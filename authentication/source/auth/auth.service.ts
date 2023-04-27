@@ -1,0 +1,452 @@
+import httpStatus from "http-status";
+import bcrypt from "bcryptjs";
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+import { randomUUID } from "crypto";
+
+import AppError from "../utils/AppError";
+import Messages from "./../utils/messages";
+import tokenService from "../services/token.services";
+import {
+  ICreateUser,
+  ISignIn,
+  IForgotPassword,
+  IResetPassword,
+} from "../interfaces/input";
+import googleService from "../services/google.service";
+import { sendMail } from "../services/nodemailer.service";
+import { log } from "console";
+import { axiosGet } from "../services/axios.service";
+
+/**
+ *
+ * @param email checking if email address is already exist
+ */
+const checkDuplicateEmail = async (email: string | undefined) => {
+  const checkEmail = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+  });
+  if (checkEmail) {
+    if (checkEmail?.isSignUp == "PENDING") {
+      return {
+        isBirthDateAvailable: false,
+        user: checkEmail.id,
+      };
+    } else {
+      throw new AppError(
+        httpStatus.UNPROCESSABLE_ENTITY,
+        Messages.EMAIL_ALREADY_EXIST
+      );
+    }
+  } else {
+    return checkEmail;
+  }
+};
+
+/**
+ *
+ * @param userName checking if userName is already exist
+ */
+const checkDuplicateUserName = async (userName: string | undefined) => {
+  const checkUserName = await prisma.user.findUnique({
+    where: {
+      userName: userName,
+    },
+  });
+  if (checkUserName) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.USERNAME_ALREADY_EXIST
+    );
+  }
+  return checkUserName;
+};
+
+/**
+ *
+ * @param data signup for user
+ */
+const signUp = async (data: ICreateUser) => {
+  if (data.userId != "" && data.userId) {
+    const getUser = await prisma.user.findUnique({
+      where: {
+        id: data.userId,
+      },
+    });
+    if (getUser) {
+      let birthday = new Date(data.birthDate);
+      const ageDifMs = new Date(Date.now() - birthday.getTime());
+      const userAge = Math.abs(ageDifMs.getUTCFullYear() - 1970);
+      if (userAge >= 21) {
+        const updateUser = await prisma.user.update({
+          where: {
+            id: data.userId,
+          },
+          data: {
+            birthDate: birthday,
+            isSignUp: "SUCCESS",
+          },
+        });
+        const user = await socialLogin(getUser.email);
+        if (user.isContactScope == true) {
+          const contactList = await googleService.contactList(
+            getUser.googleAccessToken
+          );
+          if (!contactList || contactList.length === 0) {
+            return {
+              user,
+              contactList,
+            };
+          }
+          const contacts: any = [];
+          await contactList.forEach((person: any) => {
+            contacts.push({
+              email:
+                person.emailAddresses?.length > 0
+                  ? person.emailAddresses[0].value
+                  : "",
+              name: person.names?.length > 0 ? person.names[0].displayName : "",
+              phoneNumber:
+                person?.phoneNumbers?.length > 0
+                  ? person?.phoneNumbers[0]?.value
+                  : "",
+              userId: user.id,
+            });
+          });
+          const getConatctData = await Promise.all(contactList).then(() => {
+            return contacts;
+          });
+          const createContactUser = await createContact(contacts);
+          return {
+            user,
+            createContactUser,
+            isBirthDateAvailable: true,
+          };
+        }
+        return {
+          user,
+          isBirthDateAvailable: true,
+        };
+      } else {
+        throw new AppError(
+          httpStatus.UNPROCESSABLE_ENTITY,
+          "We are sorry to say, your age is less then 18 so you are not allow to create account"
+        );
+      }
+    } else {
+      throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "session out");
+    }
+  } else {
+    if (data.password.length > 0) {
+      data.password = await bcrypt.hash(data.password, 8);
+    }
+    const emailCheck = await checkDuplicateEmail(data.email);
+    if (emailCheck?.isBirthDateAvailable == false) {
+      return emailCheck;
+    } else {
+      await checkDuplicateUserName(data.userName);
+      return await prisma.user.create({
+        data: {
+          email: data.email,
+          password: data.password ? data.password : "",
+          firstName: data.firstName ? data.firstName : "",
+          lastName: data.lastName ? data.lastName : "",
+          phone: data.phone,
+          userName: data.userName,
+          socialLogin: data.socialLogin,
+          birthDate: data.birthDate,
+          profileImage: data.profileImage ? data.profileImage : "",
+          googleAccessToken: data.googleAccessToken
+            ? data.googleAccessToken
+            : "",
+          googleRefreshToken: data.googleRefreshToken
+            ? data.googleRefreshToken
+            : "",
+          googleIdToken: data.googleRefreshToken ? data.googleRefreshToken : "",
+          isSignUp: data.isSignUp,
+          isContactScope: data.isContactScope ?? null,
+        },
+      });
+    }
+  }
+};
+
+/**
+ *
+ * @param password request password
+ * @param correctPassword existing password
+ */
+const checkPassword = async (password: string, correctPassword: string) => {
+  const isPasswordMatch = await bcrypt.compare(password, correctPassword);
+  if (!isPasswordMatch) {
+    throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, Messages.INVALID);
+  }
+  return isPasswordMatch;
+};
+
+/**
+ *
+ * @param data user sign in
+ */
+const signIn = async (data: ISignIn) => {
+  const signIn = await prisma.user.findMany({
+    where: {
+      OR: [
+        {
+          email: data.userNameEmail,
+        },
+        {
+          userName: data.userNameEmail,
+        },
+      ],
+    },
+  });
+  if (signIn.length > 0) {
+    if (signIn[0].password != "" || data.password.length > 0) {
+      await checkPassword(data.password, signIn[0].password);
+    }
+    const tokens = await tokenService.generateAuthTokens(signIn[0].id);
+
+    const user = {
+      id: signIn[0].id,
+      userName: signIn[0].userName,
+      firstName: signIn[0].firstName,
+      lastName: signIn[0].lastName,
+      profileImage: signIn[0].profileImage,
+      birthDate: signIn[0].birthDate,
+      accessToken: tokens.access.token,
+      refreshToken: tokens.refresh.token,
+    };
+    return { user };
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.EMAIL_NOT_FOUND
+    );
+  }
+};
+
+/**
+ *
+ * @param data checking email for social login
+ */
+const checkDuplicateEmailForSocialLogin = async (data: ICreateUser) => {
+  const checkEmail = await prisma.user.findUnique({
+    where: {
+      email: data.email,
+    },
+  });
+
+  if (checkEmail) {
+    const obj = {
+      userNameEmail: checkEmail.email,
+      password: data.password,
+    };
+    return await signIn(obj);
+  } else {
+    return checkEmail;
+  }
+};
+
+/**
+ *
+ * @param email requesting email for forgot password
+ */
+const forgotPassword = async (email: IForgotPassword) => {
+  const checkEmail = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (!checkEmail) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.EMAIL_NOT_FOUND_FORGOTPASSWORD
+    );
+  }
+  return { id: checkEmail.id, emailFound: true };
+};
+
+/**
+ *
+ * @param data requesting password for reset existing password
+ */
+const resetPassword = async (data: IResetPassword) => {
+  data.password = await bcrypt.hash(data.password, 8);
+  return await prisma.user.update({
+    where: {
+      id: data.id,
+    },
+    data: {
+      password: data.password,
+    },
+    select: {
+      id: true,
+    },
+  });
+};
+
+/**
+ *
+ * @param data social login/sign in without password
+ */
+
+const socialLogin = async (data: any) => {
+  const checkEmail = await prisma.user.findUnique({
+    where: {
+      email: data,
+    },
+  });
+  if (checkEmail) {
+    if (checkEmail.isSignUp == "PENDING") {
+      return {
+        isBirthDateAvailable: false,
+        user: checkEmail.id,
+      };
+    } else {
+      const tokens = await tokenService.generateAuthTokens(checkEmail.id);
+      const user = {
+        id: checkEmail.id,
+        firstName: checkEmail.firstName,
+        lastName: checkEmail.lastName,
+        profileImage: checkEmail.profileImage,
+        birthDate: checkEmail.birthDate,
+        accessToken: tokens.access.token,
+        refreshToken: tokens.refresh.token,
+        userName: checkEmail.userName,
+      };
+      return user;
+    }
+  } else {
+    return checkEmail;
+  }
+};
+
+const deleteUser = async (id: number) => {
+  const data = await axiosGet("http://localhost:8002/mlb/standings", {}, "");
+  console.log("data", data.data.data.americanLeague);
+
+  // await prisma.invite.deleteMany({
+  //   where: {
+  //     sendInviteBy: id,
+  //   },
+  // });
+  // await prisma.contact.deleteMany({
+  //   where: {
+  //     userId: id,
+  //   },
+  // });
+  // return await prisma.user.delete({
+  //   where: {
+  //     id: id,
+  //   },
+  // });
+};
+
+const createContact = async (data: any) => {
+  console.log("data", data);
+
+  const result = await data.reduce((acc: any, address: any) => {
+    const dup = acc.find(
+      (addr: any) =>
+        addr.email === address.email && addr.phoneNumber === address.phoneNumber
+    );
+    if (dup) {
+      return acc;
+    }
+    return acc.concat(address);
+  }, []);
+  const extractContact = await result.map(async (item: any) => {
+    if (item.email != "") {
+      const getUser = await prisma.user.findUnique({
+        where: { email: item.email },
+      });
+      if (getUser) {
+        let contact = {
+          name: item.name,
+          email: item.email,
+          phoneNumber: item.phoneNumber,
+          userId: item.userId,
+          invite: "ACEEPTED",
+        };
+        await prisma.contact.create({
+          data: contact,
+        });
+      } else {
+        await prisma.contact.create({
+          data: item,
+        });
+      }
+    } else {
+      await prisma.contact.create({
+        data: item,
+      });
+    }
+  });
+  return await Promise.all(extractContact).then(async (item) => {
+    console.log("in promiss", data.userId);
+    console.log("item", result);
+
+    const contactData = await prisma.contact.findMany({
+      where: {
+        userId: result[0].userId,
+      },
+    });
+    console.log("contactData", contactData);
+
+    return contactData;
+  });
+};
+
+const sendInvite = async (data: any) => {
+  var someDate = new Date();
+  var result = new Date(someDate.setDate(someDate.getDate() + 7));
+
+  const inviteSend = await prisma.invite.create({
+    data: {
+      expire: result,
+      sendInviteBy: data.sendInviteBy,
+      sendInviteContact: data.sendInviteContact,
+      token: randomUUID(),
+    },
+  });
+
+  const sendMai = await sendMail({
+    url: `${process.env.REDIRECT_URI}/register/${inviteSend.token}`,
+    mailFile: "VerifyAccount.html",
+  });
+};
+
+const checkInviteExpire = async (data: any) => {
+  const checkInviteExpire = await prisma.invite.findUnique({
+    where: {
+      token: data.token,
+    },
+  });
+  if (
+    checkInviteExpire.expire >
+    new Date(new Date().setDate(new Date().getDate() - 7))
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+export default {
+  signUp,
+  signIn,
+  checkDuplicateEmailForSocialLogin,
+  forgotPassword,
+  resetPassword,
+  socialLogin,
+  deleteUser,
+  createContact,
+  sendInvite,
+  checkInviteExpire,
+};
