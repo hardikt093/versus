@@ -18,7 +18,6 @@ const getContacts = async (req: Request, res: Response) => {
     );
     createResponse(res, httpStatus.OK, "", getContact.data.data);
   } catch (error: any) {
-    console.log("in error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
 };
@@ -32,7 +31,7 @@ const createContact = async (req: Request, res: Response) => {
       `${config.chatServer}/contact/createContact`,
       token
     );
-    createResponse(res, httpStatus.OK, "", createContact.data);
+    createResponse(res, httpStatus.OK, "", createContact.data.data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }

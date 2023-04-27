@@ -250,13 +250,13 @@ const conversationChange = async (
       socketRef: socket.id,
       conversationId: conversationId || null,
     });
-    const contact = await prisma.contact.findFirst({
+    const contact = await prisma.contactTry.findFirst({
       where: { userId: myUserId, conversationId },
     });
     if (!contact) {
       return;
     }
-    const updatedContact = await prisma.contact.update({
+    const updatedContact = await prisma.contactTry.update({
       include: {
         contactUser: {
           select: { userName: true, id: true },

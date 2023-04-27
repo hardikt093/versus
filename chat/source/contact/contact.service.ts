@@ -8,7 +8,7 @@ import { ICreateContact, IUser } from "../interfaces/input";
 const prisma = new PrismaClient();
 
 const getContacts = async (data: IUser) => {
-  const contacts = await prisma.contact.findMany({
+  const contacts = await prisma.contactTry.findMany({
     where: { userId: data.id },
     include: {
       contactUser: {
@@ -35,7 +35,7 @@ const createContact = async (user: IUser, body: ICreateContact) => {
   if (relatedUser.id === user?.id) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, Messages.INVALID_USER);
   }
-  const isContactExists = await prisma.contact.findFirst({
+  const isContactExists = await prisma.contactTry.findFirst({
     where: {
       userId: user?.id,
       contactUser: {
@@ -80,7 +80,7 @@ const newContact = async ({
   conversationId: number;
   contactUserId: number;
 }) => {
-  return await prisma.contact.create({
+  return await prisma.contactTry.create({
     data: {
       userId,
       conversationId,

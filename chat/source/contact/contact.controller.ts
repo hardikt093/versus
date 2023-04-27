@@ -27,7 +27,7 @@ const createContact = async (req: Request, res: Response) => {
     );
     createResponse(res, httpStatus.OK, "", createContact);
   } catch (error: any) {
-    console.log("error", error);
+    console.log("error in chat", error.message);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };

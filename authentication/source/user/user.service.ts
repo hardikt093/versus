@@ -49,16 +49,25 @@ const getAllContact = async () => {
   // return getContact;
 };
 
-const searchUser = async (query: any) => {
+const searchUser = async (query: any, user: any) => {
   if (query.search) {
     console.log("query.search", query.search);
     const { search } = query;
     return await prisma.user.findMany({
       where: {
-        OR: [
-          { userName: { contains: search } },
-          { firstName: { contains: search } },
-          { lastName: { contains: search } },
+        AND: [
+          {
+            OR: [
+              { userName: { contains: search } },
+              { firstName: { contains: search } },
+              { lastName: { contains: search } },
+            ],
+          },
+          {
+            id: {
+              not: user.id,
+            },
+          },
         ],
       },
       select: {
