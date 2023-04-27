@@ -19,6 +19,7 @@ const getContacts = async (req: Request, res: Response) => {
 };
 
 const createContact = async (req: Request, res: Response) => {
+  console.log("email", req.body);
   try {
     const createContact = await contactService.createContact(
       req.loggedInUser as IUser,
@@ -26,6 +27,7 @@ const createContact = async (req: Request, res: Response) => {
     );
     createResponse(res, httpStatus.OK, "", createContact);
   } catch (error: any) {
+    console.log("error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };

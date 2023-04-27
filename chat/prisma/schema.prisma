@@ -24,19 +24,26 @@ model User {
   createdAt        DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
   isDeleted        Boolean   @default(false)
-  contacts         Contact[] @relation("contactToUserId")
+  contacts         ContactTry[] @relation("contactToUserId")
   messagesSent     Message[] @relation("toUserId")
   messagesReceived Message[] @relation("fromUserId")
-  contactsUser     Contact[] @relation("contactToUserUserId")
-  reactionUser     MessageReaction[]  @relation("reactionfromUserId")  
-  threadUser       Threads[]  @relation("threadfromUserId")  
+  contactsUser     ContactTry[] @relation("contactToUserUserId")
+  contact Contact[]
+  invite Invite[]
+  reactionUser     MessageReaction[]  @relation("reactionfromUserId")
+  threadUser       Threads[]  @relation("threadfromUserId")    
+  googleAccessToken String?
+  googleRefreshToken String?
+  googleIdToken String?
+  isContactScope Boolean?
+  isSignUp isSignUp @default(PENDING)
 }
 
 model Token {
-  id        Int      @id @default(autoincrement())
-  token     String
-  user      Int
-  type      Int
+  id     Int     @id @default(autoincrement())
+  token    String
+  user Int   
+  type Int
   expiresAt String
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
@@ -47,10 +54,10 @@ model Conversation {
   id           Int       @id @default(autoincrement())
   participants Int[]
   messages     Message[]
-  contacts     Contact[]
+  contacts     ContactTry[]
 }
 
-model Contact {
+model ContactTry {
   id             Int          @id @default(autoincrement())
   conversation   Conversation @relation(fields: [conversationId], references: [id])
   conversationId Int
@@ -81,11 +88,6 @@ model Message {
   threads       Threads[]
 }
 
-enum Status {
-  online
-  offline
-}
-
 model MessageReaction {
   id             Int           @id @default(autoincrement())
   message        Message?      @relation(fields: [messageId], references: [id])
@@ -105,4 +107,45 @@ model Threads {
   filePath       String?
   createdAt      DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+}
+
+enum Status {
+  online
+  offline
+}
+model Contact {
+  id     Int     @id @default(autoincrement())
+  name String?
+  email String? 
+  phoneNumber String? 
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
+  invite inviteSend @default(PENDING)
+  sendInvite Invite[]
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+  isDeleted Boolean  @default(false)
+}
+
+model Invite {
+  id     Int     @id @default(autoincrement())
+  token String @unique @db.Uuid
+  expire DateTime
+  sendInviteBy Int
+  sendInviteContact Int
+  contact   Contact? @relation(fields: [sendInviteContact], references: [id])
+  user   User? @relation(fields: [sendInviteBy], references: [id])
+  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+enum inviteSend {
+  SENT
+  ACEEPTED
+  PENDING
+}
+
+enum isSignUp {
+  SUCCESS
+  PENDING
 }

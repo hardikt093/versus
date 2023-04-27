@@ -30,6 +30,8 @@ model User {
   contactsUser     ContactTry[] @relation("contactToUserUserId")
   contact Contact[]
   invite Invite[]
+  reactionUser     MessageReaction[]  @relation("reactionfromUserId")
+  threadUser       Threads[]  @relation("threadfromUserId")    
   googleAccessToken String?
   googleRefreshToken String?
   googleIdToken String?
@@ -77,11 +79,34 @@ model Message {
   to             User?         @relation(name: "toUserId", fields: [toId], references: [id])
   toId           Int?
   text           String
-  filePath       String?
+  filePath       String[]
   createdAt      DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
   Conversation   Conversation? @relation(fields: [conversationId], references: [id])
   conversationId Int?
+  reaction      MessageReaction[]
+  threads       Threads[]
+}
+
+model MessageReaction {
+  id             Int           @id @default(autoincrement())
+  message        Message?      @relation(fields: [messageId], references: [id])
+  messageId      Int?
+  reaction       String
+  from           User?         @relation(name: "reactionfromUserId", fields: [fromId], references: [id])
+  fromId         Int?         
+}
+
+model Threads {
+  id             Int           @id @default(autoincrement())
+  message        Message?      @relation(fields: [messageId], references: [id])
+  messageId      Int?
+  from           User?         @relation(name: "threadfromUserId", fields: [fromId], references: [id])
+  fromId         Int?
+  text           String
+  filePath       String?
+  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
 }
 
 enum Status {

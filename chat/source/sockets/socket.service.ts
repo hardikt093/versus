@@ -6,8 +6,8 @@ import { HandshakeUserId, IConversation, IMessage } from "../interfaces/input";
 const prisma = new PrismaClient();
 const onlineUsers = new Map();
 
-const connection = async (userId: HandshakeUserId, socket: any) => {
-  if (userId) {
+const connection = async (userId: any, socket: any) => {
+  if (userId > 0) {
     onlineUsers.set(+userId, { socketRef: socket.id });
     await prisma.contact.updateMany({
       where: {
@@ -17,8 +17,10 @@ const connection = async (userId: HandshakeUserId, socket: any) => {
         status: "online",
       },
     });
+    io.emit("onlineUsers", Array.from(onlineUsers));
+  } else {
+    return;
   }
-  io.emit("onlineUsers", Array.from(onlineUsers));
 };
 
 const disconnect = async (userId: HandshakeUserId, socket: any) => {
