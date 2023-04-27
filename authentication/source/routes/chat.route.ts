@@ -4,10 +4,10 @@ import auth from "../middlewares/auth";
 
 const router = express.Router();
 
-router.get("contact/getContacts", auth, chatProxyController.getContacts);
-router.post("contact/createContact", auth, chatProxyController.createContact);
+router.get("/contact/getContacts", auth, chatProxyController.getContacts);
+router.post("/contact/createContact", auth, chatProxyController.createContact);
 router.get(
-  "conversation/getConversation/:id",
+  "/conversation/getConversation/:id",
   auth,
   chatProxyController.getConversation
 );
