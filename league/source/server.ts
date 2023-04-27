@@ -53,7 +53,7 @@ const PORT: number | string = process.env.PORT ?? 6060;
 export const io = new Server(httpServer, {
   cors: {
     origin: [
-      "http://localhost:3000",
+      "https://localhost:3000",
       "http://localhost:3001",
       "http://192.168.1.15:3000",
     ],

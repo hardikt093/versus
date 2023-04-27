@@ -45,7 +45,7 @@ const createContact = async (user: IUser, body: ICreateContact) => {
   });
 
   if (isContactExists) {
-    return;
+    return isContactExists;
   }
 
   const foundConversation = await prisma.conversation.findFirst({

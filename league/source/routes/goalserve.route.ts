@@ -25,5 +25,5 @@ const router = express.Router();
  *       200:
  *         description: get standings
  */
-router.get("/standings", goalserveController.baseballStandings);
+router.get("/standings", auth, goalserveController.baseballStandings);
 export default router;
