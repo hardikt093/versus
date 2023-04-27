@@ -45,7 +45,7 @@ const getConversation = async (req: Request, res: Response) => {
       {},
       token
     );
-    createResponse(res, httpStatus.OK, "", getConversation.data);
+    createResponse(res, httpStatus.OK, "", getConversation.data.data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }

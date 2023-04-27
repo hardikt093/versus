@@ -75,7 +75,7 @@ const myMessage = async (
     where: { id: otherUserId },
   });
   const isRelatedUserOnline = onlineUsers.has(relatedUser?.id);
-  const isContactExists = await prisma.contact.findFirst({
+  const isContactExists = await prisma.contactTry.findFirst({
     where: { userId: otherUserId, contactUserId: myUser?.id },
   });
 
@@ -84,7 +84,7 @@ const myMessage = async (
       return;
     }
 
-    const newContact = await prisma.contact.create({
+    const newContact = await prisma.contactTry.create({
       data: {
         contactUserId: myUserId,
         conversationId: conversation.id,
@@ -112,7 +112,7 @@ const myMessage = async (
       updatedUnreadMessagesCount = prevUnreadMessages + 1;
     }
 
-    const updatedContact = await prisma.contact.update({
+    const updatedContact = await prisma.contactTry.update({
       include: {
         contactUser: {
           select: { userName: true, id: true },

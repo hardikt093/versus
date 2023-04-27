@@ -18,11 +18,11 @@ import {
 } from "./socket.service";
 
 export default (socket: any) => {
-  // console.log("socket.handshake.query.userId", socket.handshake.query.userId);
-  // const myId = socket.handshake.query.userId
-  //   ? socket.handshake.query.userId
-  //   : 0;
-  // connection(Number(myId), socket);
+  console.log("socket.handshake.query.userId", socket.handshake.query.userId);
+  const myId = socket.handshake.query.userId
+    ? socket.handshake.query.userId
+    : 0;
+  connection(Number(myId), socket);
   socket.on(
     "myMessage",
     ({ message, conversation, myUserId }: IMessageInput) => {
