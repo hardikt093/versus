@@ -1,0 +1,298 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_POSTGRES_URL")
+}
+
+model User {
+  id                      Int               @id @default(autoincrement())
+  email                   String            @unique
+  password                String
+  firstName               String?
+  lastName                String?
+  userName                String            @unique
+  profileImage            String?
+  socialLogin             Boolean
+  birthDate               String?
+  phone                   Json?
+  createdAt               DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime          @updatedAt @db.Timestamptz(3)
+  isDeleted               Boolean           @default(false)
+  contacts                ContactTry[]      @relation("contactToUserId")
+  messagesSent            Message[]         @relation("toUserId")
+  messagesReceived        Message[]         @relation("fromUserId")
+  contactsUser            ContactTry[]      @relation("contactToUserUserId")
+  contact                 Contact[]
+  invite                  Invite[]
+  reactionUser            MessageReaction[] @relation("reactionfromUserId")
+  threadUser              Threads[]         @relation("threadfromUserId")
+  googleAccessToken       String?
+  googleRefreshToken      String?
+  googleIdToken           String?
+  isContactScope          Boolean?
+  isSignUp                isSignUp          @default(PENDING)
+  oneToOneBatOpponentUser OneToOneBat[]     @relation("opponentUser")
+  oneToOneBatRequestUser  OneToOneBat[]     @relation("requestUser")
+  userWallet              UserWallet?       @relation("userWallet")
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  token     String
+  user      Int
+  type      Int
+  expiresAt String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  isDeleted Boolean  @default(false)
+}
+
+model Conversation {
+  id           Int          @id @default(autoincrement())
+  participants Int[]
+  messages     Message[]
+  contacts     ContactTry[]
+}
+
+model ContactTry {
+  id             Int          @id @default(autoincrement())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId Int
+  unreadMessages Int          @default(0)
+  status         Status       @default(offline)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @db.Timestamptz(3)
+  User           User?        @relation(name: "contactToUserId", fields: [userId], references: [id])
+  userId         Int?
+  contactUser    User?        @relation(name: "contactToUserUserId", fields: [contactUserId], references: [id])
+  contactUserId  Int?
+}
+
+model Message {
+  id             Int               @id @default(autoincrement())
+  from           User?             @relation(name: "fromUserId", fields: [fromId], references: [id])
+  fromId         Int?
+  to             User?             @relation(name: "toUserId", fields: [toId], references: [id])
+  toId           Int?
+  text           String
+  filePath       String[]
+  createdAt      DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @db.Timestamptz(3)
+  Conversation   Conversation?     @relation(fields: [conversationId], references: [id])
+  conversationId Int?
+  reaction       MessageReaction[]
+  threads        Threads[]
+}
+
+model MessageReaction {
+  id        Int      @id @default(autoincrement())
+  message   Message? @relation(fields: [messageId], references: [id])
+  messageId Int?
+  reaction  String
+  from      User?    @relation(name: "reactionfromUserId", fields: [fromId], references: [id])
+  fromId    Int?
+}
+
+model Threads {
+  id        Int      @id @default(autoincrement())
+  message   Message? @relation(fields: [messageId], references: [id])
+  messageId Int?
+  from      User?    @relation(name: "threadfromUserId", fields: [fromId], references: [id])
+  fromId    Int?
+  text      String
+  filePath  String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum Status {
+  online
+  offline
+}
+
+model Contact {
+  id          Int        @id @default(autoincrement())
+  name        String?
+  email       String?
+  phoneNumber String?
+  userId      Int?
+  user        User?      @relation(fields: [userId], references: [id])
+  invite      inviteSend @default(PENDING)
+  sendInvite  Invite[]
+  createdAt   DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime   @updatedAt @db.Timestamptz(3)
+  isDeleted   Boolean    @default(false)
+}
+
+model Invite {
+  id                Int      @id @default(autoincrement())
+  token             String   @unique @db.Uuid
+  expire            DateTime
+  sendInviteBy      Int
+  sendInviteContact Int
+  contact           Contact? @relation(fields: [sendInviteContact], references: [id])
+  user              User?    @relation(fields: [sendInviteBy], references: [id])
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum inviteSend {
+  SENT
+  ACEEPTED
+  PENDING
+}
+
+enum isSignUp {
+  SUCCESS
+  PENDING
+}
+
+model OneToOneBat {
+  id                            Int               @id @default(autoincrement())
+  requestUserId                 Int
+  opponentUserId                Int
+  requestUserAmount             Float
+  opponentUserAmount            Float?
+  sportsType                    SportsType
+  type                          OneToOneBatType   @default(TEAM)
+  matchId                       Int
+  matchEventId                  Int
+  requestUserTeamId             Int
+  opponentUserTeamId            Int?
+  matchOddsId                   Int
+  winTeamId                     Int?
+  isRequestUserWinAmount        Boolean           @default(false)
+  isOpponentUserWinAmount       Boolean           @default(false)
+  resultAmountRequestUser       Float?
+  resultAmountOpponentUser      Float?
+  requestUserOdds               Float
+  opponentUserOdds              Float?
+  winAmount                     Float?
+  loseAmount                    Float?
+  responseAt                    DateTime?
+  resultAt                      DateTime?
+  matchOdds                     MatchOdds         @relation("matchOddsId", fields: [matchOddsId], references: [id])
+  requestUserTeam               Team              @relation("requestUserTeam", fields: [requestUserTeamId], references: [id])
+  opponentUserTeam              Team?             @relation("opponentUserTeam", fields: [opponentUserTeamId], references: [id])
+  matchEvent                    MatchEvent        @relation("oneToOneBetMatchEvent", fields: [matchEventId], references: [id])
+  match                         Match             @relation("oneToOneBetMatch", fields: [matchId], references: [id])
+  status                        OneToOneBatStatus @default(REQUESTED)
+  isRequestUserResultSatisfied  Boolean?
+  isOpponentUserResultSatisfied Boolean?
+  createdAt                     DateTime          @default(now()) @db.Timestamptz(3)
+  isDeleted                     Boolean           @default(false)
+  updatedAt                     DateTime          @updatedAt @db.Timestamptz(3)
+  opponentUser                  User?             @relation("opponentUser", fields: [opponentUserId], references: [id])
+  requestUser                   User?             @relation("requestUser", fields: [requestUserId], references: [id])
+}
+
+enum OneToOneBatType {
+  TEAM
+  PLAYERS
+}
+
+enum OneToOneBatStatus {
+  REQUESTED
+  ACCEPTED
+  REJECTED
+  IN_PROGRESS
+  RESULT_DECLARED
+  RESULT_NOT_SATISFIED
+  COMPLETED
+}
+
+model Team {
+  id                      Int           @id @default(autoincrement())
+  name                    String
+  sortName                String?
+  sportsType              SportsType
+  createdAt               DateTime      @default(now()) @db.Timestamptz(3)
+  isDeleted               Boolean       @default(false)
+  updatedAt               DateTime      @updatedAt @db.Timestamptz(3)
+  localTeamMatch          Match[]       @relation("localTeam")
+  awayTeamMatch           Match[]       @relation("awayTeam")
+  localTeamMatchOdds      MatchOdds[]   @relation("localTeamOdds")
+  awayTeamMatchOdds       MatchOdds[]   @relation("awayTeamOdds")
+  requestUserOneToOneBat  OneToOneBat[] @relation("requestUserTeam")
+  opponentUserOneToOneBat OneToOneBat[] @relation("opponentUserTeam")
+}
+
+model Match {
+  id               Int           @id @default(autoincrement())
+  status           MatchStatus   @default(NOT_STARTED)
+  sportsType       SportsType
+  matchEventId     Int
+  localTeamId      Int
+  awayTeamId       Int
+  matchEvent       MatchEvent    @relation("matchEvent", fields: [matchEventId], references: [id])
+  localTeam        Team          @relation("localTeam", fields: [localTeamId], references: [id])
+  awayTeam         Team          @relation("awayTeam", fields: [awayTeamId], references: [id])
+  scheduledAt      DateTime      @default(now())
+  createdAt        DateTime      @default(now()) @db.Timestamptz(3)
+  isDeleted        Boolean       @default(false)
+  updatedAt        DateTime      @updatedAt @db.Timestamptz(3)
+  matchOdds        MatchOdds[]   @relation("matchOdds")
+  matchOneToOneBat OneToOneBat[] @relation("oneToOneBetMatch")
+}
+
+model MatchOdds {
+  id              Int           @id @default(autoincrement())
+  sportsType      SportsType
+  matchId         Int
+  localTeamId     Int
+  awayTeamId      Int
+  localTeamOdd    Float
+  awayTeamOdd     Float
+  match           Match         @relation("matchOdds", fields: [matchId], references: [id])
+  localTeam       Team          @relation("localTeamOdds", fields: [localTeamId], references: [id])
+  awayTeam        Team          @relation("awayTeamOdds", fields: [awayTeamId], references: [id])
+  createdAt       DateTime      @default(now()) @db.Timestamptz(3)
+  isDeleted       Boolean       @default(false)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(3)
+  oneToOneBatOdds OneToOneBat[] @relation("matchOddsId")
+}
+
+model MatchEvent {
+  id               Int           @id @default(autoincrement())
+  name             String
+  shortName        String?
+  sportsType       SportsType
+  createdAt        DateTime      @default(now()) @db.Timestamptz(3)
+  isDeleted        Boolean       @default(false)
+  updatedAt        DateTime      @updatedAt @db.Timestamptz(3)
+  matches          Match[]       @relation("matchEvent")
+  eventOneToOneBat OneToOneBat[] @relation("oneToOneBetMatchEvent")
+}
+
+model UserWallet {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  balance   Float    @default(0)
+  user      User     @relation("userWallet", fields: [userId], references: [id])
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  isDeleted Boolean  @default(false)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+enum MatchStatus {
+  NOT_STARTED
+  STARTED
+  FINISHED
+}
+
+enum SportsType {
+  SOCCER
+  BASKET
+  TENNIS
+  TABLE_TENNIS
+  HOCKEY
+  FOOTBALL
+  BASEBALL
+  VOLLEYBALL
+}
