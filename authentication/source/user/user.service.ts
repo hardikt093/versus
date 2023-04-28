@@ -40,18 +40,13 @@ const getAllContact = async () => {
     },
   });
   const getContactRes = await getContact.map(async (item: any) => {
-    console.log("item", item);
-
-    const getInvite = await item.sendInvite.map(async (item: any) => {
-      console.log("item", item);
-    });
+    const getInvite = await item.sendInvite.map(async (item: any) => {});
   });
   // return getContact;
 };
 
 const searchUser = async (query: any, user: any) => {
   if (query.search) {
-    console.log("query.search", query.search);
     const { search } = query;
     return await prisma.user.findMany({
       where: {

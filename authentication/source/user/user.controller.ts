@@ -41,7 +41,6 @@ const seacrchUsers = async (req: Request, res: Response) => {
     const allUsers = await userService.searchUser(req.query, req.loggedInUser);
     createResponse(res, httpStatus.OK, "", allUsers);
   } catch (error: any) {
-    console.log("error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };

@@ -164,8 +164,6 @@ const signUp = async (req: Request, res: Response) => {
       }
     }
   } catch (error: any) {
-    console.log("error", error);
-
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };

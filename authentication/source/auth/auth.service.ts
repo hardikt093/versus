@@ -329,7 +329,6 @@ const socialLogin = async (data: any) => {
 
 const deleteUser = async (id: number) => {
   const data = await axiosGet("http://localhost:8002/mlb/standings", {}, "");
-  console.log("data", data.data.data.americanLeague);
 
   // await prisma.invite.deleteMany({
   //   where: {
@@ -349,8 +348,6 @@ const deleteUser = async (id: number) => {
 };
 
 const createContact = async (data: any) => {
-  console.log("data", data);
-
   const result = await data.reduce((acc: any, address: any) => {
     const dup = acc.find(
       (addr: any) =>
@@ -389,16 +386,11 @@ const createContact = async (data: any) => {
     }
   });
   return await Promise.all(extractContact).then(async (item) => {
-    console.log("in promiss", data.userId);
-    console.log("item", result);
-
     const contactData = await prisma.contact.findMany({
       where: {
         userId: result[0].userId,
       },
     });
-    console.log("contactData", contactData);
-
     return contactData;
   });
 };

@@ -8,7 +8,6 @@ const baseballStandings = async (req: Request, res: Response) => {
     const getStandings = await goalserveService.getMLBStandings();
     createResponse(res, httpStatus.OK, "", getStandings);
   } catch (error: any) {
-    console.log("erroe from 8002", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };

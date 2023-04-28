@@ -1,5 +1,9 @@
+import httpStatus from "http-status";
 import { IDivision, ITeam } from "../interfaces/input";
+import { axiosGet } from "../services/axios.service";
 import { goalserveApi } from "../services/goalserve.service";
+import socket from "../services/socket.service";
+import AppError from "../utils/AppError";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -9,7 +13,6 @@ function camelize(str: string) {
 }
 
 const transformLeague = async (getResponse: any, data: any) => {
-  console.log("here");
   return new Promise(async (resolve, reject) => {
     try {
       const leagues = getResponse?.data?.standings?.category?.league;
@@ -65,4 +68,107 @@ const getMLBStandings = async () => {
   }, {});
 };
 
-export default { getMLBStandings };
+const getUpcomingMatch = async () => {
+  try {
+    const getScore = await axiosGet(
+      "https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
+      { json: true, date1: "28.04.2023", date2: "28.04.2023" }
+    );
+    const winlossArray = await getWinLost();
+    await Promise.all(winlossArray).then(async () => {
+      var liveScore: any = [];
+      var upcommingScore: any = [];
+      const takeData =
+        await getScore?.data?.fixtures?.category?.matches?.match.map(
+          async (item: any) => {
+            const getAwayTeamImage = await axiosGet(
+              `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
+              { json: true }
+            );
+            const getHomeTeamImage = await axiosGet(
+              `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
+              { json: true }
+            );
+
+            if (item.status === "Not Started") {
+              const findAwayTeamWinLose: any = await search(
+                item?.awayteam?.id,
+                winlossArray
+              );
+              const findHomeTeamWinLose: any = await search(
+                item?.hometeam?.id,
+                winlossArray
+              );
+              let upcommingScoreData = {
+                status: item.status,
+                id: item.id,
+                awayTeam: {
+                  awayTeamName: item.awayteam.name,
+                  awayTeamId: item.awayteam.id,
+                  awayTeamScore: item.awayteam.totalscore,
+                  teamImage: getAwayTeamImage.data.team.image,
+                  won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+                  lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+                },
+                datetime_utc: item.datetime_utc,
+                homeTeam: {
+                  homeTeamName: item.hometeam.name,
+                  homeTeamId: item.hometeam.id,
+                  homeTeamScore: item.hometeam.totalscore,
+                  teamImage: getHomeTeamImage.data.team.image,
+                  won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+                  lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+                },
+                time: item.time,
+              };
+
+              upcommingScore.push(upcommingScoreData);
+            }
+            return { liveScore, upcommingScore };
+          }
+        );
+      await Promise.all(takeData).then(async (item: any) => {
+        await socket("updateScore", {
+          upcommingScore,
+          liveScore,
+        });
+      });
+    });
+  } catch (error) {
+    throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
+  }
+};
+
+const getWinLost = async () => {
+  var winlossArray: any = [];
+
+  const winLoss = await axiosGet(
+    "https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_standings",
+    { json: true }
+  );
+  const winLossData = await winLoss.data.standings.category.league.map(
+    async (item: any) => {
+      const getTeam = await item.division.map(async (item: any) => {
+        const fff = Object.entries(item?.team);
+        for (let index = 0; index < fff.length; index++) {
+          const [key, value] = fff[index];
+          winlossArray.push(value);
+        }
+
+        return winlossArray;
+      });
+      return getTeam;
+    }
+  );
+  return winlossArray;
+};
+
+const search = async (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray.length; i++) {
+    if (myArray[i].id === nameKey) {
+      return myArray[i];
+    }
+  }
+};
+
+export default { getMLBStandings, getUpcomingMatch, getWinLost, search };

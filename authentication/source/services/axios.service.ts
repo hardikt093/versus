@@ -31,7 +31,6 @@ const axiosGet = async (url: string, payload = {}, token: "") => {
   try {
     return await axios.get(`${url}?${params}`, getHeaders(token));
   } catch (error: any) {
-    console.log("error", error);
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
   }
 };
@@ -48,8 +47,6 @@ const axiosPost = async (payload = {}, url: string, redirect_uri = "") => {
     );
     return request;
   } catch (error: any) {
-    console.log("error", error);
-
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
   }
 };
