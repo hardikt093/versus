@@ -1,6 +1,6 @@
 import Joi from "@hapi/joi";
 
-const createOneToOneBat = {
+const createBet = {
   body: Joi.object().keys({
     opponentUserId: Joi.number().required(),
     amount: Joi.number().required(),
@@ -19,7 +19,7 @@ const createOneToOneBat = {
     matchId: Joi.number().required(),
   })
 };
-const responseOneToOneBat = {
+const responseBet = {
   params: Joi.object().keys({
     id: Joi.number().required(),
   }),
@@ -45,7 +45,7 @@ const responseToBatResultSatisfiedOrNot = {
   })
 };
 
-const resultOneToOneBat = {
+const resultBet = {
   params: Joi.object().keys({
     id: Joi.number().required(),
   }),
@@ -69,4 +69,4 @@ const listBetsByStatus = {
   })
 };
 
-export default { listBetsByStatus, responseToBatResultSatisfiedOrNot, resultOneToOneBat, createOneToOneBat, responseOneToOneBat };
+export default { listBetsByStatus, responseToBatResultSatisfiedOrNot, resultBet, createBet, responseBet };

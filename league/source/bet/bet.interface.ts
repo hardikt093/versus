@@ -1,19 +1,19 @@
-export interface ICreateOneToOneBatRequest {
+export interface ICreateBetRequest {
     opponentUserId: number,
     amount: number,
-    type: OneToOneBatType,
+    type: BetType,
     requestUserTeamId: number,
     matchId: number,
     sportsType: sportsType
 }
 
-export interface IresponseOneToOneBatRequest {
+export interface IresponseBetRequest {
     isAccepted: boolean,
     amount?: number,
     teamId?: number
 }
 
-enum OneToOneBatType {
+enum BetType {
     TEAM,
     PLAYERS
 }

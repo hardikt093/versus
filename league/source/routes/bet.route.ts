@@ -1,8 +1,8 @@
 import express from "express";
 
-import oneToOneBatController from "../bet/bet.controller";
+import BetController from "../bet/bet.controller";
 import validate from "../middlewares/validate";
-import oneToOneBatValidation from "../bet/bet.validation";
+import BetValidation from "../bet/bet.validation";
 import auth from "../middlewares/auth";
 
 const router = express.Router();
@@ -10,8 +10,53 @@ const router = express.Router();
 router.post(
   "/",
   auth,
-  validate(oneToOneBatValidation.createOneToOneBat),
-  oneToOneBatController.createBet
+  validate(BetValidation.createBet),
+  BetController.createBet
 );
 
+router.post(
+  "/listByStatus",
+  auth,
+  validate(BetValidation.listBetsByStatus),
+  BetController.listBetsByStatus
+);
+
+router.get(
+  "/request",
+  auth,
+  BetController.requestListBet
+);
+
+router.post(
+  "/:id/response",
+  auth,
+  validate(BetValidation.responseBet),
+  BetController.responseBet
+);
+
+router.post(
+  "/:id/result",
+  auth,
+  validate(BetValidation.resultBet),
+  BetController.resultBet
+);
+
+router.get(
+  "/:id/result",
+  auth,
+  BetController.getResultBet
+);
+
+router.post(
+  "/:id/result-satisfied",
+  auth,
+  validate(BetValidation.responseToBatResultSatisfiedOrNot),
+  BetController.resultBetVerified
+);
+
+router.post(
+  "/:id/complete",
+  auth,
+  BetController.completeBet
+);
 export default router;

@@ -60,11 +60,11 @@ const axiosPostMicro = async (
   token: ""
 ) => {
   try {
-    console.log(data);
     let request = await axios.post(`${url}`, data, getHeaders(token));
     return request;
   } catch (error: any) {
-    throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
+    console.log(error.response.data)
+    throw new AppError(error.response.data.status, error.response.data.message, error.response.data.data);
   }
 };
 
