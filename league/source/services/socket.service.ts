@@ -2,8 +2,12 @@ import { io } from "../server";
 
 const socket = async (eventName: string, data: object | Array<object>) => {
   switch (eventName) {
-    case "updateScore":
-      io.emit("updateScore", data);
+    case "mlbUpcomingMatch":
+      io.emit("mlbUpcomingMatch", data);
+      break;
+    case "mlbFinalMatch":
+      console.log(data)
+      io.emit("mlbFinalMatch", data);
       break;
 
     default:

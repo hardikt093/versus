@@ -70,17 +70,18 @@ const getMLBStandings = async () => {
 
 const getUpcomingMatch = async () => {
   try {
-    const getScore = await axiosGet(
-      "https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
-      { json: true, date1: "28.04.2023", date2: "28.04.2023" }
-    );
     const winlossArray = await getWinLost();
-    await Promise.all(winlossArray).then(async () => {
-      var liveScore: any = [];
+    const getScore = await axiosGet(
+      "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
+      { json: true, date1: "01.05.2023", date2: "02.05.2023", showodds: "1", bm: "455," }
+    );
+
+    // await Promise.all(winlossArray).then(async () => {
       var upcommingScore: any = [];
       const takeData =
         await getScore?.data?.fixtures?.category?.matches?.match.map(
           async (item: any) => {
+            // console.log("here")
             const getAwayTeamImage = await axiosGet(
               `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
               { json: true }
@@ -90,7 +91,15 @@ const getUpcomingMatch = async () => {
               { json: true }
             );
 
+
+
             if (item.status === "Not Started") {
+              // const getMoneyLine: any = getOdds('Home/Away', item?.odds?.type)
+              // // const getTotal = await getOdds('Over/Under', item.odds.type)
+              // const getSpread = await getOdds('Run Line', item?.odds?.type)
+              // console.log(typeof getSpread)
+            // const getAwayTeamRunLine = await getRunLine(item.awayteam.name, getSpread.bookmaker.odd)
+            // const getHomeTeamRunLine = await getRunLine(item.hometeam.name, getSpread.bookmaker.odd)
               const findAwayTeamWinLose: any = await search(
                 item?.awayteam?.id,
                 winlossArray
@@ -106,34 +115,43 @@ const getUpcomingMatch = async () => {
                   awayTeamName: item.awayteam.name,
                   awayTeamId: item.awayteam.id,
                   awayTeamScore: item.awayteam.totalscore,
-                  teamImage: getAwayTeamImage.data.team.image,
+                  // teamImage: getAwayTeamImage.data.team.image,
                   won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
                   lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+                  // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "2") : "",
+                  // spread: getAwayTeamRunLine ? getAwayTeamRunLine.name.split(' ').slice(-1)[0] : ""
                 },
                 datetime_utc: item.datetime_utc,
                 homeTeam: {
                   homeTeamName: item.hometeam.name,
                   homeTeamId: item.hometeam.id,
                   homeTeamScore: item.hometeam.totalscore,
-                  teamImage: getHomeTeamImage.data.team.image,
+                  // teamImage: getHomeTeamImage.data.team.image,
                   won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
                   lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+                  // moneyline: getMoneyLine.bookmaker.odd.find((item: any) => item.name === "1"),
+                  // spread: getHomeTeamRunLine ? getHomeTeamRunLine.name.split(' ').slice(-1)[0] : ""
                 },
+                // total: getTotal.bookmaker.odd,
                 time: item.time,
               };
-
+              // console.log("upcommingScoreData", upcommingScoreData)
               upcommingScore.push(upcommingScoreData);
+
             }
-            return { liveScore, upcommingScore };
+            // console.log("upcommingScore", upcommingScore)
+            return { upcommingScore };
           }
         );
+    // console.log("upcommingScore", upcommingScore)
       await Promise.all(takeData).then(async (item: any) => {
-        await socket("updateScore", {
-          upcommingScore,
-          liveScore,
+        // console.log("here")
+        // console.log("upcommingScore", item)
+        await socket("mlbUpcomingMatch", {
+          upcommingScore
         });
       });
-    });
+    // });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
@@ -163,12 +181,103 @@ const getWinLost = async () => {
   return winlossArray;
 };
 
+const getOdds = (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray.length; i++) {
+    if (myArray[i].value === nameKey) {
+      return myArray[i];
+    }
+  }
+
+}
+
+const getRunLine = async (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray.length; i++) {
+    if (myArray[i].name.split(" ").slice(0, -1).join(' ') == nameKey) {
+      return myArray[i];
+    }
+  }
+  return
+}
+
 const search = async (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray.length; i++) {
     if (myArray[i].id === nameKey) {
       return myArray[i];
     }
   }
+  return
 };
 
-export default { getMLBStandings, getUpcomingMatch, getWinLost, search };
+const getFinalMatch = async () => {
+  try {
+    const winlossArray = await getWinLost();
+    const getScore = await axiosGet(
+      "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/usa",
+      { json: true }
+    );
+    var getFinalMatch: any = [];
+    const takeData =
+      await getScore?.data?.scores?.category?.match.map(
+        async (item: any) => {
+          const getAwayTeamImage = await axiosGet(
+            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
+            { json: true }
+          );
+          const getHomeTeamImage = await axiosGet(
+            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
+            { json: true }
+          );
+          if (item.status === "Final") {
+            const findAwayTeamWinLose: any = await search(
+              item?.awayteam?.id,
+              winlossArray
+            );
+            const findHomeTeamWinLose: any = await search(
+              item?.hometeam?.id,
+              winlossArray
+            );
+            let upcommingScoreData = {
+              status: item.status,
+              id: item.id,
+              awayTeam: {
+                awayTeamName: item.awayteam.name,
+                awayTeamId: item.awayteam.id,
+                teamImage: getAwayTeamImage.data.team.image,
+                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+                awayTeamRun: item.awayteam.totalscore,
+                awayTeamHit: item.awayteam.hits,
+                awayTeamErrors: item.awayteam.errors
+              },
+              datetime_utc: item.datetime_utc,
+              homeTeam: {
+                homeTeamName: item.hometeam.name,
+                homeTeamId: item.hometeam.id,
+                teamImage: getHomeTeamImage.data.team.image,
+                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+                homeTeamRun: item.hometeam.totalscore,
+                homeTeamHit: item.hometeam.hits,
+                homeTeamErrors: item.hometeam.errors
+              },
+              time: item.time,
+            };
+            getFinalMatch.push(upcommingScoreData);
+
+          }
+          return { getFinalMatch };
+        }
+      );
+    await Promise.all(takeData).then(async (item: any) => {
+      await socket("mlbFinalMatch", {
+        getFinalMatch
+      });
+    });
+  } catch (error) {
+    throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
+  }
+};
+
+
+
+export default { getMLBStandings, getUpcomingMatch, getWinLost, search, getOdds, getRunLine, getFinalMatch };

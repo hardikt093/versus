@@ -62,15 +62,16 @@ export const io = new Server(httpServer, {
 });
 
 mongoose.connect(config.mongoose.url).then((result: any) => {
-  logger.info(`Connected to MongoDB -${config.mongoose.url}`);
+  console.info(`Connected to MongoDB -${config.mongoose.url}`);
   httpServer.listen(PORT, () =>
     console.info(`The server is running on port ${PORT}`)
   );
+  /** runing cron */
+cron;
 });
 mongoose.set("debug", true);
 
-/** runing cron */
-cron;
+
 
 const exitHandler = () => {
   if (httpServer) {
