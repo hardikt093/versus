@@ -12,4 +12,9 @@ var getFinalMatch = cron.schedule("*/10 * * * * *", async () => {
   await goalserveService.getFinalMatch();
 });
 
-export default { getUpcomingMatch, getFinalMatch };
+var getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
+  console.log("inside score cron getLiveMatch");
+  await goalserveService.getLiveMatch();
+});
+
+export default { getUpcomingMatch, getFinalMatch, getLiveMatch };
