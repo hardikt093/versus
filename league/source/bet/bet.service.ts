@@ -1,6 +1,12 @@
 import httpStatus from "http-status";
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+import Bet from "../models/documents/bet.model";
+import Match from "../models/documents/match.model";
+import MatchOdd from "../models/documents/matchOdd.model";
+import Team from "../models/documents/team.model";
+import MatchEvent from "../models/documents/matchEvent.model";
+import { ObjectId } from "mongoose";
 
 import AppError from "../utils/AppError";
 import { ICreateBetRequest, IresponseBetRequest } from "./bet.interface";
@@ -16,7 +22,46 @@ const betWinAmountCalculationUsingOdd = function (amount : number, odd : number)
     return ((amount - 100) + (Math.abs(odd)) + amount)
   }
 }
-
+// const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
+//   const localTeam = await Team.create({
+//     name : "Gujarat Titans",
+//     shortName : "GT",
+//     sportsType : "HOCKEY"
+//   });
+//   const awayTeam = await Team.create({
+//     name : "Mumbai Indians",
+//     shortName : "MI",
+//     sportsType : "HOCKEY"
+//   });
+//   const matchEvent = await MatchEvent.create({
+//     name : "Indian Hockey Leauge",
+//     shortName : "IHL",
+//     sportsType : "HOCKEY"
+//   });
+//   const match = await Match.create({
+//     matchEventId : matchEvent._id,
+//     localTeamId: localTeam._id,
+//     awayTeamId: awayTeam._id,
+//     sportsType : "HOCKEY"
+//   });
+//   const matchOdd = await MatchOdd.create({
+//     matchId : match._id,
+//     localTeamId: localTeam._id,
+//     awayTeamId: awayTeam._id,
+//     localTeamOdd : -160,
+//     awayTeamOdd : +200,
+//     sportsType : "HOCKEY"
+//   });
+//   await MatchOdd.create({
+//     matchId : match._id,
+//     localTeamId: localTeam._id,
+//     awayTeamId: awayTeam._id,
+//     localTeamOdd : 230,
+//     awayTeamOdd : -160,
+//     sportsType : "HOCKEY"
+//   });
+//   return {};
+// };
 const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   if (data.opponentUserId === loggedInUserId) {
     throw new AppError(
@@ -30,11 +75,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       "Amount Must Be Greater Than 0"
     );
   }
-  const matchData = await prisma.Match.findUnique({
-    where: {
-      id: data.matchId
-    }
-  });
+  const matchData = await Match.findOne({
+      _id: data.matchId
+    }).lean();
 
   if (!matchData) {
     throw new AppError(
@@ -42,35 +85,36 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       "Match data not found"
     );
   }
-  if (matchData.sportsType !== data.sportsType || matchData.isDeleted === true) {
+  if (matchData.sportsType !== data.sportsType) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       "Match data not found"
     );
   }
-  if (matchData.localTeamId !== data.requestUserTeamId && matchData.awayTeamId !== data.requestUserTeamId) {
+  console.log(data)
+  console.log(matchData)
+  
+  if (matchData.localTeamId != data.requestUserTeamId && matchData.awayTeamId != data.requestUserTeamId) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       "Your Team is Not Found in this Match"
     );
   }
 
-  const matchOddsData = await prisma.MatchOdds.findFirst({
-    where: {
-      isDeleted: false,
-      matchId: data.matchId
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-    include: {
-      localTeam: true,
-      awayTeam: true,
-      match: true,
-    }
-  });
+  const matchOddsData = await MatchOdd.findOne({
+    matchId: data.matchId
+  }).sort({createdAt: 'desc'}).populate([
+    { path : "localTeamId" },
+    { path : "awayTeamId"},
+    { path : "matchId" }
+  ]).lean();
 
-
+  if (!matchOddsData) {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      "Match Odd is Not Found"
+    );
+  }
 
   let minumumBetAmount = 0;
   if (data.requestUserTeamId === matchOddsData.localTeamId) {
@@ -86,61 +130,47 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
 
-  const betFound = await prisma.OneToOneBat.findFirst({
-    where: {
-      OR: [
-        { requestUserId: loggedInUserId },
-        { opponentUserId: loggedInUserId },
-      ],
-      matchId: data.matchId,
-    }
-  });
+  // const betFound = await prisma.OneToOneBat.findFirst({
+  //   where: {
+  //     OR: [
+  //       { requestUserId: loggedInUserId },
+  //       { opponentUserId: loggedInUserId },
+  //     ],
+  //     matchId: data.matchId,
+  //   }
+  // });
 
-  if (betFound) {
-    throw new AppError(
-      httpStatus.UNPROCESSABLE_ENTITY,
-      "You already applied on this match"
-    )
-  }
+  // if (betFound) {
+  //   throw new AppError(
+  //     httpStatus.UNPROCESSABLE_ENTITY,
+  //     "You already applied on this match"
+  //   )
+  // }
+  const MatchEventId = matchOddsData.matchId.matchEventId;
   const preparedBetObject = {
     requestUserId: loggedInUserId,
     opponentUserId: data.opponentUserId,
     requestUserAmount: data.amount,
-    type: data.type,
     sportsType: data.sportsType,
     requestUserTeamId: data.requestUserTeamId,
     matchId: data.matchId,
-    matchEventId: matchOddsData.match.matchEventId,
+    matchEventId: MatchEventId,
     matchOddsId: matchOddsData.id,
     requestUserOdds: (matchOddsData.localTeamId === data.requestUserTeamId ? matchOddsData.localTeamOdd : matchOddsData.awayTeamOdd),
   };
-  const createBet = await prisma.OneToOneBat.create({
-    data: preparedBetObject,
-  }
-  );
+  const createBet = await Bet.create(preparedBetObject); 
 
-  const createdBet = await prisma.OneToOneBat.findUnique({
-    where: {
-      id: createBet.id,
-    },
-    include: {
-      "matchOdds": true,
-      "requestUserTeam": true,
-      "matchEvent": true,
-      "match": true,
-      opponentUser: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          userName: true,
-          profileImage: true
-        }
-      }
-    }
-  });
+  const createdBet = await Bet.findOne({
+    _id : createBet._id
+  }).populate([
+    { path : "requestUserTeamId", select : "_id name sortName" },
+    { path : "matchEventId", select : "_id name sortName" },
+    { path : "matchId" },
+    { path : "matchOddsId" }
+  ]);
   return createdBet;
 };
+
 const responseBet = async (id: number, loggedInUserId: number, data: IresponseBetRequest) => {
   const Bet = await prisma.OneToOneBat.findUnique({
     where: {

@@ -15,8 +15,8 @@ const createBet = {
       "BASEBALL",
       "VOLLEYBALL"
     ).required(),
-    requestUserTeamId: Joi.number().required(),
-    matchId: Joi.number().required(),
+    requestUserTeamId: Joi.string().required(),
+    matchId: Joi.string().required(),
   })
 };
 const responseBet = {

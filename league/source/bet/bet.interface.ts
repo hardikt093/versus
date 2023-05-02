@@ -1,9 +1,10 @@
+import mongoose from "mongoose"
+
 export interface ICreateBetRequest {
     opponentUserId: number,
     amount: number,
-    type: BetType,
-    requestUserTeamId: number,
-    matchId: number,
+    requestUserTeamId:  string,
+    matchId: string,
     sportsType: sportsType
 }
 

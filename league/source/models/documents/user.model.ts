@@ -6,10 +6,10 @@ var userSchema = new Schema(
   },
   {
     timestamps: true,
-    toObject: { getters: true },
-    toJSON: { getters: true },
+    toObject: { virtuals: true },
+    toJSON: { virtuals: true },
   }
 );
-const Users = model<IUserModel>("user", userSchema);
+const Users = model("User", userSchema, "user");
 
 export default Users;
