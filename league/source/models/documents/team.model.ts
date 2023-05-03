@@ -24,6 +24,6 @@ var teamSchema = new Schema(
     toJSON: { virtuals: true },
   }
 );
-const Team = model<ITeamModel>("Team", teamSchema, "team");
+const Team = model<ITeamModel>("Team", teamSchema);
 
 export default Team;

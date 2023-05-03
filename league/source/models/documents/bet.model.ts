@@ -1,20 +1,17 @@
 import mongoose, { model, Schema } from "mongoose";
 import IBetModel from "../interfaces/bet.interface";
-var userSchema = new Schema(
+var BetSchema = new Schema(
   {
     matchId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'match',
+      ref: 'Match',
       required: true
     },
     requestUserId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'user',
-      required: true
+      type: Number
     },
     opponentUserId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'user',
+      type: Number
     },
     requestUserAmount: {
       type: Number
@@ -37,23 +34,23 @@ var userSchema = new Schema(
     },
     matchEventId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'matchEvent'
+      ref: 'MatchEvent'
     },
     requestUserTeamId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'team'
+      ref: 'Team'
     },
     opponentUserTeamId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'team'
+      ref: 'Team'
     },
     matchOddsId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'matchOdd'
+      ref: 'MatchOdd'
     },
     winTeamId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'team'
+      ref: 'Team'
     },
     isRequestUserWinAmount: {
       type: Boolean,
@@ -107,6 +104,6 @@ var userSchema = new Schema(
     toJSON: { virtuals: true },
   }
 );
-const Bet = model<IBetModel>("Bet", userSchema, "bet");
+const Bet = model<IBetModel>("Bet", BetSchema);
 
 export default Bet;

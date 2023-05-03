@@ -10,6 +10,6 @@ var userSchema = new Schema(
     toJSON: { virtuals: true },
   }
 );
-const Users = model("User", userSchema, "user");
+const Users = model<IUserModel>("User", userSchema);
 
 export default Users;

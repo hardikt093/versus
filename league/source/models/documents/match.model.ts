@@ -17,17 +17,17 @@ var matchSchema = new Schema(
     },
     matchEventId : {
       type : mongoose.Schema.Types.ObjectId,
-      ref : 'matchEvent',
+      ref : 'MatchEvent',
       required: true
     },
     localTeamId : {
       type : mongoose.Schema.Types.ObjectId,
-      ref : 'team',
+      ref : 'Team',
       required: true
     },
     awayTeamId : {
       type : mongoose.Schema.Types.ObjectId,
-      ref : 'team',
+      ref : 'Team',
       required: true
     },
     scheduleAt : {
@@ -41,6 +41,6 @@ var matchSchema = new Schema(
     toJSON: { virtuals: true },
   }
 );
-const Match = model<IMatchModel>("Match", matchSchema, "match");
+const Match = model<IMatchModel>("Match", matchSchema);
 
 export default Match;

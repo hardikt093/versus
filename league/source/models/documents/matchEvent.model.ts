@@ -24,6 +24,6 @@ var matchEventSchema = new Schema(
     toJSON: { virtuals: true },
   }
 );
-const MatchEvent = model<MatchEventModel>("MatchEvent", matchEventSchema, "matchEvent");
+const MatchEvent = model<MatchEventModel>("MatchEvent", matchEventSchema);
 
 export default MatchEvent;

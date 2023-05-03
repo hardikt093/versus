@@ -11,7 +11,7 @@ export interface ICreateBetRequest {
 export interface IresponseBetRequest {
     isAccepted: boolean,
     amount?: number,
-    teamId?: number
+    teamId?: string
 }
 
 enum BetType {

@@ -1,9 +1,10 @@
 import { Document } from "mongoose";
-export interface ITeamModel extends Document {
+export type TTeam = {
   name: String;
   shortName: String;
   sportsType : sportsType;
-}
+};
+export interface ITeamModel extends TTeam, Document {}
 enum sportsType {
   SOCCER,
   BASKET,

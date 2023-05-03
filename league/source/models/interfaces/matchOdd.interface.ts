@@ -1,13 +1,19 @@
 import mongoose, { Document } from "mongoose";
-import Match from "./match.interface";
-export interface IMatchOddModel extends Document {
+import MatchEvent from "./matchEvent.interface";
+import Match from './match.interface';
+import Team from './team.interface';
+import MatchOdd from './matchOdd.interface';
+
+export type TMatchOdd = {
   sportsType : sportsType;
-  matchId : mongoose.Schema.Types.ObjectId | string | any;
-  localTeamId : mongoose.Schema.Types.ObjectId |string;
-  awayTeamId : mongoose.Schema.Types.ObjectId | string;
-  localTeamOdd : number,
-  awayTeamOdd : number,
-}
+  matchId : Match["_id"] | Match ;
+  localTeamId : Team["_id"] | Team;
+  awayTeamId : Team["_id"] | Team;
+  localTeamOdd : number;
+  awayTeamOdd : number;
+};
+
+export interface IMatchOddModel extends TMatchOdd, Document {}
 enum sportsType {
   SOCCER,
   BASKET,

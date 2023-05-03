@@ -62,6 +62,7 @@ export const io = new Server(httpServer, {
 });
 
 mongoose.connect(config.mongoose.url).then((result: any) => {
+  require("./models/documents/index.model");
   logger.info(`Connected to MongoDB -${config.mongoose.url}`);
   httpServer.listen(PORT, () =>
     console.info(`The server is running on port ${PORT}`)

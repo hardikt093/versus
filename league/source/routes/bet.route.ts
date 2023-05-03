@@ -53,10 +53,4 @@ router.post(
   validate(BetValidation.responseToBatResultSatisfiedOrNot),
   BetController.resultBetVerified
 );
-
-router.post(
-  "/:id/complete",
-  auth,
-  BetController.completeBet
-);
 export default router;

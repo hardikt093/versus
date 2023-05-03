@@ -16,7 +16,7 @@ const createBet = async (req: Request, res: Response) => {
 };
 const responseBet = async (req: Request, res: Response) => {
   try {   
-    const resposnseBet = await BetService.responseBet(Number(req.params.id), req.loggedInUser.id, req.body);
+    const resposnseBet = await BetService.responseBet(req.params.id, req.loggedInUser.id, req.body);
     createResponse(res, httpStatus.OK, req.body.isAccepted ?  "Bet Accepted Successfully" : "Bet Rejected Successfully", resposnseBet);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -27,7 +27,7 @@ const requestListBet = async (req: Request, res: Response) => {
   try {
     const list = await BetService.requestListBetByUserId(req.loggedInUser.id);
     if (list && list.length < 1) {
-      return createResponse(res, httpStatus.NOT_FOUND, "NO bet requests found");
+      return createResponse(res, httpStatus.NOT_FOUND, "No bet requests found");
     }
     createResponse(res, httpStatus.OK, "My bet list", list);
   } catch (error: any) {
@@ -45,7 +45,7 @@ const listBetsByUserId = async (req: Request, res: Response) => {
 
 const resultBet = async (req: Request, res: Response) => {
   try {   
-    const data = await BetService.resultBet(Number(req.params.id), req.body.winTeamId);
+    const data = await BetService.resultBet(req.params.id, req.body.winTeamId);
     createResponse(res, httpStatus.OK, "bat result delcared", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -54,7 +54,7 @@ const resultBet = async (req: Request, res: Response) => {
 
 const getResultBet = async (req: Request, res: Response) => {
   try {   
-    const data = await BetService.getResultBet(req.loggedInUser.id ,Number(req.params.id));
+    const data = await BetService.getResultBet(req.loggedInUser.id ,req.params.id);
     createResponse(res, httpStatus.OK, data.win ? "Congrats! You Won this bet" : "Opps! You lose this bet", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -62,21 +62,13 @@ const getResultBet = async (req: Request, res: Response) => {
 };
 const resultBetVerified = async (req: Request, res: Response) => {
   try {   
-    const data = await BetService.resultBetVerified(req.loggedInUser.id ,Number(req.params.id), req.body.isSatisfied);
+    const data = await BetService.resultBetVerified(req.loggedInUser.id ,req.params.id, req.body.isSatisfied);
     createResponse(res, httpStatus.OK, req.body.isSatisfied ? "Thanks for satisfied with result" : "Result mark as not satisfied", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
 
-const completeBet = async (req: Request, res: Response) => {
-  try {   
-    const data = await BetService.completeResultBet(Number(req.params.id));
-    createResponse(res, httpStatus.OK, "Bat completed succesfully", data);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
 
 const listBetsByStatus = async (req: Request, res: Response) => {
   try {   
@@ -86,5 +78,5 @@ const listBetsByStatus = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-export default { createBet, listBetsByStatus, completeBet, resultBetVerified, getResultBet, resultBet, responseBet, requestListBet, listBetsByUserId };
+export default { createBet, listBetsByStatus, resultBetVerified, getResultBet, resultBet, responseBet, requestListBet, listBetsByUserId };
 

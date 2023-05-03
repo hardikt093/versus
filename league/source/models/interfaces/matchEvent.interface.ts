@@ -1,9 +1,11 @@
 import { Document } from "mongoose";
-export interface IMatchEventModel extends Document {
+
+export type TMatchEvent = {
   name: String;
   shortName: String;
   sportsType : sportsType;
-}
+};
+export interface IMatchEventModel extends TMatchEvent, Document {}
 enum sportsType {
   SOCCER,
   BASKET,

@@ -1,12 +1,18 @@
 import { Document, Schema } from "mongoose";
-import MatchEvent from './matchEvent.interface';
-export interface IMatchModel extends Document {
+import MatchEvent from "./matchEvent.interface";
+import Match from './match.interface';
+import Team from './team.interface';
+import MatchOdd from './matchOdd.interface';
+
+export type TMatch = {
   sportsType : sportsType;
-  matchEventId : Schema.Types.ObjectId | String;
-  localTeamId : Schema.Types.ObjectId | String;
-  awayTeamId : Schema.Types.ObjectId | String;
+  matchEventId : MatchEvent["_id"] | MatchEvent;
+  localTeamId : Team["_id"] | Team;
+  awayTeamId : Team["_id"] | Team;
   scheduleAt : Date;
-}
+};
+export interface IMatchModel extends TMatch, Document {}
+
 enum sportsType {
   SOCCER,
   BASKET,

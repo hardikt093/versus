@@ -1,5 +1,7 @@
 import { Document } from "mongoose";
-export interface IUserModel extends Document {
-  name: String;
-}
+
+export type TUser = {
+  name: string;
+};
+export interface IUserModel extends TUser, Document {}
 export default IUserModel;

@@ -21,7 +21,7 @@ const createBet = {
 };
 const responseBet = {
   params: Joi.object().keys({
-    id: Joi.number().required(),
+    id: Joi.string().required(),
   }),
   body: Joi.object().keys({
     isAccepted: Joi.boolean().required(),
@@ -29,16 +29,16 @@ const responseBet = {
       is: true,
       then: Joi.number().required()
     }),
-    teamId : Joi.number().when('isAccepted', {
+    teamId : Joi.string().when('isAccepted', {
       is: true,
-      then: Joi.number().required()
+      then: Joi.string().required()
     }),
   })
 };
 
 const responseToBatResultSatisfiedOrNot = {
   params: Joi.object().keys({
-    id: Joi.number().required(),
+    id: Joi.string().required(),
   }),
   body: Joi.object().keys({
     isSatisfied: Joi.boolean().required()
@@ -47,10 +47,10 @@ const responseToBatResultSatisfiedOrNot = {
 
 const resultBet = {
   params: Joi.object().keys({
-    id: Joi.number().required(),
+    id: Joi.string().required(),
   }),
   body: Joi.object().keys({
-    winTeamId: Joi.number().required()
+    winTeamId: Joi.string().required()
   })
 };
 

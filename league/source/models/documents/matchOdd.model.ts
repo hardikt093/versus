@@ -17,17 +17,17 @@ var matchOddSchema = new Schema(
     },
     matchId : {
       type : mongoose.Schema.Types.ObjectId,
-      ref : 'match',
+      ref : 'Match',
       required: true
     },
     localTeamId : {
       type : mongoose.Schema.Types.ObjectId,
-      ref : 'team',
+      ref : 'Team',
       required: true
     },
     awayTeamId : {
       type : mongoose.Schema.Types.ObjectId,
-      ref : 'team',
+      ref : 'Team',
       required: true
     },
     localTeamOdd : {
@@ -45,6 +45,6 @@ var matchOddSchema = new Schema(
     toJSON: { virtuals: true },
   }
 );
-const MatchOdd = model<MatchOddModel>("MatchOdd", matchOddSchema, "matchOdd");
+const MatchOdd = model<MatchOddModel>("MatchOdd", matchOddSchema);
 
 export default MatchOdd;
