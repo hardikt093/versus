@@ -5,6 +5,7 @@ import { goalserveApi } from "../services/goalserve.service";
 import socket from "../services/socket.service";
 import AppError from "../utils/AppError";
 import League from "../models/documents/league.model";
+import moment from "moment";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -138,13 +139,13 @@ const getUpcomingMatch = async () => {
               upcommingScore.push(upcommingScoreData);
               // return upcommingScore;
             }
-            console.log("upcommingScore", upcommingScore)
+            // console.log("upcommingScore", upcommingScore)
             return upcommingScore;
           }
         );
     // console.log('table data : ', takeData, upcommingScore);
     await Promise.all(takeData).then(async (item: any) => {
-      console.log("takeData------", item)
+      // console.log("takeData------", item)
         await socket("mlbUpcomingMatch", {
           upcommingScore
         });
@@ -181,14 +182,9 @@ const getWinLost = async () => {
 
 const getOdds = (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray.length; i++) {
-    // console.log('data Index : ', myArray[i].value, nameKey);
     if (myArray[i].value === nameKey) {
-      // console.log("in if", myArray[i])
-      // console.log('temp : ', myArray[i].value);
       return myArray[i];
     } else {
-      // console.log("in else", i, myArray[i])
-      // console.log('false : ', i);
       return;
     }
   }
@@ -363,6 +359,113 @@ const getLiveMatch = async () => {
   }
 }
 
+const mlbScoreWithDate = async (params: any) => {
+  let day = moment(params.date1).format("DD")
+  let month = moment(params.date1).format("MM")
+  let year = moment(params.date1).format("YYYY")
+  let date = `${day}.${month}.${year}`
+  console.log("date", date)
+  try {
+
+    const winlossArray = await getWinLost();
+    const getScore = await axiosGet(
+      "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
+      { json: true, date1: date }
+    );
+    var upcommingScore: any = [];
+    var getFinalMatch: any = [];
+    const takeData =
+      await getScore?.data?.fixtures?.category?.matches?.match.map(
+        async (item: any) => {
+          const getAwayTeamImage = await axiosGet(
+            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
+            { json: true }
+          );
+          const getHomeTeamImage = await axiosGet(
+            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
+            { json: true }
+          );
+          if (item.status === "Not Started") {
+            const findAwayTeamWinLose: any = await search(
+              item?.awayteam?.id,
+              winlossArray
+            );
+            const findHomeTeamWinLose: any = await search(
+              item?.hometeam?.id,
+              winlossArray
+            );
+            let upcommingScoreData = {
+              status: item.status,
+              id: item.id,
+              awayTeam: {
+                awayTeamName: item.awayteam.name,
+                awayTeamId: item.awayteam.id,
+                awayTeamScore: item.awayteam.totalscore,
+                teamImage: getAwayTeamImage.data.team.image,
+                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+              },
+              datetime_utc: item.datetime_utc,
+              homeTeam: {
+                homeTeamName: item.hometeam.name,
+                homeTeamId: item.hometeam.id,
+                homeTeamScore: item.hometeam.totalscore,
+                teamImage: getHomeTeamImage.data.team.image,
+                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+              },
+              time: item.time,
+            };
+            upcommingScore.push(upcommingScoreData);
+          } else if (item.status === "Final") {
+            const findAwayTeamWinLose: any = await search(
+              item?.awayteam?.id,
+              winlossArray
+            );
+            const findHomeTeamWinLose: any = await search(
+              item?.hometeam?.id,
+              winlossArray
+            );
+            let finalScoreData = {
+              status: item.status,
+              id: item.id,
+              awayTeam: {
+                awayTeamName: item.awayteam.name,
+                awayTeamId: item.awayteam.id,
+                teamImage: getAwayTeamImage.data.team.image,
+                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+                awayTeamRun: item.awayteam.totalscore,
+                awayTeamHit: item.awayteam.hits,
+                awayTeamErrors: item.awayteam.errors
+              },
+              datetime_utc: item.datetime_utc,
+              homeTeam: {
+                homeTeamName: item.hometeam.name,
+                homeTeamId: item.hometeam.id,
+                teamImage: getHomeTeamImage.data.team.image,
+                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+                homeTeamRun: item.hometeam.totalscore,
+                homeTeamHit: item.hometeam.hits,
+                homeTeamErrors: item.hometeam.errors
+              },
+              time: item.time,
+            };
+            getFinalMatch.push(finalScoreData);
+
+          }
+          return { upcommingScore, getFinalMatch };
+        }
+      );
+    return await Promise.all(takeData).then(async (item: any) => {
+      return { upcommingScore, getFinalMatch }
+    });
+  } catch (error: any) {
+    console.log("error in catch", error)
+    throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
+  }
+}
 
 
-export default { getMLBStandings, getUpcomingMatch, getWinLost, search, getOdds, getRunLine, getFinalMatch, getLiveMatch };
+export default { getMLBStandings, getUpcomingMatch, getWinLost, search, getOdds, getRunLine, getFinalMatch, getLiveMatch, mlbScoreWithDate };

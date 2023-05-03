@@ -12,6 +12,15 @@ const baseballStandings = async (req: Request, res: Response) => {
   }
 };
 
+const mlbScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    const mlbScoreWithDate = await goalserveService.mlbScoreWithDate(req.query);
+    createResponse(res, httpStatus.OK, "", mlbScoreWithDate);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
 export default {
-  baseballStandings,
+  baseballStandings, mlbScoreWithDate
 };
