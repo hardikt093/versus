@@ -4,6 +4,7 @@ import { axiosGet } from "../services/axios.service";
 import { goalserveApi } from "../services/goalserve.service";
 import socket from "../services/socket.service";
 import AppError from "../utils/AppError";
+import League from "../models/documents/league.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -73,7 +74,7 @@ const getUpcomingMatch = async () => {
     const winlossArray = await getWinLost();
     const getScore = await axiosGet(
       "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
-      { json: true, date1: "01.05.2023", date2: "02.05.2023", showodds: "1", bm: "455," }
+      { json: true, date1: "02.05.2023", date2: "03.05.2023", showodds: "1", bm: "455," }
     );
 
     // await Promise.all(winlossArray).then(async () => {
@@ -89,11 +90,10 @@ const getUpcomingMatch = async () => {
               `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
               { json: true }
             );
-
-
-
             if (item.status === "Not Started") {
-              // const getMoneyLine: any = getOdds('Home/Away', item?.odds?.type)
+              // console.log('item?.odds?.type : ', item?.odds?.type);
+              // const getMoneyLine: any = await getOdds('Home/Away', item?.odds?.type);
+              // console.log('data : ', getMoneyLine);
               // // const getTotal = await getOdds('Over/Under', item.odds.type)
               // const getSpread = await getOdds('Run Line', item?.odds?.type)
               // console.log(typeof getSpread)
@@ -114,7 +114,7 @@ const getUpcomingMatch = async () => {
                   awayTeamName: item.awayteam.name,
                   awayTeamId: item.awayteam.id,
                   awayTeamScore: item.awayteam.totalscore,
-                  teamImage: getAwayTeamImage.data.team.image,
+                  // teamImage: getAwayTeamImage.data.team.image,
                   won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
                   lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
                   // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "2") : "",
@@ -125,22 +125,26 @@ const getUpcomingMatch = async () => {
                   homeTeamName: item.hometeam.name,
                   homeTeamId: item.hometeam.id,
                   homeTeamScore: item.hometeam.totalscore,
-                  teamImage: getHomeTeamImage.data.team.image,
+                  // teamImage: getHomeTeamImage.data.team.image,
                   won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
                   lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
-                  // moneyline: getMoneyLine.bookmaker.odd.find((item: any) => item.name === "1"),
+                  // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "1") : {},
                   // spread: getHomeTeamRunLine ? getHomeTeamRunLine.name.split(' ').slice(-1)[0] : ""
                 },
                 // total: getTotal.bookmaker.odd,
                 time: item.time,
               };
+              // console.log("upcommingScoreData---", upcommingScoreData)
               upcommingScore.push(upcommingScoreData);
-
+              // return upcommingScore;
             }
-            return { upcommingScore };
+            console.log("upcommingScore", upcommingScore)
+            return upcommingScore;
           }
         );
+    // console.log('table data : ', takeData, upcommingScore);
     await Promise.all(takeData).then(async (item: any) => {
+      console.log("takeData------", item)
         await socket("mlbUpcomingMatch", {
           upcommingScore
         });
@@ -177,8 +181,15 @@ const getWinLost = async () => {
 
 const getOdds = (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray.length; i++) {
+    // console.log('data Index : ', myArray[i].value, nameKey);
     if (myArray[i].value === nameKey) {
+      // console.log("in if", myArray[i])
+      // console.log('temp : ', myArray[i].value);
       return myArray[i];
+    } else {
+      // console.log("in else", i, myArray[i])
+      // console.log('false : ', i);
+      return;
     }
   }
 
@@ -291,7 +302,7 @@ const getLiveMatch = async () => {
             `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
             { json: true }
           );
-          if (item.status !== "Not Started" && item.status !== "Final") {
+          if (item.status !== "Not Started" && item.status !== "Final" && item.status !== "Postponed") {
             const findAwayTeamWinLose: any = await search(
               item?.awayteam?.id,
               winlossArray
