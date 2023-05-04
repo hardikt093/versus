@@ -50,6 +50,14 @@ const betWinAmountCalculationUsingOdd = function (amount: number, odd: number) {
 //     matchId : match._id,
 //     localTeamId: localTeam._id,
 //     awayTeamId: awayTeam._id,
+//     localTeamOdd : 120,
+//     awayTeamOdd : -150,
+//     sportsType : "HOCKEY"
+//   });
+//   await MatchOdd.create({
+//     matchId : match._id,
+//     localTeamId: localTeam._id,
+//     awayTeamId: awayTeam._id,
 //     localTeamOdd : 230,
 //     awayTeamOdd : -160,
 //     sportsType : "HOCKEY"
@@ -109,7 +117,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   }
 
   let minumumBetAmount = 0;
-  if (data.requestUserTeamId === matchOddsData.localTeamId) {
+  if (data.requestUserTeamId == matchOddsData.localTeamId._id) {
     minumumBetAmount = matchOddsData.localTeamOdd > 0 ? matchOddsData.localTeamOdd : 0
   } else {
     minumumBetAmount = matchOddsData.awayTeamOdd > 0 ? matchOddsData.localTeamOdd : 0
@@ -147,7 +155,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     matchId: data.matchId,
     matchEventId: MatchEventId,
     matchOddsId: matchOddsData._id,
-    requestUserOdds: (matchOddsData.localTeamId === data.requestUserTeamId ? matchOddsData.localTeamOdd : matchOddsData.awayTeamOdd),
+    requestUserOdds: (matchOddsData.localTeamId._id == data.requestUserTeamId ? matchOddsData.localTeamOdd : matchOddsData.awayTeamOdd),
   };
   const createBet = await Bet.create(preparedBetObject);
 
@@ -202,7 +210,7 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
     }
     if (BetData.requestUserTeamId == data.teamId) {
       let minumumBetAmount = 0;
-      if (data.teamId === BetData.matchOddsId.localTeamId) {
+      if (data.teamId == BetData.matchOddsId.localTeamId) {
         minumumBetAmount = BetData.matchOddsId.localTeamOdd > 0 ? BetData.matchOddsId.localTeamOdd : 0
       } else {
         minumumBetAmount = BetData.matchOddsId.awayTeamOdd > 0 ? BetData.matchOddsId.awayTeamOdd : 0
@@ -303,7 +311,7 @@ const resultBet = async (id: string, winTeamId: string) => {
   let isOpponentUserWinAmount = false;
   let resultAmountRequestUser = 0 - BetData.requestUserAmount;
   let resultAmountOpponentUser = 0 - BetData.opponentUserAmount;
-  if (BetData.requestUserTeamId == BetData.opponentUserTeamId) {
+  if (BetData.requestUserTeamId.toHexString() ==  BetData.opponentUserTeamId.toHexString()) {
     if (BetData.requestUserTeamId == winTeamId) {
       isRequestUserWinAmount = true;
       resultAmountRequestUser = betWinAmountCalculationUsingOdd(BetData.requestUserAmount, BetData.requestUserOdds);
