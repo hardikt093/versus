@@ -75,7 +75,7 @@ const getUpcomingMatch = async () => {
     const winlossArray = await getWinLost();
     const getScore = await axiosGet(
       "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
-      { json: true, date1: "02.05.2023", date2: "04.05.2023", showodds: "1", bm: "455," }
+      { json: true, date1: "04.05.2023", showodds: "1", bm: "455," }
     );
       var upcommingScore: any = [];
       const takeData =
@@ -89,11 +89,11 @@ const getUpcomingMatch = async () => {
               `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
               { json: true }
             );
-            console.log(item.status, "Stsus");
-
             if (item.status === "Not Started") {
+              // console.log("item?.odds?.type", item?.odds?.type)
               const getMoneyLine: any = await getOdds('Home/Away', item?.odds?.type);
               const getSpread = await getOdds('Run Line', item?.odds?.type)
+
               const getAwayTeamRunLine = await getRunLine(item?.awayteam?.name, getSpread?.bookmaker?.odd)
               const getHomeTeamRunLine = await getRunLine(item?.hometeam?.name, getSpread?.bookmaker?.odd)
               const findAwayTeamWinLose: any = await search(
@@ -173,24 +173,44 @@ const getWinLost = async () => {
 };
 
 const getOdds = (nameKey: any, myArray: any) => {
-  // return myArray.find((ma: { value: any; }) => ma.value === nameKey)
   for (let i = 0; i < myArray?.length; i++) {
-    if (myArray[i].value === nameKey) {
+    if (myArray[i].value == nameKey) {
       return myArray[i];
-    } else {
-      return false;
     }
   }
 
 }
 
+// const getOddss = async (nameKey: any, myArray: any) => {
+//   console.log("namekey", nameKey, myArray)
+//   for (var i = 0; i < myArray?.length; i++) {
+//     console.log("myArray[i].value", i)
+//     if (myArray[i].value == nameKey) {
+//       console.log("here")
+//       return myArray[i];
+//     }
+//     // else {
+//     //   return false;
+//     // }
+//   }
+//   // return await myArray.array.forEach(element => {
+//   //   map
+//   // });((item: any) => {
+//   //   if (item?.value == nameKey) {
+//   //     return item
+//   //   } else { return }
+//   // })
+
+
+
+
+// }
+
 const getRunLine = async (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].name.split(" ").slice(0, -1).join(' ') == nameKey) {
       return myArray[i];
-    } else {
-      return false
-    }
+    } 
   }
 
 }
