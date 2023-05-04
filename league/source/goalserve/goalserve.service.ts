@@ -309,6 +309,7 @@ const getLiveMatch = async () => {
             );
             let liveScoreData = {
               status: item.status,
+              inningNo: item?.status?.split(" ").pop(),
               id: item.data,
               awayTeam: {
                 awayTeamName: item.awayteam.name,
