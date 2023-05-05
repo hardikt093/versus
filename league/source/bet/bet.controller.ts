@@ -7,7 +7,7 @@ import Messages from "../utils/messages";
 const createBet = async (req: Request, res: Response) => { 
   try {
     const createBet = await BetService.createBet(req.loggedInUser.id, req.body);
-    createResponse(res, httpStatus.OK, "Bet Created Sucessfully", createBet);
+    createResponse(res, httpStatus.OK, Messages.BET_REQUESTED, createBet);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -15,7 +15,7 @@ const createBet = async (req: Request, res: Response) => {
 const responseBet = async (req: Request, res: Response) => {
   try {   
     const resposnseBet = await BetService.responseBet(req.params.id, req.loggedInUser.id, req.body);
-    createResponse(res, httpStatus.OK, req.body.isAccepted ?  "Bet Accepted Successfully" : "Bet Rejected Successfully", resposnseBet);
+    createResponse(res, httpStatus.OK, req.body.isAccepted ?  Messages.BET_ACCEPTED : Messages.BET_REJECTED, resposnseBet);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -25,26 +25,19 @@ const requestListBet = async (req: Request, res: Response) => {
   try {
     const list = await BetService.requestListBetByUserId(req.loggedInUser.id);
     if (list && list.length < 1) {
-      return createResponse(res, httpStatus.NOT_FOUND, "No bet requests found");
+      return createResponse(res, httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
     }
-    createResponse(res, httpStatus.OK, "My bet list", list);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-const listBetsByUserId = async (req: Request, res: Response) => {
-  try {   
-    const list = await BetService.listBetsByUserId(1);
-    createResponse(res, httpStatus.OK, "Bet List", list);
+    createResponse(res, httpStatus.OK, Messages.BET_REQUEST_LIST, list);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
 
+
 const resultBet = async (req: Request, res: Response) => {
   try {   
     const data = await BetService.resultBet(req.params.id, req.body.winTeamId);
-    createResponse(res, httpStatus.OK, "bat result delcared", data);
+    createResponse(res, httpStatus.OK, Messages.BET_RESULT_DECLARED, data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -53,7 +46,7 @@ const resultBet = async (req: Request, res: Response) => {
 const getResultBet = async (req: Request, res: Response) => {
   try {   
     const data = await BetService.getResultBet(req.loggedInUser.id ,req.params.id);
-    createResponse(res, httpStatus.OK, data.win ? "Congrats! You Won this bet" : "Opps! You lose this bet", data);
+    createResponse(res, httpStatus.OK, data.win ? Messages.BET_WON : Messages.BET_LOSE, data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -61,7 +54,7 @@ const getResultBet = async (req: Request, res: Response) => {
 const resultBetVerified = async (req: Request, res: Response) => {
   try {   
     const data = await BetService.resultBetVerified(req.loggedInUser.id ,req.params.id, req.body.isSatisfied);
-    createResponse(res, httpStatus.OK, req.body.isSatisfied ? "Thanks for satisfied with result" : "Result mark as not satisfied", data);
+    createResponse(res, httpStatus.OK, req.body.isSatisfied ? Messages.BET_RESULT_SATISFIED : Messages.BET_RESULT_NOT_SATISFIED, data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -71,10 +64,10 @@ const resultBetVerified = async (req: Request, res: Response) => {
 const listBetsByStatus = async (req: Request, res: Response) => {
   try {   
     const data = await BetService.listBetsByStatus(req.loggedInUser.id, req.body.status);
-    createResponse(res, httpStatus.OK, "Bat data fetched succesfully", data);
+    createResponse(res, httpStatus.OK, Messages.BET_DATA_FOUND, data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-export default { createBet, listBetsByStatus, resultBetVerified, getResultBet, resultBet, responseBet, requestListBet, listBetsByUserId };
+export default { createBet, listBetsByStatus, resultBetVerified, getResultBet, resultBet, responseBet, requestListBet };
 

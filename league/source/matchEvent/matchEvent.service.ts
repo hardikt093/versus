@@ -1,6 +1,3 @@
-
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 import { IinputeventListBySports } from "./matchEvent.interface";
 import MatchEvent from "../models/documents/matchEvent.model";
 const eventListBySports = async (data: IinputeventListBySports) => {

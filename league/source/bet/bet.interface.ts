@@ -1,5 +1,3 @@
-import mongoose from "mongoose"
-
 export interface ICreateBetRequest {
     opponentUserId: number,
     amount: number,
@@ -12,11 +10,6 @@ export interface IresponseBetRequest {
     isAccepted: boolean,
     amount?: number,
     teamId?: string
-}
-
-enum BetType {
-    TEAM,
-    PLAYERS
 }
 
 enum sportsType {

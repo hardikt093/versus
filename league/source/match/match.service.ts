@@ -1,10 +1,3 @@
-import httpStatus from "http-status";
-import bcrypt from "bcryptjs";
-import { randomUUID } from "crypto";
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-import AppError from "../utils/AppError";
-import Messages from "./../utils/messages";
 import Match from "../models/documents/match.model";
 import { IinputmatchListBySportsAndEvent } from "./match.interface";
 import mongoose from "mongoose";

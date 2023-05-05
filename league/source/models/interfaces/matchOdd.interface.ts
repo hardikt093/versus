@@ -1,8 +1,6 @@
-import mongoose, { Document } from "mongoose";
-import MatchEvent from "./matchEvent.interface";
+import { Document } from "mongoose";
 import Match from './match.interface';
 import Team from './team.interface';
-import MatchOdd from './matchOdd.interface';
 
 export type TMatchOdd = {
   sportsType : sportsType;

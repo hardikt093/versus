@@ -4,6 +4,7 @@ import httpStatus from "http-status";
 import { pick } from "lodash";
 
 import AppError from "./../utils/AppError";
+import createResponse from "../utils/response";
 
 const validate =
   (schema: object | Array<object>) =>
@@ -13,12 +14,9 @@ const validate =
     const { value, error } = Joi.compile(validSchema)
       .prefs({ errors: { label: "key" } })
       .validate(object);
-
     if (error) {
-      const errorMessage = error.details
-        .map((details) => details.message)
-        .join(", ");
-      return next(new AppError(httpStatus.BAD_REQUEST, errorMessage));
+      const errorMessage = error.details.map((details) => details.message).join(", ");
+        return createResponse(res, httpStatus.BAD_REQUEST, errorMessage, {});
     }
     Object.assign(req, value);
     return next();

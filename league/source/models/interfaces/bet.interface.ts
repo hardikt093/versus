@@ -1,4 +1,4 @@
-import mongoose, { Document } from "mongoose";
+import { Document } from "mongoose";
 import MatchEvent from "./matchEvent.interface";
 import Match from './match.interface';
 import Team from './team.interface';
