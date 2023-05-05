@@ -217,8 +217,6 @@ const sendInvite = async (req: Request, res: Response) => {
     const sendInvite = await authService.sendInvite(req.body);
     createResponse(res, httpStatus.OK, "invite send successfully", true);
   } catch (error) {
-    console.log(error);
-
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
 };

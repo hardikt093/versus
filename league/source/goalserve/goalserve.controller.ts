@@ -21,6 +21,15 @@ const mlbScoreWithDate = async (req: Request, res: Response) => {
   }
 }
 
+const scoreWithCurrentDate = async (req: Request, res: Response) => {
+  try {
+    const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate();
+    createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
 export default {
-  baseballStandings, mlbScoreWithDate
+  baseballStandings, mlbScoreWithDate, scoreWithCurrentDate
 };

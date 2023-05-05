@@ -71,13 +71,17 @@ const getMLBStandings = async () => {
 };
 
 const getUpcomingMatch = async () => {
+  let day = moment().format("DD")
+  let month = moment().format("MM")
+  let year = moment().format("YYYY")
+  let date = `${day}.${month}.${year}`
   try {
     const winlossArray = await getWinLost();
     const getScore = await axiosGet(
       "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
-      { json: true, date1: "04.05.2023", showodds: "1", bm: "455," }
+      { json: true, date1: date, showodds: "1", bm: "455," }
     );
-      var upcommingScore: any = [];
+    var getUpcomingMatch: any = [];
       const takeData =
         await getScore?.data?.fixtures?.category?.matches?.match.map(
           async (item: any) => {
@@ -90,7 +94,6 @@ const getUpcomingMatch = async () => {
               { json: true }
             );
             if (item.status === "Not Started") {
-              // console.log("item?.odds?.type", item?.odds?.type)
               const getMoneyLine: any = await getOdds('Home/Away', item?.odds?.type);
               const getSpread = await getOdds('Run Line', item?.odds?.type)
 
@@ -131,16 +134,16 @@ const getUpcomingMatch = async () => {
                 // total: getTotal.bookmaker.odd,
                 time: item.time,
               };
-              upcommingScore.push(upcommingScoreData);
+              getUpcomingMatch.push(upcommingScoreData);
             }
-            return upcommingScore;
+            return getUpcomingMatch;
           }
         );
-
-    await Promise.all(takeData).then(async (item: any) => {
+    return await Promise.all(takeData).then(async (item: any) => {
         await socket("mlbUpcomingMatch", {
-          upcommingScore
+          getUpcomingMatch
         });
+      return getUpcomingMatch
       });
 
   } catch (error) {
@@ -180,31 +183,6 @@ const getOdds = (nameKey: any, myArray: any) => {
   }
 
 }
-
-// const getOddss = async (nameKey: any, myArray: any) => {
-//   console.log("namekey", nameKey, myArray)
-//   for (var i = 0; i < myArray?.length; i++) {
-//     console.log("myArray[i].value", i)
-//     if (myArray[i].value == nameKey) {
-//       console.log("here")
-//       return myArray[i];
-//     }
-//     // else {
-//     //   return false;
-//     // }
-//   }
-//   // return await myArray.array.forEach(element => {
-//   //   map
-//   // });((item: any) => {
-//   //   if (item?.value == nameKey) {
-//   //     return item
-//   //   } else { return }
-//   // })
-
-
-
-
-// }
 
 const getRunLine = async (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
@@ -284,10 +262,11 @@ const getFinalMatch = async () => {
           return { getFinalMatch };
         }
       );
-    await Promise.all(takeData).then(async (item: any) => {
+    return await Promise.all(takeData).then(async (item: any) => {
       await socket("mlbFinalMatch", {
         getFinalMatch
       });
+      return getFinalMatch
     });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
@@ -365,10 +344,11 @@ const getLiveMatch = async () => {
           return { getLiveMatch };
         }
       );
-    await Promise.all(takeData).then(async (item: any) => {
+    return await Promise.all(takeData).then(async (item: any) => {
       await socket("mlbLiveMatch", {
         getLiveMatch
       });
+      return getLiveMatch
     });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
@@ -380,7 +360,6 @@ const mlbScoreWithDate = async (params: any) => {
   let month = moment(params.date1).format("MM")
   let year = moment(params.date1).format("YYYY")
   let date = `${day}.${month}.${year}`
-  console.log("date", date)
   try {
 
     const winlossArray = await getWinLost();
@@ -478,10 +457,22 @@ const mlbScoreWithDate = async (params: any) => {
       return { upcommingScore, getFinalMatch }
     });
   } catch (error: any) {
-    console.log("error in catch", error)
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
 }
 
+const scoreWithCurrentDate = async () => {
 
-export default { getMLBStandings, getUpcomingMatch, getWinLost, search, getOdds, getRunLine, getFinalMatch, getLiveMatch, mlbScoreWithDate };
+  return {
+    getLiveMatch: await getLiveMatch(),
+    getUpcomingMatch: await getUpcomingMatch(),
+    getFinalMatch: await getFinalMatch()
+
+  }
+}
+
+export default {
+  getMLBStandings, getUpcomingMatch,
+  getWinLost, search, getOdds, getRunLine, getFinalMatch,
+  getLiveMatch, mlbScoreWithDate, scoreWithCurrentDate
+};

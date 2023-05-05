@@ -27,4 +27,5 @@ const router = express.Router();
  */
 router.get("/standings", auth, goalserveController.baseballStandings);
 router.get("/scoreWithDate", auth, goalserveController.mlbScoreWithDate);
+router.get("/scoreWithCurrentDate", auth, goalserveController.scoreWithCurrentDate);
 export default router;

@@ -57,7 +57,6 @@ const axiosPostMicro = async (
   token: ""
 ) => {
   try {
-    console.log(data);
     let request = await axios.post(`${url}`, data, getHeaders(token));
     return request;
   } catch (error: any) {

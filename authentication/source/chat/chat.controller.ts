@@ -21,7 +21,6 @@ const getContacts = async (req: Request, res: Response) => {
 };
 
 const createContact = async (req: Request, res: Response) => {
-  console.log(req.body);
   try {
     let token: any = req.header("Authorization");
     const createContact = await axiosPostMicro(
