@@ -9,8 +9,6 @@ const createBet = async (req: Request, res: Response) => {
     const createBet = await BetService.createBet(req.loggedInUser.id, req.body);
     createResponse(res, httpStatus.OK, "Bet Created Sucessfully", createBet);
   } catch (error: any) {
-    console.log(error);
-    
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };

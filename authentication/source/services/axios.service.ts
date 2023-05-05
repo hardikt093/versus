@@ -61,8 +61,6 @@ const axiosPost = async (payload = {}, url: string, redirect_uri = "") => {
     );
     return request;
   } catch (error: any) {
-    console.log("error", error);
-
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
   }
 };
@@ -76,7 +74,6 @@ const axiosPostMicro = async (
     let request = await axios.post(`${url}`, data, getHeaders(token));
     return request;
   } catch (error: any) {
-    console.log(error.response.data)
     throw new AppError(error.response.data.status ?? httpStatus.UNPROCESSABLE_ENTITY,
       error.response.data.message ?? error.message,
      error.response.data.data ?? {});
