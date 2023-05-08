@@ -24,15 +24,15 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       Messages.SELECT_DIFFERENT_OPPONENT_USER
     );
   }
-  const betFound = await Bet.find({
+  const betFound = await Bet.findOne({
     $or: [
       { requestUserId: loggedInUserId },
       { opponentUserId: loggedInUserId },
     ],
     matchId: data.matchId,
-  });
+  }).lean();
 
-  if (betFound && betFound.length > 0) {
+  if ( betFound ) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.ALREADY_APPLIED_ON_MATCH
@@ -84,17 +84,17 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
 
-  let minumumBetAmount = 0;
+  let minimumBetAmount = 0;
   if (data.requestUserTeamId == matchOddsData.localTeamId._id) {
-    minumumBetAmount = matchOddsData.localTeamOdd > 0 ? matchOddsData.localTeamOdd : 0
+    minimumBetAmount = matchOddsData.localTeamOdd > 0 ? matchOddsData.localTeamOdd : 0
   } else {
-    minumumBetAmount = matchOddsData.awayTeamOdd > 0 ? matchOddsData.localTeamOdd : 0
+    minimumBetAmount = matchOddsData.awayTeamOdd > 0 ? matchOddsData.localTeamOdd : 0
   }
 
-  if (data.amount <= minumumBetAmount) {
+  if (data.amount <= minimumBetAmount) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.AMOUNT_GREATER_THAN + minumumBetAmount
+      Messages.AMOUNT_GREATER_THAN + minimumBetAmount
     );
   }
 
@@ -160,16 +160,16 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
       );
     }
     if (BetData.requestUserTeamId == data.teamId) {
-      let minumumBetAmount = 0;
+      let minimumBetAmount = 0;
       if (data.teamId == BetData.matchOddsId.localTeamId) {
-        minumumBetAmount = BetData.matchOddsId.localTeamOdd > 0 ? BetData.matchOddsId.localTeamOdd : 0
+        minimumBetAmount = BetData.matchOddsId.localTeamOdd > 0 ? BetData.matchOddsId.localTeamOdd : 0
       } else {
-        minumumBetAmount = BetData.matchOddsId.awayTeamOdd > 0 ? BetData.matchOddsId.awayTeamOdd : 0
+        minimumBetAmount = BetData.matchOddsId.awayTeamOdd > 0 ? BetData.matchOddsId.awayTeamOdd : 0
       }
-      if (data.amount < minumumBetAmount || data.amount < 0) {
+      if (data.amount < minimumBetAmount || data.amount < 0) {
         throw new AppError(
           httpStatus.UNPROCESSABLE_ENTITY,
-          Messages.AMOUNT_GREATER_THAN + minumumBetAmount
+          Messages.AMOUNT_GREATER_THAN + minimumBetAmount
         );
       }
     } else {
@@ -287,7 +287,6 @@ const getResultBet = async (loggedInUserId: number, betId: string) => {
   const BetData = await Bet.findOne({
     _id: betId
   }).populate("requestUserTeamId opponentUserTeamId matchEventId matchId").lean();
-
   if (BetData && BetData.opponentUserId == loggedInUserId) {
     if (BetData.isOpponentUserWinAmount) {
       return {
