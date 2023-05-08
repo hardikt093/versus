@@ -6,6 +6,7 @@ import socket from "../services/socket.service";
 import AppError from "../utils/AppError";
 import League from "../models/documents/league.model";
 import moment from "moment";
+import { isArray } from "lodash";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -96,6 +97,9 @@ const getUpcomingMatch = async () => {
             if (item.status === "Not Started") {
               const getMoneyLine: any = await getOdds('Home/Away', item?.odds?.type);
               const getSpread = await getOdds('Run Line', item?.odds?.type)
+              const total = await getTotal('Over/Under', item?.odds?.type)
+              const totalValues = await getTotalValues(total)
+
 
               const getAwayTeamRunLine = await getRunLine(item?.awayteam?.name, getSpread?.bookmaker?.odd)
               const getHomeTeamRunLine = await getRunLine(item?.hometeam?.name, getSpread?.bookmaker?.odd)
@@ -118,7 +122,8 @@ const getUpcomingMatch = async () => {
                   won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
                   lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
                   moneyline: getMoneyLine ? (getMoneyLine?.bookmaker?.odd?.find((item: any) => item?.name === "2")) : "",
-                  spread: getAwayTeamRunLine ? getAwayTeamRunLine?.name?.split(' ').slice(-1)[0] : ""
+                  spread: getAwayTeamRunLine ? getAwayTeamRunLine?.name?.split(' ').slice(-1)[0] : "",
+                  total: totalValues
                 },
                 datetime_utc: item.datetime_utc,
                 homeTeam: {
@@ -129,9 +134,9 @@ const getUpcomingMatch = async () => {
                   won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
                   lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
                   moneyline: getMoneyLine ? getMoneyLine?.bookmaker?.odd?.find((item: any) => item?.name === "1") : {},
-                  spread: getHomeTeamRunLine ? getHomeTeamRunLine?.name?.split(' ').slice(-1)[0] : ""
+                  spread: getHomeTeamRunLine ? getHomeTeamRunLine?.name?.split(' ').slice(-1)[0] : "",
+                  total: totalValues
                 },
-                // total: getTotal.bookmaker.odd,
                 time: item.time,
               };
               getUpcomingMatch.push(upcommingScoreData);
@@ -181,6 +186,30 @@ const getOdds = (nameKey: any, myArray: any) => {
       return myArray[i];
     }
   }
+
+}
+const getTotal = (nameKey: any, myArray: any) => {
+  if (myArray.length > 0) {
+    for (let i = 0; i < myArray?.length; i++) {
+      if (myArray[i].value == nameKey) {
+        return myArray[i];
+      }
+    }
+  }
+}
+
+const getTotalValues = async (total: any) => {
+  if (total.bookmaker) {
+    if (isArray(total?.bookmaker?.total)) {
+      return total?.bookmaker?.total[0]?.name ? total?.bookmaker?.total[0]?.name : "_"
+    } else {
+      return total?.bookmaker?.total?.name ?
+        total?.bookmaker?.total?.name : "-"
+    }
+  } else {
+    return "-"
+  }
+
 
 }
 
