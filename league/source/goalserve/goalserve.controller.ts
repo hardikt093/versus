@@ -122,7 +122,7 @@ const deleteTeam = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-const getAllTeam= async (req: Request, res: Response) => {
+const getAllTeam = async (req: Request, res: Response) => {
   try {
     const getAllTeam = await goalserveService.getAllTeam();
     createResponse(res, httpStatus.OK, "", getAllTeam);
@@ -131,7 +131,7 @@ const getAllTeam= async (req: Request, res: Response) => {
   }
 };
 
-const getAllDivison= async (req: Request, res: Response) => {
+const getAllDivison = async (req: Request, res: Response) => {
   try {
     const getAllDivison = await goalserveService.getAllDivison();
     createResponse(res, httpStatus.OK, "", getAllDivison);
@@ -151,7 +151,10 @@ const deleteDivision = async (req: Request, res: Response) => {
 
 const updateDivison = async (req: Request, res: Response) => {
   try {
-    const updateDivison = await goalserveService.updateDivison(req.params, req.body);
+    const updateDivison = await goalserveService.updateDivison(
+      req.params,
+      req.body
+    );
     createResponse(res, httpStatus.OK, "", updateDivison);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -165,6 +168,15 @@ const createDivison = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const scoreWithCurrentDate = async (req: Request, res: Response) => {
+  try {
+    const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate();
+    createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -183,6 +195,6 @@ export default {
   createDivison,
   updateDivison,
   deleteDivision,
-  getAllDivison
-
+  getAllDivison,
+  scoreWithCurrentDate,
 };

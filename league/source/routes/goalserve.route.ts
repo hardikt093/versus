@@ -106,7 +106,7 @@ router.get("/player", auth, goalserveController.getAllPlayer);
 router.post(
   "/player",
   auth,
-  validate(goalserveValidation.createPlayer),
+  // validate(goalserveValidation.createPlayer),
   goalserveController.createPlayer
 );
 router.put(
@@ -169,4 +169,5 @@ router.delete(
   auth,
   goalserveController.deleteDivision
 );
+router.get("/scoreWithCurrentDate", auth, goalserveController.scoreWithCurrentDate);
 export default router;

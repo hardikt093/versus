@@ -34,4 +34,18 @@ const mlbScoreWithDate = async (req: Request, res: Response) => {
   }
 }
 
-export default { standings, mlbScoreWithDate };
+const scoreWithCurrentDate = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const scoreWithCurrentDate = await axiosGet(
+      `${config.leagueServer}/mlb/scoreWithCurrentDate`,
+      {},
+      token
+    );
+    createResponse(res, httpStatus.OK, "", scoreWithCurrentDate.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+}
+
+export default { standings, mlbScoreWithDate, scoreWithCurrentDate };

@@ -9,6 +9,7 @@ import moment from "moment";
 import Player from "../models/documents/player.model";
 import Team from "../models/documents/team.model";
 import Division from "../models/documents/division.model";
+import { isArray } from "lodash";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -74,21 +75,17 @@ const getMLBStandings = async () => {
 };
 
 const getUpcomingMatch = async () => {
+  let day = moment().format("DD");
+  let month = moment().format("MM");
+  let year = moment().format("YYYY");
+  let date = `${day}.${month}.${year}`;
   try {
     const winlossArray = await getWinLost();
     const getScore = await axiosGet(
       "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
-      {
-        json: true,
-        date1: "02.05.2023",
-        date2: "03.05.2023",
-        showodds: "1",
-        bm: "455,",
-      }
+      { json: true, date1: date, showodds: "1", bm: "455," }
     );
-
-    // await Promise.all(winlossArray).then(async () => {
-    var upcommingScore: any = [];
+    var getUpcomingMatch: any = [];
     const takeData =
       await getScore?.data?.fixtures?.category?.matches?.match.map(
         async (item: any) => {
@@ -101,14 +98,22 @@ const getUpcomingMatch = async () => {
             { json: true }
           );
           if (item.status === "Not Started") {
-            // console.log('item?.odds?.type : ', item?.odds?.type);
-            // const getMoneyLine: any = await getOdds('Home/Away', item?.odds?.type);
-            // console.log('data : ', getMoneyLine);
-            // // const getTotal = await getOdds('Over/Under', item.odds.type)
-            // const getSpread = await getOdds('Run Line', item?.odds?.type)
-            // console.log(typeof getSpread)
-            // const getAwayTeamRunLine = await getRunLine(item.awayteam.name, getSpread.bookmaker.odd)
-            // const getHomeTeamRunLine = await getRunLine(item.hometeam.name, getSpread.bookmaker.odd)
+            const getMoneyLine: any = await getOdds(
+              "Home/Away",
+              item?.odds?.type
+            );
+            const getSpread = await getOdds("Run Line", item?.odds?.type);
+            const total = await getTotal("Over/Under", item?.odds?.type);
+            const totalValues = await getTotalValues(total);
+
+            const getAwayTeamRunLine = await getRunLine(
+              item?.awayteam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const getHomeTeamRunLine = await getRunLine(
+              item?.hometeam?.name,
+              getSpread?.bookmaker?.odd
+            );
             const findAwayTeamWinLose: any = await search(
               item?.awayteam?.id,
               winlossArray
@@ -124,42 +129,50 @@ const getUpcomingMatch = async () => {
                 awayTeamName: item.awayteam.name,
                 awayTeamId: item.awayteam.id,
                 awayTeamScore: item.awayteam.totalscore,
-                // teamImage: getAwayTeamImage.data.team.image,
+                teamImage: getAwayTeamImage.data.team.image,
                 won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
                 lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
-                // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "2") : "",
-                // spread: getAwayTeamRunLine ? getAwayTeamRunLine.name.split(' ').slice(-1)[0] : ""
+                moneyline: getMoneyLine
+                  ? getMoneyLine?.bookmaker?.odd?.find(
+                      (item: any) => item?.name === "2"
+                    )
+                  : "",
+                spread: getAwayTeamRunLine
+                  ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+                  : "",
+                total: totalValues,
               },
               datetime_utc: item.datetime_utc,
               homeTeam: {
                 homeTeamName: item.hometeam.name,
                 homeTeamId: item.hometeam.id,
                 homeTeamScore: item.hometeam.totalscore,
-                // teamImage: getHomeTeamImage.data.team.image,
+                teamImage: getHomeTeamImage.data.team.image,
                 won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
                 lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
-                // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "1") : {},
-                // spread: getHomeTeamRunLine ? getHomeTeamRunLine.name.split(' ').slice(-1)[0] : ""
+                moneyline: getMoneyLine
+                  ? getMoneyLine?.bookmaker?.odd?.find(
+                      (item: any) => item?.name === "1"
+                    )
+                  : {},
+                spread: getHomeTeamRunLine
+                  ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+                  : "",
+                total: totalValues,
               },
-              // total: getTotal.bookmaker.odd,
               time: item.time,
             };
-            // console.log("upcommingScoreData---", upcommingScoreData)
-            upcommingScore.push(upcommingScoreData);
-            // return upcommingScore;
+            getUpcomingMatch.push(upcommingScoreData);
           }
-          // console.log("upcommingScore", upcommingScore)
-          return upcommingScore;
+          return getUpcomingMatch;
         }
       );
-    // console.log('table data : ', takeData, upcommingScore);
-    await Promise.all(takeData).then(async (item: any) => {
-      // console.log("takeData------", item)
+    return await Promise.all(takeData).then(async (item: any) => {
       await socket("mlbUpcomingMatch", {
-        upcommingScore,
+        getUpcomingMatch,
       });
+      return getUpcomingMatch;
     });
-    // });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
@@ -190,26 +203,48 @@ const getWinLost = async () => {
 };
 
 const getOdds = (nameKey: any, myArray: any) => {
-  for (let i = 0; i < myArray.length; i++) {
-    if (myArray[i].value === nameKey) {
+  for (let i = 0; i < myArray?.length; i++) {
+    if (myArray[i].value == nameKey) {
       return myArray[i];
-    } else {
-      return;
     }
+  }
+};
+const getTotal = (nameKey: any, myArray: any) => {
+  if (myArray.length > 0) {
+    for (let i = 0; i < myArray?.length; i++) {
+      if (myArray[i].value == nameKey) {
+        return myArray[i];
+      }
+    }
+  }
+};
+
+const getTotalValues = async (total: any) => {
+  if (total.bookmaker) {
+    if (isArray(total?.bookmaker?.total)) {
+      return total?.bookmaker?.total[0]?.name
+        ? total?.bookmaker?.total[0]?.name
+        : "_";
+    } else {
+      return total?.bookmaker?.total?.name
+        ? total?.bookmaker?.total?.name
+        : "-";
+    }
+  } else {
+    return "-";
   }
 };
 
 const getRunLine = async (nameKey: any, myArray: any) => {
-  for (let i = 0; i < myArray.length; i++) {
+  for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].name.split(" ").slice(0, -1).join(" ") == nameKey) {
       return myArray[i];
     }
   }
-  return;
 };
 
 const search = async (nameKey: any, myArray: any) => {
-  for (let i = 0; i < myArray.length; i++) {
+  for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].id === nameKey) {
       return myArray[i];
     }
@@ -272,13 +307,13 @@ const getFinalMatch = async () => {
           };
           getFinalMatch.push(upcommingScoreData);
         }
-        return { getFinalMatch };
       }
     );
-    await Promise.all(takeData).then(async (item: any) => {
+    return await Promise.all(takeData).then(async (item: any) => {
       await socket("mlbFinalMatch", {
         getFinalMatch,
       });
+      return getFinalMatch;
     });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
@@ -316,51 +351,67 @@ const getLiveMatch = async () => {
             item?.hometeam?.id,
             winlossArray
           );
-          let liveScoreData = {
-            status: item.status,
-            id: item.data,
-            awayTeam: {
-              awayTeamName: item.awayteam.name,
-              awayTeamId: item.awayteam.id,
-              awayTeamInnings: item.awayteam.innings,
-              awayTeamScore: item.awayteam.totalscore,
-              teamImage: getAwayTeamImage.data.team.image,
-              won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
-              lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
-              awayTeamRun: item.awayteam.totalscore,
-              awayTeamHit: item.awayteam.hits,
-              awayTeamErrors: item.awayteam.errors,
-            },
-            date: item.date,
-            datetime_utc: item.datetime_utc,
-            events: item.events,
-            formatted_date: item.formatted_date,
-            homeTeam: {
-              homeTeamName: item.hometeam.name,
-              homeTeamId: item.hometeam.id,
-              homeTeamInnings: item.hometeam.innings,
-              homeTeamScore: item.hometeam.totalscore,
-              teamImage: getHomeTeamImage.data.team.image,
-              won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
-              lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
-              homeTeamRun: item.hometeam.totalscore,
-              homeTeamHit: item.hometeam.hits,
-              homeTeamErrors: item.hometeam.errors,
-            },
-            oddsid: item.oddsid,
-            time: item.time,
-            timezone: item.timezone,
-            out: item.outs,
-          };
-          getLiveMatch.push(liveScoreData);
+          if (
+            item.status !== "Not Started" &&
+            item.status !== "Final" &&
+            item.status !== "Postponed"
+          ) {
+            const findAwayTeamWinLose: any = await search(
+              item?.awayteam?.id,
+              winlossArray
+            );
+            const findHomeTeamWinLose: any = await search(
+              item?.hometeam?.id,
+              winlossArray
+            );
+            let liveScoreData = {
+              status: item.status,
+              inningNo: item?.status?.split(" ").pop(),
+              id: item.data,
+              awayTeam: {
+                awayTeamName: item.awayteam.name,
+                awayTeamId: item.awayteam.id,
+                awayTeamInnings: item.awayteam.innings,
+                awayTeamScore: item.awayteam.totalscore,
+                teamImage: getAwayTeamImage.data.team.image,
+                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+                awayTeamRun: item.awayteam.totalscore,
+                awayTeamHit: item.awayteam.hits,
+                awayTeamErrors: item.awayteam.errors,
+              },
+              date: item.date,
+              datetime_utc: item.datetime_utc,
+              events: item.events,
+              formatted_date: item.formatted_date,
+              homeTeam: {
+                homeTeamName: item.hometeam.name,
+                homeTeamId: item.hometeam.id,
+                homeTeamInnings: item.hometeam.innings,
+                homeTeamScore: item.hometeam.totalscore,
+                teamImage: getHomeTeamImage.data.team.image,
+                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+                homeTeamRun: item.hometeam.totalscore,
+                homeTeamHit: item.hometeam.hits,
+                homeTeamErrors: item.hometeam.errors,
+              },
+              oddsid: item.oddsid,
+              time: item.time,
+              timezone: item.timezone,
+              out: item.outs,
+            };
+            getLiveMatch.push(liveScoreData);
+          }
+          return { getLiveMatch };
         }
-        return { getLiveMatch };
       }
     );
-    await Promise.all(takeData).then(async (item: any) => {
+    return await Promise.all(takeData).then(async (item: any) => {
       await socket("mlbLiveMatch", {
         getLiveMatch,
       });
+      return getLiveMatch;
     });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
@@ -372,7 +423,6 @@ const mlbScoreWithDate = async (params: any) => {
   let month = moment(params.date1).format("MM");
   let year = moment(params.date1).format("YYYY");
   let date = `${day}.${month}.${year}`;
-  console.log("date", date);
   try {
     const winlossArray = await getWinLost();
     const getScore = await axiosGet(
@@ -468,7 +518,6 @@ const mlbScoreWithDate = async (params: any) => {
       return { upcommingScore, getFinalMatch };
     });
   } catch (error: any) {
-    console.log("error in catch", error);
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
 };
@@ -565,7 +614,9 @@ const deleteTeam = async (param: any) => {
 };
 
 const getAllTeam = async () => {
-  const team = await Team.find({ isDeleted: false }).populate("divisionId leagueId");
+  const team = await Team.find({ isDeleted: false }).populate(
+    "divisionId leagueId"
+  );
   return team;
 };
 
@@ -598,7 +649,13 @@ const createDivison = async (body: any) => {
   const dataToSave = await data.save();
   return dataToSave;
 };
-
+const scoreWithCurrentDate = async () => {
+  return {
+    getLiveMatch: await getLiveMatch(),
+    getUpcomingMatch: await getUpcomingMatch(),
+    getFinalMatch: await getFinalMatch(),
+  };
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -625,4 +682,5 @@ export default {
   deleteDivision,
   updateDivison,
   createDivison,
+  scoreWithCurrentDate,
 };
