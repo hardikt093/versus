@@ -6,6 +6,9 @@ import socket from "../services/socket.service";
 import AppError from "../utils/AppError";
 import League from "../models/documents/league.model";
 import moment from "moment";
+import Player from "../models/documents/player.model";
+import Team from "../models/documents/team.model";
+import Division from "../models/documents/division.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -75,81 +78,87 @@ const getUpcomingMatch = async () => {
     const winlossArray = await getWinLost();
     const getScore = await axiosGet(
       "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
-      { json: true, date1: "02.05.2023", date2: "03.05.2023", showodds: "1", bm: "455," }
+      {
+        json: true,
+        date1: "02.05.2023",
+        date2: "03.05.2023",
+        showodds: "1",
+        bm: "455,",
+      }
     );
 
     // await Promise.all(winlossArray).then(async () => {
-      var upcommingScore: any = [];
-      const takeData =
-        await getScore?.data?.fixtures?.category?.matches?.match.map(
-          async (item: any) => {
-            const getAwayTeamImage = await axiosGet(
-              `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
-              { json: true }
-            );
-            const getHomeTeamImage = await axiosGet(
-              `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
-              { json: true }
-            );
-            if (item.status === "Not Started") {
-              // console.log('item?.odds?.type : ', item?.odds?.type);
-              // const getMoneyLine: any = await getOdds('Home/Away', item?.odds?.type);
-              // console.log('data : ', getMoneyLine);
-              // // const getTotal = await getOdds('Over/Under', item.odds.type)
-              // const getSpread = await getOdds('Run Line', item?.odds?.type)
-              // console.log(typeof getSpread)
+    var upcommingScore: any = [];
+    const takeData =
+      await getScore?.data?.fixtures?.category?.matches?.match.map(
+        async (item: any) => {
+          const getAwayTeamImage = await axiosGet(
+            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
+            { json: true }
+          );
+          const getHomeTeamImage = await axiosGet(
+            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
+            { json: true }
+          );
+          if (item.status === "Not Started") {
+            // console.log('item?.odds?.type : ', item?.odds?.type);
+            // const getMoneyLine: any = await getOdds('Home/Away', item?.odds?.type);
+            // console.log('data : ', getMoneyLine);
+            // // const getTotal = await getOdds('Over/Under', item.odds.type)
+            // const getSpread = await getOdds('Run Line', item?.odds?.type)
+            // console.log(typeof getSpread)
             // const getAwayTeamRunLine = await getRunLine(item.awayteam.name, getSpread.bookmaker.odd)
             // const getHomeTeamRunLine = await getRunLine(item.hometeam.name, getSpread.bookmaker.odd)
-              const findAwayTeamWinLose: any = await search(
-                item?.awayteam?.id,
-                winlossArray
-              );
-              const findHomeTeamWinLose: any = await search(
-                item?.hometeam?.id,
-                winlossArray
-              );
-              let upcommingScoreData = {
-                status: item.status,
-                id: item.id,
-                awayTeam: {
-                  awayTeamName: item.awayteam.name,
-                  awayTeamId: item.awayteam.id,
-                  awayTeamScore: item.awayteam.totalscore,
-                  // teamImage: getAwayTeamImage.data.team.image,
-                  won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
-                  lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
-                  // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "2") : "",
-                  // spread: getAwayTeamRunLine ? getAwayTeamRunLine.name.split(' ').slice(-1)[0] : ""
-                },
-                datetime_utc: item.datetime_utc,
-                homeTeam: {
-                  homeTeamName: item.hometeam.name,
-                  homeTeamId: item.hometeam.id,
-                  homeTeamScore: item.hometeam.totalscore,
-                  // teamImage: getHomeTeamImage.data.team.image,
-                  won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
-                  lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
-                  // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "1") : {},
-                  // spread: getHomeTeamRunLine ? getHomeTeamRunLine.name.split(' ').slice(-1)[0] : ""
-                },
-                // total: getTotal.bookmaker.odd,
-                time: item.time,
-              };
-              // console.log("upcommingScoreData---", upcommingScoreData)
-              upcommingScore.push(upcommingScoreData);
-              // return upcommingScore;
-            }
-            // console.log("upcommingScore", upcommingScore)
-            return upcommingScore;
+            const findAwayTeamWinLose: any = await search(
+              item?.awayteam?.id,
+              winlossArray
+            );
+            const findHomeTeamWinLose: any = await search(
+              item?.hometeam?.id,
+              winlossArray
+            );
+            let upcommingScoreData = {
+              status: item.status,
+              id: item.id,
+              awayTeam: {
+                awayTeamName: item.awayteam.name,
+                awayTeamId: item.awayteam.id,
+                awayTeamScore: item.awayteam.totalscore,
+                // teamImage: getAwayTeamImage.data.team.image,
+                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+                // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "2") : "",
+                // spread: getAwayTeamRunLine ? getAwayTeamRunLine.name.split(' ').slice(-1)[0] : ""
+              },
+              datetime_utc: item.datetime_utc,
+              homeTeam: {
+                homeTeamName: item.hometeam.name,
+                homeTeamId: item.hometeam.id,
+                homeTeamScore: item.hometeam.totalscore,
+                // teamImage: getHomeTeamImage.data.team.image,
+                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+                // moneyline: getMoneyLine ? getMoneyLine.bookmaker.odd.find((item: any) => item.name === "1") : {},
+                // spread: getHomeTeamRunLine ? getHomeTeamRunLine.name.split(' ').slice(-1)[0] : ""
+              },
+              // total: getTotal.bookmaker.odd,
+              time: item.time,
+            };
+            // console.log("upcommingScoreData---", upcommingScoreData)
+            upcommingScore.push(upcommingScoreData);
+            // return upcommingScore;
           }
-        );
+          // console.log("upcommingScore", upcommingScore)
+          return upcommingScore;
+        }
+      );
     // console.log('table data : ', takeData, upcommingScore);
     await Promise.all(takeData).then(async (item: any) => {
       // console.log("takeData------", item)
-        await socket("mlbUpcomingMatch", {
-          upcommingScore
-        });
+      await socket("mlbUpcomingMatch", {
+        upcommingScore,
       });
+    });
     // });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
@@ -188,17 +197,16 @@ const getOdds = (nameKey: any, myArray: any) => {
       return;
     }
   }
-
-}
+};
 
 const getRunLine = async (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray.length; i++) {
-    if (myArray[i].name.split(" ").slice(0, -1).join(' ') == nameKey) {
+    if (myArray[i].name.split(" ").slice(0, -1).join(" ") == nameKey) {
       return myArray[i];
     }
   }
-  return
-}
+  return;
+};
 
 const search = async (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray.length; i++) {
@@ -206,7 +214,7 @@ const search = async (nameKey: any, myArray: any) => {
       return myArray[i];
     }
   }
-  return
+  return;
 };
 
 const getFinalMatch = async () => {
@@ -217,61 +225,59 @@ const getFinalMatch = async () => {
       { json: true }
     );
     var getFinalMatch: any = [];
-    const takeData =
-      await getScore?.data?.scores?.category?.match.map(
-        async (item: any) => {
-          const getAwayTeamImage = await axiosGet(
-            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
-            { json: true }
+    const takeData = await getScore?.data?.scores?.category?.match.map(
+      async (item: any) => {
+        const getAwayTeamImage = await axiosGet(
+          `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
+          { json: true }
+        );
+        const getHomeTeamImage = await axiosGet(
+          `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
+          { json: true }
+        );
+        if (item.status === "Final") {
+          const findAwayTeamWinLose: any = await search(
+            item?.awayteam?.id,
+            winlossArray
           );
-          const getHomeTeamImage = await axiosGet(
-            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
-            { json: true }
+          const findHomeTeamWinLose: any = await search(
+            item?.hometeam?.id,
+            winlossArray
           );
-          if (item.status === "Final") {
-            const findAwayTeamWinLose: any = await search(
-              item?.awayteam?.id,
-              winlossArray
-            );
-            const findHomeTeamWinLose: any = await search(
-              item?.hometeam?.id,
-              winlossArray
-            );
-            let upcommingScoreData = {
-              status: item.status,
-              id: item.id,
-              awayTeam: {
-                awayTeamName: item.awayteam.name,
-                awayTeamId: item.awayteam.id,
-                teamImage: getAwayTeamImage.data.team.image,
-                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
-                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
-                awayTeamRun: item.awayteam.totalscore,
-                awayTeamHit: item.awayteam.hits,
-                awayTeamErrors: item.awayteam.errors
-              },
-              datetime_utc: item.datetime_utc,
-              homeTeam: {
-                homeTeamName: item.hometeam.name,
-                homeTeamId: item.hometeam.id,
-                teamImage: getHomeTeamImage.data.team.image,
-                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
-                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
-                homeTeamRun: item.hometeam.totalscore,
-                homeTeamHit: item.hometeam.hits,
-                homeTeamErrors: item.hometeam.errors
-              },
-              time: item.time,
-            };
-            getFinalMatch.push(upcommingScoreData);
-
-          }
-          return { getFinalMatch };
+          let upcommingScoreData = {
+            status: item.status,
+            id: item.id,
+            awayTeam: {
+              awayTeamName: item.awayteam.name,
+              awayTeamId: item.awayteam.id,
+              teamImage: getAwayTeamImage.data.team.image,
+              won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+              lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+              awayTeamRun: item.awayteam.totalscore,
+              awayTeamHit: item.awayteam.hits,
+              awayTeamErrors: item.awayteam.errors,
+            },
+            datetime_utc: item.datetime_utc,
+            homeTeam: {
+              homeTeamName: item.hometeam.name,
+              homeTeamId: item.hometeam.id,
+              teamImage: getHomeTeamImage.data.team.image,
+              won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+              lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+              homeTeamRun: item.hometeam.totalscore,
+              homeTeamHit: item.hometeam.hits,
+              homeTeamErrors: item.hometeam.errors,
+            },
+            time: item.time,
+          };
+          getFinalMatch.push(upcommingScoreData);
         }
-      );
+        return { getFinalMatch };
+      }
+    );
     await Promise.all(takeData).then(async (item: any) => {
       await socket("mlbFinalMatch", {
-        getFinalMatch
+        getFinalMatch,
       });
     });
   } catch (error) {
@@ -287,86 +293,87 @@ const getLiveMatch = async () => {
       { json: true }
     );
     var getLiveMatch: any = [];
-    const takeData =
-      await getScore?.data?.scores?.category?.match.map(
-        async (item: any) => {
-          const getAwayTeamImage = await axiosGet(
-            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
-            { json: true }
+    const takeData = await getScore?.data?.scores?.category?.match.map(
+      async (item: any) => {
+        const getAwayTeamImage = await axiosGet(
+          `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
+          { json: true }
+        );
+        const getHomeTeamImage = await axiosGet(
+          `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
+          { json: true }
+        );
+        if (
+          item.status !== "Not Started" &&
+          item.status !== "Final" &&
+          item.status !== "Postponed"
+        ) {
+          const findAwayTeamWinLose: any = await search(
+            item?.awayteam?.id,
+            winlossArray
           );
-          const getHomeTeamImage = await axiosGet(
-            `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
-            { json: true }
+          const findHomeTeamWinLose: any = await search(
+            item?.hometeam?.id,
+            winlossArray
           );
-          if (item.status !== "Not Started" && item.status !== "Final" && item.status !== "Postponed") {
-            const findAwayTeamWinLose: any = await search(
-              item?.awayteam?.id,
-              winlossArray
-            );
-            const findHomeTeamWinLose: any = await search(
-              item?.hometeam?.id,
-              winlossArray
-            );
-            let liveScoreData = {
-              status: item.status,
-              id: item.data,
-              awayTeam: {
-                awayTeamName: item.awayteam.name,
-                awayTeamId: item.awayteam.id,
-                awayTeamInnings: item.awayteam.innings,
-                awayTeamScore: item.awayteam.totalscore,
-                teamImage: getAwayTeamImage.data.team.image,
-                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
-                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
-                awayTeamRun: item.awayteam.totalscore,
-                awayTeamHit: item.awayteam.hits,
-                awayTeamErrors: item.awayteam.errors
-              },
-              date: item.date,
-              datetime_utc: item.datetime_utc,
-              events: item.events,
-              formatted_date: item.formatted_date,
-              homeTeam: {
-                homeTeamName: item.hometeam.name,
-                homeTeamId: item.hometeam.id,
-                homeTeamInnings: item.hometeam.innings,
-                homeTeamScore: item.hometeam.totalscore,
-                teamImage: getHomeTeamImage.data.team.image,
-                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
-                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
-                homeTeamRun: item.hometeam.totalscore,
-                homeTeamHit: item.hometeam.hits,
-                homeTeamErrors: item.hometeam.errors
-              },
-              oddsid: item.oddsid,
-              time: item.time,
-              timezone: item.timezone,
-              out: item.outs
-            };
-            getLiveMatch.push(liveScoreData);
-
-          }
-          return { getLiveMatch };
+          let liveScoreData = {
+            status: item.status,
+            id: item.data,
+            awayTeam: {
+              awayTeamName: item.awayteam.name,
+              awayTeamId: item.awayteam.id,
+              awayTeamInnings: item.awayteam.innings,
+              awayTeamScore: item.awayteam.totalscore,
+              teamImage: getAwayTeamImage.data.team.image,
+              won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
+              lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
+              awayTeamRun: item.awayteam.totalscore,
+              awayTeamHit: item.awayteam.hits,
+              awayTeamErrors: item.awayteam.errors,
+            },
+            date: item.date,
+            datetime_utc: item.datetime_utc,
+            events: item.events,
+            formatted_date: item.formatted_date,
+            homeTeam: {
+              homeTeamName: item.hometeam.name,
+              homeTeamId: item.hometeam.id,
+              homeTeamInnings: item.hometeam.innings,
+              homeTeamScore: item.hometeam.totalscore,
+              teamImage: getHomeTeamImage.data.team.image,
+              won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
+              lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
+              homeTeamRun: item.hometeam.totalscore,
+              homeTeamHit: item.hometeam.hits,
+              homeTeamErrors: item.hometeam.errors,
+            },
+            oddsid: item.oddsid,
+            time: item.time,
+            timezone: item.timezone,
+            out: item.outs,
+          };
+          getLiveMatch.push(liveScoreData);
         }
-      );
+        return { getLiveMatch };
+      }
+    );
     await Promise.all(takeData).then(async (item: any) => {
       await socket("mlbLiveMatch", {
-        getLiveMatch
+        getLiveMatch,
       });
     });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
-}
+};
 
 const mlbScoreWithDate = async (params: any) => {
-  let day = moment(params.date1).format("DD")
-  let month = moment(params.date1).format("MM")
-  let year = moment(params.date1).format("YYYY")
-  let date = `${day}.${month}.${year}`
-  console.log("date", date)
+  let day = moment(params.date1).format("DD");
+  let month = moment(params.date1).format("MM");
+  let year = moment(params.date1).format("YYYY");
+  let date = `${day}.${month}.${year}`;
+  console.log("date", date);
   try {
-
     const winlossArray = await getWinLost();
     const getScore = await axiosGet(
       "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
@@ -437,7 +444,7 @@ const mlbScoreWithDate = async (params: any) => {
                 lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
                 awayTeamRun: item.awayteam.totalscore,
                 awayTeamHit: item.awayteam.hits,
-                awayTeamErrors: item.awayteam.errors
+                awayTeamErrors: item.awayteam.errors,
               },
               datetime_utc: item.datetime_utc,
               homeTeam: {
@@ -448,24 +455,174 @@ const mlbScoreWithDate = async (params: any) => {
                 lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
                 homeTeamRun: item.hometeam.totalscore,
                 homeTeamHit: item.hometeam.hits,
-                homeTeamErrors: item.hometeam.errors
+                homeTeamErrors: item.hometeam.errors,
               },
               time: item.time,
             };
             getFinalMatch.push(finalScoreData);
-
           }
           return { upcommingScore, getFinalMatch };
         }
       );
     return await Promise.all(takeData).then(async (item: any) => {
-      return { upcommingScore, getFinalMatch }
+      return { upcommingScore, getFinalMatch };
     });
   } catch (error: any) {
-    console.log("error in catch", error)
+    console.log("error in catch", error);
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
-}
+};
 
+const createLeague = async (body: any) => {
+  const data = new League({
+    name: body.name,
+    year: body.year,
+  });
+  const dataToSave = await data.save();
+  return dataToSave;
+};
 
-export default { getMLBStandings, getUpcomingMatch, getWinLost, search, getOdds, getRunLine, getFinalMatch, getLiveMatch, mlbScoreWithDate };
+const updateLeague = async (param: any, body: any) => {
+  const id = param.id;
+  const result = await League.findByIdAndUpdate(id, body, {
+    returnDocument: "after",
+  });
+  return result;
+};
+
+const deleteLeague = async (param: any) => {
+  const id = param.id;
+  await League.findByIdAndUpdate(
+    id,
+    { isDeleted: true },
+    {
+      returnDocument: "after",
+    }
+  );
+  return { message: `League is deleted successfully` };
+};
+
+const getAllLeague = async () => {
+  const leagues = await League.find({ isDeleted: false });
+  return leagues;
+};
+
+const getAllPlayer = async () => {
+  const players = await Player.find({ isDeleted: false });
+  return players;
+};
+
+const deletePlayer = async (param: any) => {
+  const id = param.id;
+  await Player.findByIdAndUpdate(
+    id,
+    { isDeleted: true },
+    {
+      returnDocument: "after",
+    }
+  );
+  return { message: `Player is deleted successfully` };
+};
+
+const createPlayer = async (body: any) => {
+  const data = new Player(body);
+  const dataToSave = await data.save();
+  return dataToSave;
+};
+
+const updatePlayer = async (param: any, body: any) => {
+  const id = param.id;
+  const result = await Player.findByIdAndUpdate(id, body, {
+    returnDocument: "after",
+  });
+  return result;
+};
+
+const createTeam = async (body: any) => {
+  const data = new Team(body);
+  const dataToSave = await data.save();
+  return dataToSave;
+};
+
+const updateTeam = async (param: any, body: any) => {
+  const id = param.id;
+  const result = await Team.findByIdAndUpdate(id, body, {
+    returnDocument: "after",
+  });
+  return result;
+};
+
+const deleteTeam = async (param: any) => {
+  const id = param.id;
+  await Team.findByIdAndUpdate(
+    id,
+    { isDeleted: true },
+    {
+      returnDocument: "after",
+    }
+  );
+  return { message: `Team is deleted successfully` };
+};
+
+const getAllTeam = async () => {
+  const team = await Team.find({ isDeleted: false }).populate("divisionId leagueId");
+  return team;
+};
+
+const getAllDivison = async () => {
+  const divison = await Division.find({ isDeleted: false });
+  return divison;
+};
+
+const deleteDivision = async (param: any) => {
+  const id = param.id;
+  await Division.findByIdAndUpdate(
+    id,
+    { isDeleted: true },
+    {
+      returnDocument: "after",
+    }
+  );
+  return { message: `Division is deleted successfully` };
+};
+
+const updateDivison = async (param: any, body: any) => {
+  const id = param.id;
+  const result = await Division.findByIdAndUpdate(id, body, {
+    returnDocument: "after",
+  });
+  return result;
+};
+const createDivison = async (body: any) => {
+  const data = new Division(body);
+  const dataToSave = await data.save();
+  return dataToSave;
+};
+
+export default {
+  getMLBStandings,
+  getUpcomingMatch,
+  getWinLost,
+  search,
+  getOdds,
+  getRunLine,
+  getFinalMatch,
+  getLiveMatch,
+  mlbScoreWithDate,
+  createLeague,
+  updateLeague,
+  deleteLeague,
+  getAllLeague,
+  getAllPlayer,
+  deletePlayer,
+  createPlayer,
+  updatePlayer,
+  createTeam,
+  updateTeam,
+  deleteTeam,
+  getAllTeam,
+  getAllDivison,
+  deleteDivision,
+  updateDivison,
+  createDivison,
+};
