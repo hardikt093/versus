@@ -1,5 +1,6 @@
 import { Document } from "mongoose";
 export interface IMatchModel extends Document {
+    goalServeMatchId:Number
     awayTeamId: String
     homeTeamId: String
     date: String

@@ -2,7 +2,8 @@ import Joi from "@hapi/joi";
 const createLeague = {
   body: Joi.object().keys({
     name: Joi.string(),
-    year: Joi.string(),
+    year: Joi.string().allow(null, ""),
+    goalServeLeagueId: Joi.number(),
   }),
 };
 

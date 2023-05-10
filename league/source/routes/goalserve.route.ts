@@ -86,7 +86,7 @@ router.get("/league", auth, goalserveController.getAllLeague);
 router.post(
   "/league",
   validate(goalserveValidation.createLeague),
-  auth,
+  // auth,
   goalserveController.createLeague
 );
 router.put(
@@ -102,13 +102,21 @@ router.delete(
   goalserveController.deleteLeague
 );
 
-router.get("/player", auth, goalserveController.getAllPlayer);
+router.get("/player", 
+// auth, 
+goalserveController.getAllPlayer);
 router.post(
   "/player",
-  auth,
+  // auth,
   // validate(goalserveValidation.createPlayer),
   goalserveController.createPlayer
 );
+// router.post(
+//   "/match",
+//   // auth,
+//   // validate(goalserveValidation.createPlayer),
+//   goalserveController.createMatch
+// );
 router.put(
   "/player/:id",
   auth,
@@ -127,7 +135,7 @@ router.get("/team", auth, goalserveController.getAllTeam);
 router.post(
   "/team",
   auth,
-  validate(goalserveValidation.createTeam),
+  // validate(goalserveValidation.createTeam),
   goalserveController.createTeam
 );
 
