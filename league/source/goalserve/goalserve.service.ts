@@ -580,28 +580,26 @@ const deletePlayer = async (param: any) => {
 
 const createPlayer = async (body: any) => {
   const team = await Team.find({ isDeleted: false });
-  for (const item of team) {
+  team.map(async (item: any) => {
     const roasterApi: any = await axiosGet(
       `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item?.goalServeTeamId}_rosters`,
       { json: true }
     );
-
-    console.log(roasterApi);
     const playerArray1 = roasterApi?.data?.team?.position;
-    for (const val of playerArray1) {
-      if (val?.player.length) {
+    playerArray1.map(async (val: any) => {
+      if (val?.player?.length) {
         val?.player?.map(async (player: any) => {
           const data: any = {
-            age: player.age,
-            bats: player.bats,
-            height: player.height,
+            age: player?.age,
+            bats: player?.bats,
+            height: player?.height,
             goalServePlayerId: player.id,
-            name: player.name,
-            number: player.number,
-            position: player.position,
-            salary: player.salary,
-            throws: player.throws,
-            weight: player.weight,
+            name: player?.name,
+            number: player?.number,
+            position: player?.position,
+            salary: player?.salary,
+            throws: player?.throws,
+            weight: player?.weight,
           };
           const playerData = new Player(data);
           const savedMatchData = await playerData.save();
@@ -622,8 +620,8 @@ const createPlayer = async (body: any) => {
         const playerData = new Player(data);
         const savedMatchData = await playerData.save();
       }
-    }
-  }
+    });
+  });
 
   // const dataToSave = await Player.insertMany(body);
   // return dataToSave;
@@ -1069,27 +1067,27 @@ const addMatch = async (data: any) => {
                 goalServePlayerId: hittersAway.id,
               });
               let data = {
-                at_bats: hittersAway.at_bats,
-                average: hittersAway.average,
-                cs: hittersAway.cs,
-                doubles: hittersAway.doubles,
-                hit_by_pitch: hittersAway.hit_by_pitch,
-                hits: hittersAway.hits,
-                home_runs: hittersAway.home_runs,
-                // id: hittersAway."42403",
-                playerId: player._id,
-                goalServePlayerId: player.goalServePlayerId,
-                name: hittersAway.name,
-                on_base_percentage: hittersAway.on_base_percentage,
-                pos: hittersAway.pos,
-                runs: hittersAway.runs,
-                runs_batted_in: hittersAway.runs_batted_in,
-                sac_fly: hittersAway.sac_fly,
-                slugging_percentage: hittersAway.slugging_percentage,
-                stolen_bases: hittersAway.stolen_bases,
-                strikeouts: hittersAway.strikeouts,
-                triples: hittersAway.triples,
-                walks: hittersAway.walks,
+                at_bats: hittersAway?.at_bats,
+                average: hittersAway?.average,
+                cs: hittersAway?.cs,
+                doubles: hittersAway?.doubles,
+                hit_by_pitch: hittersAway?.hit_by_pitch,
+                hits: hittersAway?.hits,
+                home_runs: hittersAway?.home_runs,
+                // id: hittersAway?."42403",
+                playerId: player?._id,
+                goalServePlayerId: player?.goalServePlayerId,
+                name: hittersAway?.name,
+                on_base_percentage: hittersAway?.on_base_percentage,
+                pos: hittersAway?.pos,
+                runs: hittersAway?.runs,
+                runs_batted_in: hittersAway?.runs_batted_in,
+                sac_fly: hittersAway?.sac_fly,
+                slugging_percentage: hittersAway?.slugging_percentage,
+                stolen_bases: hittersAway?.stolen_bases,
+                strikeouts: hittersAway?.strikeouts,
+                triples: hittersAway?.triples,
+                walks: hittersAway?.walks,
                 teamType: "awayteam",
                 statsType: "hitters",
               };
@@ -1101,27 +1099,27 @@ const addMatch = async (data: any) => {
               goalServePlayerId: statsHittersAway.id,
             });
             let data = {
-              at_bats: statsHittersAway.at_bats,
-              average: statsHittersAway.average,
-              cs: statsHittersAway.cs,
-              doubles: statsHittersAway.doubles,
-              hit_by_pitch: statsHittersAway.hit_by_pitch,
-              hits: statsHittersAway.hits,
-              home_runs: statsHittersAway.home_runs,
-              // id: statsHittersAway."42403",
-              playerId: player._id,
-              goalServePlayerId: player.goalServePlayerId,
-              name: statsHittersAway.name,
-              on_base_percentage: statsHittersAway.on_base_percentage,
-              pos: statsHittersAway.pos,
-              runs: statsHittersAway.runs,
-              runs_batted_in: statsHittersAway.runs_batted_in,
-              sac_fly: statsHittersAway.sac_fly,
-              slugging_percentage: statsHittersAway.slugging_percentage,
-              stolen_bases: statsHittersAway.stolen_bases,
-              strikeouts: statsHittersAway.strikeouts,
-              triples: statsHittersAway.triples,
-              walks: statsHittersAway.walks,
+              at_bats: statsHittersAway?.at_bats,
+              average: statsHittersAway?.average,
+              cs: statsHittersAway?.cs,
+              doubles: statsHittersAway?.doubles,
+              hit_by_pitch: statsHittersAway?.hit_by_pitch,
+              hits: statsHittersAway?.hits,
+              home_runs: statsHittersAway?.home_runs,
+              // id: statsHittersAway?."42403",
+              playerId: player?._id,
+              goalServePlayerId: player?.goalServePlayerId,
+              name: statsHittersAway?.name,
+              on_base_percentage: statsHittersAway?.on_base_percentage,
+              pos: statsHittersAway?.pos,
+              runs: statsHittersAway?.runs,
+              runs_batted_in: statsHittersAway?.runs_batted_in,
+              sac_fly: statsHittersAway?.sac_fly,
+              slugging_percentage: statsHittersAway?.slugging_percentage,
+              stolen_bases: statsHittersAway?.stolen_bases,
+              strikeouts: statsHittersAway?.strikeouts,
+              triples: statsHittersAway?.triples,
+              walks: statsHittersAway?.walks,
               teamType: "awayteam",
               statsType: "hitters",
             };
@@ -1360,6 +1358,8 @@ const addMatch = async (data: any) => {
     return item;
   });
 };
+
+const addStanding = async () => {};
 export default {
   getMLBStandings,
   getUpcomingMatch,
