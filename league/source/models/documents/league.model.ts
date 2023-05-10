@@ -3,7 +3,8 @@ import ILeagueModel from "../interfaces/league.interface";
 var leagueSchema = new Schema(
   {
     name: { type: String, required: true },
-    year: { type: String, required: true },
+    year: { type: String },
+    goalServeLeagueId: { type: Number, required: true },
     isDeleted: { type: Boolean, default: false },
   },
   {

@@ -4,7 +4,10 @@ export interface IEventModel extends Document {
   che: String;
   desc: String;
   inn: String;
-  teamId: String;
+  matchId: String;
+  goalServeMatchId: String;
   leagueId: String;
+  goalServeLeagueId: String;
+  teamType: String
 }
 export default IEventModel;

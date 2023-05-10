@@ -177,6 +177,16 @@ const scoreWithCurrentDate = async (req: Request, res: Response) => {
   }
 };
 
+const addMatchData = async (req: Request, res: Response) => {
+  try {
+    const addMatch = await goalserveService.addMatch(req.body)
+    createResponse(res, httpStatus.OK, "", addMatch)
+  } catch (error: any) {
+    console.log("error", error)
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -197,4 +207,5 @@ export default {
   deleteDivision,
   getAllDivison,
   scoreWithCurrentDate,
+  addMatchData
 };

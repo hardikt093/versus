@@ -3,12 +3,16 @@ import IEventModel from "../interfaces/event.interface";
 var eventSchema = new Schema(
     {
         chw: { type: String, required: true },
-        che: { type: String, required: true },
-        desc: { type: Schema.Types.ObjectId, required: true, ref: 'league' },
+        cle: { type: String, required: true },
+        desc: String,
         inn:{ type: String, required: true },
-        teamId: { type: Schema.Types.ObjectId, required: true, ref: 'team' },
-        leagueId: { type: Schema.Types.ObjectId, required: true, ref: 'league' },
+        matchId: { type: Schema.Types.ObjectId, ref: "match" },
+        goalServeMatchId: { type: Number },
+        leagueId: { type: Schema.Types.ObjectId, ref: 'league' },
+        goalServeLeagueId: { type: Number, },
+        teamType: String,
     },
+
     {
         timestamps: true,
     }

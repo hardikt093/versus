@@ -170,4 +170,5 @@ router.delete(
   goalserveController.deleteDivision
 );
 router.get("/scoreWithCurrentDate", auth, goalserveController.scoreWithCurrentDate);
+router.get("/addMatchData", goalserveController.addMatchData);
 export default router;

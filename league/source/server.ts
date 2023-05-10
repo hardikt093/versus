@@ -67,9 +67,9 @@ mongoose.connect(config.mongoose.url).then((result: any) => {
     console.info(`The server is running on port ${PORT}`)
   );
   /** runing cron */
-cron;
+// cron;
 });
-mongoose.set("debug", true);
+// mongoose.set("debug", true);
 
 
 
