@@ -31,7 +31,6 @@ const axiosGet = async (url: string, payload = {}, token: "") => {
   try {
     return await axios.get(`${url}?${params}`, getHeaders(token));
   } catch (error: any) {
-    console.log("error", error);
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
   }
 };
@@ -41,8 +40,6 @@ const axiosGetMicro = async (url: string, payload = {}, token: "") => {
   try {
     return await axios.get(`${url}?${params}`, getHeaders(token));
   } catch (error: any) {
-    console.log("error", error);
-    console.log(error.response.data)
     throw new AppError(error.response.data.status ?? httpStatus.UNPROCESSABLE_ENTITY,
        error.response.data.message ?? error.message,
       error.response.data.data ?? {});

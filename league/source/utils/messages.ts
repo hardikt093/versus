@@ -33,7 +33,7 @@ class Messages {
   static BET_DATA_FOUND = "Bet data found";
   static MATCH_DATA_FOUND = "Match data found";
   static MATCH_EVENT_DATA_FOUND = "Match Event data found";
-  static BET_RESULT_DECLARED = "Bet Result Declared Succesfully";
+  static BET_RESULT_DECLARED = "Bet Result Declared Successfully";
   static BET_WON = "Congrats! You Won this bet";
   static BET_LOSE = "Opps! You lose this bet";
   static BET_RESULT_SATISFIED = "Thanks for satisfied with result";
@@ -41,6 +41,6 @@ class Messages {
   static MATCH_ODD_DATA_NOT_FOUND = "Match Odd data not found";
   static TEAM_NOT_FOUND_IN_MATCH = "Team is Not Found in this Match";
   static ALREADY_APPLIED_ON_MATCH = "You already applied on this match";
-  static YOU_CAN_NOT_RESPONSE_TO_THIS_BET = "You can not repond this bet request";
+  static YOU_CAN_NOT_RESPONSE_TO_THIS_BET = "You can not respond this bet request";
 }
 export default Messages;

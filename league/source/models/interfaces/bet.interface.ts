@@ -23,7 +23,7 @@ export type TBet = {
   opponentUserTeamId: Team["_id"] | Team;
   winTeamId: Team["_id"] | Team;
   matchOddsId: MatchOdd["_id"] | MatchOdd;
-  shortName: String;
+  shortName: string;
   responseAt: Date;
   resultAt: Date;
   sportsType : sportsType;
@@ -40,13 +40,13 @@ enum sportsType {
   BASEBALL,
   VOLLEYBALL
 }
-enum betStatus {
-    REQUESTED,
-    ACCEPTED,
-    REJECTED,
-    IN_PROGRESS,
-    RESULT_DECLARED,
-    RESULT_NOT_SATISFIED,
-    COMPLETED
+export enum betStatus {
+    REQUESTED = "REQUESTED",
+    ACCEPTED = "ACCEPTED",
+    REJECTED = "REJECTED",
+    IN_PROGRESS = "IN_PROGRESS",
+    RESULT_DECLARED = "RESULT_DECLARED",
+    RESULT_NOT_SATISFIED = "RESULT_NOT_SATISFIED",
+    COMPLETED = "COMPLETED"
 }
 export default IbetModel;

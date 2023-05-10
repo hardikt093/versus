@@ -3,8 +3,6 @@ import httpStatus from "http-status";
 import matchEventService from "./matchEvent.service";
 import createResponse from "../utils/response";
 import Messages from "../utils/messages";
-
-
 const eventListBySports = async (req: Request, res: Response) => {
   try {   
     const data = await matchEventService.eventListBySports(req.body);

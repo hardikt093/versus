@@ -4,7 +4,6 @@ import matchOddService from "./matchOdds.service";
 import createResponse from "../utils/response";
 import Messages from "../utils/messages";
 
-
 const matchOddsListBySportsAndMatch = async (req: Request, res: Response) => {
   try {   
     const data = await matchOddService.matchOddsListBySportsAndMatch(req.body);

@@ -4,9 +4,10 @@ import Match from "../models/documents/match.model";
 import MatchOdd from "../models/documents/matchOdd.model";
 import AppError from "../utils/AppError";
 import { ICreateBetRequest, IresponseBetRequest } from "./bet.interface";
+import { TBet, betStatus} from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
 
-const betWinAmountCalculationUsingOdd = function (amount: number, odd: number) {
+const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
     if (amount >= Math.abs(odd)) {
       return amount + (amount + 100 - (Math.abs(odd)))
@@ -14,7 +15,7 @@ const betWinAmountCalculationUsingOdd = function (amount: number, odd: number) {
       return amount + ((amount * 100) / (Math.abs(odd)))
     }
   } else {
-    return ((amount - 100) + (Math.abs(odd)) + amount)
+    return (amount - 100) + Math.abs(odd) + amount
   }
 }
 const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
@@ -62,7 +63,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
 
-  if (matchData.localTeamId != data.requestUserTeamId && matchData.awayTeamId != data.requestUserTeamId) {
+  if (matchData.localTeamId.toHexString() !== data.requestUserTeamId && matchData.awayTeamId.toHexString() !== data.requestUserTeamId) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       Messages.TEAM_NOT_FOUND_IN_MATCH
@@ -124,26 +125,26 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
 
 const responseBet = async (id: string, loggedInUserId: number, data: IresponseBetRequest) => {
 
-  const BetData = await Bet.findOne({
+  const betData = await Bet.findOne({
     _id: id
   }
   ).populate("matchOddsId").lean();
-  if (!BetData) {
+  if (!betData) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       Messages.BET_DATA_NOT_FOUND
     );
   }
-  if (BetData.opponentUserId !== loggedInUserId) {
+  if (betData.opponentUserId !== loggedInUserId) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.YOU_CAN_NOT_RESPONSE_TO_THIS_BET
     );
   }
-  if (BetData.status !== "REQUESTED") {
+  if (betData.status !== betStatus.REQUESTED) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.ONLY_RESP_WHEN_STATUS + "`REQUESTED`"
+      Messages.ONLY_RESP_WHEN_STATUS + betStatus.REQUESTED
     );
   }
   if (data && Number(data.amount) <= 0) {
@@ -153,18 +154,18 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
     );
   }
   if (data.isAccepted && data.amount && data.amount > 0 && data.teamId) {
-    if (BetData.matchOddsId.localTeamId != data.teamId && BetData.matchOddsId.awayTeamId != data.teamId) {
+    if (betData.matchOddsId.localTeamId != data.teamId && betData.matchOddsId.awayTeamId != data.teamId) {
       throw new AppError(
         httpStatus.NOT_FOUND,
         Messages.TEAM_NOT_FOUND_IN_MATCH
       );
     }
-    if (BetData.requestUserTeamId == data.teamId) {
+    if (betData.requestUserTeamId == data.teamId) {
       let minimumBetAmount = 0;
-      if (data.teamId == BetData.matchOddsId.localTeamId) {
-        minimumBetAmount = BetData.matchOddsId.localTeamOdd > 0 ? BetData.matchOddsId.localTeamOdd : 0
+      if (data.teamId == betData.matchOddsId.localTeamId) {
+        minimumBetAmount = betData.matchOddsId.localTeamOdd > 0 ? betData.matchOddsId.localTeamOdd : 0
       } else {
-        minimumBetAmount = BetData.matchOddsId.awayTeamOdd > 0 ? BetData.matchOddsId.awayTeamOdd : 0
+        minimumBetAmount = betData.matchOddsId.awayTeamOdd > 0 ? betData.matchOddsId.awayTeamOdd : 0
       }
       if (data.amount < minimumBetAmount || data.amount < 0) {
         throw new AppError(
@@ -173,10 +174,10 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
         );
       }
     } else {
-      if (data.amount !== BetData.requestUserAmount) {
+      if (data.amount !== betData.requestUserAmount) {
         throw new AppError(
           httpStatus.UNPROCESSABLE_ENTITY,
-          Messages.AMOUNT_SHOULD_BE + BetData.requestUserAmount
+          Messages.AMOUNT_SHOULD_BE + betData.requestUserAmount
         );
       }
     }
@@ -186,10 +187,10 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
         _id: id
       },
       {
-        status: 'ACCEPTED',
+        status: betStatus.ACCEPTED,
         opponentUserAmount: data.amount,
         opponentUserTeamId: data.teamId,
-        opponentUserOdds: (BetData.matchOddsId.localTeamId == data.teamId ? BetData.matchOddsId.localTeamOdd : BetData.matchOddsId.awayTeamOdd),
+        opponentUserOdds: (betData.matchOddsId.localTeamId == data.teamId ? betData.matchOddsId.localTeamOdd : betData.matchOddsId.awayTeamOdd),
         responseAt: new Date()
       });
 
@@ -204,7 +205,7 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
       {
         _id: id
       }, {
-      status: 'REJECTED',
+      status: betStatus.REJECTED,
       responseAt: new Date()
     }
     );
@@ -217,7 +218,7 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
 
 const requestListBetByUserId = async (userId: number) => {
   const requestListBet = await Bet.find({
-    opponentUserId: userId, status: 'REQUESTED',
+    opponentUserId: userId, status: betStatus.REQUESTED,
   });
   return requestListBet;
 };
@@ -226,20 +227,20 @@ const resultBet = async (id: string, winTeamId: string) => {
   const condition = {
     _id: id
   };
-  const BetData = await Bet.findOne(condition).populate("matchId").lean();
-  if (!BetData) {
+  const betData = await Bet.findOne(condition).populate("matchId").lean();
+  if (!betData) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       Messages.BET_DATA_NOT_FOUND
     );
   }
-  if (BetData.status !== "ACCEPTED") {
+  if (betData.status !== betStatus.ACCEPTED) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.ONLY_RESP_WHEN_STATUS + "`ACCEPTED`"
+      Messages.ONLY_RESP_WHEN_STATUS + betStatus.ACCEPTED
     );
   }
-  if (BetData.matchId.localTeamId != winTeamId && winTeamId != BetData.matchId.awayTeamId) {
+  if (betData.matchId.localTeamId.toHexString() !== winTeamId && winTeamId !== betData.matchId.awayTeamId.toHexString()) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       Messages.TEAM_NOT_FOUND_IN_MATCH
@@ -247,30 +248,30 @@ const resultBet = async (id: string, winTeamId: string) => {
   }
   let isRequestUserWinAmount = false;
   let isOpponentUserWinAmount = false;
-  let resultAmountRequestUser = 0 - BetData.requestUserAmount;
-  let resultAmountOpponentUser = 0 - BetData.opponentUserAmount;
-  if (BetData.requestUserTeamId.toHexString() == BetData.opponentUserTeamId.toHexString()) {
-    if (BetData.requestUserTeamId == winTeamId) {
+  let resultAmountRequestUser = 0 - betData.requestUserAmount;
+  let resultAmountOpponentUser = 0 - betData.opponentUserAmount;
+  if (betData.requestUserTeamId.toHexString() === betData.opponentUserTeamId.toHexString()) {
+    if (betData.requestUserTeamId.toHexString() === winTeamId) {
       isRequestUserWinAmount = true;
-      resultAmountRequestUser = betWinAmountCalculationUsingOdd(BetData.requestUserAmount, BetData.requestUserOdds);
+      resultAmountRequestUser = winAmountCalculationUsingOdd(betData.requestUserAmount, betData.requestUserOdds);
     }
-    if (BetData.opponentUserTeamId == winTeamId) {
+    if (betData.opponentUserTeamId.toHexString() === winTeamId) {
       isOpponentUserWinAmount = true;
-      resultAmountOpponentUser = betWinAmountCalculationUsingOdd(BetData.opponentUserAmount, BetData.opponentUserOdds)
+      resultAmountOpponentUser = winAmountCalculationUsingOdd(betData.opponentUserAmount, betData.opponentUserOdds)
     }
   } else {
-    if (BetData.requestUserTeamId == winTeamId) {
+    if (betData.requestUserTeamId.toHexString() === winTeamId) {
       isRequestUserWinAmount = true;
-      resultAmountRequestUser = BetData.requestUserAmount * 2;
+      resultAmountRequestUser = betData.requestUserAmount * 2;
     } else {
       isOpponentUserWinAmount = true;
-      resultAmountOpponentUser = BetData.opponentUserAmount * 2;
+      resultAmountOpponentUser = betData.opponentUserAmount * 2;
     }
   }
 
   await Bet.updateOne(condition,
     {
-      status: "RESULT_DECLARED",
+      status: betStatus.RESULT_DECLARED,
       winTeamId: winTeamId,
       isRequestUserWinAmount: isRequestUserWinAmount,
       isOpponentUserWinAmount: isOpponentUserWinAmount,
@@ -284,35 +285,35 @@ const resultBet = async (id: string, winTeamId: string) => {
 
 
 const getResultBet = async (loggedInUserId: number, betId: string) => {
-  const BetData = await Bet.findOne({
+  const betData = await Bet.findOne({
     _id: betId
   }).populate("requestUserTeamId opponentUserTeamId matchEventId matchId").lean();
-  if (BetData && BetData.opponentUserId == loggedInUserId) {
-    if (BetData.isOpponentUserWinAmount) {
+  if (betData && betData.opponentUserId === loggedInUserId) {
+    if (betData.isOpponentUserWinAmount) {
       return {
         win: true,
-        winAmount: BetData.resultAmountOpponentUser,
-        data: BetData
+        winAmount: betData.resultAmountOpponentUser,
+        data: betData
       }
     } else {
       return {
         win: false,
-        loseAmount: BetData.resultAmountOpponentUser,
-        data: BetData
+        loseAmount: betData.resultAmountOpponentUser,
+        data: betData
       }
     }
-  } else if (BetData && BetData.requestUserId == loggedInUserId) {
-    if (BetData.isRequestUserWinAmount) {
+  } else if (betData && betData.requestUserId === loggedInUserId) {
+    if (betData.isRequestUserWinAmount) {
       return {
         win: true,
-        winAmount: BetData.resultAmountRequestUser,
-        data: BetData
+        winAmount: betData.resultAmountRequestUser,
+        data: betData
       }
     } else {
       return {
         win: false,
-        loseAmount: BetData.resultAmountRequestUser,
-        data: BetData
+        loseAmount: betData.resultAmountRequestUser,
+        data: betData
       }
     }
   } else {
@@ -324,31 +325,31 @@ const getResultBet = async (loggedInUserId: number, betId: string) => {
 };
 
 const resultBetVerified = async (loggedInUserId: number, betId: string, isSatisfied: Boolean) => {
-  const BetData = await Bet.findOne({
+  const betData = await Bet.findOne({
     _id: betId
   });
-  if (!BetData) {
+  if (!betData) {
     throw new AppError(
       httpStatus.NOT_FOUND,
       Messages.BET_DATA_NOT_FOUND
     );
   }
-  if (BetData.status !== "RESULT_DECLARED") {
+  if (betData.status !== betStatus.RESULT_DECLARED) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.ONLY_RESP_WHEN_STATUS + "`RESULT_DECLARED`"
+      Messages.ONLY_RESP_WHEN_STATUS + betStatus.RESULT_DECLARED
     );
   }
-  let status = BetData.status;
-  if (BetData.opponentUserId == loggedInUserId) {
-    if (BetData.isOpponentUserResultSatisfied != null) {
+  let status:betStatus = betData.status;
+  if (betData.opponentUserId == loggedInUserId) {
+    if (betData.isOpponentUserResultSatisfied != null) {
       throw new AppError(
         httpStatus.NOT_FOUND,
         Messages.ALREADY_RESPOND
       );
     }
-    if (BetData.isRequestUserResultSatisfied != null) {
-      status = (BetData.isRequestUserResultSatisfied && isSatisfied) ? "COMPLETED" : "RESULT_NOT_SATISFIED"
+    if (betData.isRequestUserResultSatisfied != null) {
+      status = (betData.isRequestUserResultSatisfied && isSatisfied) ? betStatus.COMPLETED : betStatus.RESULT_NOT_SATISFIED
     }
     await Bet.updateOne(
       {
@@ -358,15 +359,15 @@ const resultBetVerified = async (loggedInUserId: number, betId: string, isSatisf
       status: status
     }
     );
-  } else if (BetData.requestUserId == loggedInUserId) {
-    if (BetData.isRequestUserResultSatisfied != null) {
+  } else if (betData.requestUserId === loggedInUserId) {
+    if (betData.isRequestUserResultSatisfied != null) {
       throw new AppError(
         httpStatus.NOT_FOUND,
         Messages.ALREADY_RESPOND
       );
     }
-    if (BetData.isOpponentUserResultSatisfied != null) {
-      status = (BetData.isOpponentUserResultSatisfied && isSatisfied) ? "COMPLETED" : "RESULT_NOT_SATISFIED"
+    if (betData.isOpponentUserResultSatisfied !== null) {
+      status = (betData.isOpponentUserResultSatisfied && isSatisfied) ? betStatus.COMPLETED : betStatus.RESULT_NOT_SATISFIED
     }
     await Bet.updateOne(
       {
@@ -387,7 +388,7 @@ const resultBetVerified = async (loggedInUserId: number, betId: string, isSatisf
   }).lean();
 };
 
-const listBetsByStatus = async (loggedInUserId: number, status: String) => {
+const listBetsByStatus = async (loggedInUserId: number, status: string) => {
   const list = await Bet.find({
     status: status,
     $or: [
