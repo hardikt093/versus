@@ -135,6 +135,7 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
       Messages.BET_DATA_NOT_FOUND
     );
   }
+  const {localTeamId, awayTeamId, localTeamOdd, awayTeamOdd} = betData.matchOddsId;
   if (betData.opponentUserId !== loggedInUserId) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
@@ -154,7 +155,7 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
     );
   }
   if (data.isAccepted && data.amount && data.amount > 0 && data.teamId) {
-    if (betData.matchOddsId.localTeamId != data.teamId && betData.matchOddsId.awayTeamId != data.teamId) {
+    if (localTeamId != data.teamId && awayTeamId != data.teamId) {
       throw new AppError(
         httpStatus.NOT_FOUND,
         Messages.TEAM_NOT_FOUND_IN_MATCH
@@ -162,10 +163,10 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
     }
     if (betData.requestUserTeamId == data.teamId) {
       let minimumBetAmount = 0;
-      if (data.teamId == betData.matchOddsId.localTeamId) {
-        minimumBetAmount = betData.matchOddsId.localTeamOdd > 0 ? betData.matchOddsId.localTeamOdd : 0
+      if (data.teamId == localTeamId) {
+        minimumBetAmount = localTeamOdd > 0 ? localTeamOdd : 0
       } else {
-        minimumBetAmount = betData.matchOddsId.awayTeamOdd > 0 ? betData.matchOddsId.awayTeamOdd : 0
+        minimumBetAmount = awayTeamOdd > 0 ? awayTeamOdd : 0
       }
       if (data.amount < minimumBetAmount || data.amount < 0) {
         throw new AppError(
@@ -190,7 +191,7 @@ const responseBet = async (id: string, loggedInUserId: number, data: IresponseBe
         status: betStatus.ACCEPTED,
         opponentUserAmount: data.amount,
         opponentUserTeamId: data.teamId,
-        opponentUserOdds: (betData.matchOddsId.localTeamId == data.teamId ? betData.matchOddsId.localTeamOdd : betData.matchOddsId.awayTeamOdd),
+        opponentUserOdds: (localTeamId == data.teamId ? localTeamOdd : awayTeamOdd),
         responseAt: new Date()
       });
 
