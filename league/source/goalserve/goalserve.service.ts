@@ -15,6 +15,7 @@ import Inning from "../models/documents/inning.model";
 import Event from "../models/documents/event.model";
 import StartingPitchers from "../models/documents/startingPictures";
 import Stats from "../models/documents/stats.model";
+import Standings from "../models/documents/standing.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -1357,7 +1358,45 @@ const addMatch = async (data: any) => {
   });
 };
 
-const addStanding = async () => {};
+const addStanding = async () => {
+  const getstanding = await axiosGet(
+    `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_standings`,
+    { json: true }
+  );
+  const league: any = await League.findOne({
+    goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+  });
+  getstanding?.data?.standings?.category?.league?.map((item: any) => {
+    item.division.map((div: any) => {
+      div.team.map(async (team: any) => {
+        const teamId: any = await Team.findOne({
+          goalServeTeamId: team.id,
+        });
+        let data = {
+          leagueId: league?.id,
+          leagueType: item?.name,
+          goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+          division: div?.name,
+          away_record: team?.away_record,
+          current_streak: team?.away_record,
+          games_back: team?.away_record,
+          home_record: team.home_record,
+          teamId: teamId?.id,
+          goalServePlayerId: teamId?.goalServeTeamId,
+          lost: team.lost,
+          name: team.name,
+          position: team.position,
+          runs_allowed: team.runs_allowed,
+          runs_diff: team.runs_diff,
+          runs_scored: team.runs_scored,
+          won: team.won,
+        };
+        const standingData = new Standings(data);
+        await standingData.save();
+      });
+    });
+  });
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -1388,4 +1427,5 @@ export default {
   addMatch,
   // createMatch,
   createMatchStatsApi,
+  addStanding,
 };

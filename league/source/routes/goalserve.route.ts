@@ -102,9 +102,11 @@ router.delete(
   goalserveController.deleteLeague
 );
 
-router.get("/player", 
-// auth, 
-goalserveController.getAllPlayer);
+router.get(
+  "/player",
+  // auth,
+  goalserveController.getAllPlayer
+);
 router.post(
   "/player",
   // auth,
@@ -153,8 +155,6 @@ router.delete(
   goalserveController.deleteTeam
 );
 
-
-
 router.get("/division", auth, goalserveController.getAllDivison);
 
 router.post(
@@ -177,6 +177,11 @@ router.delete(
   auth,
   goalserveController.deleteDivision
 );
-router.get("/scoreWithCurrentDate", auth, goalserveController.scoreWithCurrentDate);
+router.get(
+  "/scoreWithCurrentDate",
+  auth,
+  goalserveController.scoreWithCurrentDate
+);
 router.get("/addMatchData", goalserveController.addMatchData);
+router.get("/addstandings", goalserveController.addStanding);
 export default router;
