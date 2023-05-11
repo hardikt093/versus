@@ -32,9 +32,9 @@ var statsSchema = new Schema(
     sac_fly: String,
     slugging_percentage: String,
     stolen_bases: String,
-
     triples: String,
-
+    matchId: String,
+    goalServeMatchId: Number,
     isDeleted: { type: Boolean, default: false },
   },
   {

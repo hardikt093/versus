@@ -178,4 +178,5 @@ router.get(
 router.get("/addMatchData", goalserveController.addMatchData);
 router.get("/addstandings", goalserveController.addStanding);
 router.get("/addAbbrevation", goalserveController.addAbbrevation);
+router.get("/single-game-boxscore", goalserveController.singleGameBoxScore);
 export default router;
