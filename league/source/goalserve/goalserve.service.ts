@@ -529,6 +529,12 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
     {
+      '$sort': {
+        'formattedDate': 1,
+        'time': 1
+      }
+    },
+    {
       $project: {
         id: true,
         date: true,
@@ -655,6 +661,12 @@ const mlbScoreWithDate = async (params: any) => {
         includeArrayIndex: "string",
         preserveNullAndEmptyArrays: true,
       },
+    },
+    {
+      '$sort': {
+        'formattedDate': 1,
+        'time': 1
+      }
     },
     {
       $project: {
