@@ -231,14 +231,14 @@ const getTotalValues = async (total: any) => {
     if (isArray(total?.bookmaker?.total)) {
       return total?.bookmaker?.total[0]?.name
         ? total?.bookmaker?.total[0]?.name
-        : "_";
+        : "";
     } else {
       return total?.bookmaker?.total?.name
         ? total?.bookmaker?.total?.name
-        : "-";
+        : "";
     }
   } else {
-    return "-";
+    return "";
   }
 };
 
@@ -434,7 +434,7 @@ const mlbScoreWithDate = async (params: any) => {
   const getFinalMatch = await Match.aggregate([
     {
       $match: {
-        date: date,
+        formattedDate: date,
         status: "Final",
       },
     },
@@ -559,10 +559,10 @@ const mlbScoreWithDate = async (params: any) => {
     },
   ]);
 
-  const getUpcommingMatch = await Match.aggregate([
+  const getUpcomingMatch = await Match.aggregate([
     {
       $match: {
-        date: date,
+        formattedDate: date,
         status: "Not Started",
       },
     },
@@ -686,7 +686,7 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
   ]);
-  return { getFinalMatch, getUpcommingMatch };
+  return { getFinalMatch, getUpcomingMatch };
 
   // try {
   //   const winlossArray = await getWinLost();
@@ -892,50 +892,72 @@ const createPlayer = async (body: any) => {
   // return dataToSave;
 };
 const createMatch = async (body: any) => {
-  const mlb_shedule = await axiosGet(
-    `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
-    { json: true }
-  );
+  var getDaysArray = function (start: any, end: any) {
+    for (
+      var arr = [], dt = new Date(start);
+      dt <= new Date(end);
+      dt.setDate(dt.getDate() + 1)
+    ) {
+      let day = moment(dt).format("DD");
+      let month = moment(dt).format("MM");
+      let year = moment(dt).format("YYYY");
+      let date = `${day}.${month}.${year}`;
+      arr.push(date);
+    }
+    return arr;
+  };
+
+  var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
+
+  const createFutureMatch = await daylist.map(async (item) => {
+    const mlb_shedule = await axiosGet(
+      `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
+      { json: true, date1: item }
+    );
+    const matches = mlb_shedule?.data?.fixtures?.category?.matches.flatMap(
+      (match: any) => match.match
+    );
+    for (const item of matches) {
+      const data: any = {
+        date: item.date,
+        formattedDate: item.formatted_date,
+        timezone: item.timezone,
+        seasonType: item.seasonType,
+        goalServeMatchId: item.id,
+        dateTimeUtc: item.datetime_utc,
+        status: item.status,
+        time: item.time,
+        goalServeVenueId: item.venue_id,
+        venueName: item.venue_name,
+        homeTeamHit: item.hometeam.hits,
+        homeTeamTotalScore: item.hometeam.totalscore,
+        homeTeamError: item.hometeam.errors,
+        awayTeamHit: item.awayteam.hits,
+        awayTeamTotalScore: item.awayteam.totalscore,
+        awayTeamError: item.awayteam.errors,
+      };
+      const teamIdAway: any = await Team.findOne({
+        goalServeTeamId: item.awayteam.id,
+      });
+      if (teamIdAway) {
+        data.awayTeamId = teamIdAway.id;
+        data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+      }
+      const teamIdHome: any = await Team.findOne({
+        goalServeTeamId: item.hometeam.id,
+      });
+      if (teamIdHome) {
+        data.homeTeamId = teamIdHome.id;
+        data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+      }
+      const matchData = new Match(data);
+      const savedMatchData = await matchData.save();
+    }
+  })
+
+
   // Flatten the array of matches
-  const matches = mlb_shedule?.data?.fixtures?.category?.matches.flatMap(
-    (match: any) => match.match
-  );
-  for (const item of matches) {
-    const data: any = {
-      date: item.date,
-      formattedDate: item.formatted_date,
-      timezone: item.timezone,
-      seasonType: item.seasonType,
-      goalServeMatchId: item.id,
-      dateTimeUtc: item.datetime_utc,
-      status: item.status,
-      time: item.time,
-      goalServeVenueId: item.venue_id,
-      venueName: item.venue_name,
-      homeTeamHit: item.hometeam.hits,
-      homeTeamTotalScore: item.hometeam.totalscore,
-      homeTeamError: item.hometeam.errors,
-      awayTeamHit: item.awayteam.hits,
-      awayTeamTotalScore: item.awayteam.totalscore,
-      awayTeamError: item.awayteam.errors,
-    };
-    const teamIdAway: any = await Team.findOne({
-      goalServeTeamId: item.awayteam.id,
-    });
-    if (teamIdAway) {
-      data.awayTeamId = teamIdAway.id;
-      data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
-    }
-    const teamIdHome: any = await Team.findOne({
-      goalServeTeamId: item.hometeam.id,
-    });
-    if (teamIdHome) {
-      data.homeTeamId = teamIdHome.id;
-      data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-    }
-    const matchData = new Match(data);
-    const savedMatchData = await matchData.save();
-  }
+
 };
 
 const createMatchStatsApi = async (body: any) => {
@@ -1807,6 +1829,76 @@ const addStanding = async () => {
     });
   });
 };
+
+const addMatchDataFuture = async (data: any) => {
+  var getDaysArray = function (start: any, end: any) {
+    for (
+      var arr = [], dt = new Date(start);
+      dt <= new Date(end);
+      dt.setDate(dt.getDate() + 1)
+    ) {
+      let day = moment(dt).format("DD");
+      let month = moment(dt).format("MM");
+      let year = moment(dt).format("YYYY");
+      let date = `${day}.${month}.${year}`;
+      arr.push(date);
+    }
+    return arr;
+  };
+
+  var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
+
+  const createFutureMatch = await daylist.map(async (item) => {
+    const mlb_shedule = await axiosGet(
+      `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
+      { json: true, date1: item }
+    );
+    const league: any = await League.findOne({
+      goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
+    });
+    const matches = mlb_shedule?.data?.fixtures?.category?.matches?.match.map(async (item: any) => {
+      // );
+      // for (const item of matches) {
+
+      const data: any = {
+        date: item.date,
+        goalServeLeagueId: league.goalServeLeagueId,
+        formattedDate: item.formatted_date,
+        timezone: item.timezone,
+        seasonType: item.seasonType,
+        goalServeMatchId: item.id,
+        dateTimeUtc: item.datetime_utc,
+        status: item.status,
+        time: item.time,
+        goalServeVenueId: item.venue_id,
+        venueName: item.venue_name,
+        homeTeamHit: item.hometeam.hits,
+        homeTeamTotalScore: item.hometeam.totalscore,
+        homeTeamError: item.hometeam.errors,
+        awayTeamHit: item.awayteam.hits,
+        awayTeamTotalScore: item.awayteam.totalscore,
+        awayTeamError: item.awayteam.errors,
+      };
+      const teamIdAway: any = await Team.findOne({
+        goalServeTeamId: item.awayteam.id,
+      });
+      if (teamIdAway) {
+        data.awayTeamId = teamIdAway.id;
+        data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+      }
+      const teamIdHome: any = await Team.findOne({
+        goalServeTeamId: item.hometeam.id,
+      });
+      if (teamIdHome) {
+        data.homeTeamId = teamIdHome.id;
+        data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+      }
+      const matchData = new Match(data);
+      const savedMatchData = await matchData.save();
+
+    })
+  })
+}
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -1835,8 +1927,9 @@ export default {
   createDivison,
   scoreWithCurrentDate,
   addMatch,
-  // createMatch,
+  createMatch,
   createMatchStatsApi,
   addStanding,
   addAbbrevation,
+  addMatchDataFuture
 };

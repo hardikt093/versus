@@ -212,6 +212,15 @@ const addAbbrevation = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const addMatchDataFuture = async (req: Request, res: Response) => {
+  try {
+    const addMatchDataFuture = await goalserveService.addMatchDataFuture(req.body)
+    createResponse(res, httpStatus.OK, "", {})
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -234,5 +243,5 @@ export default {
   scoreWithCurrentDate,
   addMatchData,
   addStanding,
-  addAbbrevation
+  addAbbrevation, addMatchDataFuture
 };
