@@ -1758,8 +1758,7 @@ const addAbbrevation = async () => {
       {
         json: true,
       }
-    );
-
+    )
     const result = await Team.findByIdAndUpdate(
       item.id,
       { abbreviation: getstanding?.data?.team?.abbreviation },
@@ -1767,7 +1766,6 @@ const addAbbrevation = async () => {
         returnDocument: "after",
       }
     );
-    console.log("result", result);
   });
 };
 const addStanding = async () => {
