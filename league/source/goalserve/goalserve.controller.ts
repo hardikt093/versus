@@ -212,15 +212,28 @@ const addAbbrevation = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const singleGameBoxScore = async (req: Request, res: Response) => {
+  try {
+    const singleGameBoxScore = await goalserveService.singleGameBoxScore(
+      req.query
+    );
+    createResponse(res, httpStatus.OK, "", singleGameBoxScore);
+  } catch (error: any) {
+    console.log("error", error);
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 
 const addMatchDataFuture = async (req: Request, res: Response) => {
   try {
-    const addMatchDataFuture = await goalserveService.addMatchDataFuture(req.body)
-    createResponse(res, httpStatus.OK, "", {})
+    const addMatchDataFuture = await goalserveService.addMatchDataFuture(
+      req.body
+    );
+    createResponse(res, httpStatus.OK, "", {});
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
-}
+};
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -243,5 +256,7 @@ export default {
   scoreWithCurrentDate,
   addMatchData,
   addStanding,
-  addAbbrevation, addMatchDataFuture
+  addAbbrevation,
+  addMatchDataFuture,
+  singleGameBoxScore
 };
