@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-export interface IStanding extends Document {
+export interface IStandingModel extends Document {
   leagueId: String;
   leagueType: String;
   goalServeLeagueId: Number;
@@ -18,4 +18,4 @@ export interface IStanding extends Document {
   runs_scored: String;
   won: String;
 }
-export default IStanding;
+export default IStandingModel;

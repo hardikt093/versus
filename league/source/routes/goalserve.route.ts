@@ -104,21 +104,14 @@ router.delete(
 
 router.get(
   "/player",
-  // auth,
+  auth,
   goalserveController.getAllPlayer
 );
 router.post(
   "/player",
-  // auth,
-  // validate(goalserveValidation.createPlayer),
+  auth,
   goalserveController.createPlayer
 );
-// router.post(
-//   "/match",
-//   // auth,
-//   // validate(goalserveValidation.createPlayer),
-//   goalserveController.createMatch
-// );
 router.put(
   "/player/:id",
   auth,
@@ -184,4 +177,5 @@ router.get(
 );
 router.get("/addMatchData", goalserveController.addMatchData);
 router.get("/addstandings", goalserveController.addStanding);
+router.get("/addAbbrevation", goalserveController.addAbbrevation);
 export default router;

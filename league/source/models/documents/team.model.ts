@@ -22,6 +22,7 @@ var teamSchema = new Schema(
     runs_diff: { type: Number, required: true },
     current_streak: { type: String, required: true },
     isDeleted: { type: Boolean, default: false },
+    abbreviation: String,
   },
   {
     timestamps: true,

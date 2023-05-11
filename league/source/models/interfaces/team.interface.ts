@@ -3,6 +3,7 @@ export interface ITeamModel extends Document {
   name: String;
   logo: String;
   leagueId: String;
-  goalServeTeamId:Number
+  goalServeTeamId: Number;
+  abbreviation: String;
 }
 export default ITeamModel;
