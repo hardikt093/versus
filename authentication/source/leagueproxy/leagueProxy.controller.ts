@@ -32,7 +32,7 @@ const mlbScoreWithDate = async (req: Request, res: Response) => {
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
-}
+};
 
 const scoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
@@ -46,6 +46,25 @@ const scoreWithCurrentDate = async (req: Request, res: Response) => {
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
-}
+};
 
-export default { standings, mlbScoreWithDate, scoreWithCurrentDate };
+const singleGameBoxscore = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const singleGameBoxscore = await axiosGet(
+      `${config.leagueServer}/mlb/single-game-boxscore`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", singleGameBoxscore.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+
+export default {
+  standings,
+  mlbScoreWithDate,
+  scoreWithCurrentDate,
+  singleGameBoxscore,
+};

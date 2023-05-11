@@ -233,9 +233,7 @@ const getTotalValues = async (total: any) => {
         ? total?.bookmaker?.total[0]?.name
         : "";
     } else {
-      return total?.bookmaker?.total?.name
-        ? total?.bookmaker?.total?.name
-        : "";
+      return total?.bookmaker?.total?.name ? total?.bookmaker?.total?.name : "";
     }
   } else {
     return "";
@@ -529,10 +527,10 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
     {
-      '$sort': {
-        'formattedDate': 1,
-        'time': 1
-      }
+      $sort: {
+        formattedDate: 1,
+        time: 1,
+      },
     },
     {
       $project: {
@@ -664,10 +662,10 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
     {
-      '$sort': {
-        'formattedDate': 1,
-        'time': 1
-      }
+      $sort: {
+        formattedDate: 1,
+        time: 1,
+      },
     },
     {
       $project: {
@@ -967,11 +965,9 @@ const createMatch = async (body: any) => {
       const matchData = new Match(data);
       const savedMatchData = await matchData.save();
     }
-  })
-
+  });
 
   // Flatten the array of matches
-
 };
 
 const createMatchStatsApi = async (body: any) => {
@@ -1188,7 +1184,7 @@ const getFinalMatchDataFromDB = async () => {
     {
       $match: {
         formattedDate: date,
-        status: "Final"
+        status: "Final",
       },
     },
     {
@@ -1416,10 +1412,10 @@ const getUpcomingDataFromMongodb = async () => {
       },
     },
     {
-      '$sort': {
-        'formattedDate': 1,
-        'time': 1
-      }
+      $sort: {
+        formattedDate: 1,
+        time: 1,
+      },
     },
     {
       $project: {
@@ -1452,7 +1448,7 @@ const getUpcomingDataFromMongodb = async () => {
       },
     },
   ]);
-}
+};
 const getLiveDataFromMongodb = async () => {
   let day = moment().format("D");
   let month = moment().format("MM");
@@ -1556,10 +1552,10 @@ const getLiveDataFromMongodb = async () => {
       },
     },
     {
-      '$sort': {
-        'formattedDate': 1,
-        'time': 1
-      }
+      $sort: {
+        formattedDate: 1,
+        time: 1,
+      },
     },
     {
       $project: {
@@ -1592,7 +1588,7 @@ const getLiveDataFromMongodb = async () => {
       },
     },
   ]);
-}
+};
 const scoreWithCurrentDate = async () => {
   return {
     // getLiveMatch: await getLiveMatch(),
@@ -2307,9 +2303,9 @@ const singleGameBoxScore = async (params: any) => {
     {
       $project: {
         id: true,
-        attendance:true,
-        venueName:true,
-        dateTimeUtc:true,
+        attendance: true,
+        venueName: true,
+        dateTimeUtc: true,
         goalServeMatchId: true,
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
@@ -2348,14 +2344,14 @@ const singleGameBoxScore = async (params: any) => {
         //     },
         //   },
         // },
-        awayInning:"$inningsAway",
+        awayInning: "$inningsAway",
         homeInning: "$inningsHome",
-        matchEvents:"$matchEvents",
-        matchStats:"$matchStats"
-
+        matchEvents: "$matchEvents",
+        matchStats: "$matchStats",
       },
     },
   ]);
+  console.log("getMatch", getMatch);
   return { getMatch };
 };
 
@@ -2385,49 +2381,50 @@ const addMatchDataFuture = async (data: any) => {
     const league: any = await League.findOne({
       goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
     });
-    const matches = mlb_shedule?.data?.fixtures?.category?.matches?.match.map(async (item: any) => {
-      // );
-      // for (const item of matches) {
+    const matches = mlb_shedule?.data?.fixtures?.category?.matches?.match.map(
+      async (item: any) => {
+        // );
+        // for (const item of matches) {
 
-      const data: any = {
-        date: item.date,
-        goalServeLeagueId: league.goalServeLeagueId,
-        formattedDate: item.formatted_date,
-        timezone: item.timezone,
-        seasonType: item.seasonType,
-        goalServeMatchId: item.id,
-        dateTimeUtc: item.datetime_utc,
-        status: item.status,
-        time: item.time,
-        goalServeVenueId: item.venue_id,
-        venueName: item.venue_name,
-        homeTeamHit: item.hometeam.hits,
-        homeTeamTotalScore: item.hometeam.totalscore,
-        homeTeamError: item.hometeam.errors,
-        awayTeamHit: item.awayteam.hits,
-        awayTeamTotalScore: item.awayteam.totalscore,
-        awayTeamError: item.awayteam.errors,
-      };
-      const teamIdAway: any = await Team.findOne({
-        goalServeTeamId: item.awayteam.id,
-      });
-      if (teamIdAway) {
-        data.awayTeamId = teamIdAway.id;
-        data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+        const data: any = {
+          date: item.date,
+          goalServeLeagueId: league.goalServeLeagueId,
+          formattedDate: item.formatted_date,
+          timezone: item.timezone,
+          seasonType: item.seasonType,
+          goalServeMatchId: item.id,
+          dateTimeUtc: item.datetime_utc,
+          status: item.status,
+          time: item.time,
+          goalServeVenueId: item.venue_id,
+          venueName: item.venue_name,
+          homeTeamHit: item.hometeam.hits,
+          homeTeamTotalScore: item.hometeam.totalscore,
+          homeTeamError: item.hometeam.errors,
+          awayTeamHit: item.awayteam.hits,
+          awayTeamTotalScore: item.awayteam.totalscore,
+          awayTeamError: item.awayteam.errors,
+        };
+        const teamIdAway: any = await Team.findOne({
+          goalServeTeamId: item.awayteam.id,
+        });
+        if (teamIdAway) {
+          data.awayTeamId = teamIdAway.id;
+          data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+        }
+        const teamIdHome: any = await Team.findOne({
+          goalServeTeamId: item.hometeam.id,
+        });
+        if (teamIdHome) {
+          data.homeTeamId = teamIdHome.id;
+          data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+        }
+        const matchData = new Match(data);
+        const savedMatchData = await matchData.save();
       }
-      const teamIdHome: any = await Team.findOne({
-        goalServeTeamId: item.hometeam.id,
-      });
-      if (teamIdHome) {
-        data.homeTeamId = teamIdHome.id;
-        data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-      }
-      const matchData = new Match(data);
-      const savedMatchData = await matchData.save();
-
-    })
-  })
-}
+    );
+  });
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -2461,5 +2458,5 @@ export default {
   addStanding,
   addAbbrevation,
   singleGameBoxScore,
-  addMatchDataFuture
+  addMatchDataFuture,
 };
