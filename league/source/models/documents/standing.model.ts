@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IStartingPitcherModel from "../interfaces/startingPitcher.interface";
+import IStandingModel from "../interfaces/standing.interface";
 var standingSchema = new Schema(
   {
     leagueId: { type: Schema.Types.ObjectId, required: false, ref: "league" },
@@ -24,6 +24,6 @@ var standingSchema = new Schema(
     timestamps: true,
   }
 );
-const Standings = model<IStartingPitcherModel>("standing", standingSchema);
+const Standings = model<IStandingModel>("standing", standingSchema);
 
 export default Standings;

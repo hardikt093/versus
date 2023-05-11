@@ -44,10 +44,11 @@ const transformLeague = async (getResponse: any, data: any) => {
                   `baseball/${team.id}_rosters`
                 );
                 team.teamImage = getAwayTeamImage.data.team.image;
-                team.pct = Math.round(
+
+                team.pct = +(
                   (Number(team.won) * 100) /
-                    (Number(team.won) + Number(team.lost))
-                );
+                  (Number(team.won) + Number(team.lost))
+                ).toFixed(3);
               })
             );
             leagueTransform.push({ teams: teams, name: division.name });
