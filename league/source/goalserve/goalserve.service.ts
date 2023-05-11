@@ -180,7 +180,7 @@ const getUpcomingMatch = async () => {
       });
       return getUpcomingMatch;
     });
-  } catch (error) {
+  } catch (error: any) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
 };
@@ -217,7 +217,7 @@ const getOdds = (nameKey: any, myArray: any) => {
   }
 };
 const getTotal = (nameKey: any, myArray: any) => {
-  if (myArray.length > 0) {
+  if (myArray?.length > 0) {
     for (let i = 0; i < myArray?.length; i++) {
       if (myArray[i].value == nameKey) {
         return myArray[i];
@@ -227,7 +227,7 @@ const getTotal = (nameKey: any, myArray: any) => {
 };
 
 const getTotalValues = async (total: any) => {
-  if (total.bookmaker) {
+  if (total?.bookmaker) {
     if (isArray(total?.bookmaker?.total)) {
       return total?.bookmaker?.total[0]?.name
         ? total?.bookmaker?.total[0]?.name
@@ -1300,7 +1300,7 @@ const addMatch = async (data: any) => {
     return arr;
   };
 
-  var daylist = getDaysArray(new Date("2023-02-27"), new Date("2023-05-09"));
+  var daylist = getDaysArray(new Date("2023-02-27"), new Date("2023-05-10"));
 
   const createMatch = await daylist.map(async (item: any) => {
     const getMatch = await axiosGet(
