@@ -180,7 +180,7 @@ const getUpcomingMatch = async () => {
       });
       return getUpcomingMatch;
     });
-  } catch (error) {
+  } catch (error: any) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
 };
@@ -217,7 +217,7 @@ const getOdds = (nameKey: any, myArray: any) => {
   }
 };
 const getTotal = (nameKey: any, myArray: any) => {
-  if (myArray.length > 0) {
+  if (myArray?.length > 0) {
     for (let i = 0; i < myArray?.length; i++) {
       if (myArray[i].value == nameKey) {
         return myArray[i];
@@ -227,18 +227,18 @@ const getTotal = (nameKey: any, myArray: any) => {
 };
 
 const getTotalValues = async (total: any) => {
-  if (total.bookmaker) {
+  if (total?.bookmaker) {
     if (isArray(total?.bookmaker?.total)) {
       return total?.bookmaker?.total[0]?.name
         ? total?.bookmaker?.total[0]?.name
-        : "_";
+        : "";
     } else {
       return total?.bookmaker?.total?.name
         ? total?.bookmaker?.total?.name
-        : "-";
+        : "";
     }
   } else {
-    return "-";
+    return "";
   }
 };
 
@@ -434,7 +434,7 @@ const mlbScoreWithDate = async (params: any) => {
   const getFinalMatch = await Match.aggregate([
     {
       $match: {
-        date: date,
+        formattedDate: date,
         status: "Final",
       },
     },
@@ -529,12 +529,19 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
     {
+      '$sort': {
+        'formattedDate': 1,
+        'time': 1
+      }
+    },
+    {
       $project: {
         id: true,
         date: true,
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -559,10 +566,10 @@ const mlbScoreWithDate = async (params: any) => {
     },
   ]);
 
-  const getUpcommingMatch = await Match.aggregate([
+  const getUpcomingMatch = await Match.aggregate([
     {
       $match: {
-        date: date,
+        formattedDate: date,
         status: "Not Started",
       },
     },
@@ -657,12 +664,19 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
     {
+      '$sort': {
+        'formattedDate': 1,
+        'time': 1
+      }
+    },
+    {
       $project: {
         id: true,
         date: true,
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -686,7 +700,7 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
   ]);
-  return { getFinalMatch, getUpcommingMatch };
+  return { getFinalMatch, getUpcomingMatch };
 
   // try {
   //   const winlossArray = await getWinLost();
@@ -892,50 +906,72 @@ const createPlayer = async (body: any) => {
   // return dataToSave;
 };
 const createMatch = async (body: any) => {
-  const mlb_shedule = await axiosGet(
-    `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
-    { json: true }
-  );
+  var getDaysArray = function (start: any, end: any) {
+    for (
+      var arr = [], dt = new Date(start);
+      dt <= new Date(end);
+      dt.setDate(dt.getDate() + 1)
+    ) {
+      let day = moment(dt).format("DD");
+      let month = moment(dt).format("MM");
+      let year = moment(dt).format("YYYY");
+      let date = `${day}.${month}.${year}`;
+      arr.push(date);
+    }
+    return arr;
+  };
+
+  var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
+
+  const createFutureMatch = await daylist.map(async (item) => {
+    const mlb_shedule = await axiosGet(
+      `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
+      { json: true, date1: item }
+    );
+    const matches = mlb_shedule?.data?.fixtures?.category?.matches.flatMap(
+      (match: any) => match.match
+    );
+    for (const item of matches) {
+      const data: any = {
+        date: item.date,
+        formattedDate: item.formatted_date,
+        timezone: item.timezone,
+        seasonType: item.seasonType,
+        goalServeMatchId: item.id,
+        dateTimeUtc: item.datetime_utc,
+        status: item.status,
+        time: item.time,
+        goalServeVenueId: item.venue_id,
+        venueName: item.venue_name,
+        homeTeamHit: item.hometeam.hits,
+        homeTeamTotalScore: item.hometeam.totalscore,
+        homeTeamError: item.hometeam.errors,
+        awayTeamHit: item.awayteam.hits,
+        awayTeamTotalScore: item.awayteam.totalscore,
+        awayTeamError: item.awayteam.errors,
+      };
+      const teamIdAway: any = await Team.findOne({
+        goalServeTeamId: item.awayteam.id,
+      });
+      if (teamIdAway) {
+        data.awayTeamId = teamIdAway.id;
+        data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+      }
+      const teamIdHome: any = await Team.findOne({
+        goalServeTeamId: item.hometeam.id,
+      });
+      if (teamIdHome) {
+        data.homeTeamId = teamIdHome.id;
+        data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+      }
+      const matchData = new Match(data);
+      const savedMatchData = await matchData.save();
+    }
+  })
+
+
   // Flatten the array of matches
-  const matches = mlb_shedule?.data?.fixtures?.category?.matches.flatMap(
-    (match: any) => match.match
-  );
-  for (const item of matches) {
-    const data: any = {
-      date: item.date,
-      formattedDate: item.formatted_date,
-      timezone: item.timezone,
-      seasonType: item.seasonType,
-      goalServeMatchId: item.id,
-      dateTimeUtc: item.datetime_utc,
-      status: item.status,
-      time: item.time,
-      goalServeVenueId: item.venue_id,
-      venueName: item.venue_name,
-      homeTeamHit: item.hometeam.hits,
-      homeTeamTotalScore: item.hometeam.totalscore,
-      homeTeamError: item.hometeam.errors,
-      awayTeamHit: item.awayteam.hits,
-      awayTeamTotalScore: item.awayteam.totalscore,
-      awayTeamError: item.awayteam.errors,
-    };
-    const teamIdAway: any = await Team.findOne({
-      goalServeTeamId: item.awayteam.id,
-    });
-    if (teamIdAway) {
-      data.awayTeamId = teamIdAway.id;
-      data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
-    }
-    const teamIdHome: any = await Team.findOne({
-      goalServeTeamId: item.hometeam.id,
-    });
-    if (teamIdHome) {
-      data.homeTeamId = teamIdHome.id;
-      data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-    }
-    const matchData = new Match(data);
-    const savedMatchData = await matchData.save();
-  }
+
 };
 
 const createMatchStatsApi = async (body: any) => {
@@ -1151,7 +1187,8 @@ const getFinalMatchDataFromDB = async () => {
   return await Match.aggregate([
     {
       $match: {
-        date: "9.05.2023",
+        formattedDate: date,
+        status: "Final"
       },
     },
     {
@@ -1251,6 +1288,7 @@ const getFinalMatchDataFromDB = async () => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -1275,12 +1313,294 @@ const getFinalMatchDataFromDB = async () => {
     },
   ]);
 };
+const getUpcomingDataFromMongodb = async () => {
+  let day = moment().format("D");
+  let month = moment().format("MM");
+  let year = moment().format("YYYY");
+  let date = `${day}.${month}.${year}`;
+  return await Match.aggregate([
+    {
+      $match: {
+        formattedDate: date,
+        status: "Not Started",
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "awayTeamId",
+        foreignField: "_id",
+        as: "awayTeam",
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "homeTeamId",
+        foreignField: "_id",
+        as: "homeTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "standings",
+        localField: "awayTeamId",
+        foreignField: "teamId",
+        as: "awayTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "standings",
+        localField: "homeTeamId",
+        foreignField: "teamId",
+        as: "homeTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "teamImages",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "teamImages",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      '$sort': {
+        'formattedDate': 1,
+        'time': 1
+      }
+    },
+    {
+      $project: {
+        id: true,
+        date: true,
+        status: true,
+        datetime_utc: "$dateTimeUtc",
+        time: true,
+        goalServeMatchId: true,
+        awayTeam: {
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          awayTeamRun: "$awayTeamTotalScore",
+          awayTeamHit: "$awayTeamHit",
+          awayTeamErrors: "$awayTeamError",
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+          teamImage: "$awayTeamImage.image",
+        },
+        homeTeam: {
+          homeTeamName: "$homeTeam.name",
+          homeTeamId: "$homeTeam._id",
+          homeTeamRun: "$homeTeamTotalScore",
+          homeTeamHit: "$homeTeamHit",
+          homeTeamErrors: "$homeTeamError",
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+          teamImage: "$homeTeamImage.image",
+        },
+      },
+    },
+  ]);
+}
+const getLiveDataFromMongodb = async () => {
+  let day = moment().format("D");
+  let month = moment().format("MM");
+  let year = moment().format("YYYY");
+  let date = `${day}.${month}.${year}`;
+  return await Match.aggregate([
+    {
+      $match: {
+        formattedDate: date,
+        status: "Not Started",
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "awayTeamId",
+        foreignField: "_id",
+        as: "awayTeam",
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "homeTeamId",
+        foreignField: "_id",
+        as: "homeTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "standings",
+        localField: "awayTeamId",
+        foreignField: "teamId",
+        as: "awayTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "standings",
+        localField: "homeTeamId",
+        foreignField: "teamId",
+        as: "homeTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "teamImages",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "teamImages",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      '$sort': {
+        'formattedDate': 1,
+        'time': 1
+      }
+    },
+    {
+      $project: {
+        id: true,
+        date: true,
+        status: true,
+        datetime_utc: "$dateTimeUtc",
+        time: true,
+        goalServeMatchId: true,
+        awayTeam: {
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          awayTeamRun: "$awayTeamTotalScore",
+          awayTeamHit: "$awayTeamHit",
+          awayTeamErrors: "$awayTeamError",
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+          teamImage: "$awayTeamImage.image",
+        },
+        homeTeam: {
+          homeTeamName: "$homeTeam.name",
+          homeTeamId: "$homeTeam._id",
+          homeTeamRun: "$homeTeamTotalScore",
+          homeTeamHit: "$homeTeamHit",
+          homeTeamErrors: "$homeTeamError",
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+          teamImage: "$homeTeamImage.image",
+        },
+      },
+    },
+  ]);
+}
 const scoreWithCurrentDate = async () => {
   return {
-    getLiveMatch: await getLiveMatch(),
-    getUpcomingMatch: await getUpcomingMatch(),
-    getFinalMatch: await getFinalMatch(),
-    // getFinalMatch: await getFinalMatchDataFromDB(),
+    // getLiveMatch: await getLiveMatch(),
+    getLiveMatch: await getLiveDataFromMongodb(),
+    // getUpcomingMatch: await getUpcomingMatch(),
+    getUpcomingMatch: await getUpcomingDataFromMongodb(),
+    // getFinalMatch: await getFinalMatch(),
+    getFinalMatch: await getFinalMatchDataFromDB(),
   };
 };
 
@@ -1300,7 +1620,7 @@ const addMatch = async (data: any) => {
     return arr;
   };
 
-  var daylist = getDaysArray(new Date("2023-02-27"), new Date("2023-05-09"));
+  var daylist = getDaysArray(new Date("2023-02-27"), new Date("2023-05-10"));
 
   const createMatch = await daylist.map(async (item: any) => {
     const getMatch = await axiosGet(
@@ -2039,6 +2359,75 @@ const singleGameBoxScore = async (params: any) => {
   return { getMatch };
 };
 
+const addMatchDataFuture = async (data: any) => {
+  var getDaysArray = function (start: any, end: any) {
+    for (
+      var arr = [], dt = new Date(start);
+      dt <= new Date(end);
+      dt.setDate(dt.getDate() + 1)
+    ) {
+      let day = moment(dt).format("DD");
+      let month = moment(dt).format("MM");
+      let year = moment(dt).format("YYYY");
+      let date = `${day}.${month}.${year}`;
+      arr.push(date);
+    }
+    return arr;
+  };
+
+  var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
+
+  const createFutureMatch = await daylist.map(async (item) => {
+    const mlb_shedule = await axiosGet(
+      `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
+      { json: true, date1: item }
+    );
+    const league: any = await League.findOne({
+      goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
+    });
+    const matches = mlb_shedule?.data?.fixtures?.category?.matches?.match.map(async (item: any) => {
+      // );
+      // for (const item of matches) {
+
+      const data: any = {
+        date: item.date,
+        goalServeLeagueId: league.goalServeLeagueId,
+        formattedDate: item.formatted_date,
+        timezone: item.timezone,
+        seasonType: item.seasonType,
+        goalServeMatchId: item.id,
+        dateTimeUtc: item.datetime_utc,
+        status: item.status,
+        time: item.time,
+        goalServeVenueId: item.venue_id,
+        venueName: item.venue_name,
+        homeTeamHit: item.hometeam.hits,
+        homeTeamTotalScore: item.hometeam.totalscore,
+        homeTeamError: item.hometeam.errors,
+        awayTeamHit: item.awayteam.hits,
+        awayTeamTotalScore: item.awayteam.totalscore,
+        awayTeamError: item.awayteam.errors,
+      };
+      const teamIdAway: any = await Team.findOne({
+        goalServeTeamId: item.awayteam.id,
+      });
+      if (teamIdAway) {
+        data.awayTeamId = teamIdAway.id;
+        data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+      }
+      const teamIdHome: any = await Team.findOne({
+        goalServeTeamId: item.hometeam.id,
+      });
+      if (teamIdHome) {
+        data.homeTeamId = teamIdHome.id;
+        data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+      }
+      const matchData = new Match(data);
+      const savedMatchData = await matchData.save();
+
+    })
+  })
+}
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -2067,9 +2456,10 @@ export default {
   createDivison,
   scoreWithCurrentDate,
   addMatch,
-  // createMatch,
+  createMatch,
   createMatchStatsApi,
   addStanding,
   addAbbrevation,
   singleGameBoxScore,
+  addMatchDataFuture
 };
