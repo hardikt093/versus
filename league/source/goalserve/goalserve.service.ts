@@ -541,6 +541,7 @@ const mlbScoreWithDate = async (params: any) => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -675,6 +676,7 @@ const mlbScoreWithDate = async (params: any) => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -1286,6 +1288,7 @@ const getFinalMatchDataFromDB = async () => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -1425,6 +1428,7 @@ const getUpcomingDataFromMongodb = async () => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -1564,6 +1568,7 @@ const getLiveDataFromMongodb = async () => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
