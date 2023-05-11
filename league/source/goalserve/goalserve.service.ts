@@ -1462,6 +1462,21 @@ const getLiveDataFromMongodb = async () => {
       },
     },
     {
+      '$match': {
+        '$and': [
+          {
+            'status': {
+              '$ne': 'Not Started'
+            }
+          }, {
+            'status': {
+              '$ne': 'Final'
+            }
+          }
+        ]
+      }
+    },
+    {
       $lookup: {
         from: "teams",
         localField: "awayTeamId",
