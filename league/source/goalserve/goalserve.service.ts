@@ -1927,7 +1927,7 @@ const singleGameBoxScore = async (params: any) => {
       $lookup: {
         from: "innings",
         let: {
-          id: "$_id",
+          goalServeMatchId: "$goalServeMatchId",
           goalServeTeamId: "$goalServeAwayTeamId",
         },
         pipeline: [
@@ -1935,7 +1935,7 @@ const singleGameBoxScore = async (params: any) => {
             $match: {
               $expr: {
                 $and: [
-                  { $eq: ["$$id", "$matchId"] },
+                  { $eq: ["$$goalServeMatchId", "$goalServeMatchId"] },
                   { $eq: ["$$goalServeTeamId", "$goalServeTeamId"] },
                 ],
               },
@@ -1949,7 +1949,7 @@ const singleGameBoxScore = async (params: any) => {
       $lookup: {
         from: "innings",
         let: {
-          id: "$_id",
+          goalServeMatchId: "$goalServeMatchId",
           goalServeTeamId: "$goalServeHomeTeamId",
         },
         pipeline: [
@@ -1957,7 +1957,7 @@ const singleGameBoxScore = async (params: any) => {
             $match: {
               $expr: {
                 $and: [
-                  { $eq: ["$$id", "$matchId"] },
+                  { $eq: ["$$goalServeMatchId", "$goalServeMatchId"] },
                   { $eq: ["$$goalServeTeamId", "$goalServeTeamId"] },
                 ],
               },
@@ -2028,7 +2028,7 @@ const singleGameBoxScore = async (params: any) => {
         //     },
         //   },
         // },
-        awayInning:"$awayInning",
+        awayInning:"$inningsAway",
         homeInning: "$inningsHome",
         matchEvents:"$matchEvents",
         matchStats:"$matchStats"
