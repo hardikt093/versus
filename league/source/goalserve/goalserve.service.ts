@@ -1615,487 +1615,7 @@ const scoreWithCurrentDate = async () => {
   };
 };
 
-const addMatch = async (data: any) => {
-  var getDaysArray = function (start: any, end: any) {
-    for (
-      var arr = [], dt = new Date(start);
-      dt <= new Date(end);
-      dt.setDate(dt.getDate() + 1)
-    ) {
-      let day = moment(dt).format("DD");
-      let month = moment(dt).format("MM");
-      let year = moment(dt).format("YYYY");
-      let date = `${day}.${month}.${year}`;
-      arr.push(date);
-    }
-    return arr;
-  };
 
-  var daylist = getDaysArray(new Date("2023-02-27"), new Date("2023-05-10"));
-
-  const createMatch = await daylist.map(async (item: any) => {
-    const getMatch = await axiosGet(
-      `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/usa`,
-      { json: true, date: item }
-    );
-    var savedMatchData: any = "";
-    var savediningData: any = "";
-    var savedEventData: any = "";
-    const matchArray = await getMatch?.data?.scores?.category?.match;
-    const league: any = await League.findOne({
-      goalServeLeagueId: getMatch?.data.scores.category.id,
-    });
-    if (matchArray) {
-      // for (const item of matchArray) {
-      const match = await matchArray.map(async (item: any) => {
-        const data: any = {
-          leagueId: league.id,
-          goalServeLeagueId: league.goalServeLeagueId,
-          outs: item.outs,
-          date: item.date,
-          formattedDate: item.formatted_date,
-          timezone: item.timezone,
-          oddsid: item.seasonType,
-          attendance: item.attendance,
-          goalServeMatchId: item.id,
-          dateTimeUtc: item.datetime_utc,
-          status: item.status,
-          time: item.time,
-          goalServeVenueId: item.venue_id,
-          venueName: item.venue_name,
-          homeTeamHit: item.hometeam.hits,
-          homeTeamTotalScore: item.hometeam.totalscore,
-          homeTeamError: item.hometeam.errors,
-          awayTeamHit: item.awayteam.hits,
-          awayTeamTotalScore: item.awayteam.totalscore,
-          awayTeamError: item.awayteam.errors,
-        };
-        const teamIdAway: any = await Team.findOne({
-          goalServeTeamId: item.awayteam.id,
-        });
-        if (teamIdAway) {
-          data.awayTeamId = teamIdAway.id;
-          data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
-        }
-        const teamIdHome: any = await Team.findOne({
-          goalServeTeamId: item.hometeam.id,
-        });
-        if (teamIdHome) {
-          data.homeTeamId = teamIdHome.id;
-          data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-        }
-        const matchData = new Match(data);
-        savedMatchData = await matchData.save();
-
-        const awayInnings = item?.awayteam?.innings?.inning;
-        if (awayInnings) {
-          // for (const val of awayInnings) {
-          const awayInning = await awayInnings.map(async (val: any) => {
-            const inningData = {
-              score: val.score,
-              number: val.number,
-              hits: val.hits,
-              leagueId: league.id,
-              goalServeLeagueId: league.goalServeLeagueId,
-              teamId: teamIdAway.id,
-              goalServeTeamId: teamIdAway.goalServeTeamId,
-              teamType: "awayteam",
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-            };
-            const inningDataSaved = new Inning(inningData);
-            savediningData = await inningDataSaved.save();
-          });
-        }
-        const homeInnings = item?.hometeam?.innings?.inning;
-        if (homeInnings) {
-          // for (const val of awayInnings) {
-          const homeInning = await homeInnings.map(async (val: any) => {
-            const inningData = {
-              score: val.score,
-              number: val.number,
-              hits: val.hits,
-              leagueId: league.id,
-              goalServeLeagueId: league.goalServeLeagueId,
-              teamId: teamIdHome.id,
-              goalServeTeamId: teamIdHome.goalServeTeamId,
-              teamType: "hometeam",
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-            };
-            const inningDataSaved = new Inning(inningData);
-            savediningData = await inningDataSaved.save();
-          });
-        }
-        // startingpitchers
-
-        //  starting_pitchersAway
-        const starting_pitchersAway =
-          item?.starting_pitchers?.awayteam?.player?.id;
-
-        if (starting_pitchersAway) {
-          const awayTeamPlayer: any = await Player.findOne({
-            goalServePlayerId: starting_pitchersAway,
-          });
-          if (awayTeamPlayer) {
-            const starting_pitcherData = {
-              playerId: awayTeamPlayer.id,
-              goalServePlayerId: awayTeamPlayer.goalServePlayerId,
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-              leagueId: league.id,
-              goalServeLeagueId: league.goalServeLeagueId,
-              teamId: teamIdAway.id,
-              goalServeTeamId: teamIdAway.goalServeTeamId,
-              teamType: "awayteam",
-            };
-            const dataSaved = new StartingPitchers(starting_pitcherData);
-            const savedpitcherData = await dataSaved.save();
-          }
-        }
-
-        const starting_pitchershome =
-          item?.starting_pitchers?.hometeam?.player?.id;
-        if (starting_pitchershome) {
-          const homeTeamPlayer: any = await Player.findOne({
-            goalServePlayerId: starting_pitchershome,
-          });
-          if (homeTeamPlayer) {
-            const starting_pitcherDataHome = {
-              playerId: homeTeamPlayer.id,
-              goalServePlayerId: homeTeamPlayer.goalServePlayerId,
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-              leagueId: league.id,
-              goalServeLeagueId: league.goalServeLeagueId,
-              teamId: teamIdHome.id,
-              goalServeTeamId: teamIdHome.goalServeTeamId,
-              teamType: "hometeam",
-            };
-            const dataSaved = new StartingPitchers(starting_pitcherDataHome);
-            const savedpitcherData = await dataSaved.save();
-          }
-        }
-        // stats
-        if (item?.stats) {
-          const statsHittersAway = item?.stats?.hitters?.awayteam?.player;
-          const statsHittersHome = item?.stats?.hitters?.hometeam?.player;
-          const statsPitcherAway = item?.stats?.pitchers?.awayteam?.player;
-          const statsPitcherHome = item?.stats?.pitchers?.hometeam?.player;
-
-          if (statsHittersAway.length) {
-            statsHittersAway.map(async (hittersAway: any) => {
-              const player: any = await Player.findOne({
-                goalServePlayerId: hittersAway.id,
-              });
-              let data = {
-                at_bats: hittersAway?.at_bats,
-                average: hittersAway?.average,
-                cs: hittersAway?.cs,
-                doubles: hittersAway?.doubles,
-                hit_by_pitch: hittersAway?.hit_by_pitch,
-                hits: hittersAway?.hits,
-                home_runs: hittersAway?.home_runs,
-                // id: hittersAway?."42403",
-                playerId: player?._id,
-                goalServePlayerId: player?.goalServePlayerId,
-                name: hittersAway?.name,
-                on_base_percentage: hittersAway?.on_base_percentage,
-                pos: hittersAway?.pos,
-                runs: hittersAway?.runs,
-                runs_batted_in: hittersAway?.runs_batted_in,
-                sac_fly: hittersAway?.sac_fly,
-                slugging_percentage: hittersAway?.slugging_percentage,
-                stolen_bases: hittersAway?.stolen_bases,
-                strikeouts: hittersAway?.strikeouts,
-                triples: hittersAway?.triples,
-                walks: hittersAway?.walks,
-                teamType: "awayteam",
-                statsType: "hitters",
-                matchId: savedMatchData?.id,
-                goalServeMatchId: savedMatchData?.goalServeMatchId,
-              };
-              const dataSaved = new Stats(data);
-              await dataSaved.save();
-            });
-          } else {
-            const player: any = await Player.findOne({
-              goalServePlayerId: statsHittersAway.id,
-            });
-            let data = {
-              at_bats: statsHittersAway?.at_bats,
-              average: statsHittersAway?.average,
-              cs: statsHittersAway?.cs,
-              doubles: statsHittersAway?.doubles,
-              hit_by_pitch: statsHittersAway?.hit_by_pitch,
-              hits: statsHittersAway?.hits,
-              home_runs: statsHittersAway?.home_runs,
-              // id: statsHittersAway?."42403",
-              playerId: player?._id,
-              goalServePlayerId: player?.goalServePlayerId,
-              name: statsHittersAway?.name,
-              on_base_percentage: statsHittersAway?.on_base_percentage,
-              pos: statsHittersAway?.pos,
-              runs: statsHittersAway?.runs,
-              runs_batted_in: statsHittersAway?.runs_batted_in,
-              sac_fly: statsHittersAway?.sac_fly,
-              slugging_percentage: statsHittersAway?.slugging_percentage,
-              stolen_bases: statsHittersAway?.stolen_bases,
-              strikeouts: statsHittersAway?.strikeouts,
-              triples: statsHittersAway?.triples,
-              walks: statsHittersAway?.walks,
-              teamType: "awayteam",
-              statsType: "hitters",
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-            };
-            const dataSaved = new Stats(data);
-            await dataSaved.save();
-          }
-          if (statsHittersHome.length) {
-            statsHittersHome.map(async (hittersHome: any) => {
-              const player: any = await Player.findOne({
-                goalServePlayerId: hittersHome?.id,
-              });
-              let data = {
-                at_bats: hittersHome?.at_bats,
-                average: hittersHome?.average,
-                cs: hittersHome?.cs,
-                doubles: hittersHome?.doubles,
-                hit_by_pitch: hittersHome?.hit_by_pitch,
-                hits: hittersHome?.hits,
-                home_runs: hittersHome?.home_runs,
-                // id: hittersHome."42403",
-                playerId: player?._id,
-                goalServePlayerId: player?.goalServePlayerId,
-                name: hittersHome?.name,
-                on_base_percentage: hittersHome?.on_base_percentage,
-                pos: hittersHome?.pos,
-                runs: hittersHome?.runs,
-                runs_batted_in: hittersHome?.runs_batted_in,
-                sac_fly: hittersHome?.sac_fly,
-                slugging_percentage: hittersHome?.slugging_percentage,
-                stolen_bases: hittersHome?.stolen_bases,
-                strikeouts: hittersHome?.strikeouts,
-                triples: hittersHome?.triples,
-                walks: hittersHome?.walks,
-                teamType: "hometeam",
-                statsType: "hitters",
-                matchId: savedMatchData?.id,
-                goalServeMatchId: savedMatchData?.goalServeMatchId,
-              };
-              const dataSaved = new Stats(data);
-              await dataSaved?.save();
-            });
-          } else {
-            const player: any = await Player.findOne({
-              goalServePlayerId: statsHittersHome?.id,
-            });
-            let data = {
-              at_bats: statsHittersHome?.at_bats,
-              average: statsHittersHome?.average,
-              cs: statsHittersHome?.cs,
-              doubles: statsHittersHome?.doubles,
-              hit_by_pitch: statsHittersHome?.hit_by_pitch,
-              hits: statsHittersHome?.hits,
-              home_runs: statsHittersHome?.home_runs,
-              // id: statsHittersHome."42403",
-              playerId: player?._id,
-              goalServePlayerId: player?.goalServePlayerId,
-              name: statsHittersHome?.name,
-              on_base_percentage: statsHittersHome?.on_base_percentage,
-              pos: statsHittersHome?.pos,
-              runs: statsHittersHome?.runs,
-              runs_batted_in: statsHittersHome?.runs_batted_in,
-              sac_fly: statsHittersHome?.sac_fly,
-              slugging_percentage: statsHittersHome?.slugging_percentage,
-              stolen_bases: statsHittersHome?.stolen_bases,
-              strikeouts: statsHittersHome?.strikeouts,
-              triples: statsHittersHome?.triples,
-              walks: statsHittersHome?.walks,
-              teamType: "hometeam",
-              statsType: "hitters",
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-            };
-            const dataSaved = new Stats(data);
-            await dataSaved?.save();
-          }
-
-          if (statsPitcherAway.length) {
-            statsPitcherAway?.map(async (pitcherAway: any) => {
-              const player: any = await Player.findOne({
-                goalServePlayerId: pitcherAway?.id,
-              });
-
-              let data = {
-                earned_runs: pitcherAway?.earned_runs,
-                earned_runs_average: pitcherAway?.earned_runs_average,
-                hbp: pitcherAway?.hbp,
-                hits: pitcherAway?.hits,
-                holds: pitcherAway?.holds,
-                home_runs: pitcherAway?.home_runs,
-                playerId: player?._id,
-                goalServePlayerId: player?.goalServePlayerId,
-                innings_pitched: pitcherAway?.innings_pitched,
-                loss: pitcherAway?.loss,
-                name: pitcherAway?.name,
-                pc_st: pitcherAway?.pc_st,
-                runs: pitcherAway?.runs,
-                saves: pitcherAway?.saves,
-                strikeouts: pitcherAway?.strikeouts,
-                walks: pitcherAway?.walks,
-                win: pitcherAway?.win,
-                teamType: "awayteam",
-                statsType: "pitchers",
-                matchId: savedMatchData?.id,
-                goalServeMatchId: savedMatchData?.goalServeMatchId,
-              };
-
-              const dataSaved = new Stats(data);
-              await dataSaved.save();
-            });
-          } else {
-            const player: any = await Player.findOne({
-              goalServePlayerId: statsPitcherAway?.id,
-            });
-
-            let data = {
-              earned_runs: statsPitcherAway?.earned_runs,
-              earned_runs_average: statsPitcherAway?.earned_runs_average,
-              hbp: statsPitcherAway?.hbp,
-              hits: statsPitcherAway?.hits,
-              holds: statsPitcherAway?.holds,
-              home_runs: statsPitcherAway?.home_runs,
-              playerId: player?._id,
-              goalServePlayerId: player?.goalServePlayerId,
-              innings_pitched: statsPitcherAway?.innings_pitched,
-              loss: statsPitcherAway?.loss,
-              name: statsPitcherAway?.name,
-              pc_st: statsPitcherAway?.pc_st,
-              runs: statsPitcherAway?.runs,
-              saves: statsPitcherAway?.saves,
-              strikeouts: statsPitcherAway?.strikeouts,
-              walks: statsPitcherAway?.walks,
-              win: statsPitcherAway?.win,
-              teamType: "awayteam",
-              statsType: "pitchers",
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-            };
-
-            const dataSaved = new Stats(data);
-            await dataSaved.save();
-          }
-          if (statsPitcherHome.length) {
-            statsPitcherHome.map(async (pitcherHome: any) => {
-              const player: any = await Player.findOne({
-                goalServePlayerId: pitcherHome?.id,
-              });
-
-              let data = {
-                earned_runs: pitcherHome?.earned_runs,
-                earned_runs_average: pitcherHome?.earned_runs_average,
-                hbp: pitcherHome?.hbp,
-                hits: pitcherHome?.hits,
-                holds: pitcherHome?.holds,
-                home_runs: pitcherHome?.home_runs,
-                playerId: player?._id,
-                goalServePlayerId: player?.goalServePlayerId,
-                innings_pitched: pitcherHome?.innings_pitched,
-                loss: pitcherHome?.loss,
-                name: pitcherHome?.name,
-                pc_st: pitcherHome?.pc_st,
-                runs: pitcherHome?.runs,
-                saves: pitcherHome?.saves,
-                strikeouts: pitcherHome?.strikeouts,
-                walks: pitcherHome?.walks,
-                win: pitcherHome?.win,
-                teamType: "awayteam",
-                statsType: "pitchers",
-                matchId: savedMatchData?.id,
-                goalServeMatchId: savedMatchData?.goalServeMatchId,
-              };
-
-              const dataSaved = new Stats(data);
-              await dataSaved.save();
-            });
-          } else {
-            const player: any = await Player.findOne({
-              goalServePlayerId: statsPitcherHome?.id,
-            });
-
-            let data = {
-              earned_runs: statsPitcherHome?.earned_runs,
-              earned_runs_average: statsPitcherHome?.earned_runs_average,
-              hbp: statsPitcherHome?.hbp,
-              hits: statsPitcherHome?.hits,
-              holds: statsPitcherHome?.holds,
-              home_runs: statsPitcherHome?.home_runs,
-              playerId: player?._id,
-              goalServePlayerId: player?.goalServePlayerId,
-              innings_pitched: statsPitcherHome?.innings_pitched,
-              loss: statsPitcherHome?.loss,
-              name: statsPitcherHome?.name,
-              pc_st: statsPitcherHome?.pc_st,
-              runs: statsPitcherHome?.runs,
-              saves: statsPitcherHome?.saves,
-              strikeouts: statsPitcherHome?.strikeouts,
-              walks: statsPitcherHome?.walks,
-              win: statsPitcherHome?.win,
-              teamType: "awayteam",
-              statsType: "pitchers",
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-            };
-
-            const dataSaved = new Stats(data);
-            await dataSaved.save();
-          }
-        }
-        if (item?.events) {
-          const scoreSummary = item?.events?.event;
-
-          if (scoreSummary?.length) {
-            savedEventData = await scoreSummary.map(async (val: any) => {
-              const scoreSummaryData = {
-                chw: val.chw,
-                cle: val.cle,
-                desc: val.desc,
-                inn: val.inn,
-                teamType: val.team,
-                matchId: savedMatchData?.id,
-                goalServeMatchId: savedMatchData?.goalServeMatchId,
-                leagueId: league.id,
-                goalServeLeagueId: league.goalServeLeagueId,
-              };
-              const scoreSummaryDataSaved = new Event(scoreSummaryData);
-              return (savedEventData = await scoreSummaryDataSaved.save());
-            });
-            return savedEventData;
-          } else {
-            const scoreSummaryData = {
-              chw: scoreSummary.chw,
-              cle: scoreSummary.cle,
-              desc: scoreSummary.desc,
-              inn: scoreSummary.inn,
-              teamType: scoreSummary.team,
-              matchId: savedMatchData?.id,
-              goalServeMatchId: savedMatchData?.goalServeMatchId,
-              leagueId: league.id,
-              goalServeLeagueId: league.goalServeLeagueId,
-            };
-            const scoreSummaryDataSaved = new Event(scoreSummaryData);
-            return (savedEventData = await scoreSummaryDataSaved.save());
-          }
-        }
-      });
-    }
-  });
-  return await Promise.all(createMatch).then(async (item: any) => {
-    return item;
-  });
-};
 const addAbbrevation = async () => {
   const team = await Team.find({ isDeleted: false });
 
@@ -2537,59 +2057,76 @@ const addMatchDataFuture = async (data: any) => {
     return arr;
   };
 
-  var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
+  var daylist = getDaysArray(new Date("2023-05-11"), new Date("2023-10-01"));
 
-  const createFutureMatch = await daylist.map(async (item) => {
+
+  for (let i = 0; i < daylist?.length; i++) {
     const mlb_shedule = await axiosGet(
       `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
-      { json: true, date1: item }
+      { json: true, date1: daylist[i] }
     );
-    const league: any = await League.findOne({
-      goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
-    });
-    const matches = mlb_shedule?.data?.fixtures?.category?.matches?.match.map(
-      async (item: any) => {
-        // );
-        // for (const item of matches) {
 
+    const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches?.match
+    if (matchArray?.length > 0) {
+      const league: any = await League.findOne({
+        goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
+      });
+      var savedMatchData: any = "";
+      for (let j = 0; j < matchArray?.length; j++) {
         const data: any = {
-          date: item.date,
+          leagueId: league.id,
           goalServeLeagueId: league.goalServeLeagueId,
-          formattedDate: item.formatted_date,
-          timezone: item.timezone,
-          seasonType: item.seasonType,
-          goalServeMatchId: item.id,
-          dateTimeUtc: item.datetime_utc,
-          status: item.status,
-          time: item.time,
-          goalServeVenueId: item.venue_id,
-          venueName: item.venue_name,
-          homeTeamHit: item.hometeam.hits,
-          homeTeamTotalScore: item.hometeam.totalscore,
-          homeTeamError: item.hometeam.errors,
-          awayTeamHit: item.awayteam.hits,
-          awayTeamTotalScore: item.awayteam.totalscore,
-          awayTeamError: item.awayteam.errors,
+          outs: matchArray[j].outs,
+          date: matchArray[j].date,
+          formattedDate: matchArray[j].formatted_date,
+          timezone: matchArray[j].timezone,
+          oddsid: matchArray[j].seasonType,
+          attendance: matchArray[j].attendance,
+          goalServeMatchId: matchArray[j].id,
+          dateTimeUtc: matchArray[j].datetime_utc,
+          status: matchArray[j].status,
+          time: matchArray[j].time,
+          goalServeVenueId: matchArray[j].venue_id,
+          venueName: matchArray[j].venue_name,
+          homeTeamHit: matchArray[j].hometeam.hits,
+          homeTeamTotalScore: matchArray[j].hometeam.totalscore,
+          homeTeamError: matchArray[j].hometeam.errors,
+          awayTeamHit: matchArray[j].awayteam.hits,
+          awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+          awayTeamError: matchArray[j].awayteam.errors,
+          // new entries
+          awayTeamInnings: matchArray[j].awayteam?.innings?.inning ?
+            matchArray[j].awayteam?.innings?.inning : [],
+          homeTeamInnings: matchArray[j].hometeam?.innings?.inning ?
+            matchArray[j].hometeam?.innings?.inning : [],
+          event: matchArray[j].events?.event ? matchArray[j].events?.event : [],
+          startingPitchers: matchArray[j].starting_pitchers,
+          awayTeamHitters: matchArray[j].stats?.hitters?.awayteam?.player ? matchArray[j].stats?.hitters?.awayteam?.player : [],
+          homeTeamHitters: matchArray[j].stats?.hitters?.hometeam?.player ? matchArray[j].stats?.hitters?.hometeam?.player : [],
+          awayTeamPitchers: matchArray[j].stats?.pitchers?.awayteam?.player ? matchArray[j].stats?.pitchers?.awayteam?.player : [],
+          homeTeamPitchers: matchArray[j].stats?.pitchers?.hometeam?.player ? matchArray[j].stats?.pitchers?.hometeam?.player : []
         };
+
         const teamIdAway: any = await Team.findOne({
-          goalServeTeamId: item.awayteam.id,
+          goalServeTeamId: matchArray[j].awayteam.id,
         });
         if (teamIdAway) {
           data.awayTeamId = teamIdAway.id;
-          data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+          data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId ? teamIdAway?.goalServeTeamId : "";
         }
         const teamIdHome: any = await Team.findOne({
-          goalServeTeamId: item.hometeam.id,
+          goalServeTeamId: matchArray[j].hometeam.id,
         });
         if (teamIdHome) {
           data.homeTeamId = teamIdHome.id;
           data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
         }
         const matchData = new Match(data);
-        const savedMatchData = await matchData.save();
+        savedMatchData = await matchData.save();
       }
-    );
-  });
+    }
+
+  }
 };
 
 const getStandingData = async () => {
@@ -2695,7 +2232,7 @@ const addMatchWithNewModel = async () => {
       { json: true, date: daylist[i] }
     );
     const matchArray = await getMatch?.data?.scores?.category?.match;
-    if (matchArray) {
+    if (matchArray?.length > 0) {
       const league: any = await League.findOne({
         goalServeLeagueId: getMatch?.data.scores.category.id,
       });
@@ -2792,7 +2329,6 @@ export default {
   updateDivison,
   createDivison,
   scoreWithCurrentDate,
-  addMatch,
   createMatch,
   createMatchStatsApi,
   addStanding,

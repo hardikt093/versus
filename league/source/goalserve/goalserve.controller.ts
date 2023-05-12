@@ -228,6 +228,7 @@ const addMatchDataFuture = async (req: Request, res: Response) => {
     );
     createResponse(res, httpStatus.OK, "", {});
   } catch (error: any) {
+    console.log("error", error)
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
