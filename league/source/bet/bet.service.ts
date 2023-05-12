@@ -325,9 +325,7 @@ const resultBet = async (id: string, winTeamId: string) => {
 const getResultBet = async (loggedInUserId: number, betId: string) => {
   const betData = await Bet.findOne({
     _id: betId,
-  })
-    .populate("requestUserTeamId opponentUserTeamId matchEventId matchId")
-    .lean();
+  }).lean();
   if (betData && betData.opponentUserId === loggedInUserId) {
     if (betData.isOpponentUserWinAmount) {
       return {
