@@ -1615,7 +1615,6 @@ const scoreWithCurrentDate = async () => {
   };
 };
 
-
 const addAbbrevation = async () => {
   const team = await Team.find({ isDeleted: false });
 
@@ -1820,6 +1819,180 @@ const singleGameBoxScore = async (params: any) => {
           homeTeamErrors: "$homeTeamError",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
+        },
+
+        pitchingResult: {
+          win: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: { $ne: ["$$pitcher.win", ""] }
+                    }
+                  },
+                  []
+                ]
+              },
+              then: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: { $ne: ["$$pitcher.win", ""] }
+                    }
+                  },
+                  0
+                ]
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $ne: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: { $ne: ["$$pitcher.win", ""] }
+                        }
+                      },
+                      []
+                    ]
+                  },
+                  then: {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: { $ne: ["$$pitcher.win", ""] }
+                        }
+                      },
+                      0
+                    ]
+                  },
+                  else: null
+                }
+              }
+            }
+          },  
+          loss: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: { $ne: ["$$pitcher.loss", ""] }
+                    }
+                  },
+                  []
+                ]
+              },
+              then: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: { $ne: ["$$pitcher.loss", ""] }
+                    }
+                  },
+                  0
+                ]
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $ne: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: { $ne: ["$$pitcher.loss", ""] }
+                        }
+                      },
+                      []
+                    ]
+                  },
+                  then: {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: { $ne: ["$$pitcher.loss", ""] }
+                        }
+                      },
+                      0
+                    ]
+                  },
+                  else: null
+                }
+              }
+            }
+          },  
+          saves: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: { $ne: ["$$pitcher.saves", ""] }
+                    }
+                  },
+                  []
+                ]
+              },
+              then: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: { $ne: ["$$pitcher.saves", ""] }
+                    }
+                  },
+                  0
+                ]
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $ne: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: { $ne: ["$$pitcher.saves", ""] }
+                        }
+                      },
+                      []
+                    ]
+                  },
+                  then: {
+                    $arrayElemAt: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: { $ne: ["$$pitcher.saves", ""] }
+                        }
+                      },
+                      0
+                    ]
+                  },
+                  else: null
+                }
+              }
+            }
+          }, 
         },
       },
     },
@@ -2057,8 +2230,7 @@ const addMatchDataFuture = async (data: any) => {
     return arr;
   };
 
-  var daylist = getDaysArray(new Date("2023-05-11"), new Date("2023-10-01"));
-
+  var daylist = getDaysArray(new Date("2023-02-28"), new Date("2023-03-02"));
 
   for (let i = 0; i < daylist?.length; i++) {
     const mlb_shedule = await axiosGet(
@@ -2066,7 +2238,8 @@ const addMatchDataFuture = async (data: any) => {
       { json: true, date1: daylist[i] }
     );
 
-    const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches?.match
+    const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches
+      ?.match;
     if (matchArray?.length > 0) {
       const league: any = await League.findOne({
         goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
@@ -2095,16 +2268,26 @@ const addMatchDataFuture = async (data: any) => {
           awayTeamTotalScore: matchArray[j].awayteam.totalscore,
           awayTeamError: matchArray[j].awayteam.errors,
           // new entries
-          awayTeamInnings: matchArray[j].awayteam?.innings?.inning ?
-            matchArray[j].awayteam?.innings?.inning : [],
-          homeTeamInnings: matchArray[j].hometeam?.innings?.inning ?
-            matchArray[j].hometeam?.innings?.inning : [],
+          awayTeamInnings: matchArray[j].awayteam?.innings?.inning
+            ? matchArray[j].awayteam?.innings?.inning
+            : [],
+          homeTeamInnings: matchArray[j].hometeam?.innings?.inning
+            ? matchArray[j].hometeam?.innings?.inning
+            : [],
           event: matchArray[j].events?.event ? matchArray[j].events?.event : [],
           startingPitchers: matchArray[j].starting_pitchers,
-          awayTeamHitters: matchArray[j].stats?.hitters?.awayteam?.player ? matchArray[j].stats?.hitters?.awayteam?.player : [],
-          homeTeamHitters: matchArray[j].stats?.hitters?.hometeam?.player ? matchArray[j].stats?.hitters?.hometeam?.player : [],
-          awayTeamPitchers: matchArray[j].stats?.pitchers?.awayteam?.player ? matchArray[j].stats?.pitchers?.awayteam?.player : [],
-          homeTeamPitchers: matchArray[j].stats?.pitchers?.hometeam?.player ? matchArray[j].stats?.pitchers?.hometeam?.player : []
+          awayTeamHitters: matchArray[j].stats?.hitters?.awayteam?.player
+            ? matchArray[j].stats?.hitters?.awayteam?.player
+            : [],
+          homeTeamHitters: matchArray[j].stats?.hitters?.hometeam?.player
+            ? matchArray[j].stats?.hitters?.hometeam?.player
+            : [],
+          awayTeamPitchers: matchArray[j].stats?.pitchers?.awayteam?.player
+            ? matchArray[j].stats?.pitchers?.awayteam?.player
+            : [],
+          homeTeamPitchers: matchArray[j].stats?.pitchers?.hometeam?.player
+            ? matchArray[j].stats?.pitchers?.hometeam?.player
+            : [],
         };
 
         const teamIdAway: any = await Team.findOne({
@@ -2112,7 +2295,9 @@ const addMatchDataFuture = async (data: any) => {
         });
         if (teamIdAway) {
           data.awayTeamId = teamIdAway.id;
-          data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId ? teamIdAway?.goalServeTeamId : "";
+          data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
+            ? teamIdAway?.goalServeTeamId
+            : "";
         }
         const teamIdHome: any = await Team.findOne({
           goalServeTeamId: matchArray[j].hometeam.id,
@@ -2125,7 +2310,6 @@ const addMatchDataFuture = async (data: any) => {
         savedMatchData = await matchData.save();
       }
     }
-
   }
 };
 
