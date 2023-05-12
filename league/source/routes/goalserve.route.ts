@@ -168,7 +168,7 @@ router.get(
   auth,
   goalserveController.scoreWithCurrentDate
 );
-router.get("/addMatchData", goalserveController.addMatchData);
+router.post("/addMatchData", goalserveController.addMatchData);
 router.post("/addMatchDataFuture", goalserveController.addMatchDataFuture);
 router.get("/addstandings", goalserveController.addStanding);
 router.get("/addAbbrevation", goalserveController.addAbbrevation);

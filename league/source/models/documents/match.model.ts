@@ -33,6 +33,116 @@ var matchSchema = new Schema(
         awayTeamTotalScore: String,
         homeTeamTotalScore: String,
         run: String,
+        // new entries 
+        awayTeamInnings: [{
+            "hits": String,
+            "number": String,
+            "score": String
+        }],
+        homeTeamInnings: [{
+            "hits": String,
+            "number": String,
+            "score": String
+        }],
+        event: [{
+            "chw": String,
+            "cle": String,
+            "desc": String,
+            "inn": String,
+            "team": String
+        }],
+        startingPitchers: {
+            awayteam: {
+                player: {
+                    "id": String,
+                    "name": String
+                }
+            },
+            hometeam: {
+                player: {
+                    "id": String,
+                    "name": String
+                }
+            }
+        },
+        awayTeamHitters: [{
+            "at_bats": String,
+            "average": String,
+            "cs": String,
+            "doubles": String,
+            "hit_by_pitch": String,
+            "hits": String,
+            "home_runs": String,
+            "id": String,
+            "name": String,
+            "on_base_percentage": String,
+            "pos": String,
+            "runs": String,
+            "runs_batted_in": String,
+            "sac_fly": String,
+            "slugging_percentage": String,
+            "stolen_bases": String,
+            "strikeouts": String,
+            "triples": String,
+            "walks": String
+        }],
+        homeTeamHitters: [{
+            "at_bats": String,
+            "average": String,
+            "cs": String,
+            "doubles": String,
+            "hit_by_pitch": String,
+            "hits": String,
+            "home_runs": String,
+            "id": String,
+            "name": String,
+            "on_base_percentage": String,
+            "pos": String,
+            "runs": String,
+            "runs_batted_in": String,
+            "sac_fly": String,
+            "slugging_percentage": String,
+            "stolen_bases": String,
+            "strikeouts": String,
+            "triples": String,
+            "walks": String
+        }],
+        awayTeamPitchers: [{
+            "earned_runs": String,
+            "earned_runs_average": String,
+            "hbp": String,
+            "hits": String,
+            "holds": String,
+            "home_runs": String,
+            "id": String,
+            "innings_pitched": String,
+            "loss": String,
+            "name": String,
+            "pc-st": String,
+            "runs": String,
+            "saves": String,
+            "strikeouts": String,
+            "walks": String,
+            "win": String
+        }],
+        homeTeamPitchers: [{
+            "earned_runs": String,
+            "earned_runs_average": String,
+            "hbp": String,
+            "hits": String,
+            "holds": String,
+            "home_runs": String,
+            "id": String,
+            "innings_pitched": String,
+            "loss": String,
+            "name": String,
+            "pc-st": String,
+            "runs": String,
+            "saves": String,
+            "strikeouts": String,
+            "walks": String,
+            "win": String
+        }]
     },
     {
         timestamps: true,

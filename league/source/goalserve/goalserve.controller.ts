@@ -187,8 +187,8 @@ const scoreWithCurrentDate = async (req: Request, res: Response) => {
 
 const addMatchData = async (req: Request, res: Response) => {
   try {
-    const addMatch = await goalserveService.addMatch(req.body);
-    createResponse(res, httpStatus.OK, "", addMatch);
+    const addMatch = await goalserveService.addMatchWithNewModel();
+    createResponse(res, httpStatus.OK, "", {});
   } catch (error: any) {
     console.log("error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -199,7 +199,6 @@ const addStanding = async (req: Request, res: Response) => {
     const addMatch = await goalserveService.addStanding();
     createResponse(res, httpStatus.OK, "", addMatch);
   } catch (error: any) {
-    console.log("error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
@@ -208,7 +207,6 @@ const addAbbrevation = async (req: Request, res: Response) => {
     const addMatch = await goalserveService.addAbbrevation();
     createResponse(res, httpStatus.OK, "", addMatch);
   } catch (error: any) {
-    console.log("error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
@@ -219,7 +217,6 @@ const singleGameBoxScore = async (req: Request, res: Response) => {
     );
     createResponse(res, httpStatus.OK, "", singleGameBoxScore);
   } catch (error: any) {
-    console.log("error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
