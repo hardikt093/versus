@@ -468,8 +468,8 @@ const mlbScoreWithDate = async (params: any) => {
     {
       $lookup: {
         from: "standings",
-        localField: "awayTeamId",
-        foreignField: "teamId",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
         as: "awayTeamStandings",
       },
     },
@@ -483,8 +483,8 @@ const mlbScoreWithDate = async (params: any) => {
     {
       $lookup: {
         from: "standings",
-        localField: "homeTeamId",
-        foreignField: "teamId",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
         as: "homeTeamStandings",
       },
     },
@@ -603,8 +603,8 @@ const mlbScoreWithDate = async (params: any) => {
     {
       $lookup: {
         from: "standings",
-        localField: "awayTeamId",
-        foreignField: "teamId",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
         as: "awayTeamStandings",
       },
     },
@@ -618,8 +618,8 @@ const mlbScoreWithDate = async (params: any) => {
     {
       $lookup: {
         from: "standings",
-        localField: "homeTeamId",
-        foreignField: "teamId",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
         as: "homeTeamStandings",
       },
     },
@@ -1219,8 +1219,8 @@ const getFinalMatchDataFromDB = async () => {
     {
       $lookup: {
         from: "standings",
-        localField: "awayTeamId",
-        foreignField: "teamId",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
         as: "awayTeamStandings",
       },
     },
@@ -1234,8 +1234,8 @@ const getFinalMatchDataFromDB = async () => {
     {
       $lookup: {
         from: "standings",
-        localField: "homeTeamId",
-        foreignField: "teamId",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
         as: "homeTeamStandings",
       },
     },
@@ -1353,8 +1353,8 @@ const getUpcomingDataFromMongodb = async () => {
     {
       $lookup: {
         from: "standings",
-        localField: "awayTeamId",
-        foreignField: "teamId",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
         as: "awayTeamStandings",
       },
     },
@@ -1368,8 +1368,8 @@ const getUpcomingDataFromMongodb = async () => {
     {
       $lookup: {
         from: "standings",
-        localField: "homeTeamId",
-        foreignField: "teamId",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
         as: "homeTeamStandings",
       },
     },
