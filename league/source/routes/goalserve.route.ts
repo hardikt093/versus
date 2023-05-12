@@ -27,8 +27,9 @@ const router = express.Router();
  *       200:
  *         description: get standings
  */
-router.get("/standings", goalserveController.baseballStandings);
+// router.get("/standings", goalserveController.baseballStandings);
 router.get("/scoreWithDate", auth, goalserveController.mlbScoreWithDate);
+router.get("/standings", auth, goalserveController.getBseballStandings);
 
 /**
  * @swagger

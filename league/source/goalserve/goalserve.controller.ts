@@ -234,6 +234,16 @@ const addMatchDataFuture = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const getBseballStandings = async (req: Request, res: Response) => {
+  try {
+    const getStanding = await goalserveService.getStandingData();
+    createResponse(res, httpStatus.OK, "", getStanding);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -258,5 +268,6 @@ export default {
   addStanding,
   addAbbrevation,
   addMatchDataFuture,
-  singleGameBoxScore
+  singleGameBoxScore,
+  getBseballStandings
 };

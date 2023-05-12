@@ -11,7 +11,7 @@ var standingSchema = new Schema(
     games_back: String,
     home_record: String,
     teamId: { type: Schema.Types.ObjectId, ref: "team" },
-    goalServePlayerId: { type: Number, required: true },
+    goalServeTeamId: { type: Number, required: true },
     lost: String,
     name: String,
     position: String,

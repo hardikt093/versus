@@ -73,6 +73,7 @@ const getMLBStandings = async () => {
   );
 
   const transformedLeagues: any = await transformLeague(getResponse, data);
+  console.log(transformedLeagues);
 
   return transformedLeagues?.reduce((acc: any, current: any) => {
     const leagueName = camelize(Object.keys(current)[0]);
@@ -2139,7 +2140,7 @@ const addStanding = async () => {
           games_back: team?.away_record,
           home_record: team.home_record,
           teamId: teamId?.id,
-          goalServePlayerId: teamId?.goalServeTeamId,
+          goalServeTeamId: teamId?.goalServeTeamId,
           lost: team.lost,
           name: team.name,
           position: team.position,
@@ -2440,6 +2441,79 @@ const addMatchDataFuture = async (data: any) => {
     );
   });
 };
+
+const getStandingData = async () => {
+  const getStandingData = await Standings.aggregate([
+    {
+      $lookup: {
+        from: "teamImages",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "images",
+      },
+    },
+    {
+      $unwind: {
+        path: "$images",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: { leagueType: "$leagueType", division: "$division" },
+        teams: {
+          $push: {
+            away_record: "$away_record",
+            current_streak: "$current_streak",
+            games_back: "$games_back",
+            home_record: "$home_record",
+            id: { $toString: "$goalServeTeamId" },
+            lost: "$lost",
+            name: "$name",
+            position: "$position",
+            runs_allowed: "$runs_allowed",
+            runs_diff: "$runs_diff",
+            runs_scored: "$runs_scored",
+            won: "$won",
+            teamImage: "$images"
+          }
+        }
+      }
+    },
+    {
+      $group: {
+        _id: "$_id.leagueType",
+        divisions: {
+          $push: {
+            name: "$_id.division",
+            teams: "$teams"
+          }
+        }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        data: {
+          $push: {
+            k: { $cond: [{ $eq: ["$_id", "National League"] }, "nationalLeague", "americanLeague"] },
+            v: "$divisions"
+          }
+        }
+      }
+    },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $arrayToObject: "$data"
+        }
+      }
+    }
+  ]);
+
+  return getStandingData[0];
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -2474,4 +2548,5 @@ export default {
   addAbbrevation,
   singleGameBoxScore,
   addMatchDataFuture,
+  getStandingData,
 };
