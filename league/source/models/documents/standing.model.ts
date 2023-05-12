@@ -19,6 +19,7 @@ var standingSchema = new Schema(
     runs_diff: String,
     runs_scored: String,
     won: String,
+    pct: String,
   },
   {
     timestamps: true,
