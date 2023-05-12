@@ -76,4 +76,20 @@ const searchUser = async (query: any, user: any) => {
   }
 };
 
-export default { userProfileUpdate, getAllContact, searchUser };
+const userByIdMongoRelation = async (id: number) => {
+  return await prisma.user.findUnique({
+    where : {
+      id : id
+    },
+    select : {
+      id : true,
+      email : true,
+      firstName : true,
+      lastName : true,
+      userName : true,
+      profileImage : true
+    }
+  });
+}
+
+export default { userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation };
