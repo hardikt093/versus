@@ -16,6 +16,7 @@ import Event from "../models/documents/event.model";
 import StartingPitchers from "../models/documents/startingPictures";
 import Stats from "../models/documents/stats.model";
 import Standings from "../models/documents/standing.model";
+import Injury from "../models/documents/injuy.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -1810,6 +1811,13 @@ const singleGameBoxScore = async (params: any) => {
           awayTeamErrors: "$awayTeamError",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
+          isWinner: {
+            $cond: {
+              if: { $gte: ["$awayTeamTotalScore", "$homeTeamTotalScore"] },
+              then: true,
+              else: false,
+            },
+          },
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -1819,6 +1827,13 @@ const singleGameBoxScore = async (params: any) => {
           homeTeamErrors: "$homeTeamError",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
+          isWinner: {
+            $cond: {
+              if: { $gte: ["$homeTeamTotalScore", "$awayTeamTotalScore"] },
+              then: true,
+              else: false,
+            },
+          },
         },
 
         pitchingResult: {
@@ -1830,11 +1845,11 @@ const singleGameBoxScore = async (params: any) => {
                     $filter: {
                       input: "$awayTeamPitchers",
                       as: "pitcher",
-                      cond: { $ne: ["$$pitcher.win", ""] }
-                    }
+                      cond: { $ne: ["$$pitcher.win", ""] },
+                    },
                   },
-                  []
-                ]
+                  [],
+                ],
               },
               then: {
                 $arrayElemAt: [
@@ -1842,11 +1857,11 @@ const singleGameBoxScore = async (params: any) => {
                     $filter: {
                       input: "$awayTeamPitchers",
                       as: "pitcher",
-                      cond: { $ne: ["$$pitcher.win", ""] }
-                    }
+                      cond: { $ne: ["$$pitcher.win", ""] },
+                    },
                   },
-                  0
-                ]
+                  0,
+                ],
               },
               else: {
                 $cond: {
@@ -1856,11 +1871,11 @@ const singleGameBoxScore = async (params: any) => {
                         $filter: {
                           input: "$homeTeamPitchers",
                           as: "pitcher",
-                          cond: { $ne: ["$$pitcher.win", ""] }
-                        }
+                          cond: { $ne: ["$$pitcher.win", ""] },
+                        },
                       },
-                      []
-                    ]
+                      [],
+                    ],
                   },
                   then: {
                     $arrayElemAt: [
@@ -1868,17 +1883,17 @@ const singleGameBoxScore = async (params: any) => {
                         $filter: {
                           input: "$homeTeamPitchers",
                           as: "pitcher",
-                          cond: { $ne: ["$$pitcher.win", ""] }
-                        }
+                          cond: { $ne: ["$$pitcher.win", ""] },
+                        },
                       },
-                      0
-                    ]
+                      0,
+                    ],
                   },
-                  else: null
-                }
-              }
-            }
-          },  
+                  else: null,
+                },
+              },
+            },
+          },
           loss: {
             $cond: {
               if: {
@@ -1887,11 +1902,11 @@ const singleGameBoxScore = async (params: any) => {
                     $filter: {
                       input: "$awayTeamPitchers",
                       as: "pitcher",
-                      cond: { $ne: ["$$pitcher.loss", ""] }
-                    }
+                      cond: { $ne: ["$$pitcher.loss", ""] },
+                    },
                   },
-                  []
-                ]
+                  [],
+                ],
               },
               then: {
                 $arrayElemAt: [
@@ -1899,11 +1914,11 @@ const singleGameBoxScore = async (params: any) => {
                     $filter: {
                       input: "$awayTeamPitchers",
                       as: "pitcher",
-                      cond: { $ne: ["$$pitcher.loss", ""] }
-                    }
+                      cond: { $ne: ["$$pitcher.loss", ""] },
+                    },
                   },
-                  0
-                ]
+                  0,
+                ],
               },
               else: {
                 $cond: {
@@ -1913,11 +1928,11 @@ const singleGameBoxScore = async (params: any) => {
                         $filter: {
                           input: "$homeTeamPitchers",
                           as: "pitcher",
-                          cond: { $ne: ["$$pitcher.loss", ""] }
-                        }
+                          cond: { $ne: ["$$pitcher.loss", ""] },
+                        },
                       },
-                      []
-                    ]
+                      [],
+                    ],
                   },
                   then: {
                     $arrayElemAt: [
@@ -1925,17 +1940,17 @@ const singleGameBoxScore = async (params: any) => {
                         $filter: {
                           input: "$homeTeamPitchers",
                           as: "pitcher",
-                          cond: { $ne: ["$$pitcher.loss", ""] }
-                        }
+                          cond: { $ne: ["$$pitcher.loss", ""] },
+                        },
                       },
-                      0
-                    ]
+                      0,
+                    ],
                   },
-                  else: null
-                }
-              }
-            }
-          },  
+                  else: null,
+                },
+              },
+            },
+          },
           saves: {
             $cond: {
               if: {
@@ -1944,11 +1959,11 @@ const singleGameBoxScore = async (params: any) => {
                     $filter: {
                       input: "$awayTeamPitchers",
                       as: "pitcher",
-                      cond: { $ne: ["$$pitcher.saves", ""] }
-                    }
+                      cond: { $ne: ["$$pitcher.saves", ""] },
+                    },
                   },
-                  []
-                ]
+                  [],
+                ],
               },
               then: {
                 $arrayElemAt: [
@@ -1956,11 +1971,11 @@ const singleGameBoxScore = async (params: any) => {
                     $filter: {
                       input: "$awayTeamPitchers",
                       as: "pitcher",
-                      cond: { $ne: ["$$pitcher.saves", ""] }
-                    }
+                      cond: { $ne: ["$$pitcher.saves", ""] },
+                    },
                   },
-                  0
-                ]
+                  0,
+                ],
               },
               else: {
                 $cond: {
@@ -1970,11 +1985,11 @@ const singleGameBoxScore = async (params: any) => {
                         $filter: {
                           input: "$homeTeamPitchers",
                           as: "pitcher",
-                          cond: { $ne: ["$$pitcher.saves", ""] }
-                        }
+                          cond: { $ne: ["$$pitcher.saves", ""] },
+                        },
                       },
-                      []
-                    ]
+                      [],
+                    ],
                   },
                   then: {
                     $arrayElemAt: [
@@ -1982,17 +1997,17 @@ const singleGameBoxScore = async (params: any) => {
                         $filter: {
                           input: "$homeTeamPitchers",
                           as: "pitcher",
-                          cond: { $ne: ["$$pitcher.saves", ""] }
-                        }
+                          cond: { $ne: ["$$pitcher.saves", ""] },
+                        },
                       },
-                      0
-                    ]
+                      0,
+                    ],
                   },
-                  else: null
-                }
-              }
-            }
-          }, 
+                  else: null,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -2486,6 +2501,194 @@ const addMatchWithNewModel = async () => {
     }
   }
 };
+const addInjuryReport = async () => {
+  const team = await Team.find({ isDeleted: false });
+  await Promise.all(
+    team.map(async (item) => {
+      const injuryApi = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item?.goalServeTeamId}_injuries`,
+        { json: true }
+      );
+      const injuryArray1 = injuryApi?.data?.team;
+      if (injuryArray1?.report?.length) {
+        await Promise.all(
+          injuryArray1.report.map(async (val: any) => {
+            const player = await Player.findOne({
+              goalServePlayerId: val.player_id,
+            });
+
+            const data = {
+              date: val?.date,
+              description: val.description,
+              goalServePlayerId: val.player_id,
+              playerName: val.player_name,
+              playerId: player?.id,
+              status: val.status,
+              goalServeTeamId: injuryApi?.data?.team?.id,
+              teamId: item.id,
+            };
+            const playerData = new Injury(data);
+            const saveInjuries = await playerData.save();
+          })
+        );
+      } else {
+        const val = injuryArray1?.report;
+
+        const player = await Player.findOne({
+          goalServePlayerId: val.player_id,
+        });
+
+        const data = {
+          date: val?.date,
+          description: val?.description,
+          goalServePlayerId: val?.player_id,
+          playerName: val?.player_name,
+          status: val?.status,
+          goalServeTeamId: injuryArray1?.id,
+          teamId: item.id,
+          playerId: player?.id,
+        };
+        const playerData = new Injury(data);
+        const saveInjuries = await playerData.save();
+      }
+    })
+  );
+};
+const singleGameBoxScoreUpcomming = async (params: any) => {
+  const goalServeMatchId = params.goalServeMatchId;
+  const getMatch = await Match.aggregate([
+    {
+      $match: {
+        goalServeMatchId: Number(goalServeMatchId),
+      },
+    },
+
+    {
+      $lookup: {
+        from: "teams",
+        localField: "awayTeamId",
+        foreignField: "_id",
+        as: "awayTeam",
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "homeTeamId",
+        foreignField: "_id",
+        as: "homeTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "teamImages",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "teamImages",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "injuries",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamInjuredPlayers",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamInjuredPlayers",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "injuries",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamInjuredPlayers",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamInjuredPlayers",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $project: {
+        id: true,
+        attendance: true,
+        venueName: true,
+        dateTimeUtc: true,
+        goalServeMatchId: true,
+        startingPitchers: true,
+        awayTeamFullName: "$awayTeam.name",
+        homeTeamFullName: "$homeTeam.name",
+        awayTeamAbbreviation: "$awayTeam.abbreviation",
+        homeTeamAbbreviation: "$homeTeam.abbreviation",
+        homeTeamImage: "$homeTeamImage.image",
+        awayTeamImage: "$awayTeamImage.image",
+        awayTeamInjuredPlayers: {
+          date: "$awayTeamInjuredPlayers.date",
+          description: "$awayTeamInjuredPlayers.description",
+          playerId: "$awayTeamInjuredPlayers.playerId",
+          goalServePlayerId: "$awayTeamInjuredPlayers.goalServePlayerId",
+          playerName: "$awayTeamInjuredPlayers.playerName",
+          status: "$awayTeamInjuredPlayers.status",
+        },
+        homeTeamInjuredPlayers: {
+          date: "$homeTeamInjuredPlayers.date",
+          description: "$homeTeamInjuredPlayers.description",
+          playerId: "$homeTeamInjuredPlayers.playerId",
+          goalServePlayerId: "$homeTeamInjuredPlayers.goalServePlayerId",
+          playerName: "$homeTeamInjuredPlayers.playerName",
+          status: "$homeTeamInjuredPlayers.status",
+        },
+      },
+    },
+  ]);
+  return { getMatch: getMatch[0] };
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -2521,4 +2724,6 @@ export default {
   addMatchDataFuture,
   getStandingData,
   addMatchWithNewModel,
+  singleGameBoxScoreUpcomming,
+  addInjuryReport,
 };
