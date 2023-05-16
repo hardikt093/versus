@@ -1918,6 +1918,7 @@ const singleGameBoxScore = async (params: any) => {
       $project: {
         id: true,
         attendance: true,
+        status: true,
         venueName: true,
         dateTimeUtc: true,
         goalServeMatchId: true,
@@ -2877,6 +2878,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
       $project: {
         id: true,
         attendance: true,
+        status: true,
         venueName: true,
         datetime_utc: "$dateTimeUtc",
         goalServeMatchId: true,
