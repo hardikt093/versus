@@ -6,6 +6,7 @@ var playerSchema = new Schema(
     image: { type: String },
     leagueId: { type: Schema.Types.ObjectId, ref: "league" },
     teamId: { type: Schema.Types.ObjectId, ref: "team" },
+    goalServeTeamId: { type: Number },
     goalServePlayerId: { type: Number },
     age: { type: String },
     bats: {

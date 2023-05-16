@@ -856,17 +856,18 @@ const createPlayer = async (body: any) => {
   await Promise.all(
     team.map(async (item) => {
       const roasterApi = await axiosGet(
-        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/1027_rosters`,
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.goalServeTeamId}_rosters`,
         { json: true }
       );
       const statsApi = await axiosGet(
-        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/1027_stats`,
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.goalServeTeamId}_stats`,
         { json: true }
       );
 
       let allRosterPlayers: any = [];
       let allStatPlayers: any = [];
       let finalArr: any = [];
+
       roasterApi?.data?.team.position.map((item: any) => {
         if (item.player.length) {
           item.player.map((player: any) => {
@@ -874,6 +875,7 @@ const createPlayer = async (body: any) => {
           });
         }
       });
+
       statsApi?.data?.statistic.category.forEach((cat: any) => {
         if (cat.team && cat.team.player.length) {
           cat.team.player.forEach((player: any) => {
@@ -888,11 +890,16 @@ const createPlayer = async (body: any) => {
           });
         } else if (cat.position.length && cat.name == "Fielding") {
           cat.position.forEach((item: any) => {
-            item.player.forEach((player: any) => {
-              // player.fieldingType = item.name;
-              player.type = "fielding";
-              allStatPlayers.push(player);
-            });
+            if (item.player.length) {
+              item.player.forEach((player: any) => {
+                // player.fieldingType = item.name;
+                player.type = "fielding";
+                allStatPlayers.push(player);
+              });
+            } else {
+              item.player.type = "fielding";
+              allStatPlayers.push(item.player);
+            }
           });
         }
       });
@@ -947,21 +954,22 @@ const createPlayer = async (body: any) => {
         }
       });
 
-      finalArr.map(async (item: any) => {
+      finalArr.map(async (eVal: any) => {
         let data = {
-          age: item.age,
-          bats: item.bats,
-          height: item.height,
-          goalServePlayerId: item.id,
-          name: item.name,
-          number: item.number,
-          position: item.position,
-          salary: item.salary,
-          throws: item.throws,
-          weight: item.weight,
-          pitching: item?.pitching,
-          batting: item?.batting,
-          fielding: item?.fielding,
+          goalServeTeamId: item.goalServeTeamId,
+          age: eVal.age,
+          bats: eVal.bats,
+          height: eVal.height,
+          goalServePlayerId: eVal.id,
+          name: eVal.name,
+          number: eVal.number,
+          position: eVal.position,
+          salary: eVal.salary,
+          throws: eVal.throws,
+          weight: eVal.weight,
+          pitching: eVal?.pitching,
+          batting: eVal?.batting,
+          fielding: eVal?.fielding,
         };
         const playerData = new Player(data);
         const savedMatchData = await playerData.save();
@@ -2828,7 +2836,28 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         },
       },
     },
-
+    // {
+    //   $lookup: {
+    //     from: "players",
+    //     localField: "goalServePlayerId",
+    //     foreignField: "startingPitchers.awayteam.player.id",
+    //     as: "startingPitchersAway",
+    //   },
+    // },
+    // {
+    //   $unwind: "$startingPitchersAway",
+    // },
+    // {
+    //   $lookup: {
+    //     from: "players",
+    //     localField: "goalServePlayerId",
+    //     foreignField: "startingPitchers.hometeam.player.id",
+    //     as: "startingPitchersHome",
+    //   },
+    // },
+    // {
+    //   $unwind: "$startingPitchersHome",
+    // },
     {
       $lookup: {
         from: "odds",
@@ -2851,7 +2880,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         venueName: true,
         dateTimeUtc: true,
         goalServeMatchId: true,
-        startingPitchers: true,
+        startingPitchers:true,
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
         awayTeamAbbreviation: "$awayTeam.abbreviation",
@@ -2862,7 +2891,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         homeTeamInjuredPlayers: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
+          awayTeamId: "$awayTeam.goalServeTeamId",
           awayTeamRun: "$awayTeamTotalScore",
           awayTeamHit: "$awayTeamHit",
           awayTeamErrors: "$awayTeamError",
@@ -2887,7 +2916,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
-          homeTeamId: "$homeTeam._id",
+          homeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamRun: "$homeTeamTotalScore",
           homeTeamHit: "$homeTeamHit",
           homeTeamErrors: "$homeTeamError",
