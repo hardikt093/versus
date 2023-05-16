@@ -2756,6 +2756,22 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         },
       },
     },
+
+    {
+      $lookup: {
+        from: "odds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
+    },
+    {
+      $unwind: {
+        path: "$odds",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
     {
       $project: {
         id: true,
@@ -2772,6 +2788,14 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         awayTeamImage: "$awayTeamImage.image",
         awayTeamInjuredPlayers: true,
         homeTeamInjuredPlayers: true,
+        odds: {
+          homeTeamSpread: true,
+          homeTeamTotal: true,
+          awayTeamSpread: true,
+          awayTeamTotal: true,
+          awayTeamMoneyline: true,
+          homeTeamMoneyline: true,
+        },
       },
     },
   ]);
