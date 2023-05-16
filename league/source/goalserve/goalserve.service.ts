@@ -9,7 +9,7 @@ import moment from "moment";
 import Player from "../models/documents/player.model";
 import Team from "../models/documents/team.model";
 import Division from "../models/documents/division.model";
-import { isArray } from "lodash";
+import { isArray, stubTrue } from "lodash";
 import Match from "../models/documents/match.model";
 import Inning from "../models/documents/inning.model";
 import Event from "../models/documents/event.model";
@@ -1486,12 +1486,12 @@ const getUpcomingDataFromMongodb = async () => {
       },
     },
     {
-      '$lookup': {
-        'from': 'odds',
-        'localField': 'goalServeMatchId',
-        'foreignField': 'goalServeMatchId',
-        'as': 'odds'
-      }
+      $lookup: {
+        from: "odds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
     },
     {
       $sort: {
@@ -1516,21 +1516,15 @@ const getUpcomingDataFromMongodb = async () => {
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
-          'moneyline': {
-            '$arrayElemAt': [
-              '$odds.awayTeamMoneyline', 0
-            ]
+          moneyline: {
+            $arrayElemAt: ["$odds.awayTeamMoneyline", 0],
           },
-          'spread': {
-            '$arrayElemAt': [
-              '$odds.awayTeamSpread', 0
-            ]
+          spread: {
+            $arrayElemAt: ["$odds.awayTeamSpread", 0],
           },
-          'total': {
-            '$arrayElemAt': [
-              '$odds.awayTeamTotal', 0
-            ]
-          }
+          total: {
+            $arrayElemAt: ["$odds.awayTeamTotal", 0],
+          },
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -1541,21 +1535,15 @@ const getUpcomingDataFromMongodb = async () => {
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
-          'moneyline': {
-            '$arrayElemAt': [
-              '$odds.homeTeamMoneyline', 0
-            ]
+          moneyline: {
+            $arrayElemAt: ["$odds.homeTeamMoneyline", 0],
           },
-          'spread': {
-            '$arrayElemAt': [
-              '$odds.homeTeamSpread', 0
-            ]
+          spread: {
+            $arrayElemAt: ["$odds.homeTeamSpread", 0],
           },
-          'total': {
-            '$arrayElemAt': [
-              '$odds.homeTeamTotal', 0
-            ]
-          }
+          total: {
+            $arrayElemAt: ["$odds.homeTeamTotal", 0],
+          },
         },
       },
     },
@@ -1597,9 +1585,9 @@ const getLiveDataFromMongodb = async () => {
           },
           {
             status: {
-              $ne: "Suspended"
-            }
-          }
+              $ne: "Suspended",
+            },
+          },
         ],
       },
     },
@@ -1912,6 +1900,64 @@ const singleGameBoxScore = async (params: any) => {
         path: "$homeTeamImage",
         includeArrayIndex: "string",
         preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        awayTeamPitchers: {
+          $map: {
+            input: "$awayTeamPitchers",
+            as: "item",
+            in: {
+              earned_runs: "$$item.earned_runs",
+              earned_runs_average: "$$item.earned_runs_average",
+              hbp: "$$item.hbp",
+              hits: "$$item.hits",
+              holds: "$$item.holds",
+              home_runs: "$$item.home_runs",
+
+              innings_pitched: "$$item.innings_pitched",
+              loss: "$$item.loss",
+              name: "$$item.name",
+
+              runs: "$$item.runs",
+              saves: "$$item.saves",
+              strikeouts: "$$item.strikeouts",
+              walks: "$$item.walks",
+              win: "$$item.win",
+              pc_st: "$$item.pc-st",
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        homeTeamPitchers: {
+          $map: {
+            input: "$homeTeamPitchers",
+            as: "item",
+            in: {
+              earned_runs: "$$item.earned_runs",
+              earned_runs_average: "$$item.earned_runs_average",
+              hbp: "$$item.hbp",
+              hits: "$$item.hits",
+              holds: "$$item.holds",
+              home_runs: "$$item.home_runs",
+
+              innings_pitched: "$$item.innings_pitched",
+              loss: "$$item.loss",
+              name: "$$item.name",
+
+              runs: "$$item.runs",
+              saves: "$$item.saves",
+              strikeouts: "$$item.strikeouts",
+              walks: "$$item.walks",
+              win: "$$item.win",
+              pc_st: "$$item.pc-st",
+            },
+          },
+        },
       },
     },
     {
@@ -2882,7 +2928,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         venueName: true,
         datetime_utc: "$dateTimeUtc",
         goalServeMatchId: true,
-        startingPitchers:true,
+        startingPitchers: true,
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
         awayTeamAbbreviation: "$awayTeam.abbreviation",
@@ -2900,21 +2946,15 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
-          'moneyline': {
-            '$arrayElemAt': [
-              '$odds.awayTeamMoneyline', 0
-            ]
+          moneyline: {
+            $arrayElemAt: ["$odds.awayTeamMoneyline", 0],
           },
-          'spread': {
-            '$arrayElemAt': [
-              '$odds.awayTeamSpread', 0
-            ]
+          spread: {
+            $arrayElemAt: ["$odds.awayTeamSpread", 0],
           },
-          'total': {
-            '$arrayElemAt': [
-              '$odds.awayTeamTotal', 0
-            ]
-          }
+          total: {
+            $arrayElemAt: ["$odds.awayTeamTotal", 0],
+          },
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -2925,21 +2965,15 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
-          'moneyline': {
-            '$arrayElemAt': [
-              '$odds.homeTeamMoneyline', 0
-            ]
+          moneyline: {
+            $arrayElemAt: ["$odds.homeTeamMoneyline", 0],
           },
-          'spread': {
-            '$arrayElemAt': [
-              '$odds.homeTeamSpread', 0
-            ]
+          spread: {
+            $arrayElemAt: ["$odds.homeTeamSpread", 0],
           },
-          'total': {
-            '$arrayElemAt': [
-              '$odds.homeTeamTotal', 0
-            ]
-          }
+          total: {
+            $arrayElemAt: ["$odds.homeTeamTotal", 0],
+          },
         },
         odds: {
           homeTeamSpread: true,
@@ -2948,7 +2982,6 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           awayTeamTotal: true,
           awayTeamMoneyline: true,
           homeTeamMoneyline: true,
-
         },
       },
     },
