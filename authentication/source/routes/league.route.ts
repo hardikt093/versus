@@ -10,6 +10,7 @@ router.use("/", leagueBetRoute);
 router.get("/mlb/standings", auth, leagueProxyController.standings);
 router.get("/mlb/scoreWithDate", auth, validate(leagueValidation.scoreWithDate), leagueProxyController.mlbScoreWithDate);
 router.get("/mlb/single-game-boxscore", auth, validate(leagueValidation.singleGameBoxscore), leagueProxyController.singleGameBoxscore);
+router.get("/mlb/single-game-boxscore-upcomming", auth, validate(leagueValidation.singleGameBoxscore), leagueProxyController.singleGameBoxscoreUpcomming);
 router.get("/mlb/scoreWithCurrentDate", auth, leagueProxyController.scoreWithCurrentDate);
 
 export = router;

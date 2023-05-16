@@ -169,6 +169,7 @@ router.get(
   goalserveController.scoreWithCurrentDate
 );
 router.post("/addMatchData", goalserveController.addMatchData);
+router.post("/addInjuredPlayers", goalserveController.addInjuredPlayers);
 router.post("/addMatchDataFuture", goalserveController.addMatchDataFuture);
 router.get("/addstandings", goalserveController.addStanding);
 router.get("/addAbbrevation", goalserveController.addAbbrevation);
@@ -176,5 +177,10 @@ router.get(
   "/single-game-boxscore",
   auth,
   goalserveController.singleGameBoxScore
+);
+router.get(
+  "/single-game-boxscore-upcomming",
+  auth,
+  goalserveController.singleGameBoxScoreUpcomming
 );
 export default router;
