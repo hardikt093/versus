@@ -2796,7 +2796,7 @@ const createAndUpdateOdds = async () => {
           const league: any = await League.findOne({
             goalServeLeagueId: getScore?.data.fixtures?.category?.id,
           });
-          const findMatchOdds = await Odd.find({ goalServerMatchId: item?.id });
+          const findMatchOdds = await Odd.find({ goalServeMatchId: item?.id });
           if (findMatchOdds?.length == 0) {
             // getMoneyLine
             const getMoneyLine: any = await getOdds(
