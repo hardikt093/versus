@@ -3,8 +3,8 @@ import IOddModel from "../interfaces/odd.interface";
 var oddSchema = new Schema(
   {
     goalServerLeagueId: { type: String, required: true },
-    goalServerMatchId: { type: String, required: true },
-    goalServerHomeTeamId: { type: String, required: true },
+    goalServeMatchId: { type: String, required: true },
+    goalServeHomeTeamId: { type: String, required: true },
     goalServeAwayTeamId: { type: String, required: true },
     homeTeamSpread: { type: String, required: true },
     homeTeamTotal: { type: String, required: true },

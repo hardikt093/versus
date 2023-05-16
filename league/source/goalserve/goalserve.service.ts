@@ -2835,8 +2835,8 @@ const createAndUpdateOdds = async () => {
             const totalValues = await getTotalValues(total);
             let data = {
               goalServerLeagueId: league.goalServeLeagueId,
-              goalServerMatchId: item?.id,
-              goalServerHomeTeamId: item?.hometeam?.id,
+              goalServeMatchId: item?.id,
+              goalServeHomeTeamId: item?.hometeam?.id,
               goalServeAwayTeamId: item?.awayteam?.id,
               homeTeamSpread: homeTeamSpread,
               homeTeamTotal: totalValues,
@@ -2886,8 +2886,8 @@ const createAndUpdateOdds = async () => {
             const totalValues = await getTotalValues(total);
             let data = {
               goalServerLeagueId: league.goalServeLeagueId,
-              goalServerMatchId: item?.id,
-              goalServerHomeTeamId: item?.hometeam?.id,
+              goalServeMatchId: item?.id,
+              goalServeHomeTeamId: item?.hometeam?.id,
               goalServeAwayTeamId: item?.awayteam?.id,
               homeTeamSpread: homeTeamSpread,
               homeTeamTotal: totalValues,
