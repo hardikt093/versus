@@ -2878,7 +2878,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         id: true,
         attendance: true,
         venueName: true,
-        dateTimeUtc: true,
+        datetime_utc: "$dateTimeUtc",
         goalServeMatchId: true,
         startingPitchers:true,
         awayTeamFullName: "$awayTeam.name",
