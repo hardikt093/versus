@@ -1478,6 +1478,14 @@ const getUpcomingDataFromMongodb = async () => {
       },
     },
     {
+      '$lookup': {
+        'from': 'odds',
+        'localField': 'goalServeMatchId',
+        'foreignField': 'goalServeMatchId',
+        'as': 'odds'
+      }
+    },
+    {
       $sort: {
         formattedDate: 1,
         time: 1,
@@ -1500,6 +1508,21 @@ const getUpcomingDataFromMongodb = async () => {
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
+          'moneyline': {
+            '$arrayElemAt': [
+              '$odds.awayTeamMoneyline', 0
+            ]
+          },
+          'spread': {
+            '$arrayElemAt': [
+              '$odds.awayTeamSpread', 0
+            ]
+          },
+          'total': {
+            '$arrayElemAt': [
+              '$odds.awayTeamTotal', 0
+            ]
+          }
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -1510,6 +1533,21 @@ const getUpcomingDataFromMongodb = async () => {
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
+          'moneyline': {
+            '$arrayElemAt': [
+              '$odds.homeTeamMoneyline', 0
+            ]
+          },
+          'spread': {
+            '$arrayElemAt': [
+              '$odds.homeTeamSpread', 0
+            ]
+          },
+          'total': {
+            '$arrayElemAt': [
+              '$odds.homeTeamTotal', 0
+            ]
+          }
         },
       },
     },
@@ -1549,6 +1587,11 @@ const getLiveDataFromMongodb = async () => {
               $ne: "Canceled",
             },
           },
+          {
+            status: {
+              $ne: "Suspended"
+            }
+          }
         ],
       },
     },
@@ -2860,7 +2903,6 @@ const createAndUpdateOdds = async () => {
       { json: true, date1: date, showodds: "1", bm: "455," }
     );
     var matchData = getScore?.data?.fixtures?.category?.matches?.match;
-    // console.log("matchData", matchData)
     if (matchData?.length > 0) {
       const takeData = await matchData?.map(async (item: any) => {
         if (item.status === "Not Started") {
@@ -2901,7 +2943,6 @@ const createAndUpdateOdds = async () => {
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "null";
-            console.log("homeTeamSpread", homeTeamSpread);
             const total = await getTotal("Over/Under", item?.odds?.type);
             const totalValues = await getTotalValues(total);
             let data = {
@@ -2918,7 +2959,6 @@ const createAndUpdateOdds = async () => {
             };
             const oddsData = new Odd(data);
             const savedOddsData = await oddsData.save();
-            console.log("savedOddsData", savedOddsData);
           } else {
             // getMoneyLine
             const getMoneyLine: any = await getOdds(
@@ -2952,7 +2992,6 @@ const createAndUpdateOdds = async () => {
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "null";
-            console.log("homeTeamSpread", homeTeamSpread);
             const total = await getTotal("Over/Under", item?.odds?.type);
             const totalValues = await getTotalValues(total);
             let data = {
@@ -2967,9 +3006,6 @@ const createAndUpdateOdds = async () => {
               awayTeamMoneyline: awayTeamMoneyline,
               homeTeamMoneyline: homeTeamMoneyline,
             };
-            // const oddsData = new Odd(data);
-            // const savedOddsData = await oddsData.save();
-            // console.log("savedOddsData", savedOddsData)
             const updateOdds = await Odd.findOneAndUpdate(
               { goalServerMatchId: item?.id },
               { $set: data },
