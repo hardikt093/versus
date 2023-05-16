@@ -53,10 +53,10 @@ var betSchema = new Schema(
     resultAmountOpponentUser: {
       type: Number,
     },
-    requestUserOdds: {
+    requestUserFairOdds: {
       type: Number,
     },
-    opponentUserOdds: {
+    opponentUserFairOdds: {
       type: Number,
     },
     requestUserMoneylineOdds: {

@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import Bet from "../models/documents/bet.model";
 import Match from "../models/documents/match.model";
+import Odd from "../models/documents/odd.model";
 import AppError from "../utils/AppError";
 import { ICreateBetRequest, IresponseBetRequest } from "./bet.interface";
 import { betStatus } from "../models/interfaces/bet.interface";
@@ -72,7 +73,30 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   ) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.TEAM_NOT_FOUND_IN_MATCH);
   }
-  const fairOddCalRes = fairOddCalculation(-300, 240);
+  const oddData = await Odd.findOne({
+    goalServeMatchId: data.matchId,
+  }).lean();
+
+  if (!oddData) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.MATCH_ODD_DATA_NOT_FOUND);
+  }
+
+  let fairOddCalRes = {
+    favourite: 0,
+    underdog: 0,
+  };
+  if (parseInt(oddData.homeTeamMoneyline.us) > 0) {
+    fairOddCalRes = fairOddCalculation(
+      parseInt(oddData.awayTeamMoneyline.us),
+      parseInt(oddData.homeTeamMoneyline.us)
+    );
+  } else {
+    fairOddCalRes = fairOddCalculation(
+      parseInt(oddData.homeTeamMoneyline.us),
+      parseInt(oddData.awayTeamMoneyline.us)
+    );
+  }
+
   let preparedBetObject = {
     goalServeMatchId: data.matchId,
     requestUserId: loggedInUserId,
@@ -82,18 +106,33 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeLeagueId: matchData.goalServeLeagueId,
     goalServeRequestUserTeamId: matchData.goalServeHomeTeamId,
     goalServeOpponentUserTeamId: matchData.goalServeHomeTeamId,
-    requestUserOdds: -300,
-    requestUserMoneylineOdds: fairOddCalRes.favourite,
-    opponentUserTeamId: 1,
-    opponentUserOdds: 240,
-    opponentUserMoneylineOdds: fairOddCalRes.underdog,
+    requestUserFairOdds:
+      parseInt(oddData.homeTeamMoneyline.us) > 0
+        ? fairOddCalRes.underdog
+        : fairOddCalRes.favourite,
+    requestUserMoneylineOdds: oddData.homeTeamMoneyline.us,
+    opponentUserFairOdds:
+      parseInt(oddData.homeTeamMoneyline.us) > 0
+        ? fairOddCalRes.underdog
+        : fairOddCalRes.favourite,
+    opponentUserMoneylineOdds: oddData.homeTeamMoneyline.us,
   };
   if (matchData.goalServeHomeTeamId === data.requestUserTeamId) {
     preparedBetObject.goalServeOpponentUserTeamId =
       matchData.goalServeAwayTeamId;
+    preparedBetObject.opponentUserMoneylineOdds = oddData.awayTeamMoneyline.us;
+    preparedBetObject.opponentUserFairOdds =
+      parseInt(oddData.awayTeamMoneyline.us) > 0
+        ? fairOddCalRes.underdog
+        : fairOddCalRes.favourite;
   } else {
     preparedBetObject.goalServeRequestUserTeamId =
       matchData.goalServeAwayTeamId;
+    preparedBetObject.requestUserMoneylineOdds = oddData.awayTeamMoneyline.us;
+    preparedBetObject.requestUserFairOdds =
+      parseInt(oddData.awayTeamMoneyline.us) > 0
+        ? fairOddCalRes.underdog
+        : fairOddCalRes.favourite;
   }
   const createBet = await Bet.create(preparedBetObject);
 
