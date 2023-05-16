@@ -92,4 +92,18 @@ const userByIdMongoRelation = async (id: number) => {
   });
 }
 
-export default { userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation };
+const userContacts = async (id: number) => {
+  return await prisma.contact.findMany({
+    where : {
+      userId : id
+    },
+    select : {
+      id : true,
+      email : true,
+      name : true,
+      phoneNumber : true,
+      userId : true,
+    }
+  });
+}
+export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation };
