@@ -2837,13 +2837,13 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         as: "odds",
       },
     },
-    {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
+    // {
+    //   $unwind: {
+    //     path: "$odds",
+    //     includeArrayIndex: "string",
+    //     preserveNullAndEmptyArrays: true,
+    //   },
+    // },
     {
       $project: {
         id: true,
@@ -2893,15 +2893,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           homeTeamErrors: "$homeTeamError",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image"
-        },
-        odds: {
-          homeTeamSpread: true,
-          homeTeamTotal: true,
-          awayTeamSpread: true,
-          awayTeamTotal: true,
-          awayTeamMoneyline: true,
-          homeTeamMoneyline: true,
+          teamImage: "$homeTeamImage.image",
           'moneyline': {
             '$arrayElemAt': [
               '$odds.homeTeamMoneyline', 0
@@ -2917,6 +2909,15 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
               '$odds.homeTeamTotal', 0
             ]
           }
+        },
+        odds: {
+          homeTeamSpread: true,
+          homeTeamTotal: true,
+          awayTeamSpread: true,
+          awayTeamTotal: true,
+          awayTeamMoneyline: true,
+          homeTeamMoneyline: true,
+
         },
       },
     },
