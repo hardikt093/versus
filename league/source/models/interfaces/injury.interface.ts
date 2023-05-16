@@ -3,10 +3,10 @@ export interface IInjuryModel extends Document {
   date: String;
   description: String;
   playerId: String;
-  goalServePlayerId: String;
+  goalServePlayerId: Number;
   playerName: String;
   status: String;
   teamId: String;
-  goalServeTeamId: String;
+  goalServeTeamId: Number;
 }
 export default IInjuryModel;

@@ -25,14 +25,14 @@ const deleteApi = {
 const createPlayer = {
   body: Joi.object().keys({
     image: Joi.string().allow(null, ""),
-    name: Joi.string(),
+    name: Joi.string().allow(null, ""),
     leagueId: Joi.string().allow(null, ""),
     teamId: Joi.string().allow(null, ""),
-    age: Joi.number(),
+    age: Joi.string().allow(null, ""),
     bats: Joi.string().allow(null, "").valid("R", "L", "B"),
-    height: Joi.string(),
+    height: Joi.string().allow(null, ""),
     goalServePlayerId: Joi.number(),
-    number: Joi.number(),
+    number: Joi.string().allow(null, ""),
     position: Joi.string().valid(
       "RP",
       "LP",
@@ -60,10 +60,10 @@ const updatePlayer = {
     name: Joi.string().allow(null, ""),
     leagueId: Joi.string().allow(null, ""),
     teamId: Joi.string().allow(null, ""),
-    age: Joi.number().allow(null, ""),
+    age: Joi.string().allow(null, ""),
     bats: Joi.string().allow(null, "").valid("R", "L", "B"),
     height: Joi.string().allow(null, ""),
-    number: Joi.number().allow(null, ""),
+    number: Joi.string().allow(null, ""),
     position: Joi.string()
       .allow(null, "")
       .valid("RP", "LP", "SS", "1B", "C", "2B", "3B", "LF", "RF", "CF", "SP", "DH","OF"),

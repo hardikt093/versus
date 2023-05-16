@@ -61,10 +61,23 @@ const singleGameBoxscore = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
 };
-
+const singleGameBoxscoreUpcomming = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const singleGameBoxscoreUpcomming = await axiosGet(
+      `${config.leagueServer}/mlb/single-game-boxscore-upcomming`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", singleGameBoxscoreUpcomming.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
 export default {
   standings,
   mlbScoreWithDate,
   scoreWithCurrentDate,
   singleGameBoxscore,
+  singleGameBoxscoreUpcomming
 };

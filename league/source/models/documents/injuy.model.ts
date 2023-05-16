@@ -5,11 +5,11 @@ var injurySchema = new Schema(
     date: String,
     description: String,
     playerId: { type: Schema.Types.ObjectId, ref: "player" },
-    goalServePlayerId: String,
+    goalServePlayerId: Number,
     playerName: String,
     status: String,
     teamId: { type: Schema.Types.ObjectId, ref: "team" },
-    goalServeTeamId: String,
+    goalServeTeamId: Number,
     isDeleted: { type: Boolean, default: false },
   },
   {

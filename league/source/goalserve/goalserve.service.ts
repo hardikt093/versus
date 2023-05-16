@@ -855,53 +855,118 @@ const createPlayer = async (body: any) => {
   await Promise.all(
     team.map(async (item) => {
       const roasterApi = await axiosGet(
-        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item?.goalServeTeamId}_rosters`,
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/1027_rosters`,
         { json: true }
       );
-      const playerArray1 = roasterApi?.data?.team?.position;
-      await Promise.all(
-        playerArray1.map(async (val: any) => {
-          if (val?.player?.length) {
-            await Promise.all(
-              val?.player?.map(async (player: any) => {
-                const data = {
-                  age: player?.age,
-                  bats: player?.bats,
-                  height: player?.height,
-                  goalServePlayerId: player.id,
-                  name: player?.name,
-                  number: player?.number,
-                  position: player?.position,
-                  salary: player?.salary,
-                  throws: player?.throws,
-                  weight: player?.weight,
-                };
-                const playerData = new Player(data);
-                const savedMatchData = await playerData.save();
-              })
-            );
-          } else {
-            const data = {
-              age: val?.player.age,
-              bats: val?.player.bats,
-              height: val?.player.height,
-              goalServePlayerId: val?.player.id,
-              name: val?.player.name,
-              number: val?.player.number,
-              position: val?.player.position,
-              salary: val?.player.salary,
-              throws: val?.player.throws,
-              weight: val?.player.weight,
-            };
-            const playerData = new Player(data);
-            const savedMatchData = await playerData.save();
-          }
-        })
+      const statsApi = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/1027_stats`,
+        { json: true }
       );
+
+      let allRosterPlayers: any = [];
+      let allStatPlayers: any = [];
+      let finalArr: any = [];
+      roasterApi?.data?.team.position.map((item: any) => {
+        if (item.player.length) {
+          item.player.map((player: any) => {
+            allRosterPlayers.push(player);
+          });
+        }
+      });
+      statsApi?.data?.statistic.category.forEach((cat: any) => {
+        if (cat.team && cat.team.player.length) {
+          cat.team.player.forEach((player: any) => {
+            if (cat.name == "Batting") {
+              player.type = "batting";
+              allStatPlayers.push(player);
+            }
+            if (cat.name == "Pitching") {
+              player.type = "pitching";
+              allStatPlayers.push(player);
+            }
+          });
+        } else if (cat.position.length && cat.name == "Fielding") {
+          cat.position.forEach((item: any) => {
+            item.player.forEach((player: any) => {
+              // player.fieldingType = item.name;
+              player.type = "fielding";
+              allStatPlayers.push(player);
+            });
+          });
+        }
+      });
+      let uniqueValues = [
+        ...new Map(
+          allStatPlayers.map((item: any) => [item["id"], item])
+        ).values(),
+      ];
+      uniqueValues.forEach((item: any) => {
+        let rosterData = allRosterPlayers.filter(
+          (player: any) => player.id == item.id
+        );
+        if (rosterData.length) {
+          let statData = allStatPlayers.filter(
+            (player: any) => player.id == rosterData[0].id
+          );
+          if (statData.length) {
+            statData.map((info: any) => {
+              if (info.type == "batting") {
+                rosterData[0].batting = info;
+              }
+              if (info.type == "pitching") {
+                rosterData[0].pitching = info;
+              }
+              if (info.type == "fielding") {
+                rosterData[0].fielding = info;
+              }
+            });
+            finalArr.push(rosterData[0]);
+          }
+        } else {
+          let statData = allStatPlayers.filter(
+            (player: any) => player.id == item.id
+          );
+          let data: any = {};
+          statData.map((info: any) => {
+            data = {
+              name: statData[0].name,
+              id: statData[0].id,
+            };
+            if (info.type == "batting") {
+              data.batting = info;
+            }
+            if (info.type == "pitching") {
+              data.pitching = info;
+            }
+            if (info.type == "fielding") {
+              data.fielding = info;
+            }
+          });
+          finalArr.push(data);
+        }
+      });
+
+      finalArr.map(async (item: any) => {
+        let data = {
+          age: item.age,
+          bats: item.bats,
+          height: item.height,
+          goalServePlayerId: item.id,
+          name: item.name,
+          number: item.number,
+          position: item.position,
+          salary: item.salary,
+          throws: item.throws,
+          weight: item.weight,
+          pitching: item?.pitching,
+          batting: item?.batting,
+          fielding: item?.fielding,
+        };
+        const playerData = new Player(data);
+        const savedMatchData = await playerData.save();
+      });
     })
   );
-  // const dataToSave = await Player.insertMany(body);
-  // return dataToSave;
 };
 const createMatch = async (body: any) => {
   var getDaysArray = function (start: any, end: any) {
@@ -2516,7 +2581,7 @@ const addInjuryReport = async () => {
             const player = await Player.findOne({
               goalServePlayerId: val.player_id,
             });
-
+            console.log("player", player,  val.player_id);
             const data = {
               date: val?.date,
               description: val.description,

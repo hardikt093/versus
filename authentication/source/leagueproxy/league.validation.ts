@@ -11,4 +11,9 @@ const singleGameBoxscore = {
     goalServeMatchId: Joi.string().required(),
   }),
 };
-export default { scoreWithDate, singleGameBoxscore };
+const singleGameBoxscoreUpcomming = {
+  query: Joi.object().keys({
+    goalServeMatchId: Joi.string().required(),
+  }),
+};
+export default { scoreWithDate, singleGameBoxscore,singleGameBoxscoreUpcomming };
