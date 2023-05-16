@@ -2509,7 +2509,7 @@ const addMatchWithNewModel = async () => {
     return arr;
   };
 
-  var daylist = getDaysArray(new Date("2023-02-28"), new Date("2023-05-10"));
+  var daylist = getDaysArray(new Date("2023-02-28"), new Date("2023-05-16"));
   for (let i = 0; i < daylist?.length; i++) {
     const getMatch = await axiosGet(
       `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/usa`,
@@ -2601,7 +2601,6 @@ const addInjuryReport = async () => {
             const player = await Player.findOne({
               goalServePlayerId: val.player_id,
             });
-            console.log("player", player, val.player_id);
             const data = {
               date: val?.date,
               description: val.description,
@@ -2674,6 +2673,36 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     {
       $unwind: {
         path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "standings",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "standings",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamStandings",
         includeArrayIndex: "string",
         preserveNullAndEmptyArrays: true,
       },
@@ -2788,6 +2817,24 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         awayTeamImage: "$awayTeamImage.image",
         awayTeamInjuredPlayers: true,
         homeTeamInjuredPlayers: true,
+        awayTeam: {
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          awayTeamRun: "$awayTeamTotalScore",
+          awayTeamHit: "$awayTeamHit",
+          awayTeamErrors: "$awayTeamError",
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+        },
+        homeTeam: {
+          homeTeamName: "$homeTeam.name",
+          homeTeamId: "$homeTeam._id",
+          homeTeamRun: "$homeTeamTotalScore",
+          homeTeamHit: "$homeTeamHit",
+          homeTeamErrors: "$homeTeamError",
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+        },
         odds: {
           homeTeamSpread: true,
           homeTeamTotal: true,
