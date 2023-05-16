@@ -2868,6 +2868,22 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           awayTeamErrors: "$awayTeamError",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
+          teamImage: "$awayTeamImage.image",
+          'moneyline': {
+            '$arrayElemAt': [
+              '$odds.awayTeamMoneyline', 0
+            ]
+          },
+          'spread': {
+            '$arrayElemAt': [
+              '$odds.awayTeamSpread', 0
+            ]
+          },
+          'total': {
+            '$arrayElemAt': [
+              '$odds.awayTeamTotal', 0
+            ]
+          }
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -2877,6 +2893,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           homeTeamErrors: "$homeTeamError",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
+          teamImage: "$homeTeamImage.image"
         },
         odds: {
           homeTeamSpread: true,
@@ -2885,6 +2902,21 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           awayTeamTotal: true,
           awayTeamMoneyline: true,
           homeTeamMoneyline: true,
+          'moneyline': {
+            '$arrayElemAt': [
+              '$odds.homeTeamMoneyline', 0
+            ]
+          },
+          'spread': {
+            '$arrayElemAt': [
+              '$odds.homeTeamSpread', 0
+            ]
+          },
+          'total': {
+            '$arrayElemAt': [
+              '$odds.homeTeamTotal', 0
+            ]
+          }
         },
       },
     },
