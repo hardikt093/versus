@@ -251,9 +251,24 @@ const singleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
 };
 const addInjuredPlayers = async (req: Request, res: Response) => {
   try {
-    const addInjuredPlayers =
-      await goalserveService.addInjuryReport();
+    const addInjuredPlayers = await goalserveService.addInjuryReport();
     createResponse(res, httpStatus.OK, "", addInjuredPlayers);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+const statsPlayerPitching = async (req: Request, res: Response) => {
+  try {
+    const statsPlayerPitching = await goalserveService.statsPlayerPitching();
+    createResponse(res, httpStatus.OK, "", statsPlayerPitching);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+const statsTeam = async (req: Request, res: Response) => {
+  try {
+    const teamStats = await goalserveService.teamStats();
+    createResponse(res, httpStatus.OK, "", teamStats);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -285,5 +300,7 @@ export default {
   singleGameBoxScore,
   getBseballStandings,
   singleGameBoxScoreUpcomming,
-  addInjuredPlayers
+  addInjuredPlayers,
+  statsPlayerPitching,
+  statsTeam,
 };
