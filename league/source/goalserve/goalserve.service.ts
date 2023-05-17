@@ -2338,14 +2338,19 @@ const singleGameBoxScore = async (params: any) => {
         awayTeamImage: "$awayTeamImage.image",
         homeTeamTotalScore: true,
         awayTeamTotalScore: true,
-        awayTeamInnings: true,
-        homeTeamInnings: true,
+        innings:{
+          awayTeam: true,
+          homeTeam: true,
+        },
+  
         event: true,
-        stats: {
-          awayTeamPitchers: "$awayTeamPitchers",
-          homeTeamPitchers: "$homeTeamPitchers",
-          homeTeamHitters: "$homeTeamHitters",
-          awayTeamHitters: "$awayTeamHitters",
+        hittingStatistics: {
+          homeTeam: "$homeTeamHitters",
+          awayTeam: "$awayTeamHitters",
+        },
+        pitchingStatistics:{
+          awayTeam: "$awayTeamPitchers",
+          homeTeam: "$homeTeamPitchers",
         },
         awayTeam: {
           awayTeamName: "$awayTeam.name",
