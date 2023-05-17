@@ -3,13 +3,13 @@ import IMatchModel from "../interfaces/match.interface";
 var matchSchema = new Schema(
     {
         leagueId: { type: Schema.Types.ObjectId, required: false, ref: "league" },
-        goalServeLeagueId: { type: String, required: true },
-        goalServeMatchId: { type: String, required: true },
+        goalServeLeagueId: { type: Number, required: true },
+        goalServeMatchId: { type: Number, required: true },
         attendance: Number,
         awayTeamId: { type: Schema.Types.ObjectId, required: false, ref: "team" },
-        goalServeAwayTeamId: { type: String, required: true },
+        goalServeAwayTeamId: { type: Number, required: true },
         homeTeamId: { type: Schema.Types.ObjectId, required: false, ref: "team" },
-        goalServeHomeTeamId: { type: String, required: true },
+        goalServeHomeTeamId: { type: Number, required: true },
         date: String,
         dateTimeUtc: String,
         eventId: { type: Schema.Types.ObjectId, ref: "event" },
