@@ -11,6 +11,7 @@ import Team from "../models/documents/team.model";
 import Division from "../models/documents/division.model";
 import { isArray, stubTrue } from "lodash";
 import Match from "../models/documents/match.model";
+import Bet from "../models/documents/bet.model";
 import Inning from "../models/documents/inning.model";
 import Event from "../models/documents/event.model";
 import StartingPitchers from "../models/documents/startingPictures";
@@ -3352,6 +3353,29 @@ const updateCurruntDateRecord = async () => {
             { $set: data },
             { new: true }
           );
+        }
+        if (matchArray[j].status != "Not Started" && matchArray[j].status != "Final" 
+        && matchArray[j].status != "Postponed" && matchArray[j].status != "Canceled"
+        && matchArray[j].status != "Suspended") {
+          const goalServeMatchId = matchArray[j].id;
+          await Bet.updateMany({
+            status : "CONFIRMED",
+            goalServeMatchId : goalServeMatchId
+          }, {
+            status : "ACTIVE"
+          });
+        } else if (matchArray[j].status == "Final") {
+          const homeTeamTotalScore = parseFloat(matchArray[j].hometeam.totalscore);
+          const awayTeamTotalScore = parseFloat(matchArray[j].awayteam.totalscore);
+          const goalServeMatchId = matchArray[j].id;
+          await Bet.updateMany({
+            status : "ACTIVE",
+            goalServeMatchId : goalServeMatchId
+          }, {
+            status : "RESULT_DECLARED",
+            resultAt : new Date (),
+            goalServeWinTeamId : (homeTeamTotalScore > awayTeamTotalScore ?  matchArray[j].hometeam.id : matchArray[j].awayteam.id)
+          });
         }
       }
     }
