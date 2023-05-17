@@ -22,10 +22,10 @@ var createAndUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
   await goalserveService.createAndUpdateOdds();
 })
 
-// var updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
-//   console.info("inside score cron updateCurruntDateRecord");
-//   await goalserveService.updateCurruntDateRecord();
-// })
+var updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron updateCurruntDateRecord");
+  await goalserveService.updateCurruntDateRecord();
+})
 
 // export default { getUpcomingMatch, getFinalMatch, getLiveMatch, createAndUpdateOdds };
-export default { createAndUpdateOdds, getLiveMatch, getUpcomingMatch, getFinalMatch };
+export default { createAndUpdateOdds, getLiveMatch, getUpcomingMatch, getFinalMatch, updateCurruntDateRecord };

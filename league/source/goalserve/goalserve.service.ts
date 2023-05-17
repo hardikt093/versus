@@ -434,6 +434,16 @@ const getFinalMatch = async () => {
         },
       },
       {
+        '$addFields': {
+          'awayTeamTotalScoreInNumber': {
+            '$toInt': '$awayTeamTotalScore'
+          },
+          'homeTeamTotalScoreInNumber': {
+            '$toInt': '$homeTeamTotalScore'
+          }
+        }
+      },
+      {
         $project: {
           id: true,
           date: true,
@@ -450,6 +460,17 @@ const getFinalMatch = async () => {
             won: "$awayTeamStandings.won",
             lose: "$awayTeamStandings.lost",
             teamImage: "$awayTeamImage.image",
+            'isWinner': {
+              '$cond': {
+                'if': {
+                  '$gte': [
+                    '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+                  ]
+                },
+                'then': true,
+                'else': false
+              }
+            }
           },
           homeTeam: {
             homeTeamName: "$homeTeam.name",
@@ -460,6 +481,17 @@ const getFinalMatch = async () => {
             won: "$homeTeamStandings.won",
             lose: "$homeTeamStandings.lost",
             teamImage: "$homeTeamImage.image",
+            'isWinner': {
+              '$cond': {
+                'if': {
+                  '$gte': [
+                    '$homeTeamTotalScoreInNumber', '$awayTeamTotalScoreInNumber'
+                  ]
+                },
+                'then': true,
+                'else': false
+              }
+            }
           },
         },
       },
@@ -675,6 +707,16 @@ const mlbScoreWithDate = async (params: any) => {
       },
     },
     {
+      '$addFields': {
+        'awayTeamTotalScoreInNumber': {
+          '$toInt': '$awayTeamTotalScore'
+        },
+        'homeTeamTotalScoreInNumber': {
+          '$toInt': '$homeTeamTotalScore'
+        }
+      }
+    },
+    {
       $sort: {
         formattedDate: 1,
         time: 1,
@@ -697,6 +739,17 @@ const mlbScoreWithDate = async (params: any) => {
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+                ]
+              },
+              'then': true,
+              'else': false
+            }
+          }
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -707,6 +760,17 @@ const mlbScoreWithDate = async (params: any) => {
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$homeTeamTotalScoreInNumber', '$awayTeamTotalScoreInNumber'
+                ]
+              },
+              'then': true,
+              'else': false
+            }
+          }
         },
       },
     },
@@ -1499,6 +1563,16 @@ const getFinalMatchDataFromDB = async () => {
       },
     },
     {
+      '$addFields': {
+        'awayTeamTotalScoreInNumber': {
+          '$toInt': '$awayTeamTotalScore'
+        },
+        'homeTeamTotalScoreInNumber': {
+          '$toInt': '$homeTeamTotalScore'
+        }
+      }
+    },
+    {
       $project: {
         id: true,
         date: true,
@@ -1515,6 +1589,17 @@ const getFinalMatchDataFromDB = async () => {
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+                ]
+              },
+              'then': true,
+              'else': false
+            }
+          }
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -1525,6 +1610,17 @@ const getFinalMatchDataFromDB = async () => {
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$homeTeamTotalScoreInNumber', '$awayTeamTotalScoreInNumber'
+                ]
+              },
+              'then': true,
+              'else': false
+            }
+          }
         },
       },
     },
