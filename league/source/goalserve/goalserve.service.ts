@@ -2354,10 +2354,9 @@ const singleGameBoxScore = async (params: any) => {
         homeTeamTotalScore: true,
         awayTeamTotalScore: true,
         innings:{
-          awayTeam: true,
-          homeTeam: true,
+          awayTeam: "$awayTeamInnings",
+          homeTeam: "$homeTeamInnings",
         },
-  
         event: true,
         hittingStatistics: {
           homeTeam: "$homeTeamHitters",
