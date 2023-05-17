@@ -3548,12 +3548,12 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
       $limit: 1,
     },
     {
-      '$lookup': {
-        'from': 'odds',
-        'localField': 'goalServeMatchId',
-        'foreignField': 'goalServeMatchId',
-        'as': 'odds'
-      }
+      $lookup: {
+        from: "odds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
     },
     {
       $project: {
@@ -3618,6 +3618,29 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
             on_base_percentage: "$homeTeamStats.on_base_percentage",
             slugging_percentage: "$homeTeamStats.slugging_percentage",
             runs_batted_in: "$homeTeamStats.runs_batted_in",
+            on_base_plus_slugging: {
+              $round: [
+                {
+                  $add: [
+                    {
+                      $convert: {
+                        input: "$homeTeamStats.on_base_percentage",
+                        to: "double",
+                        onError: 0,
+                      },
+                    },
+                    {
+                      $convert: {
+                        input: "$homeTeamStats.slugging_percentage",
+                        to: "double",
+                        onError: 0,
+                      },
+                    },
+                  ],
+                },
+                3,
+              ],
+            },
           },
           awayTeam: {
             hits: "$awayTeamStats.hits",
@@ -3628,6 +3651,29 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
             on_base_percentage: "$awayTeamStats.on_base_percentage",
             slugging_percentage: "$awayTeamStats.slugging_percentage",
             runs_batted_in: "$awayTeamStats.runs_batted_in",
+            on_base_plus_slugging: {
+              $round: [
+                {
+                  $add: [
+                    {
+                      $convert: {
+                        input: "$awayTeamStats.on_base_percentage",
+                        to: "double",
+                        onError: 0,
+                      },
+                    },
+                    {
+                      $convert: {
+                        input: "$awayTeamStats.slugging_percentage",
+                        to: "double",
+                        onError: 0,
+                      },
+                    },
+                  ],
+                },
+                3,
+              ],
+            },
           },
         },
         startingPitchers: {
