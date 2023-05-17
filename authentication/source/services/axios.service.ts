@@ -34,7 +34,16 @@ const axiosGet = async (url: string, payload = {}, token: "") => {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
   }
 };
-
+const axiosGetMicro = async (url: string, payload = {}, token: "") => {
+  const params = new URLSearchParams(payload).toString();
+  try {
+    return await axios.get(`${url}?${params}`, getHeaders(token));
+  } catch (error: any) {
+    throw new AppError(error.response.data.status ?? httpStatus.UNPROCESSABLE_ENTITY,
+       error.response.data.message ?? error.message,
+      error.response.data.data ?? {});
+  }
+};
 /**
  * Post request from axios
  */
@@ -60,7 +69,9 @@ const axiosPostMicro = async (
     let request = await axios.post(`${url}`, data, getHeaders(token));
     return request;
   } catch (error: any) {
-    throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
+    throw new AppError(error.response.data.status ?? httpStatus.UNPROCESSABLE_ENTITY,
+      error.response.data.message ?? error.message,
+     error.response.data.data ?? {});
   }
 };
 
@@ -104,4 +115,5 @@ export {
   axiosPut,
   axiosPatch,
   axiosPostMicro,
+  axiosGetMicro
 };

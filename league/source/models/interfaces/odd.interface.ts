@@ -15,6 +15,7 @@ export interface IOddModel extends Document {
     homeTeamRunLine: string,
     awayTeamSpread: string,
     awayTeamRunLine: string,
-    moneyLine : Array<moneyLine>
+    homeTeamMoneyline : moneyLine
+    awayTeamMoneyline : moneyLine
 }
 export default IOddModel;
