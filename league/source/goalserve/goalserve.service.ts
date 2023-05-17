@@ -3386,12 +3386,12 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        home_run_float: { $toDouble: "$awayTeamHomeRuns.batting.home_runs" },
+        home_run_float_away: { $toDouble: "$awayTeamHomeRuns.batting.home_runs" },
       },
     },
     {
       $sort: {
-        home_run_float: -1,
+        home_run_float_away: -1,
       },
     },
     {
@@ -3410,12 +3410,12 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        home_run_float: { $toDouble: "$homeTeamHomeRuns.batting.home_runs" },
+        home_run_float_home: { $toDouble: "$homeTeamHomeRuns.batting.home_runs" },
       },
     },
     {
       $sort: {
-        home_run_float: -1,
+        home_run_float_home: -1,
       },
     },
     {
@@ -3434,14 +3434,14 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        batting_avg_Float: {
+        batting_avg_float_home: {
           $toDouble: "$homeTeamBatting_avg.batting.batting_avg",
         },
       },
     },
     {
       $sort: {
-        home_run_float: -1,
+        batting_avg_float_home: -1,
       },
     },
     {
@@ -3460,40 +3460,14 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        batting_avg_Float: {
+        batting_avg_float_Away: {
           $toDouble: "$awayTeamBatting_avg.batting.batting_avg",
         },
       },
     },
     {
       $sort: {
-        home_run_float: -1,
-      },
-    },
-    {
-      $limit: 1,
-    },
-    {
-      $lookup: {
-        from: "players",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamBatting_avg",
-      },
-    },
-    {
-      $unwind: "$awayTeamBatting_avg",
-    },
-    {
-      $addFields: {
-        batting_avg_Float: {
-          $toDouble: "$awayTeamBatting_avg.batting.batting_avg",
-        },
-      },
-    },
-    {
-      $sort: {
-        home_run_float: -1,
+        batting_avg_float_Away: -1,
       },
     },
     {
@@ -3512,12 +3486,12 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        RBI_Float: { $toDouble: "$awayTeamRBI.batting.runs_batted_in" },
+        RBI_float_away: { $toDouble: "$awayTeamRBI.batting.runs_batted_in" },
       },
     },
     {
       $sort: {
-        RBI_Float: -1,
+        RBI_float_away: -1,
       },
     },
     {
@@ -3536,12 +3510,12 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        RBI_Float: { $toDouble: "$homeTeamRBI.batting.runs_batted_in" },
+        RBI_Float_Home: { $toDouble: "$homeTeamRBI.batting.runs_batted_in" },
       },
     },
     {
       $sort: {
-        RBI_Float: -1,
+        RBI_Float_Home: -1,
       },
     },
     {
