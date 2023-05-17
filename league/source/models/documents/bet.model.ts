@@ -3,7 +3,7 @@ import IBetModel from "../interfaces/bet.interface";
 var betSchema = new Schema(
   {
     goalServeMatchId: {
-      type: String,
+      type: Number,
       required: true,
     },
     requestUserId: {
@@ -24,20 +24,20 @@ var betSchema = new Schema(
       type: Number,
     },
     goalServeLeagueId: {
-      type: String,
+      type: Number,
     },
     goalServeRequestUserTeamId: {
-      type: String,
+      type: Number,
     },
     goalServeOpponentUserTeamId: {
-      type: String,
+      type: Number,
     },
     matchOddsId: {
       type: Schema.Types.ObjectId,
       ref: "odd",
     },
     goalServeWinTeamId: {
-      type: String,
+      type: Number,
     },
     isRequestUserWinAmount: {
       type: Boolean,

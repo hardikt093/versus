@@ -6,11 +6,11 @@ type TBet = {
   isRequestUserConfirmedBet: boolean;
   isOpponentUserConfirmedBet: boolean;
   betAmount: number;
-  goalServeLeagueId: string;
-  goalServeRequestUserTeamId: string;
-  goalServeOpponentUserTeamId: string;
+  goalServeLeagueId: number;
+  goalServeRequestUserTeamId: number;
+  goalServeOpponentUserTeamId: number;
   matchOddsId: string;
-  goalServeWinTeamId: string;
+  goalServeWinTeamId: number;
   isRequestUserWinAmount: boolean;
   isOpponentUserWinAmount: boolean;
   resultAmountRequestUser: number;
