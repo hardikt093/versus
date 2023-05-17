@@ -174,6 +174,7 @@ router.post("/addMatchDataFuture", goalserveController.addMatchDataFuture);
 router.get("/addstandings", goalserveController.addStanding);
 router.get("/addAbbrevation", goalserveController.addAbbrevation);
 router.post("/addPlayerStats", goalserveController.statsPlayerPitching);
+router.post("/addTeamStats", goalserveController.statsTeam);
 router.get(
   "/single-game-boxscore",
   auth,

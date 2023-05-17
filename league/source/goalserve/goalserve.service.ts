@@ -19,6 +19,7 @@ import Standings from "../models/documents/standing.model";
 import Injury from "../models/documents/injuy.model";
 import Odd from "../models/documents/odd.model";
 import StatsPlayer from "../models/documents/statsPlayer.model";
+import StatsTeam from "../models/documents/teamStats.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -3258,10 +3259,32 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $lookup: {
-        from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
+        from: "statsteams",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamStats",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamStats",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "statsteams",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamStats",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamStats",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
       },
     },
     {
@@ -3280,9 +3303,30 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         awayTeamImage: "$awayTeamImage.image",
         awayTeamInjuredPlayers: true,
         homeTeamInjuredPlayers: true,
-        awayTeamStartingPitchers:{
-          throws:"$awayTeamStartingPitchers.throws",
-            earned_run_average: "$awayTeamStartingPitchers.pitching.earned_run_average",
+        homeTeamStats: {
+          hits: "$homeTeamStats.hits",
+          home_runs: "$homeTeamStats.home_runs",
+          batting_avg: "$homeTeamStats.batting_avg",
+          rank: "$homeTeamStats.rank",
+          runs: "$homeTeamStats.runs",
+          on_base_percentage: "$homeTeamStats.on_base_percentage",
+          slugging_percentage: "$homeTeamStats.slugging_percentage",
+          runs_batted_in: "$homeTeamStats.runs_batted_in",
+        },
+        awayTeamStats: {
+          hits: "$awayTeamStats.hits",
+          home_runs: "$awayTeamStats.home_runs",
+          batting_avg: "$awayTeamStats.batting_avg",
+          rank: "$awayTeamStats.rank",
+          runs: "$awayTeamStats.runs",
+          on_base_percentage: "$awayTeamStats.on_base_percentage",
+          slugging_percentage: "$awayTeamStats.slugging_percentage",
+          runs_batted_in: "$awayTeamStats.runs_batted_in",
+        },
+        awayTeamStartingPitchers: {
+          throws: "$awayTeamStartingPitchers.throws",
+          earned_run_average:
+            "$awayTeamStartingPitchers.pitching.earned_run_average",
           walk_hits_per_inning_pitched:
             "$awayTeamStartingPitchers.pitching.walk_hits_per_inning_pitched",
           innings_pitched: "$awayTeamStartingPitchers.pitching.innings_pitched",
@@ -3294,9 +3338,10 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           wins: "$awayTeamStartingPitchers.pitching.wins",
           name: "$awayTeamStartingPitchers.pitching.name",
         },
-        homeTeamStartingPitchers:{
-          throws:"$homeTeamStartingPitchers.throws",
-            earned_run_average: "$homeTeamStartingPitchers.pitching.earned_run_average",
+        homeTeamStartingPitchers: {
+          throws: "$homeTeamStartingPitchers.throws",
+          earned_run_average:
+            "$homeTeamStartingPitchers.pitching.earned_run_average",
           walk_hits_per_inning_pitched:
             "$homeTeamStartingPitchers.pitching.walk_hits_per_inning_pitched",
           innings_pitched: "$homeTeamStartingPitchers.pitching.innings_pitched",
@@ -3345,14 +3390,6 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           total: {
             $arrayElemAt: ["$odds.homeTeamTotal", 0],
           },
-        },
-        odds: {
-          homeTeamSpread: true,
-          homeTeamTotal: true,
-          awayTeamSpread: true,
-          awayTeamTotal: true,
-          awayTeamMoneyline: true,
-          homeTeamMoneyline: true,
         },
       },
     },
@@ -3666,6 +3703,40 @@ const statsPlayerPitching = async () => {
   );
 };
 
+const teamStats = async () => {
+  const teamStatsNl = await axiosGet(
+    `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/nl_team_batting`,
+    { json: true }
+  );
+
+  await Promise.all(
+    teamStatsNl.data.statistic.category.team.map(async (item: any) => {
+      const team = await Team.findOne({ name: item.name });
+      let data = item;
+      data.category = teamStatsNl.data.statistic.category.name;
+      data.teamId = team?.id;
+      data.goalServeTeamId = team?.goalServeTeamId;
+      const stat = new StatsTeam(data);
+      await stat.save();
+    })
+  );
+  const teamStatsAL = await axiosGet(
+    `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/al_team_batting`,
+    { json: true }
+  );
+
+  await Promise.all(
+    teamStatsAL.data.statistic.category.team.map(async (item: any) => {
+      const team = await Team.findOne({ name: item.name });
+      let data = item;
+      data.category = teamStatsAL.data.statistic.category.name;
+      data.teamId = team?.id;
+      data.goalServeTeamId = team?.goalServeTeamId;
+      const stat = new StatsTeam(data);
+      await stat.save();
+    })
+  );
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -3706,4 +3777,5 @@ export default {
   createAndUpdateOdds,
   updateCurruntDateRecord,
   statsPlayerPitching,
+  teamStats,
 };
