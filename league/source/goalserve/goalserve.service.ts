@@ -3375,6 +3375,14 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
       },
     },
     {
+      '$lookup': {
+        'from': 'odds',
+        'localField': 'goalServeMatchId',
+        'foreignField': 'goalServeMatchId',
+        'as': 'odds'
+      }
+    },
+    {
       $project: {
         id: true,
         attendance: true,
