@@ -307,7 +307,7 @@ const updateBetRequest = async (
   return responsedBetData;
 };
 
-const resultBet = async (id: string, winTeamId: string) => {
+const resultBet = async (id: string, winTeamId: number) => {
   const condition = {
     _id: id,
   };

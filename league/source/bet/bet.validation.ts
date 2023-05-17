@@ -4,8 +4,8 @@ const createBet = {
   body: Joi.object().keys({
     opponentUserId: Joi.number().required(),
     amount: Joi.number().required().min(1),
-    requestUserTeamId: Joi.string().required(),
-    matchId: Joi.string().required(),
+    requestUserTeamId: Joi.number().required(),
+    matchId: Joi.number().required(),
   }),
 };
 const responseBet = {
@@ -40,7 +40,7 @@ const resultBet = {
     id: Joi.string().required(),
   }),
   body: Joi.object().keys({
-    winTeamId: Joi.string().required(),
+    winTeamId: Joi.number().required(),
   }),
 };
 

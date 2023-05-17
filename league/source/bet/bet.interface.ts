@@ -1,9 +1,8 @@
 export interface ICreateBetRequest {
     opponentUserId: number,
     amount: number,
-    requestUserTeamId:  string,
-    matchId: string,
-    sportsType: sportsType
+    requestUserTeamId:  number,
+    matchId: number
 }
 
 export interface IresponseBetRequest {
