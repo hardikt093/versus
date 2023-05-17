@@ -2323,6 +2323,21 @@ const singleGameBoxScore = async (params: any) => {
       },
     },
     {
+      '$addFields': {
+        'lostTeam': {
+          '$cond': {
+            'if': {
+              '$gte': [
+                '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+              ]
+            },
+            'then': '$homeTeamTotalScoreInNumber',
+            'else': '$awayTeamTotalScoreInNumber'
+          }
+        }
+      }
+    },
+    {
       $project: {
         id: true,
         attendance: true,
@@ -2600,6 +2615,20 @@ const singleGameBoxScore = async (params: any) => {
           awayTeamTotal: "$odds.awayTeamTotal",
           awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
           homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
+          'totalGameScore': {
+            '$add': [
+              '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+            ]
+          },
+          'scoreDiffrence': {
+            '$subtract': [
+              {
+                '$add': [
+                  '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+                ]
+              }, '$lostTeam'
+            ]
+          }
         },
       },
     },
