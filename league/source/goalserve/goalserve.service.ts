@@ -328,96 +328,184 @@ const getFinalMatch = async () => {
 
 const getLiveMatch = async () => {
   try {
-    const winlossArray = await getWinLost();
-    const getScore = await axiosGet(
-      "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/usa",
-      { json: true }
-    );
-    var getLiveMatch: any = [];
-    const takeData = await getScore?.data?.scores?.category?.match.map(
-      async (item: any) => {
-        const getAwayTeamImage = await axiosGet(
-          `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.awayteam.id}_rosters`,
-          { json: true }
-        );
-        const getHomeTeamImage = await axiosGet(
-          `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.hometeam.id}_rosters`,
-          { json: true }
-        );
-        if (
-          item.status !== "Not Started" &&
-          item.status !== "Final" &&
-          item.status !== "Postponed"
-        ) {
-          const findAwayTeamWinLose: any = await search(
-            item?.awayteam?.id,
-            winlossArray
-          );
-          const findHomeTeamWinLose: any = await search(
-            item?.hometeam?.id,
-            winlossArray
-          );
-          if (
-            item.status !== "Not Started" &&
-            item.status !== "Final" &&
-            item.status !== "Postponed"
-          ) {
-            const findAwayTeamWinLose: any = await search(
-              item?.awayteam?.id,
-              winlossArray
-            );
-            const findHomeTeamWinLose: any = await search(
-              item?.hometeam?.id,
-              winlossArray
-            );
-            let liveScoreData = {
-              status: item.status,
-              inningNo: item?.status?.split(" ").pop(),
-              id: item.data,
-              awayTeam: {
-                awayTeamName: item.awayteam.name,
-                awayTeamId: item.awayteam.id,
-                awayTeamInnings: item.awayteam.innings,
-                awayTeamScore: item.awayteam.totalscore,
-                teamImage: getAwayTeamImage.data.team.image,
-                won: findAwayTeamWinLose ? findAwayTeamWinLose.won : "",
-                lose: findAwayTeamWinLose ? findAwayTeamWinLose.lost : "",
-                awayTeamRun: item.awayteam.totalscore,
-                awayTeamHit: item.awayteam.hits,
-                awayTeamErrors: item.awayteam.errors,
+    const getLiveMatch = await Match.aggregate([
+      // {
+      //   $match: {
+      //     formattedDate: date,
+      //   },
+      // },
+      {
+        $match: {
+          $and: [
+            {
+              status: {
+                $ne: "Not Started",
               },
-              date: item.date,
-              datetime_utc: item.datetime_utc,
-              events: item.events,
-              formatted_date: item.formatted_date,
-              homeTeam: {
-                homeTeamName: item.hometeam.name,
-                homeTeamId: item.hometeam.id,
-                homeTeamInnings: item.hometeam.innings,
-                homeTeamScore: item.hometeam.totalscore,
-                teamImage: getHomeTeamImage.data.team.image,
-                won: findHomeTeamWinLose ? findHomeTeamWinLose.won : "",
-                lose: findHomeTeamWinLose ? findHomeTeamWinLose.lost : "",
-                homeTeamRun: item.hometeam.totalscore,
-                homeTeamHit: item.hometeam.hits,
-                homeTeamErrors: item.hometeam.errors,
+            },
+            {
+              status: {
+                $ne: "Final",
               },
-              oddsid: item.oddsid,
-              time: item.time,
-              timezone: item.timezone,
-              out: item.outs,
-            };
-            getLiveMatch.push(liveScoreData);
-          }
-          return { getLiveMatch };
-        }
-      }
-    );
-    return await Promise.all(takeData).then(async (item: any) => {
+            },
+            {
+              status: {
+                $ne: "Postponed",
+              },
+            },
+            {
+              status: {
+                $ne: "Canceled",
+              },
+            },
+            {
+              status: {
+                $ne: "Suspended",
+              },
+            },
+          ],
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "awayTeamId",
+          foreignField: "_id",
+          as: "awayTeam",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "homeTeamId",
+          foreignField: "_id",
+          as: "homeTeam",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: {
+          datetime_utc: 1,
+          // time: 1,
+        },
+      },
+      {
+        $addFields: {
+          inningNo: {
+            $split: ["$status", " "],
+          },
+        },
+      },
+      {
+        $project: {
+          id: true,
+          date: true,
+          status: true,
+          inningNo: {
+            $last: "$inningNo",
+          },
+          datetime_utc: "$dateTimeUtc",
+          time: true,
+          goalServeMatchId: true,
+          awayTeam: {
+            awayTeamName: "$awayTeam.name",
+            awayTeamId: "$awayTeam._id",
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            won: "$awayTeamStandings.won",
+            lose: "$awayTeamStandings.lost",
+            teamImage: "$awayTeamImage.image",
+          },
+          homeTeam: {
+            homeTeamName: "$homeTeam.name",
+            homeTeamId: "$homeTeam._id",
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            won: "$homeTeamStandings.won",
+            lose: "$homeTeamStandings.lost",
+            teamImage: "$homeTeamImage.image",
+          },
+        },
+      },
+    ]);
+
       await socket("mlbLiveMatch", {
         getLiveMatch,
-      });
-      return getLiveMatch;
+
     });
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
@@ -3048,9 +3136,9 @@ const createAndUpdateOdds = async () => {
               goalServeHomeTeamId: item?.hometeam?.id,
               goalServeAwayTeamId: item?.awayteam?.id,
               homeTeamSpread: homeTeamSpread,
-              homeTeamTotal: totalValues,
+              homeTeamTotal: totalValues ? totalValues : "",
               awayTeamSpread: awayTeamSpread,
-              awayTeamTotal: totalValues,
+              awayTeamTotal: totalValues ? totalValues : "",
               awayTeamMoneyline: awayTeamMoneyline,
               homeTeamMoneyline: homeTeamMoneyline,
             };

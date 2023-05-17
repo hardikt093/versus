@@ -9,6 +9,7 @@ const socket = async (eventName: string, data: object | Array<object>) => {
       io.emit("mlbFinalMatch", data);
       break;
     case "mlbLiveMatch":
+      console.log("data", data)
       io.emit("mlbLiveMatch", data);
       break;
 

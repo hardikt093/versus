@@ -12,10 +12,10 @@ import goalserveService from "../../goalserve/goalserve.service";
 //   await goalserveService.getFinalMatch();
 // });
 
-// var getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
-//   console.info("inside score cron getLiveMatch");
-//   await goalserveService.getLiveMatch();
-// });
+var getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron getLiveMatch");
+  await goalserveService.getLiveMatch();
+});
 
 var createAndUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
   console.info("inside score cron createAndUpdateOdds");
@@ -28,4 +28,4 @@ var createAndUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
 // })
 
 // export default { getUpcomingMatch, getFinalMatch, getLiveMatch, createAndUpdateOdds };
-export default { createAndUpdateOdds };
+export default { createAndUpdateOdds, getLiveMatch };
