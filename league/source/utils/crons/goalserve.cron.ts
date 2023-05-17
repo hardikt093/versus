@@ -2,15 +2,15 @@ import cron from "node-cron";
 
 import goalserveService from "../../goalserve/goalserve.service";
 
-// var getUpcomingMatch = cron.schedule("*/10 * * * * *", async () => {
-//   console.info("inside score cron getUpcomingMatch");
-//   await goalserveService.getUpcomingMatch();
-// });
+var getUpcomingMatch = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron getUpcomingMatch");
+  await goalserveService.getUpcomingMatch();
+});
 
-// var getFinalMatch = cron.schedule("*/10 * * * * *", async () => {
-//   console.info("inside score cron getFinalMatch");
-//   await goalserveService.getFinalMatch();
-// });
+var getFinalMatch = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron getFinalMatch");
+  await goalserveService.getFinalMatch();
+});
 
 var getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   console.info("inside score cron getLiveMatch");
@@ -28,4 +28,4 @@ var createAndUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
 // })
 
 // export default { getUpcomingMatch, getFinalMatch, getLiveMatch, createAndUpdateOdds };
-export default { createAndUpdateOdds, getLiveMatch };
+export default { createAndUpdateOdds, getLiveMatch, getUpcomingMatch, getFinalMatch };
