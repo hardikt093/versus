@@ -2323,21 +2323,7 @@ const singleGameBoxScore = async (params: any) => {
         },
       },
     },
-    {
-      '$addFields': {
-        'lostTeam': {
-          '$cond': {
-            'if': {
-              '$gte': [
-                '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
-              ]
-            },
-            'then': '$homeTeamTotalScoreInNumber',
-            'else': '$awayTeamTotalScoreInNumber'
-          }
-        }
-      }
-    },
+
     {
       $project: {
         id: true,
@@ -2354,7 +2340,7 @@ const singleGameBoxScore = async (params: any) => {
         awayTeamImage: "$awayTeamImage.image",
         homeTeamTotalScore: true,
         awayTeamTotalScore: true,
-        innings:{
+        innings: {
           awayTeam: "$awayTeamInnings",
           homeTeam: "$homeTeamInnings",
         },
@@ -2363,7 +2349,7 @@ const singleGameBoxScore = async (params: any) => {
           homeTeam: "$homeTeamHitters",
           awayTeam: "$awayTeamHitters",
         },
-        pitchingStatistics:{
+        pitchingStatistics: {
           awayTeam: "$awayTeamPitchers",
           homeTeam: "$homeTeamPitchers",
         },
@@ -2615,20 +2601,21 @@ const singleGameBoxScore = async (params: any) => {
           awayTeamTotal: "$odds.awayTeamTotal",
           awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
           homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
-          'totalGameScore': {
-            '$add': [
-              '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
-            ]
+          scoreDifference: {
+            $abs: {
+              $subtract: [
+                "$awayTeamTotalScoreInNumber",
+                "$homeTeamTotalScoreInNumber",
+              ],
+            },
           },
-          'scoreDiffrence': {
-            '$subtract': [
-              {
-                '$add': [
-                  '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
-                ]
-              }, '$lostTeam'
-            ]
-          }
+          totalGameScore: {
+            $add: [
+              "$awayTeamTotalScoreInNumber",
+              "$homeTeamTotalScoreInNumber",
+            ],
+          },
+          
         },
       },
     },
@@ -3420,7 +3407,9 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        home_run_float_away: { $toDouble: "$awayTeamHomeRuns.batting.home_runs" },
+        home_run_float_away: {
+          $toDouble: "$awayTeamHomeRuns.batting.home_runs",
+        },
       },
     },
     {
@@ -3444,7 +3433,9 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
     },
     {
       $addFields: {
-        home_run_float_home: { $toDouble: "$homeTeamHomeRuns.batting.home_runs" },
+        home_run_float_home: {
+          $toDouble: "$homeTeamHomeRuns.batting.home_runs",
+        },
       },
     },
     {
@@ -4038,19 +4029,30 @@ const updateCurruntDateRecord = async () => {
             { new: true }
           );
         }
-        if (matchArray[j].status != "Not Started" && matchArray[j].status != "Final" 
-        && matchArray[j].status != "Postponed" && matchArray[j].status != "Canceled"
-        && matchArray[j].status != "Suspended") {
+        if (
+          matchArray[j].status != "Not Started" &&
+          matchArray[j].status != "Final" &&
+          matchArray[j].status != "Postponed" &&
+          matchArray[j].status != "Canceled" &&
+          matchArray[j].status != "Suspended"
+        ) {
           const goalServeMatchId = matchArray[j].id;
-          await Bet.updateMany({
-            status : "CONFIRMED",
-            goalServeMatchId : goalServeMatchId
-          }, {
-            status : "ACTIVE"
-          });
+          await Bet.updateMany(
+            {
+              status: "CONFIRMED",
+              goalServeMatchId: goalServeMatchId,
+            },
+            {
+              status: "ACTIVE",
+            }
+          );
         } else if (matchArray[j].status == "Final") {
-          const homeTeamTotalScore = parseFloat(matchArray[j].hometeam.totalscore);
-          const awayTeamTotalScore = parseFloat(matchArray[j].awayteam.totalscore);
+          const homeTeamTotalScore = parseFloat(
+            matchArray[j].hometeam.totalscore
+          );
+          const awayTeamTotalScore = parseFloat(
+            matchArray[j].awayteam.totalscore
+          );
           const goalServeMatchId = matchArray[j].id;
           const goalServeWinTeamId = (homeTeamTotalScore > awayTeamTotalScore ?  matchArray[j].hometeam.id : matchArray[j].awayteam.id);
           await betServices.declareResultMatch(parseInt(goalServeMatchId), parseInt(goalServeWinTeamId));

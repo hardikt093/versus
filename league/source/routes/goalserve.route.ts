@@ -176,7 +176,7 @@ router.get("/addAbbrevation", goalserveController.addAbbrevation);
 router.post("/addPlayerStats", goalserveController.statsPlayerPitching);
 router.post("/addTeamStats", goalserveController.statsTeam);
 router.get(
-  "/single-game-boxscore",
+  "/single-game-boxscore-final",
   auth,
   goalserveController.singleGameBoxScore
 );

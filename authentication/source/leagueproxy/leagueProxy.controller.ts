@@ -52,7 +52,7 @@ const singleGameBoxscore = async (req: Request, res: Response) => {
   try {
     let token: any = req.header("Authorization");
     const singleGameBoxscore = await axiosGet(
-      `${config.leagueServer}/mlb/single-game-boxscore`,
+      `${config.leagueServer}/mlb/single-game-boxscore-final`,
       { goalServeMatchId: req.query.goalServeMatchId },
       token
     );
