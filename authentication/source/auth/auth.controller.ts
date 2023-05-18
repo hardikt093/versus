@@ -236,10 +236,8 @@ const checkInviteExpire = async (req: Request, res: Response) => {
 const refreshAuthTokens = async (req: Request, res: Response) => {
   try {
     const refreshAuthTokens = await authService.refreshAuthTokens(req.body.refreshToken);
-
     createResponse(res, httpStatus.OK, "", refreshAuthTokens);
   } catch (error) {
-    console.log(error)
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
 };

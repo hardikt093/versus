@@ -3119,19 +3119,19 @@ const addInjuryReport = async () => {
       const injuryArray1 = injuryApi?.data?.team;
       if (injuryArray1?.report?.length) {
         await Promise.all(
-          injuryArray1.report.map(async (val: any) => {
+          injuryArray1?.report?.map(async (val: any) => {
             const player = await Player.findOne({
-              goalServePlayerId: val.player_id,
+              goalServePlayerId: val?.player_id,
             });
             const data = {
               date: val?.date,
-              description: val.description,
-              goalServePlayerId: val.player_id,
-              playerName: val.player_name,
+              description: val?.description,
+              goalServePlayerId: val?.player_id,
+              playerName: val?.player_name,
               playerId: player?.id,
-              status: val.status,
+              status: val?.status,
               goalServeTeamId: injuryApi?.data?.team?.id,
-              teamId: item.id,
+              teamId: item?.id,
             };
             const playerData = new Injury(data);
             const saveInjuries = await playerData.save();
@@ -3139,9 +3139,8 @@ const addInjuryReport = async () => {
         );
       } else {
         const val = injuryArray1?.report;
-
         const player = await Player.findOne({
-          goalServePlayerId: val.player_id,
+          goalServePlayerId: val?.player_id,
         });
 
         const data = {
@@ -3151,7 +3150,7 @@ const addInjuryReport = async () => {
           playerName: val?.player_name,
           status: val?.status,
           goalServeTeamId: injuryArray1?.id,
-          teamId: item.id,
+          teamId: item?.id,
           playerId: player?.id,
         };
         const playerData = new Injury(data);
