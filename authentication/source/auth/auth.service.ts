@@ -430,6 +430,35 @@ const checkInviteExpire = async (data: any) => {
   }
 };
 
+const refreshAuthTokens = async (refreshToken: any) => {
+  try {
+    const refreshTokenDoc = await tokenService.refreshVerifyToken(refreshToken);
+
+    const userId = refreshTokenDoc.sub.id;
+    const findUser = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (findUser) {
+      await prisma.token.deleteMany({ where: { token: refreshToken } });
+      const tokens = await tokenService.generateAuthTokens(findUser?.id);
+      const user = {
+        id: findUser.id,
+        userName: findUser.userName,
+        firstName: findUser.firstName,
+        lastName: findUser.lastName,
+        profileImage: findUser.profileImage,
+        birthDate: findUser.birthDate,
+        accessToken: tokens.access.token,
+        refreshToken: tokens.refresh.token,
+      };
+      return { user };
+    }
+  } catch (error) {
+    throw new AppError(httpStatus.UNAUTHORIZED, Messages.INVALIDTOKEN);
+  }
+};
 export default {
   signUp,
   signIn,
@@ -441,4 +470,5 @@ export default {
   createContact,
   sendInvite,
   checkInviteExpire,
+  refreshAuthTokens,
 };

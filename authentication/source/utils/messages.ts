@@ -21,5 +21,6 @@ class Messages {
   static CONVERSATION_NOT_FOUND = "Could not find the conversation";
   static USERS_CONTACT_LIST = "Contact list fetched sucessfully";
   static USERS_CONTACT_NOT_FOUND = "Contact not found";
+  static INVALIDTOKEN = "Your token is invalid";
 }
 export default Messages;

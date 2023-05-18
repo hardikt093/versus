@@ -233,6 +233,16 @@ const checkInviteExpire = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
 };
+const refreshAuthTokens = async (req: Request, res: Response) => {
+  try {
+    const refreshAuthTokens = await authService.refreshAuthTokens(req.body.refreshToken);
+
+    createResponse(res, httpStatus.OK, "", refreshAuthTokens);
+  } catch (error) {
+    console.log(error)
+    createResponse(res, httpStatus.BAD_REQUEST, "", {});
+  }
+};
 export default {
   signIn,
   signUp,
@@ -242,4 +252,5 @@ export default {
   deleteUser,
   sendInvite,
   checkInviteExpire,
+  refreshAuthTokens
 };

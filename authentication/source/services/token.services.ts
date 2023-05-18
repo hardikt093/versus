@@ -112,15 +112,16 @@ const verifyToken = async (token: string, type: string | number) => {
   }
   return payload;
 };
-const refreshVerifyToken = async (token: string, type: string | number) => {
+const refreshVerifyToken = async (token: string) => {
   const payload: any = jwt.verify(token, config.jwt.secret);
-
-  const tokenDoc: object | Array<object> = await prisma.token.findUnique({
+  const tokenDoc: Array<object> = await prisma.token.findMany({
     where: {
-      user: payload.sub.user,
+      token: token,
+      user: payload.sub.id,
     },
   });
-  if (!tokenDoc) {
+
+  if (!tokenDoc?.length) {
     throw new AppError(httpStatus.NOT_FOUND, "The link has been expired!");
   }
   return payload;
