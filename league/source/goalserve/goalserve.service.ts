@@ -3593,7 +3593,6 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           },
         },
         datetime_utc: "$dateTimeUtc",
-        goalServeMatchId: true,
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
         awayTeamAbbreviation: "$awayTeam.abbreviation",
