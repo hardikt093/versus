@@ -197,6 +197,7 @@ router.post(
 
 router.post("/sendInvite", authController.sendInvite);
 router.post("/checkInviteExpire", authController.checkInviteExpire);
+router.post("/refresh-auth-token", authController.refreshAuthTokens);
 
 // router.post("/auth/getContact", authController.getContact);
 // router.delete("/auth/userDelete", authController.deleteUser);
