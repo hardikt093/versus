@@ -379,18 +379,21 @@ const declareResultMatch = async (matchId: number, winTeamId: number) => {
         isOpponentUserWinAmount = true;
         resultAmountOpponentUser = oneBet.betAmount * 2;
       }
-      await Bet.updateOne({
-        goalServeMatchId: matchId,
-        status: betStatus.ACTIVE,
-      }, {
-        status: betStatus.RESULT_DECLARED,
-        goalServeWinTeamId: winTeamId,
-        isRequestUserWinAmount: isRequestUserWinAmount,
-        isOpponentUserWinAmount: isOpponentUserWinAmount,
-        resultAmountRequestUser: resultAmountRequestUser,
-        resultAmountOpponentUser: resultAmountOpponentUser,
-        resultAt: new Date(),
-      });
+      await Bet.updateOne(
+        {
+          goalServeMatchId: matchId,
+          status: betStatus.ACTIVE,
+        },
+        {
+          status: betStatus.RESULT_DECLARED,
+          goalServeWinTeamId: winTeamId,
+          isRequestUserWinAmount: isRequestUserWinAmount,
+          isOpponentUserWinAmount: isOpponentUserWinAmount,
+          resultAmountRequestUser: resultAmountRequestUser,
+          resultAmountOpponentUser: resultAmountOpponentUser,
+          resultAt: new Date(),
+        }
+      );
     }
   }
 };
@@ -497,17 +500,51 @@ const resultBetVerified = async (
 };
 
 const listBetsByStatus = async (loggedInUserId: number, status: string) => {
-  const list = await Bet.find({
-    status: status,
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
-    ],
-  });
-  if (list && list.length == 0) {
+  const data = await Bet.aggregate([
+    {
+      $match: {
+        status: status,
+        $or: [
+          { requestUserId: loggedInUserId },
+          { opponentUserId: loggedInUserId },
+        ],
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "goalServeRequestUserTeamId",
+        foreignField: "goalServeTeamId",
+        as: "goalServeRequestUserTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$goalServeRequestUserTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "teams",
+        localField: "goalServeOpponentUserTeamId",
+        foreignField: "goalServeTeamId",
+        as: "goalServeOpponentUserTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$goalServeOpponentUserTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  ]);
+  if (data && data.length == 0) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  return list;
+  return data;
 };
 export default {
   listBetsByStatus,
@@ -518,5 +555,5 @@ export default {
   resultBet,
   createBet,
   updateBetRequest,
-  declareResultMatch
+  declareResultMatch,
 };
