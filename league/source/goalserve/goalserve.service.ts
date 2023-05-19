@@ -3288,10 +3288,6 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
             },
           },
         },
-      },
-    },
-    {
-      $addFields: {
         homeTeamInjuredPlayers: {
           $map: {
             input: "$homeTeamInjuredPlayers",
@@ -3391,159 +3387,110 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         preserveNullAndEmptyArrays: true,
       },
     },
-
     {
       $lookup: {
         from: "players",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
+        let: { awayTeamId: "$goalServeAwayTeamId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$goalServeTeamId", "$$awayTeamId"] } } },
+          {
+            $set: { home_run_float_away: { $toDouble: "$batting.home_runs" } },
+          },
+        ],
         as: "awayTeamHomeRuns",
       },
     },
-    {
-      $unwind: "$awayTeamHomeRuns",
-    },
-    {
-      $addFields: {
-        home_run_float_away: {
-          $toDouble: "$awayTeamHomeRuns.batting.home_runs",
-        },
-      },
-    },
-    {
-      $sort: {
-        home_run_float_away: -1,
-      },
-    },
-    {
-      $limit: 1,
-    },
+    { $unwind: "$awayTeamHomeRuns" },
+    { $sort: { "awayTeamHomeRuns.home_run_float_away": -1 } },
+    { $limit: 1 },
     {
       $lookup: {
         from: "players",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
+        let: { homeTeamId: "$goalServeHomeTeamId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$goalServeTeamId", "$$homeTeamId"] } } },
+          {
+            $set: { home_run_float_home: { $toDouble: "$batting.home_runs" } },
+          },
+        ],
         as: "homeTeamHomeRuns",
       },
     },
-    {
-      $unwind: "$homeTeamHomeRuns",
-    },
-    {
-      $addFields: {
-        home_run_float_home: {
-          $toDouble: "$homeTeamHomeRuns.batting.home_runs",
-        },
-      },
-    },
-    {
-      $sort: {
-        home_run_float_home: -1,
-      },
-    },
-    {
-      $limit: 1,
-    },
+    { $unwind: "$homeTeamHomeRuns" },
+    { $sort: { "homeTeamHomeRuns.home_run_float_home": -1 } },
+    { $limit: 1 },
     {
       $lookup: {
         from: "players",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
+        let: { homeTeamId: "$goalServeHomeTeamId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$goalServeTeamId", "$$homeTeamId"] } } },
+          {
+            $set: {
+              batting_avg_float_home: { $toDouble: "$batting.batting_avg" },
+            },
+          },
+        ],
         as: "homeTeamBatting_avg",
       },
     },
-    {
-      $unwind: "$homeTeamBatting_avg",
-    },
-    {
-      $addFields: {
-        batting_avg_float_home: {
-          $toDouble: "$homeTeamBatting_avg.batting.batting_avg",
-        },
-      },
-    },
-    {
-      $sort: {
-        batting_avg_float_home: -1,
-      },
-    },
-    {
-      $limit: 1,
-    },
+    { $unwind: "$homeTeamBatting_avg" },
+    { $sort: { "homeTeamBatting_avg.batting_avg_float_home": -1 } },
+    { $limit: 1 },
     {
       $lookup: {
         from: "players",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
+        let: { awayTeamId: "$goalServeAwayTeamId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$goalServeTeamId", "$$awayTeamId"] } } },
+          {
+            $set: {
+              batting_avg_float_Away: { $toDouble: "$batting.batting_avg" },
+            },
+          },
+        ],
         as: "awayTeamBatting_avg",
       },
     },
-    {
-      $unwind: "$awayTeamBatting_avg",
-    },
-    {
-      $addFields: {
-        batting_avg_float_Away: {
-          $toDouble: "$awayTeamBatting_avg.batting.batting_avg",
-        },
-      },
-    },
-    {
-      $sort: {
-        batting_avg_float_Away: -1,
-      },
-    },
-    {
-      $limit: 1,
-    },
+    { $unwind: "$awayTeamBatting_avg" },
+    { $sort: { "awayTeamBatting_avg.batting_avg_float_Away": -1 } },
+    { $limit: 1 },
     {
       $lookup: {
         from: "players",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
+        let: { awayTeamId: "$goalServeAwayTeamId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$goalServeTeamId", "$$awayTeamId"] } } },
+          {
+            $set: {
+              RBI_float_away: { $toDouble: "$batting.runs_batted_in" },
+            },
+          },
+        ],
         as: "awayTeamRBI",
       },
     },
-    {
-      $unwind: "$awayTeamRBI",
-    },
-    {
-      $addFields: {
-        RBI_float_away: { $toDouble: "$awayTeamRBI.batting.runs_batted_in" },
-      },
-    },
-    {
-      $sort: {
-        RBI_float_away: -1,
-      },
-    },
-    {
-      $limit: 1,
-    },
+    { $unwind: "$awayTeamRBI" },
+    { $sort: { "awayTeamRBI.RBI_float_away": -1 } },
+    { $limit: 1 },
     {
       $lookup: {
         from: "players",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
+        let: { homeTeamId: "$goalServeHomeTeamId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$goalServeTeamId", "$$homeTeamId"] } } },
+          {
+            $set: {
+              RBI_Float_Home: { $toDouble: "$batting.runs_batted_in" },
+            },
+          },
+        ],
         as: "homeTeamRBI",
       },
     },
-    {
-      $unwind: "$homeTeamRBI",
-    },
-    {
-      $addFields: {
-        RBI_Float_Home: { $toDouble: "$homeTeamRBI.batting.runs_batted_in" },
-      },
-    },
-    {
-      $sort: {
-        RBI_Float_Home: -1,
-      },
-    },
-    {
-      $limit: 1,
-    },
+    { $unwind: "$homeTeamRBI" },
+    { $sort: { "homeTeamRBI.RBI_Float_Home": -1 } },
+    { $limit: 1 },
     {
       $lookup: {
         from: "odds",
