@@ -22,6 +22,8 @@ import Injury from "../models/documents/injuy.model";
 import Odd from "../models/documents/odd.model";
 import StatsPlayer from "../models/documents/statsPlayer.model";
 import StatsTeam from "../models/documents/teamStats.model";
+import TeamNHL from "../models/documents/NHL/team.model";
+import teamImageNHL from "../models/documents/NHL/teamImage.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -3998,8 +4000,14 @@ const updateCurruntDateRecord = async () => {
             matchArray[j].awayteam.totalscore
           );
           const goalServeMatchId = matchArray[j].id;
-          const goalServeWinTeamId = (homeTeamTotalScore > awayTeamTotalScore ?  matchArray[j].hometeam.id : matchArray[j].awayteam.id);
-          await betServices.declareResultMatch(parseInt(goalServeMatchId), parseInt(goalServeWinTeamId));
+          const goalServeWinTeamId =
+            homeTeamTotalScore > awayTeamTotalScore
+              ? matchArray[j].hometeam.id
+              : matchArray[j].awayteam.id;
+          await betServices.declareResultMatch(
+            parseInt(goalServeMatchId),
+            parseInt(goalServeWinTeamId)
+          );
         }
       }
     }
@@ -4065,6 +4073,50 @@ const teamStats = async () => {
     })
   );
 };
+
+// NHL
+const createTeamNHL = async (body: any) => {
+  const standing = await axiosGet(
+    "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/nhl-standings",
+    { json: true }
+  );
+
+  const league = await League.findOne({
+    goalServeLeagueId: standing.data.standings.category.id,
+  });
+  let data: any = {
+    goalServeLeagueId: standing.data.standings.category.id,
+    leagueId: league?.id,
+  };
+  standing.data.standings.category.league.map((div: any) => {
+    data.leagueType = div.name;
+    div.division.map((val: any) => {
+      data.division = val.name;
+      val.team.map(async (team: any) => {
+        const roaster = await axiosGet(
+          `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/${team.id}_rosters`,
+          { json: true }
+        );
+        data.name = team.name;
+        data.goalServeTeamId = team.id;
+        data.abbreviation = roaster.data.team.abbreviation;
+        const teamNew = new TeamNHL(data);
+        await teamNew.save();
+      });
+    });
+  });
+};
+
+const addNHLTeamImage = async (body: any) => {
+  let data = {
+    teamId: body.teamId,
+    goalServeTeamId: body.goalServeTeamId,
+    image: body.image,
+  };
+  console.log(data)
+  const teamNewImage = new teamImageNHL(data);
+  await teamNewImage.save();
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -4106,4 +4158,6 @@ export default {
   updateCurruntDateRecord,
   statsPlayerPitching,
   teamStats,
+  createTeamNHL,
+  addNHLTeamImage,
 };

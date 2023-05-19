@@ -273,6 +273,27 @@ const statsTeam = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+
+// NHL
+
+const createTeamNHL = async (req: Request, res: Response) => {
+  try {
+    const createTeamNHL = await goalserveService.createTeamNHL(req.body);
+    createResponse(res, httpStatus.OK, "", createTeamNHL);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const createTeamImageNHL = async (req: Request, res: Response) => {
+  try {
+    const createTeamImageNHL = await goalserveService.addNHLTeamImage(req.body);
+    createResponse(res, httpStatus.OK, "", createTeamNHL);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -303,4 +324,6 @@ export default {
   addInjuredPlayers,
   statsPlayerPitching,
   statsTeam,
+  createTeamNHL,
+  createTeamImageNHL
 };
