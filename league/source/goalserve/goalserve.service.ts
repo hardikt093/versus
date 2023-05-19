@@ -2330,7 +2330,7 @@ const singleGameBoxScore = async (params: any) => {
         attendance: true,
         status: true,
         venueName: true,
-        dateTimeUtc: true,
+        datetime_utc: "$dateTimeUtc",
         goalServeMatchId: true,
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
@@ -2615,7 +2615,6 @@ const singleGameBoxScore = async (params: any) => {
               "$homeTeamTotalScoreInNumber",
             ],
           },
-          
         },
       },
     },
@@ -2788,7 +2787,7 @@ const oldSingleGameBoxScore = async (params: any) => {
         id: true,
         attendance: true,
         venueName: true,
-        dateTimeUtc: true,
+        datetime_utc: true,
         goalServeMatchId: true,
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
@@ -3120,19 +3119,19 @@ const addInjuryReport = async () => {
       const injuryArray1 = injuryApi?.data?.team;
       if (injuryArray1?.report?.length) {
         await Promise.all(
-          injuryArray1.report.map(async (val: any) => {
+          injuryArray1?.report?.map(async (val: any) => {
             const player = await Player.findOne({
-              goalServePlayerId: val.player_id,
+              goalServePlayerId: val?.player_id,
             });
             const data = {
               date: val?.date,
-              description: val.description,
-              goalServePlayerId: val.player_id,
-              playerName: val.player_name,
+              description: val?.description,
+              goalServePlayerId: val?.player_id,
+              playerName: val?.player_name,
               playerId: player?.id,
-              status: val.status,
+              status: val?.status,
               goalServeTeamId: injuryApi?.data?.team?.id,
-              teamId: item.id,
+              teamId: item?.id,
             };
             const playerData = new Injury(data);
             const saveInjuries = await playerData.save();
@@ -3140,9 +3139,8 @@ const addInjuryReport = async () => {
         );
       } else {
         const val = injuryArray1?.report;
-
         const player = await Player.findOne({
-          goalServePlayerId: val.player_id,
+          goalServePlayerId: val?.player_id,
         });
 
         const data = {
@@ -3152,7 +3150,7 @@ const addInjuryReport = async () => {
           playerName: val?.player_name,
           status: val?.status,
           goalServeTeamId: injuryArray1?.id,
-          teamId: item.id,
+          teamId: item?.id,
           playerId: player?.id,
         };
         const playerData = new Injury(data);
@@ -3595,7 +3593,6 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
           },
         },
         datetime_utc: "$dateTimeUtc",
-        goalServeMatchId: true,
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
         awayTeamAbbreviation: "$awayTeam.abbreviation",
@@ -3799,11 +3796,11 @@ const createAndUpdateOdds = async () => {
             );
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "null";
+              : "";
 
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "null";
+              : "";
             const total = await getTotal("Over/Under", item?.odds?.type);
             const totalValues = await getTotalValues(total);
             let data = {

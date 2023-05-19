@@ -6,9 +6,9 @@ var oddSchema = new Schema(
     goalServeMatchId: { type: Number, required: true },
     goalServeHomeTeamId: { type: Number, required: true },
     goalServeAwayTeamId: { type: Number, required: true },
-    homeTeamSpread: { type: String, required: true },
+    homeTeamSpread: { type: String, },
     homeTeamTotal: { type: String },
-    awayTeamSpread: { type: String, required: true },
+    awayTeamSpread: { type: String, },
     awayTeamTotal: { type: String },
     awayTeamMoneyline:
     {
