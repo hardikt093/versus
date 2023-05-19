@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import { IDivision, ITeam } from "../interfaces/input";
 import { axiosGet } from "../services/axios.service";
 import { goalserveApi } from "../services/goalserve.service";
+import betServices from "../bet/bet.service";
 import socket from "../services/socket.service";
 import AppError from "../utils/AppError";
 import League from "../models/documents/league.model";
@@ -4050,20 +4051,8 @@ const updateCurruntDateRecord = async () => {
             matchArray[j].awayteam.totalscore
           );
           const goalServeMatchId = matchArray[j].id;
-          await Bet.updateMany(
-            {
-              status: "ACTIVE",
-              goalServeMatchId: goalServeMatchId,
-            },
-            {
-              status: "RESULT_DECLARED",
-              resultAt: new Date(),
-              goalServeWinTeamId:
-                homeTeamTotalScore > awayTeamTotalScore
-                  ? matchArray[j].hometeam.id
-                  : matchArray[j].awayteam.id,
-            }
-          );
+          const goalServeWinTeamId = (homeTeamTotalScore > awayTeamTotalScore ?  matchArray[j].hometeam.id : matchArray[j].awayteam.id);
+          await betServices.declareResultMatch(parseInt(goalServeMatchId), parseInt(goalServeWinTeamId));
         }
       }
     }
