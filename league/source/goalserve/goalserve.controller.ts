@@ -202,14 +202,6 @@ const addStanding = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-const addAbbrevation = async (req: Request, res: Response) => {
-  try {
-    const addMatch = await goalserveService.addAbbrevation();
-    createResponse(res, httpStatus.OK, "", addMatch);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
 const singleGameBoxScore = async (req: Request, res: Response) => {
   try {
     const singleGameBoxScore = await goalserveService.singleGameBoxScore(
@@ -295,7 +287,6 @@ export default {
   scoreWithCurrentDate,
   addMatchData,
   addStanding,
-  addAbbrevation,
   addMatchDataFuture,
   singleGameBoxScore,
   getBseballStandings,
