@@ -24,6 +24,7 @@ import TeamNHL from "../models/documents/NHL/team.model";
 import teamImageNHL from "../models/documents/NHL/teamImage.model";
 import NhlMatch from "../models/documents/NHL/match.model";
 import playersNHL from "../models/documents/NHL/player.model";
+import NhlInjury from "../models/documents/NHL/injury.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -4043,7 +4044,7 @@ const addNhlPlayer = async () => {
         player.isGoalKeeper = true;
         player.goalServePlayerId =
           statsApi?.data?.statistic?.goalkeepers?.player?.id;
-          player.teamId = item.id;
+        player.teamId = item.id;
         allStatePlayer.push(player);
       }
       if (statsApi?.data?.statistic?.team?.length) {
@@ -4059,7 +4060,7 @@ const addNhlPlayer = async () => {
           let player: any = statsApi?.data?.statistic?.team[1]?.player;
           player.goalServePlayerId =
             statsApi?.data?.statistic?.team[1]?.player?.id;
-            player.teamId = item.id;
+          player.teamId = item.id;
           allStatePlayer.push(player);
         }
       }
@@ -4074,6 +4075,62 @@ const addNhlPlayer = async () => {
   );
 };
 
+const addNhlInjuredPlayer = async () => {
+  const team = await TeamNHL.find();
+  await Promise.all(
+    team.map(async (item) => {
+      let data = {
+        json: true,
+      };
+      const injuryApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `hockey/${item?.goalServeTeamId}_injuries`
+      );
+
+      const injuryArray1 = injuryApi?.data?.team;
+      if (injuryArray1?.report?.length) {
+        await Promise.all(
+          injuryArray1?.report?.map(async (val: any) => {
+            const player = await playersNHL.findOne({
+              goalServePlayerId: val?.player_id,
+            });
+            const data = {
+              date: val?.date,
+              description: val?.description,
+              goalServePlayerId: val?.player_id,
+              playerName: val?.player_name,
+              playerId: player?.id,
+              status: val?.status,
+              goalServeTeamId: injuryApi?.data?.team?.id,
+              teamId: item?.id,
+            };
+            const playerData = new NhlInjury(data);
+            const saveInjuries = await playerData.save();
+          })
+        );
+      } else if (injuryArray1?.report && !injuryArray1?.report?.length) {
+        const val = injuryArray1?.report;
+        const player = await Player.findOne({
+          goalServePlayerId: val?.player_id,
+        });
+
+        const data = {
+          date: val?.date,
+          description: val?.description,
+          goalServePlayerId: val?.player_id,
+          playerName: val?.player_name,
+          status: val?.status,
+          goalServeTeamId: injuryArray1?.id,
+          teamId: item?.id,
+          playerId: player?.id,
+        };
+        const playerData = new NhlInjury(data);
+        const saveInjuries = await playerData.save();
+      }
+    })
+  );
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -4118,4 +4175,5 @@ export default {
   addNHLTeamImage,
   addNhlMatch,
   addNhlPlayer,
+  addNhlInjuredPlayer,
 };

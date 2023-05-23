@@ -296,6 +296,14 @@ const addNhlPlayer = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
+const addNhlInjuredPlayer = async (req: Request, res: Response) => {
+  try {
+    const addNhlInjuredPlayer = await goalserveService.addNhlInjuredPlayer();
+    createResponse(res, httpStatus.OK, "", addNhlInjuredPlayer);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -328,5 +336,6 @@ export default {
   createTeamNHL,
   createTeamImageNHL,
   addNhlMatch,
-  addNhlPlayer
+  addNhlPlayer,
+  addNhlInjuredPlayer
 };
