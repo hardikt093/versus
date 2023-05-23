@@ -21,10 +21,11 @@ import Odd from "../models/documents/odd.model";
 import StatsPlayer from "../models/documents/statsPlayer.model";
 import StatsTeam from "../models/documents/teamStats.model";
 import TeamNHL from "../models/documents/NHL/team.model";
-import teamImageNHL from "../models/documents/NHL/teamImage.model";
+import TeamImageNHL from "../models/documents/NHL/teamImage.model";
 import NhlMatch from "../models/documents/NHL/match.model";
-import playersNHL from "../models/documents/NHL/player.model";
+import PlayersNHL from "../models/documents/NHL/player.model";
 import NhlInjury from "../models/documents/NHL/injury.model";
+import NhlStandings from "../models/documents/NHL/standing,model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -3795,9 +3796,13 @@ const teamStats = async () => {
 
 // NHL
 const createTeamNHL = async (body: any) => {
-  const standing = await axiosGet(
-    "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/nhl-standings",
-    { json: true }
+  let dataJson = {
+    json: true,
+  };
+  const standing = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    dataJson,
+    `hockey/nhl-standings`
   );
 
   const league = await League.findOne({
@@ -3812,10 +3817,12 @@ const createTeamNHL = async (body: any) => {
     div.division.map((val: any) => {
       data.division = val.name;
       val.team.map(async (team: any) => {
-        const roaster = await axiosGet(
-          `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/${team.id}_rosters`,
-          { json: true }
+        const roaster = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          dataJson,
+          `hockey/${team.id}_rosters`
         );
+
         data.name = team.name;
         data.goalServeTeamId = team.id;
         data.abbreviation = roaster.data.team.abbreviation;
@@ -3832,7 +3839,7 @@ const addNHLTeamImage = async (body: any) => {
     goalServeTeamId: body.goalServeTeamId,
     image: body.image,
   };
-  const teamNewImage = new teamImageNHL(data);
+  const teamNewImage = new TeamImageNHL(data);
   await teamNewImage.save();
 };
 
@@ -4070,7 +4077,7 @@ const addNhlPlayer = async () => {
         );
         return { ...obj1, ...obj2 };
       });
-      await playersNHL.insertMany(mergedArr);
+      await PlayersNHL.insertMany(mergedArr);
     })
   );
 };
@@ -4092,7 +4099,7 @@ const addNhlInjuredPlayer = async () => {
       if (injuryArray1?.report?.length) {
         await Promise.all(
           injuryArray1?.report?.map(async (val: any) => {
-            const player = await playersNHL.findOne({
+            const player = await PlayersNHL.findOne({
               goalServePlayerId: val?.player_id,
             });
             const data = {
@@ -4131,6 +4138,146 @@ const addNhlInjuredPlayer = async () => {
     })
   );
 };
+
+const addNhlStandings = async () => {
+  let data = {
+    json: true,
+  };
+  const getstanding = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "hockey/nhl-standings"
+  );
+
+  const league: any = await League.findOne({
+    goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+  });
+  getstanding?.data?.standings?.category?.league?.map((item: any) => {
+    item.division.map((div: any) => {
+      div.team.map(async (team: any) => {
+        const teamId: any = await TeamNHL.findOne({
+          goalServeTeamId: team.id,
+        });
+        let data = {
+          leagueId: league?.id,
+          leagueType: item?.name,
+          goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+          division: div?.name,
+          teamId: teamId?.id,
+          goalServeTeamId: teamId?.goalServeTeamId,
+          difference: team.difference,
+          games_played: team.games_played,
+          goals_against: team.goals_against,
+          goals_for: team.goals_for,
+          home_record: team.home_record,
+          last_ten: team.last_ten,
+          ot_losses: team.ot_losses,
+          points: team.points,
+          regular_ot_wins: team.regular_ot_wins,
+          road_record: team.road_record,
+          shootout_losses: team.shootout_losses,
+          shootout_wins: team.shootout_wins,
+          streak: team.streak,
+          pct: +(
+            (Number(team.won) * 100) /
+            (Number(team.won) + Number(team.lost))
+          ).toFixed(3),
+          lost: team.lost,
+          name: team.name,
+          position: team.position,
+          won: team.won,
+        };
+        const standingData = new NhlStandings(data);
+        await standingData.save();
+      });
+    });
+  });
+};
+
+const getNHLStandingData = async () => {
+  const getStandingData = await NhlStandings.aggregate([
+    {
+      $lookup: {
+        from: "nhlteamimages",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "images",
+      },
+    },
+    {
+      $unwind: {
+        path: "$images",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: { leagueType: "$leagueType", division: "$division" },
+        teams: {
+          $push: {
+            id: { $toString: "$goalServeTeamId" },
+            games_played: "$games_played",
+            won: "$won",
+            lost: "$lost",
+            ot_losses: "$ot_losses",
+            points: "$points",
+            regular_ot_wins: "$regular_ot_wins",
+            shootout_losses: "$shootout_losses",
+            shootout_wins: "$shootout_wins",
+            difference: "$difference",
+            goals_against: "$goals_against",
+            goals_for: "$goals_for",
+            name: "$name",
+            teamImage: "$images.image",
+            pct: "$pct",
+            streak: "$streak",
+            home_record: "$home_record",
+            last_ten: "$last_ten",
+          },
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: "$_id.leagueType",
+        divisions: {
+          $push: {
+            name: "$_id.division",
+            teams: "$teams",
+          },
+        },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        data: {
+          $push: {
+            k: {
+              $cond: [
+                { $eq: ["$_id", "Eastern Conference"] },
+                "easternConference",
+                "westernConference",
+              ],
+            },
+            v: "$divisions",
+          },
+        },
+      },
+    },
+    {
+      $replaceRoot: {
+        newRoot: {
+          $arrayToObject: "$data",
+        },
+      },
+    },
+  ]);
+  return getStandingData[0];
+};
+
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -4176,4 +4323,6 @@ export default {
   addNhlMatch,
   addNhlPlayer,
   addNhlInjuredPlayer,
+  addNhlStandings,
+  getNHLStandingData,
 };

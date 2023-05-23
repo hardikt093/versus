@@ -12,6 +12,6 @@ var leagueSchema = new Schema(
         timestamps: true,
     }
 );
-const teamImageNHL = model<ITeamImagesModel>("NhlTeamImage", leagueSchema);
+const TeamImageNHL = model<ITeamImagesModel>("NhlTeamImage", leagueSchema);
 
-export default teamImageNHL;
+export default TeamImageNHL;

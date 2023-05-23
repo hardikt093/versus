@@ -7,5 +7,7 @@ router.post("/team-image", goalserveController.createTeamImageNHL);
 router.post("/addMatchData", goalserveController.addNhlMatch);
 router.post("/addPlayer", goalserveController.addNhlPlayer);
 router.post("/addNhlInjuredPlayer", goalserveController.addNhlInjuredPlayer);
+router.post("/addStandings", goalserveController.addNhlStandings);
+router.post("/get-standings", goalserveController.getNhlStandings);
 
 export = router;

@@ -50,6 +50,6 @@ var playerSchema = new Schema(
     timestamps: true,
   }
 );
-const playersNHL = model<INhlPlayerhModel>("NhlPlayers", playerSchema);
+const PlayersNHL = model<INhlPlayerhModel>("NhlPlayers", playerSchema);
 
-export default playersNHL;
+export default PlayersNHL;
