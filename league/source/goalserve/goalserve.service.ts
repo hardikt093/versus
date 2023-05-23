@@ -10,13 +10,11 @@ import moment from "moment";
 import Player from "../models/documents/player.model";
 import Team from "../models/documents/team.model";
 import Division from "../models/documents/division.model";
-import { isArray, stubTrue } from "lodash";
+import { isArray } from "lodash";
 import Match from "../models/documents/match.model";
 import Bet from "../models/documents/bet.model";
 import Inning from "../models/documents/inning.model";
-import Event from "../models/documents/event.model";
 import StartingPitchers from "../models/documents/startingPictures";
-import Stats from "../models/documents/stats.model";
 import Standings from "../models/documents/standing.model";
 import Injury from "../models/documents/injuy.model";
 import Odd from "../models/documents/odd.model";
@@ -262,10 +260,13 @@ const getUpcomingMatch = async () => {
 
 const getWinLost = async () => {
   var winlossArray: any = [];
-
-  const winLoss = await axiosGet(
-    "https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_standings",
-    { json: true }
+  let dataJson = {
+    json: true,
+  };
+  const winLoss = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    dataJson,
+    `baseball/mlb_standings`
   );
   const winLossData = await winLoss.data.standings.category.league.map(
     async (item: any) => {
@@ -513,11 +514,6 @@ const getFinalMatch = async () => {
 const getLiveMatch = async () => {
   try {
     const getLiveMatch = await Match.aggregate([
-      // {
-      //   $match: {
-      //     formattedDate: date,
-      //   },
-      // },
       {
         $match: {
           $and: [
@@ -642,7 +638,6 @@ const getLiveMatch = async () => {
       {
         $sort: {
           datetime_utc: 1,
-          // time: 1,
         },
       },
       {
@@ -1059,15 +1054,23 @@ const deletePlayer = async (param: any) => {
 
 const createPlayer = async (body: any) => {
   const team = await Team.find({ isDeleted: false });
+
+  let data = {
+    json: true,
+  };
+
   await Promise.all(
     team.map(async (item) => {
-      const roasterApi = await axiosGet(
-        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.goalServeTeamId}_rosters`,
-        { json: true }
+      const roasterApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `baseball/${item.goalServeTeamId}_rosters`
       );
-      const statsApi = await axiosGet(
-        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.goalServeTeamId}_stats`,
-        { json: true }
+
+      const statsApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `baseball/${item.goalServeTeamId}_stats`
       );
 
       let allRosterPlayers: any = [];
@@ -1098,7 +1101,6 @@ const createPlayer = async (body: any) => {
           cat.position.forEach((item: any) => {
             if (item.player.length) {
               item.player.forEach((player: any) => {
-                // player.fieldingType = item.name;
                 player.type = "fielding";
                 allStatPlayers.push(player);
               });
@@ -1178,7 +1180,7 @@ const createPlayer = async (body: any) => {
           fielding: eVal?.fielding,
         };
         const playerData = new Player(data);
-        const savedMatchData = await playerData.save();
+        await playerData.save();
       });
     })
   );
@@ -1202,10 +1204,13 @@ const createMatch = async (body: any) => {
   var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
 
   const createFutureMatch = await daylist.map(async (item) => {
-    const mlb_shedule = await axiosGet(
-      `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
-      { json: true, date1: item }
+    let dataJson = { json: true, date1: item };
+    const mlb_shedule = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      dataJson,
+      `baseball/mlb_shedule`
     );
+
     const matches = mlb_shedule?.data?.fixtures?.category?.matches.flatMap(
       (match: any) => match.match
     );
@@ -1251,9 +1256,11 @@ const createMatch = async (body: any) => {
 };
 
 const createMatchStatsApi = async (body: any) => {
-  const mlb_shedule = await axiosGet(
-    `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/usa`,
-    { json: true, date: "28.04.2023" }
+  let dataJson = { json: true, date: "28.04.2023" };
+  const mlb_shedule = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    dataJson,
+    `baseball/usa`
   );
   const matchArray = mlb_shedule?.data?.scores?.category?.match;
   const league: any = await League.findOne({
@@ -1979,10 +1986,15 @@ const scoreWithCurrentDate = async () => {
 };
 
 const addStanding = async () => {
-  const getstanding = await axiosGet(
-    `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_standings`,
-    { json: true }
+  let data = {
+    json: true,
+  };
+  const getstanding = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "baseball/mlb_standings"
   );
+
   const league: any = await League.findOne({
     goalServeLeagueId: getstanding?.data?.standings?.category?.id,
   });
@@ -2024,7 +2036,6 @@ const addStanding = async () => {
 
 const singleGameBoxScore = async (params: any) => {
   const goalServeMatchId = params.goalServeMatchId;
-
   const getMatch = await Match.aggregate([
     {
       $match: {
@@ -2523,9 +2534,14 @@ const addMatchDataFuture = async (data: any) => {
   var daylist = getDaysArray(new Date("2023-05-22"), new Date("2023-05-28"));
 
   for (let i = 0; i < daylist?.length; i++) {
-    const mlb_shedule = await axiosGet(
-      `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
-      { json: true, date1: daylist[i] }
+    let data = {
+      json: true,
+      date1: daylist[i],
+    };
+    const mlb_shedule = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      "baseball/mlb_shedule"
     );
 
     const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches
@@ -2557,7 +2573,6 @@ const addMatchDataFuture = async (data: any) => {
           awayTeamHit: matchArray[j].awayteam.hits,
           awayTeamTotalScore: matchArray[j].awayteam.totalscore,
           awayTeamError: matchArray[j].awayteam.errors,
-          // new entries
           awayTeamInnings: matchArray[j].awayteam?.innings?.inning
             ? matchArray[j].awayteam?.innings?.inning
             : [],
@@ -2701,10 +2716,13 @@ const addMatchWithNewModel = async () => {
 
   var daylist = getDaysArray(new Date("2023-02-28"), new Date("2023-05-16"));
   for (let i = 0; i < daylist?.length; i++) {
-    const getMatch = await axiosGet(
-      `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/usa`,
-      { json: true, date: daylist[i] }
+    let data = { json: true, date: daylist[i] };
+    const getMatch = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      "baseball/usa"
     );
+
     const matchArray = await getMatch?.data?.scores?.category?.match;
     if (matchArray?.length > 0) {
       const league: any = await League.findOne({
@@ -2733,7 +2751,6 @@ const addMatchWithNewModel = async () => {
           awayTeamHit: matchArray[j].awayteam.hits,
           awayTeamTotalScore: matchArray[j].awayteam.totalscore,
           awayTeamError: matchArray[j].awayteam.errors,
-          // new entries
           awayTeamInnings: matchArray[j].awayteam?.innings?.inning
             ? matchArray[j].awayteam?.innings?.inning
             : [],
@@ -2780,10 +2797,15 @@ const addInjuryReport = async () => {
   const team = await Team.find({ isDeleted: false });
   await Promise.all(
     team.map(async (item) => {
-      const injuryApi = await axiosGet(
-        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item?.goalServeTeamId}_injuries`,
-        { json: true }
+      let data = {
+        json: true,
+      };
+      const injuryApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `baseball/${item?.goalServeTeamId}_injuries`
       );
+
       const injuryArray1 = injuryApi?.data?.team;
       if (injuryArray1?.report?.length) {
         await Promise.all(
@@ -2979,9 +3001,9 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
             $cond: {
               if: { $ne: ["$startingPitchers.awayteam.player.id", ""] },
               then: { $toInt: "$startingPitchers.awayteam.player.id" },
-              else: null
-            }
-          }
+              else: null,
+            },
+          },
         },
         pipeline: [
           {
@@ -3010,9 +3032,9 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
             $cond: {
               if: { $ne: ["$startingPitchers.hometeam.player.id", ""] },
               then: { $toInt: "$startingPitchers.hometeam.player.id" },
-              else: null
-            }
-          }
+              else: null,
+            },
+          },
         },
         pipeline: [
           {
@@ -3379,10 +3401,13 @@ const createAndUpdateOdds = async () => {
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
   try {
-    const getScore = await axiosGet(
-      "http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule",
-      { json: true, date1: date, showodds: "1", bm: "455," }
+    let data = { json: true, date1: date, showodds: "1", bm: "455," };
+    const getScore = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      "baseball/mlb_shedule"
     );
+
     var matchData = getScore?.data?.fixtures?.category?.matches?.match;
     if (matchData?.length > 0) {
       const takeData = await matchData?.map(async (item: any) => {
@@ -3392,7 +3417,7 @@ const createAndUpdateOdds = async () => {
           });
           const findMatchOdds = await Odd.find({ goalServeMatchId: item?.id });
           if (findMatchOdds?.length == 0) {
-            // getMoneyLine
+                       // getMoneyLine
             const getMoneyLine: any = await getOdds(
               "Home/Away",
               item?.odds?.type
@@ -3407,7 +3432,7 @@ const createAndUpdateOdds = async () => {
                   (item: any) => item?.name === "1"
                 )
               : {};
-            // getSpread
+                // getSpread
             const getSpread = await getOdds("Run Line", item?.odds?.type);
             const getAwayTeamRunLine = await getRunLine(
               item?.awayteam?.name,
@@ -3441,8 +3466,8 @@ const createAndUpdateOdds = async () => {
             const oddsData = new Odd(data);
             const savedOddsData = await oddsData.save();
           } else {
-            // getMoneyLine
-            const getMoneyLine: any = await getOdds(
+           // getMoneyLine          
+             const getMoneyLine: any = await getOdds(
               "Home/Away",
               item?.odds?.type
             );
@@ -3456,7 +3481,7 @@ const createAndUpdateOdds = async () => {
                   (item: any) => item?.name === "1"
                 )
               : {};
-            // getSpread
+  // getSpread
             const getSpread = await getOdds("Run Line", item?.odds?.type);
             const getAwayTeamRunLine = await getRunLine(
               item?.awayteam?.name,
@@ -3503,14 +3528,18 @@ const createAndUpdateOdds = async () => {
 
 const updateCurruntDateRecord = async () => {
   try {
-    const getMatch = await axiosGet(
-      `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/usa`,
-      { json: true }
+    let data = {
+      json: true,
+    };
+    const getMatch = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      "baseball/usa"
     );
+
     const matchArray = await getMatch?.data?.scores?.category?.match;
     if (matchArray?.length > 0) {
       for (let j = 0; j < matchArray?.length; j++) {
-        // const findMatch = await Match.find({ goalServeMatchId: matchArray[j].id })
         const league: any = await League.findOne({
           goalServeLeagueId: getMatch?.data.scores.category.id,
         });
@@ -3518,7 +3547,6 @@ const updateCurruntDateRecord = async () => {
           matchArray[j].status != "Not Started" &&
           matchArray[j].status != "Final"
         ) {
-          // if (matchArray[j].status == "Final") {
           const data: any = {
             leagueId: league.id,
             goalServeLeagueId: league.goalServeLeagueId,
@@ -3605,7 +3633,7 @@ const updateCurruntDateRecord = async () => {
             awayTeamHit: matchArray[j].awayteam.hits,
             awayTeamTotalScore: matchArray[j].awayteam.totalscore,
             awayTeamError: matchArray[j].awayteam.errors,
-            // new entries
+             // new entries
             awayTeamInnings: matchArray[j].awayteam?.innings?.inning
               ? matchArray[j].awayteam?.innings?.inning
               : [],
@@ -3695,10 +3723,16 @@ const statsPlayerPitching = async () => {
 
   await Promise.all(
     team.map(async (item: any) => {
-      const statsApi = await axiosGet(
-        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/${item.goalServeTeamId}_stats`,
-        { json: true }
+      let data = {
+        json: true,
+      };
+
+      const statsApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `baseball/${item.goalServeTeamId}_stats`
       );
+
       const pitchingPlayer = statsApi.data.statistic.category.filter(
         (val: any) => val.name === "Pitching"
       )[0];
@@ -3714,9 +3748,13 @@ const statsPlayerPitching = async () => {
 };
 
 const teamStats = async () => {
-  const teamStatsNl = await axiosGet(
-    `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/nl_team_batting`,
-    { json: true }
+  let data = {
+    json: true,
+  };
+  const teamStatsNl = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "baseball/nl_team_batting"
   );
 
   await Promise.all(
@@ -3730,9 +3768,11 @@ const teamStats = async () => {
       await stat.save();
     })
   );
-  const teamStatsAL = await axiosGet(
-    `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/al_team_batting`,
-    { json: true }
+
+  const teamStatsAL = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "baseball/al_team_batting"
   );
 
   await Promise.all(
