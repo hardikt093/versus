@@ -1,9 +1,13 @@
 import { Document } from "mongoose";
 export interface ITeamModel extends Document {
-  name: String;
-  logo: String;
-  leagueId: String;
   goalServeTeamId: Number;
+  name: String;
+  teamName: String;
+  leagueId: String;
+  leagueName: String;
+  division: String;
+  locality: String;
+  goalServeLeagueId: Number;
   abbreviation: String;
 }
 export default ITeamModel;

@@ -168,14 +168,6 @@ const createDivison = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-// const createMatch = async (req: Request, res: Response) => {
-//   try {
-//     const createMatch = await goalserveService.createMatchStatsApi(req.body);
-//     createResponse(res, httpStatus.OK, "", createMatch);
-//   } catch (error: any) {
-//     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-//   }
-// };
 const scoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
     const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate();
@@ -197,14 +189,6 @@ const addMatchData = async (req: Request, res: Response) => {
 const addStanding = async (req: Request, res: Response) => {
   try {
     const addMatch = await goalserveService.addStanding();
-    createResponse(res, httpStatus.OK, "", addMatch);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-const addAbbrevation = async (req: Request, res: Response) => {
-  try {
-    const addMatch = await goalserveService.addAbbrevation();
     createResponse(res, httpStatus.OK, "", addMatch);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -316,7 +300,6 @@ export default {
   scoreWithCurrentDate,
   addMatchData,
   addStanding,
-  addAbbrevation,
   addMatchDataFuture,
   singleGameBoxScore,
   getBseballStandings,
