@@ -2065,8 +2065,8 @@ const singleGameBoxScore = async (params: any) => {
     {
       $lookup: {
         from: "standings",
-        localField: "awayTeamId",
-        foreignField: "teamId",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
         as: "awayTeamStandings",
       },
     },
@@ -2080,8 +2080,8 @@ const singleGameBoxScore = async (params: any) => {
     {
       $lookup: {
         from: "standings",
-        localField: "homeTeamId",
-        foreignField: "teamId",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
         as: "homeTeamStandings",
       },
     },
@@ -2976,8 +2976,12 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         from: "players",
         let: {
           awayTeamPlayerId: {
-            $toInt: "$startingPitchers.awayteam.player.id",
-          },
+            $cond: {
+              if: { $ne: ["$startingPitchers.awayteam.player.id", ""] },
+              then: { $toInt: "$startingPitchers.awayteam.player.id" },
+              else: null
+            }
+          }
         },
         pipeline: [
           {
@@ -3003,8 +3007,12 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
         from: "players",
         let: {
           homeTeamPlayerId: {
-            $toInt: "$startingPitchers.hometeam.player.id",
-          },
+            $cond: {
+              if: { $ne: ["$startingPitchers.hometeam.player.id", ""] },
+              then: { $toInt: "$startingPitchers.hometeam.player.id" },
+              else: null
+            }
+          }
         },
         pipeline: [
           {
