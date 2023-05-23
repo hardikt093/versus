@@ -278,6 +278,15 @@ const createTeamImageNHL = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const addNhlMatch = async (req: Request, res: Response) => {
+  try {
+    const addNhlMatch = await goalserveService.addNhlMatch();
+    createResponse(res, httpStatus.OK, "", addNhlMatch);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -308,5 +317,6 @@ export default {
   statsPlayerPitching,
   statsTeam,
   createTeamNHL,
-  createTeamImageNHL
+  createTeamImageNHL,
+  addNhlMatch
 };
