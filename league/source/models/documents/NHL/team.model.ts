@@ -15,6 +15,6 @@ var teamSchema = new Schema(
     timestamps: true,
   }
 );
-const TeamNHL = model<ITeamNHLModel>("nhlTeam", teamSchema);
+const TeamNHL = model<ITeamNHLModel>("NhlTeam", teamSchema);
 
 export default TeamNHL;
