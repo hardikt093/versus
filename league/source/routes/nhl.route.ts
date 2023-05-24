@@ -9,5 +9,6 @@ router.post("/addPlayer", goalserveController.addNhlPlayer);
 router.post("/addNhlInjuredPlayer", goalserveController.addNhlInjuredPlayer);
 router.post("/addStandings", goalserveController.addNhlStandings);
 router.get("/get-standings", goalserveController.getNhlStandings);
+router.get("/single-game-boxscore-final", goalserveController.nhlSingleGameBoxScore);
 
 export = router;

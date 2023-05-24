@@ -322,6 +322,14 @@ const getNhlStandings = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
+const nhlSingleGameBoxScore = async (req: Request, res: Response) => {
+  try {
+    const nhlSingleGameBoxScore = await goalserveService.nhlSingleGameBoxScore(req.query);
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScore);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -357,5 +365,6 @@ export default {
   addNhlPlayer,
   addNhlInjuredPlayer,
   addNhlStandings,
-  getNhlStandings
+  getNhlStandings,
+  nhlSingleGameBoxScore
 };

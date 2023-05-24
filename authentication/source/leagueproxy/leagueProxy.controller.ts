@@ -79,10 +79,24 @@ const nhlStandings = async (req: Request, res: Response) => {
     let token: any = req.header("Authorization");
     const nhlStandings = await axiosGet(
       `${config.leagueServer}/nhl/get-standings`,
-      { goalServeMatchId: req.query.goalServeMatchId },
+      {},
       token
     );
     createResponse(res, httpStatus.OK, "", nhlStandings.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+
+const nhlSingleGameBoxScore = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const nhlSingleGameBoxScore = await axiosGet(
+      `${config.leagueServer}/nhl/single-game-boxscore-final`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScore.data.data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
@@ -93,5 +107,6 @@ export default {
   scoreWithCurrentDate,
   singleGameBoxscore,
   singleGameBoxscoreUpcomming,
-  nhlStandings
+  nhlStandings,
+  nhlSingleGameBoxScore
 };
