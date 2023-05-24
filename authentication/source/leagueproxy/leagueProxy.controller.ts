@@ -74,10 +74,24 @@ const singleGameBoxscoreUpcomming = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
 };
+const nhlStandings = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const nhlStandings = await axiosGet(
+      `${config.leagueServer}/nhl/get-standings`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", nhlStandings.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
 export default {
   standings,
   mlbScoreWithDate,
   scoreWithCurrentDate,
   singleGameBoxscore,
-  singleGameBoxscoreUpcomming
+  singleGameBoxscoreUpcomming,
+  nhlStandings
 };
