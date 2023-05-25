@@ -12,9 +12,10 @@ router.get("/mlb/scoreWithDate", auth, validate(leagueValidation.scoreWithDate),
 router.get("/mlb/single-game-boxscore-final", auth, validate(leagueValidation.singleGameBoxscore), leagueProxyController.singleGameBoxscore);
 router.get("/mlb/single-game-boxscore-upcomming", auth, validate(leagueValidation.singleGameBoxscore), leagueProxyController.singleGameBoxscoreUpcomming);
 router.get("/mlb/scoreWithCurrentDate", auth, leagueProxyController.scoreWithCurrentDate);
-router.get("/nhl/standings", auth, leagueProxyController.nhlStandings);
+router.get("/nhl/standings", leagueProxyController.nhlStandings);
 router.get("/nhl/single-game-boxscore-final", auth, leagueProxyController.nhlSingleGameBoxScore);
 router.get("/nhl/scoreWithDate", leagueProxyController.nhlScoreWithDate);
+router.get("/nhl/get-team", leagueProxyController.nhlGetTeam);
 
 
 export = router;

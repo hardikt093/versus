@@ -113,6 +113,20 @@ const nhlScoreWithDate = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
 }
+
+const nhlGetTeam = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const mlbScoreWithDate = await axiosGet(
+      `${config.leagueServer}/nhl/get-team`,
+      { goalServeTeamId: req.query.goalServeTeamId },
+      token,
+    );
+    createResponse(res, httpStatus.OK, "", mlbScoreWithDate.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+}
 export default {
   standings,
   mlbScoreWithDate,
@@ -121,5 +135,6 @@ export default {
   singleGameBoxscoreUpcomming,
   nhlStandings,
   nhlSingleGameBoxScore,
-  nhlScoreWithDate
+  nhlScoreWithDate,
+  nhlGetTeam
 };

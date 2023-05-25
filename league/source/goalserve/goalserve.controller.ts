@@ -340,6 +340,14 @@ const addMatchDataFutureForNhl = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
+const nhlGetTeam = async (req: Request, res: Response) => {
+  try {
+    const nhlGetTeam = await goalserveService.nhlGetTeam(req.query);
+    createResponse(res, httpStatus.OK, "", nhlGetTeam);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 
 const nhlScoreWithDate = async (req: Request, res: Response) => {
   try {
@@ -356,6 +364,17 @@ const nhlScoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
     const nhlScoreWithCurrentDate = await goalserveService.nhlScoreWithCurrentDate()
     createResponse(res, httpStatus.OK, "", nhlScoreWithCurrentDate);
+
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+
+  }
+}
+
+const nhlSingleGameBoxScoreUpcomming=async (req: Request, res: Response) => {
+  try {
+    const nhlSingleGameBoxScoreUpcomming = await goalserveService.nhlSingleGameBoxScoreUpcomming(req.query)
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScoreUpcomming);
 
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -401,5 +420,7 @@ export default {
   nhlSingleGameBoxScore,
   addMatchDataFutureForNhl,
   nhlScoreWithDate,
-  nhlScoreWithCurrentDate
+  nhlScoreWithCurrentDate,
+  nhlGetTeam,
+  nhlSingleGameBoxScoreUpcomming
 };
