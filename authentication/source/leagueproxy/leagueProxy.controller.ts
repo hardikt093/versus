@@ -101,6 +101,18 @@ const nhlSingleGameBoxScore = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
 };
+const nhlScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    const mlbScoreWithDate = await axiosGet(
+      `${config.leagueServer}/nhl/scoreWithDate`,
+      { date1: req.query.date1 },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", mlbScoreWithDate.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+}
 export default {
   standings,
   mlbScoreWithDate,
@@ -108,5 +120,6 @@ export default {
   singleGameBoxscore,
   singleGameBoxscoreUpcomming,
   nhlStandings,
-  nhlSingleGameBoxScore
+  nhlSingleGameBoxScore,
+  nhlScoreWithDate
 };

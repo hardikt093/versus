@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import { Request, Response } from "express";
 import createResponse from "../utils/response";
 import goalserveService from "./goalserve.service";
+import { string } from "joi";
 
 const baseballStandings = async (req: Request, res: Response) => {
   try {
@@ -330,6 +331,37 @@ const nhlSingleGameBoxScore = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
+
+const addMatchDataFutureForNhl = async (req: Request, res: Response) => {
+  try {
+    const addMatchDataFutureForNhl = await goalserveService.addMatchDataFutureForNhl()
+    createResponse(res, httpStatus.OK, "", true);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
+const nhlScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    const nhlScoreWithDate = await goalserveService.nhlScoreWithDate(req.query)
+    createResponse(res, httpStatus.OK, "", nhlScoreWithDate);
+
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+
+  }
+}
+
+const nhlScoreWithCurrentDate = async (req: Request, res: Response) => {
+  try {
+    const nhlScoreWithCurrentDate = await goalserveService.nhlScoreWithCurrentDate()
+    createResponse(res, httpStatus.OK, "", nhlScoreWithCurrentDate);
+
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -366,5 +398,8 @@ export default {
   addNhlInjuredPlayer,
   addNhlStandings,
   getNhlStandings,
-  nhlSingleGameBoxScore
+  nhlSingleGameBoxScore,
+  addMatchDataFutureForNhl,
+  nhlScoreWithDate,
+  nhlScoreWithCurrentDate
 };

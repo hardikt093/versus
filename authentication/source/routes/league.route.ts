@@ -14,6 +14,7 @@ router.get("/mlb/single-game-boxscore-upcomming", auth, validate(leagueValidatio
 router.get("/mlb/scoreWithCurrentDate", auth, leagueProxyController.scoreWithCurrentDate);
 router.get("/nhl/standings", auth, leagueProxyController.nhlStandings);
 router.get("/nhl/single-game-boxscore-final", auth, leagueProxyController.nhlSingleGameBoxScore);
+router.get("/nhl/scoreWithDate", leagueProxyController.nhlScoreWithDate);
 
 
 export = router;
