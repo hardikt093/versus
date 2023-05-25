@@ -26,6 +26,8 @@ import NhlMatch from "../models/documents/NHL/match.model";
 import PlayersNHL from "../models/documents/NHL/player.model";
 import NhlInjury from "../models/documents/NHL/injury.model";
 import NhlStandings from "../models/documents/NHL/standing,model";
+import TeamNBA from "../models/documents/NBA/team.model";
+import TeamImageNBA from "../models/documents/NBA/teamImage.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -5193,6 +5195,53 @@ const nhlScoreWithCurrentDate = async () => {
   };
 }
 
+// NBA
+
+const createTeamNBA = async (body: any) => {
+  let dataJson = {
+    json: true,
+  };
+  const standing = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    dataJson,
+    `bsktbl/nba-standings`
+  );
+  const league = await League.findOne({
+    goalServeLeagueId: standing.data.standings.category.id,
+  });
+  let data: any = {
+    goalServeLeagueId: standing.data.standings.category.id,
+    leagueId: league?.id,
+  };
+  for(const league of standing.data.standings.category.league) {
+    for(const div of league.division) {
+      data.leagueType = league.name;
+      data.division = div.name;
+      for(const team of div.team) {
+        const roaster = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          dataJson,
+          `bsktbl/${team.id}_rosters`
+        );
+        data.name = team.name;
+        data.goalServeTeamId = team.id;
+        data.abbreviation = roaster.data.team.abbreviation;
+        const teamNew = await TeamNBA.create(data);
+      }
+    }
+  }
+};
+
+const addNBATeamImage = async (body: any) => {
+  let data = {
+    teamId: body.teamId,
+    goalServeTeamId: body.goalServeTeamId,
+    image: body.image,
+  };
+  const teamNewImage = new TeamImageNBA(data);
+  await teamNewImage.save();
+};
+
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -5244,5 +5293,7 @@ export default {
   addMatchDataFutureForNhl,
   nhlScoreWithDate,
   nhlScoreWithCurrentDate,
-  getLiveDataOfNhl
+  getLiveDataOfNhl,
+  createTeamNBA,
+  addNBATeamImage
 };
