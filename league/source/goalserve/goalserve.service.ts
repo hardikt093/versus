@@ -5461,10 +5461,11 @@ const nhlGetTeam = async (params: any) => {
                 $filter: {
                   input: "$teamPlayers",
                   as: "player",
-                  cond: { $eq: ["$$player.position", "$$pos"] }
-                }
-              }
-            }
+                  cond: { $eq: ["$$player.position", "$$pos"] },
+                  
+                },
+              },
+            },
           },
         },
         teamDetails: {
@@ -5512,50 +5513,10 @@ const nhlGetTeam = async (params: any) => {
       },
     },
   ]);
-
-  // const teamRoaster = await NhlStandings.aggregate([
-  //   {
-  //     $match: {
-  //       goalServeTeamId: Number(goalServeTeamId),
-  //     },
-  //   },
-  //   {
-  //     $lookup: {
-  //       from: "nhlteamimages",
-  //       localField: "goalServeTeamId",
-  //       foreignField: "goalServeTeamId",
-  //       as: "images",
-  //     },
-  //   },
-  //   {
-  //     $unwind: {
-  //       path: "$images",
-  //       preserveNullAndEmptyArrays: true,
-  //     },
-  //   },
-  //   {
-  //     $project: {
-  //       id: true,
-  //       goalServeTeamId: true,
-  //       teamImage: "$images.image",
-  //       name: true,
-  //       won: true,
-  //       lost: true,
-  //       ot_losses: true,
-  //       division: true,
-  //       position: true,
-  //       last_ten: {
-  //         $arrayElemAt: [{ $split: ["$last_ten", ","] }, 0],
-  //       },
-  //       streak: true,
-  //     },
-  //   },
-  // ]);
   return getTeam[0];
 };
 
-const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
-}
+const nhlSingleGameBoxScoreUpcomming = async (params: any) => {};
 export default {
   getMLBStandings,
   getUpcomingMatch,
