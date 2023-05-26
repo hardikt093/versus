@@ -5228,45 +5228,29 @@ const nhlScoreWithDate = async (params: any, type: string) => {
           },
           'goalServeAwayTeamId': '$goalServeAwayTeamId'
         },
-      },
-    },
-    {
-      $sort: {
-        formattedDate: 1,
-        time: 1,
-      },
-    },
-    {
-      $project: {
-        id: true,
-        date: true,
-        status: true,
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        awayTeam: {
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          awayTeamRun: "$awayTeamTotalScore",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$awayTeamTotalScoreInNumber",
-                  "$homeTeamTotalScoreInNumber",
-                ],
+        'homeTeam': {
+          'homeTeamName': '$homeTeam.name',
+          'homeTeamId': '$homeTeam._id',
+          'homeTeamRun': '$homeTeamTotalScore',
+          'won': '$homeTeamStandings.won',
+          'lose': '$homeTeamStandings.lost',
+          'teamImage': '$homeTeamImage.image',
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$homeTeamTotalScoreInNumber', '$awayTeamTotalScoreInNumber'
+                ]
               },
               'then': true,
               'else': false
             }
           },
           'goalServeHomeTeamId': '$goalServeHomeTeamId'
-        }
-      }
-    }
+        },
+      },
+    },
+
   ])
   if (type) {
     if (type == "final") {
