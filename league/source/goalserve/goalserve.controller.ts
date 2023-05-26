@@ -351,7 +351,7 @@ const nhlGetTeam = async (req: Request, res: Response) => {
 
 const nhlScoreWithDate = async (req: Request, res: Response) => {
   try {
-    const nhlScoreWithDate = await goalserveService.nhlScoreWithDate(req.query)
+    const nhlScoreWithDate = await goalserveService.nhlScoreWithDate(req.query, "")
     createResponse(res, httpStatus.OK, "", nhlScoreWithDate);
 
   } catch (error: any) {
@@ -362,7 +362,7 @@ const nhlScoreWithDate = async (req: Request, res: Response) => {
 
 const nhlScoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
-    const nhlScoreWithCurrentDate = await goalserveService.nhlScoreWithCurrentDate()
+    const nhlScoreWithCurrentDate = await goalserveService.nhlScoreWithCurrentDate(req.query)
     createResponse(res, httpStatus.OK, "", nhlScoreWithCurrentDate);
 
   } catch (error: any) {

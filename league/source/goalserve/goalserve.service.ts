@@ -3847,7 +3847,7 @@ const addNhlMatch = async () => {
       }
       return arr;
     };
-    var daylist = getDaysArray(new Date("2022-09-24"), new Date("2023-05-23"));
+    var daylist = getDaysArray(new Date("2023-05-20"), new Date("2023-05-25"));
     for (let i = 0; i < daylist?.length; i++) {
       const getMatch = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/nhl-scores`,
@@ -4617,7 +4617,7 @@ const addMatchDataFutureForNhl = async () => {
       }
       return arr;
     };
-    var daylist = getDaysArray(new Date("2023-05-24"), new Date("2023-05-31"));
+    var daylist = getDaysArray(new Date("2023-05-25"), new Date("2023-05-31"));
     for (let i = 0; i < daylist?.length; i++) {
       const getMatch = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/nhl-shedule`,
@@ -4867,7 +4867,8 @@ const addMatchDataFutureForNhl = async () => {
   }
 };
 
-const nhlScoreWithDate = async (params: any) => {
+const nhlScoreWithDate = async (params: any, type: string) => {
+
   const getUpcomingMatch = await NhlMatch.aggregate([
     {
       $addFields: {
@@ -5189,8 +5190,42 @@ const nhlScoreWithDate = async (params: any) => {
         awayTeamTotalScoreInNumber: {
           $toInt: "$awayTeamTotalScore",
         },
-        homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+        'homeTeamTotalScoreInNumber': {
+          '$toInt': '$homeTeamTotalScore'
+        }
+      }
+    }, {
+      '$sort': {
+        'formattedDate': 1,
+        'time': 1
+      }
+    }, {
+      '$project': {
+        'id': true,
+        'date': true,
+        'status': true,
+        'datetime_utc': '$dateTimeUtc',
+        'time': true,
+        'goalServeMatchId': true,
+        'awayTeam': {
+          'awayTeamName': '$awayTeam.name',
+          'awayTeamId': '$awayTeam._id',
+          'awayTeamRun': '$awayTeamTotalScore',
+          'won': '$awayTeamStandings.won',
+          'lose': '$awayTeamStandings.lost',
+          'teamImage': '$awayTeamImage.image',
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+                ]
+              },
+              'then': true,
+              'else': false
+            }
+          },
+          'goalServeAwayTeamId': '$goalServeAwayTeamId'
         },
       },
     },
@@ -5223,42 +5258,265 @@ const nhlScoreWithDate = async (params: any) => {
                   "$homeTeamTotalScoreInNumber",
                 ],
               },
-              then: true,
-              else: false,
-            },
+              'then': true,
+              'else': false
+            }
           },
-        },
-        homeTeam: {
-          homeTeamName: "$homeTeam.name",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$homeTeamTotalScoreInNumber",
-                  "$awayTeamTotalScoreInNumber",
-                ],
-              },
-              then: true,
-              else: false,
-            },
-          },
-        },
-      },
+          'goalServeHomeTeamId': '$goalServeHomeTeamId'
+        }
+      }
+    }
+  ])
+  if (type) {
+    if (type == "final") {
+      return getFinalMatch
+    } else {
+      return getUpcomingMatch
+    }
+  } else {
+    return { getUpcomingMatch, getFinalMatch }
+  }
+
+}
+const getLiveDataOfNhl = async (params: any) => {
+  const getLiveDataOfNhl = await NhlMatch.aggregate([
+    {
+      '$match': {
+        '$and': [
+          {
+            'status': {
+              '$ne': 'Not Started'
+            }
+          }, {
+            'status': {
+              '$ne': 'Final'
+            }
+          }, {
+            'status': {
+              '$ne': 'After Over Time'
+            }
+          }, {
+            'status': {
+              '$ne': 'Postponed'
+            }
+          }, {
+            'status': {
+              '$ne': 'After Penalties'
+            }
+          }, {
+            'status': {
+              '$ne': 'Final/4OT'
+            }
+          }
+        ]
+      }
+    }, {
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': {
+            '$arrayElemAt': [
+              '$spliteTime', 0
+            ]
+          }
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
     },
-  ]);
-  return { getUpcomingMatch, getFinalMatch };
-};
-const getLiveDataOfNhl = async () => {};
-const nhlScoreWithCurrentDate = async () => {
+    // {
+    //   '$match': {
+    //     'dateInString': params.date1
+    //   }
+    // },
+    {
+      '$lookup': {
+        'from': 'nhlteams',
+        'localField': 'goalServeAwayTeamId',
+        'foreignField': 'goalServeTeamId',
+        'as': 'awayTeam'
+      }
+    }, {
+      '$lookup': {
+        'from': 'nhlteams',
+        'localField': 'goalServeHomeTeamId',
+        'foreignField': 'goalServeTeamId',
+        'as': 'homeTeam'
+      }
+    }, {
+      '$unwind': {
+        'path': '$awayTeam',
+        'includeArrayIndex': 'string',
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$unwind': {
+        'path': '$homeTeam',
+        'includeArrayIndex': 'string',
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$lookup': {
+        'from': 'nhlstandings',
+        'localField': 'goalServeAwayTeamId',
+        'foreignField': 'goalServeTeamId',
+        'as': 'awayTeamStandings'
+      }
+    }, {
+      '$unwind': {
+        'path': '$awayTeamStandings',
+        'includeArrayIndex': 'string',
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$lookup': {
+        'from': 'nhlstandings',
+        'localField': 'goalServeHomeTeamId',
+        'foreignField': 'goalServeTeamId',
+        'as': 'homeTeamStandings'
+      }
+    }, {
+      '$unwind': {
+        'path': '$homeTeamStandings',
+        'includeArrayIndex': 'string',
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$lookup': {
+        'from': 'nhlteamimages',
+        'localField': 'goalServeAwayTeamId',
+        'foreignField': 'goalServeTeamId',
+        'as': 'awayTeamImage'
+      }
+    }, {
+      '$unwind': {
+        'path': '$awayTeamImage',
+        'includeArrayIndex': 'string',
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$lookup': {
+        'from': 'nhlteamimages',
+        'localField': 'goalServeHomeTeamId',
+        'foreignField': 'goalServeTeamId',
+        'as': 'homeTeamImage'
+      }
+    }, {
+      '$unwind': {
+        'path': '$homeTeamImage',
+        'includeArrayIndex': 'string',
+        'preserveNullAndEmptyArrays': true
+      }
+    }, {
+      '$addFields': {
+        'awayTeamTotalScoreInNumber': {
+          '$toInt': '$awayTeamTotalScore'
+        },
+        'homeTeamTotalScoreInNumber': {
+          '$toInt': '$homeTeamTotalScore'
+        },
+        'statusWithPeriod': {
+          '$regexMatch': {
+            'input': '$status',
+            'regex': new RegExp('[0-9]')
+          }
+        }
+      }
+    }, {
+      '$addFields': {
+        'statusWithCondition': {
+          '$cond': {
+            'if': {
+              '$eq': [
+                '$statusWithPeriod', true
+              ]
+            },
+            'then': {
+              '$concat': [
+                'Period ', '', '$status'
+              ]
+            },
+            'else': 'Overtime'
+          }
+        }
+      }
+    }, {
+      '$sort': {
+        'datetime_utc': 1
+      }
+    }, {
+      '$project': {
+        'id': true,
+        'date': true,
+        'status': '$statusWithCondition',
+        'datetime_utc': '$dateTimeUtc',
+        'time': true,
+        'goalServeMatchId': true,
+        "timer": "$timer",
+        'awayTeam': {
+          'awayTeamName': '$awayTeam.name',
+          'awayTeamId': '$awayTeam._id',
+          'awayTeamRun': '$awayTeamTotalScore',
+          'won': '$awayTeamStandings.won',
+          'lose': '$awayTeamStandings.lost',
+          'teamImage': '$awayTeamImage.image',
+          'goalServeAwayTeamId': '$goalServeAwayTeamId',
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$awayTeamTotalScoreInNumber', '$homeTeamTotalScoreInNumber'
+                ]
+              },
+              'then': true,
+              'else': false
+            }
+          }
+        },
+        'homeTeam': {
+          'homeTeamName': '$homeTeam.name',
+          'homeTeamId': '$homeTeam._id',
+          'homeTeamRun': '$homeTeamTotalScore',
+          'won': '$homeTeamStandings.won',
+          'lose': '$homeTeamStandings.lost',
+          'teamImage': '$homeTeamImage.image',
+          'goalServeHomeTeamId': '$goalServeHomeTeamId',
+          'isWinner': {
+            '$cond': {
+              'if': {
+                '$gte': [
+                  '$homeTeamTotalScoreInNumber', '$awayTeamTotalScoreInNumber'
+                ]
+              },
+              'then': true,
+              'else': false
+            }
+          }
+        }
+      }
+    }
+  ])
+  await socket("nhlLiveMatch", {
+    getLiveDataOfNhl,
+  });
+  return getLiveDataOfNhl
+}
+const nhlScoreWithCurrentDate = async (params: any) => {
   return {
-    getLiveMatch: await getLiveDataOfNhl(),
-    getUpcomingMatch: await getUpcomingDataFromMongodb(),
-    getFinalMatch: await getFinalMatchDataFromDB(),
+    getLiveMatch: await getLiveDataOfNhl(params),
+    getUpcomingMatch: await nhlScoreWithDate(params, "upcoming"),
+    getFinalMatch: await nhlScoreWithDate(params, "final"),
   };
 };
 const nhlGetTeam = async (params: any) => {
@@ -5517,6 +5775,265 @@ const nhlGetTeam = async (params: any) => {
 };
 
 const nhlSingleGameBoxScoreUpcomming = async (params: any) => {};
+const updateCurruntDateRecordNhl = async () => {
+  try {
+    const getMatch = await axiosGet(
+      `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/nhl-scores`,
+      { json: true }
+    );
+    const matchArray = await getMatch?.data?.scores?.category?.match;
+    const league: any = await League.findOne({
+      goalServeLeagueId: getMatch?.data.scores.category.id,
+    });
+    var savedMatchData: any = "";
+    if (matchArray?.length > 0 && matchArray) {
+      // array logic
+      for (let j = 0; j < matchArray?.length; j++) {
+        const data: any = {
+          leagueId: league.id,
+          goalServeLeagueId: league.goalServeLeagueId,
+          date: matchArray[j].date,
+          formattedDate: matchArray[j].formatted_date,
+          timezone: matchArray[j].timezone,
+          attendance: matchArray[j].attendance,
+          goalServeMatchId: matchArray[j].id,
+          dateTimeUtc: matchArray[j].datetime_utc,
+          status: matchArray[j].status,
+          time: matchArray[j].time,
+          goalServeVenueId: matchArray[j].venue_id,
+          venueName: matchArray[j].venue_name,
+          homeTeamTotalScore: matchArray[j].hometeam.totalscore,
+          awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+          // new entries
+          timer: matchArray[j]?.timer ? matchArray[j]?.timer : "",
+          isPp: matchArray[j]?.is_pp ? matchArray[j]?.is_pp : "",
+          ppTime: matchArray[j]?.pp_time ? matchArray[j]?.pp_time : "",
+          awayTeamOt: matchArray[j].awayteam.ot,
+          awayTeamP1: matchArray[j].awayteam.p1,
+          awayTeamP2: matchArray[j].awayteam.p2,
+          awayTeamP3: matchArray[j].awayteam.p3,
+          awayTeamPp: matchArray[j].awayteam.pp,
+          awayTeamSo: matchArray[j].awayteam.so,
+
+          homeTeamOt: matchArray[j].hometeam.ot,
+          homeTeamP1: matchArray[j].hometeam.p1,
+          homeTeamP2: matchArray[j].hometeam.p2,
+          homeTeamP3: matchArray[j].hometeam.p3,
+          homeTeamPp: matchArray[j].hometeam.pp,
+          homeTeamSo: matchArray[j].hometeam.so,
+
+          scoringFirstperiod: matchArray[j]?.scoring?.firstperiod?.event
+            ? matchArray[j]?.scoring?.firstperiod?.event
+            : [],
+          scoringOvertime: matchArray[j]?.scoring?.overtime?.event
+            ? matchArray[j]?.scoring?.overtime?.event
+            : [],
+          scoringSecondperiod: matchArray[j]?.scoring?.secondperiod?.event
+            ? matchArray[j]?.scoring?.secondperiod?.event
+            : [],
+          scoringShootout: matchArray[j]?.scoring?.shootout?.event
+            ? matchArray[j]?.scoring?.shootout?.event
+            : [],
+          scoringThirdperiod: matchArray[j]?.scoring?.thirdperiod?.event
+            ? matchArray[j]?.scoring?.thirdperiod?.event
+            : [],
+
+          penaltiesFirstperiod: matchArray[j]?.penalties?.firstperiod?.penalty
+            ? matchArray[j]?.penalties?.firstperiod?.penalty
+            : [],
+          penaltiesOvertime: matchArray[j]?.penalties?.overtime?.penalty
+            ? matchArray[j]?.penalties?.overtime?.penalty
+            : [],
+          penaltiesSecondperiod: matchArray[j]?.penalties?.secondperiod
+            ?.penalty
+            ? matchArray[j]?.penalties?.secondperiod?.penalty
+            : [],
+          penaltiesThirdperiod: matchArray[j]?.penalties?.thirdperiod?.penalty
+            ? matchArray[j]?.penalties?.thirdperiod?.penalty
+            : [],
+
+          teamStatsHomeTeam: matchArray[j]?.team_stats?.hometeam
+            ? matchArray[j]?.team_stats?.hometeam
+            : {},
+          teamStatsAwayTeam: matchArray[j]?.team_stats?.awayteam
+            ? matchArray[j]?.team_stats?.awayteam
+            : {},
+
+          playerStatsAwayTeam: matchArray[j]?.player_stats?.awayteam?.player
+            ? matchArray[j]?.player_stats?.awayteam?.player
+            : [],
+          playerStatsHomeTeam: matchArray[j]?.player_stats?.hometeam?.player
+            ? matchArray[j]?.player_stats?.hometeam?.player
+            : [],
+
+          powerPlayAwayTeam: matchArray[j]?.powerplay?.awayteam
+            ? matchArray[j]?.powerplay?.awayteam
+            : {},
+          powerPlayHomeTeam: matchArray[j]?.powerplay?.hometeam
+            ? matchArray[j]?.powerplay?.hometeam
+            : {},
+
+          goalkeeperStatsAwayTeam: matchArray[j]?.goalkeeper_stats?.awayteam
+            ?.player
+            ? matchArray[j]?.goalkeeper_stats?.awayteam?.player
+            : [],
+          goalkeeperStatsHomeTeam: matchArray[j]?.goalkeeper_stats?.hometeam
+            ?.player
+            ? matchArray[j]?.goalkeeper_stats?.hometeam?.player
+            : [],
+        };
+
+        const teamIdAway: any = await TeamNHL.findOne({
+          goalServeTeamId: matchArray[j].awayteam.id,
+        });
+
+        data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
+          ? teamIdAway.goalServeTeamId
+          : 1;
+
+        const teamIdHome: any = await TeamNHL.findOne({
+          goalServeTeamId: matchArray[j].hometeam.id,
+        });
+
+        data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
+          ? teamIdHome.goalServeTeamId
+          : 1;
+
+        // const matchData = new NhlMatch(data);
+        console.log("data.status", data)
+        const recordUpdate = await Match.findOneAndUpdate(
+          { goalServeMatchId: data.goalServeMatchId },
+          { $set: data },
+          { new: true }
+        );
+      }
+    } else {
+      if (matchArray) {
+        const data: any = {
+          leagueId: league.id,
+          goalServeLeagueId: league.goalServeLeagueId,
+          date: matchArray.date,
+          formattedDate: matchArray.formatted_date,
+          timezone: matchArray.timezone,
+          attendance: matchArray.attendance,
+          goalServeMatchId: matchArray.id,
+          dateTimeUtc: matchArray.datetime_utc,
+          status: matchArray.status,
+          time: matchArray.time,
+          goalServeVenueId: matchArray.venue_id,
+          venueName: matchArray.venue_name,
+          homeTeamTotalScore: matchArray.hometeam.totalscore,
+          awayTeamTotalScore: matchArray.awayteam.totalscore,
+          // new entries
+          timer: matchArray?.timer ? matchArray?.timer : "",
+          isPp: matchArray?.is_pp ? matchArray?.is_pp : "",
+          ppTime: matchArray?.pp_time ? matchArray?.pp_time : "",
+          awayTeamOt: matchArray.awayteam.ot,
+          awayTeamP1: matchArray.awayteam.p1,
+          awayTeamP2: matchArray.awayteam.p2,
+          awayTeamP3: matchArray.awayteam.p3,
+          awayTeamPp: matchArray.awayteam.pp,
+          awayTeamSo: matchArray.awayteam.so,
+
+          homeTeamOt: matchArray.hometeam.ot,
+          homeTeamP1: matchArray.hometeam.p1,
+          homeTeamP2: matchArray.hometeam.p2,
+          homeTeamP3: matchArray.hometeam.p3,
+          homeTeamPp: matchArray.hometeam.pp,
+          homeTeamSo: matchArray.hometeam.so,
+
+          scoringFirstperiod: matchArray?.scoring?.firstperiod?.event
+            ? matchArray?.scoring?.firstperiod?.event
+            : [],
+          scoringOvertime: matchArray?.scoring?.overtime?.event
+            ? matchArray?.scoring?.overtime?.event
+            : [],
+          scoringSecondperiod: matchArray?.scoring?.secondperiod?.event
+            ? matchArray?.scoring?.secondperiod?.event
+            : [],
+          scoringShootout: matchArray?.scoring?.shootout?.event
+            ? matchArray?.scoring?.shootout?.event
+            : [],
+          scoringThirdperiod: matchArray?.scoring?.thirdperiod?.event
+            ? matchArray?.scoring?.thirdperiod?.event
+            : [],
+
+          penaltiesFirstperiod: matchArray?.penalties?.firstperiod?.penalty
+            ? matchArray?.penalties?.firstperiod?.penalty
+            : [],
+          penaltiesOvertime: matchArray?.penalties?.overtime?.penalty
+            ? matchArray?.penalties?.overtime?.penalty
+            : [],
+          penaltiesSecondperiod: matchArray?.penalties?.secondperiod?.penalty
+            ? matchArray?.penalties?.secondperiod?.penalty
+            : [],
+          penaltiesThirdperiod: matchArray?.penalties?.thirdperiod?.penalty
+            ? matchArray?.penalties?.thirdperiod?.penalty
+            : [],
+
+          teamStatsHomeTeam: matchArray?.team_stats?.hometeam
+            ? matchArray?.team_stats?.hometeam
+            : {},
+          teamStatsAwayTeam: matchArray?.team_stats?.awayteam
+            ? matchArray?.team_stats?.awayteam
+            : {},
+
+          playerStatsAwayTeam: matchArray?.player_stats?.awayteam?.player
+            ? matchArray?.player_stats?.awayteam?.player
+            : [],
+          playerStatsHomeTeam: matchArray?.player_stats?.hometeam?.player
+            ? matchArray?.player_stats?.hometeam?.player
+            : [],
+
+          powerPlayAwayTeam: matchArray?.powerplay?.awayteam
+            ? matchArray?.powerplay?.awayteam
+            : {},
+          powerPlayHomeTeam: matchArray?.powerplay?.hometeam
+            ? matchArray?.powerplay?.hometeam
+            : {},
+
+          goalkeeperStatsAwayTeam: matchArray?.goalkeeper_stats?.awayteam
+            ?.player
+            ? matchArray?.goalkeeper_stats?.awayteam?.player
+            : [],
+          goalkeeperStatsHomeTeam: matchArray?.goalkeeper_stats?.hometeam
+            ?.player
+            ? matchArray?.goalkeeper_stats?.hometeam?.player
+            : [],
+        };
+
+        const teamIdAway: any = await TeamNHL.findOne({
+          goalServeTeamId: matchArray.awayteam.id,
+        });
+        if (teamIdAway) {
+          data.awayTeamId = teamIdAway.id;
+          data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
+            ? teamIdAway.goalServeTeamId
+            : 0;
+        }
+        const teamIdHome: any = await TeamNHL.findOne({
+          goalServeTeamId: matchArray.hometeam.id,
+        });
+        if (teamIdHome) {
+          data.homeTeamId = teamIdHome.id;
+          data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
+            ? teamIdHome.goalServeTeamId
+            : 0;
+        }
+        console.log("data.status", data.goalServeMatchId)
+        const recordUpdate = await Match.findOneAndUpdate(
+          { goalServeMatchId: data.goalServeMatchId },
+          { $set: data },
+          { new: true }
+        );
+        console.log("recordUpdate", recordUpdate)
+      }
+    }
+  }
+  catch (error: any) {
+    console.log("error", error);
+  }
+}
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -5571,4 +6088,5 @@ export default {
   getLiveDataOfNhl,
   nhlGetTeam,
   nhlSingleGameBoxScoreUpcomming,
+  updateCurruntDateRecordNhl
 };

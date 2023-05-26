@@ -16,6 +16,7 @@ router.get("/nhl/standings", leagueProxyController.nhlStandings);
 router.get("/nhl/single-game-boxscore-final", auth, leagueProxyController.nhlSingleGameBoxScore);
 router.get("/nhl/scoreWithDate", leagueProxyController.nhlScoreWithDate);
 router.get("/nhl/get-team", leagueProxyController.nhlGetTeam);
+router.get("/nhl/scoreWithCurrentDate", leagueProxyController.nhlScoreWithCurrentDate);
 
 
 export = router;
