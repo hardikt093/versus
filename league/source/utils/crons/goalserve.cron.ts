@@ -37,5 +37,10 @@ var updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
   await goalserveService.updateCurruntDateRecordNhl();
 })
 
+const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron updateCurruntDateRecordNba");
+  await goalserveService.updateCurruntDateRecordNba();
+})
+
 // export default { getUpcomingMatch, getFinalMatch, getLiveMatch, createAndUpdateOdds };
-export default { createAndUpdateOdds, getLiveMatch, getUpcomingMatch, getFinalMatch, updateCurruntDateRecord, updateCurruntDateRecordNhl };
+export default { createAndUpdateOdds, getLiveMatch, getUpcomingMatch, getFinalMatch, updateCurruntDateRecord, updateCurruntDateRecordNhl, updateCurruntDateRecordNba };
