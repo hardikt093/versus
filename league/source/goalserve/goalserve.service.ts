@@ -695,12 +695,38 @@ const mlbScoreWithDate = async (params: any) => {
   let year = moment(params.date1).format("YYYY");
   let date = `${day}.${month}.${year}`;
 
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+
   const getFinalMatch = await Match.aggregate([
+
     {
-      $match: {
-        formattedDate: date,
-        status: "Final",
-      },
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    }, {
+      '$match': {
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
+        'status': 'Final'
+      }
     },
     {
       $lookup: {
@@ -866,8 +892,32 @@ const mlbScoreWithDate = async (params: any) => {
 
   const getUpcomingMatch = await Match.aggregate([
     {
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    },
+    {
       $match: {
-        formattedDate: date,
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
         status: "Not Started",
       },
     },
@@ -1459,18 +1509,41 @@ const createDivison = async (body: any) => {
   return dataToSave;
 };
 
-const getFinalMatchDataFromDB = async () => {
+const getFinalMatchDataFromDB = async (params: any) => {
   let day = moment().format("D");
   let month = moment().format("MM");
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
-
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
   return await Match.aggregate([
     {
-      $match: {
-        formattedDate: date,
-        status: "Final",
-      },
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    }, {
+      '$match': {
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
+        'status': 'Final'
+      }
     },
     {
       $lookup: {
@@ -1628,15 +1701,40 @@ const getFinalMatchDataFromDB = async () => {
     },
   ]);
 };
-const getUpcomingDataFromMongodb = async () => {
+const getUpcomingDataFromMongodb = async (params: any) => {
   let day = moment().format("D");
   let month = moment().format("MM");
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
   return await Match.aggregate([
     {
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    },
+    {
       $match: {
-        formattedDate: date,
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
         status: "Not Started",
       },
     },
@@ -1974,14 +2072,14 @@ const getLiveDataFromMongodb = async () => {
     },
   ]);
 };
-const scoreWithCurrentDate = async () => {
+const scoreWithCurrentDate = async (params: any) => {
   return {
     // getLiveMatch: await getLiveMatch(),
     getLiveMatch: await getLiveDataFromMongodb(),
     // getUpcomingMatch: await getUpcomingMatch(),
-    getUpcomingMatch: await getUpcomingDataFromMongodb(),
+    getUpcomingMatch: await getUpcomingDataFromMongodb(params),
     // getFinalMatch: await getFinalMatch(),
-    getFinalMatch: await getFinalMatchDataFromDB(),
+    getFinalMatch: await getFinalMatchDataFromDB(params),
   };
 };
 

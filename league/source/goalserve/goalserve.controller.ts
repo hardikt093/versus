@@ -170,7 +170,7 @@ const createDivison = async (req: Request, res: Response) => {
 };
 const scoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
-    const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate();
+    const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate(req.query);
     createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});

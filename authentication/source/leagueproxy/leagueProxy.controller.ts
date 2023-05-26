@@ -39,7 +39,7 @@ const scoreWithCurrentDate = async (req: Request, res: Response) => {
     let token: any = req.header("Authorization");
     const scoreWithCurrentDate = await axiosGet(
       `${config.leagueServer}/mlb/scoreWithCurrentDate`,
-      {},
+      { date1: req.query.date1 },
       token
     );
     createResponse(res, httpStatus.OK, "", scoreWithCurrentDate.data.data);
