@@ -4317,15 +4317,16 @@ const getNHLStandingData = async () => {
             id: { $toString: "$goalServeTeamId" },
             games_played: "$games_played",
             won: "$won",
-            lost: "$lost",
-            ot_losses: "$ot_losses",
+            lost: { $toInt: "$lost" },
+            ot_losses: { $toInt: "$ot_losses" },
             points: "$points",
-            regular_ot_wins: "$regular_ot_wins",
+            regular_ot_wins: { $toInt: "$regular_ot_wins" },
             shootout_losses: "$shootout_losses",
             shootout_wins: "$shootout_wins",
             difference: "$difference",
             goals_against: "$goals_against",
             goals_for: "$goals_for",
+            road_record: "$road_record",
             name: "$name",
             teamImage: "$images.image",
             pct: "$pct",
@@ -5716,11 +5717,25 @@ const nhlGetTeam = async (params: any) => {
             in: {
               position: "$$pos",
               players: {
-                $filter: {
-                  input: "$teamPlayers",
+                $map: {
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "player",
+                      cond: { $eq: ["$$player.position", "$$pos"] },
+                    },
+                  },
                   as: "player",
-                  cond: { $eq: ["$$player.position", "$$pos"] },
-                  
+                  in: {
+                    name: "$$player.name",
+                    height: "$$player.height",
+                    weight: "$$player.weight",
+                    birthplace: "$$player.birth_place",
+                    age: "$$player.age",
+                    shot: "$$player.shot",
+                    goalServePlayerId: "$$player.goalServePlayerId",
+                    number: "$$player.number",
+                  },
                 },
               },
             },
