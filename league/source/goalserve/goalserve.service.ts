@@ -3789,6 +3789,7 @@ const teamStats = async () => {
 };
 
 const updateInjuryRecored = async () => {
+  await Injury.deleteMany({})
   const team = await Team.find({ isDeleted: false });
   await Promise.all(
     team.map(async (item) => {
@@ -3818,12 +3819,8 @@ const updateInjuryRecored = async () => {
               goalServeTeamId: injuryApi?.data?.team?.id,
               teamId: item?.id,
             };
-            const option = { upsert: true, returnOriginal: false };
-            const result = await Injury.findByIdAndUpdate(
-              { goalServePlayerId: injuryArray1?.id },
-              data,
-              option
-            );
+            const playerData = new Injury(data);
+            const saveInjuries = await playerData.save();
           })
         );
       } else {
@@ -3843,12 +3840,9 @@ const updateInjuryRecored = async () => {
           playerId: player?.id,
         };
 
-        const option = { upsert: true, returnOriginal: false };
-        const result = await Injury.findOneAndUpdate(
-          { goalServePlayerId: val?.player_id },
-          data,
-          option
-        );
+        // const option = { upsert: true, returnOriginal: false };
+        const playerData = new Injury(data);
+        const saveInjuries = await playerData.save();
       }
     })
   );
