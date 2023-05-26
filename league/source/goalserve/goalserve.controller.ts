@@ -383,6 +383,24 @@ const createTeamImageNBA = async (req: Request, res: Response) => {
   }
 };
 
+const addNbaMatch = async (req: Request, res: Response) => {
+  try {
+    const addNbaMatch = await goalserveService.addNbaMatch();
+    createResponse(res, httpStatus.OK, "", addNbaMatch);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
+const addMatchDataFutureForNba = async (req: Request, res: Response) => {
+  try {
+    const addMatchDataFutureForNba = await goalserveService.addMatchDataFutureForNba()
+    createResponse(res, httpStatus.OK, "", true);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -424,5 +442,7 @@ export default {
   nhlScoreWithDate,
   nhlScoreWithCurrentDate,
   createTeamNBA,
-  createTeamImageNBA
+  createTeamImageNBA,
+  addNbaMatch,
+  addMatchDataFutureForNba
 };

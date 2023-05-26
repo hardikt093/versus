@@ -28,6 +28,7 @@ import NhlInjury from "../models/documents/NHL/injury.model";
 import NhlStandings from "../models/documents/NHL/standing,model";
 import TeamNBA from "../models/documents/NBA/team.model";
 import TeamImageNBA from "../models/documents/NBA/teamImage.model";
+import NbaMatch from "../models/documents/NBA/match.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -5242,6 +5243,384 @@ const addNBATeamImage = async (body: any) => {
   await teamNewImage.save();
 };
 
+const addNbaMatch = async () => {
+  try {
+    let getDaysArray = function (start: any, end: any) {
+      for (
+        var arr = [], dt = new Date(start);
+        dt <= new Date(end);
+        dt.setDate(dt.getDate() + 1)
+      ) {
+        let day = moment(dt).format("DD");
+        let month = moment(dt).format("MM");
+        let year = moment(dt).format("YYYY");
+        let date = `${day}.${month}.${year}`;
+        arr.push(date);
+      }
+      return arr;
+    };
+    const daylist = getDaysArray(new Date("2022-10-02"), new Date("2023-05-25"));
+    for (let i = 0; i < daylist?.length; i++) {
+      try {
+        const getMatch = await axiosGet(
+          `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/bsktbl/nba-scores`,
+          { json: true, date: daylist[i] }
+        );
+        if (getMatch) {
+          const matchArray = await getMatch?.data?.scores?.category?.match;
+          const league: any = await League.findOne({
+            goalServeLeagueId: getMatch?.data.scores.category.id,
+          });
+          let savedMatchData: any = "";
+          if (matchArray?.length > 0 && matchArray) {
+            for (let j = 0; j < matchArray?.length; j++) {
+              
+              const data: any = {
+                leagueId: league._id,
+                goalServeLeagueId: league.goalServeLeagueId,
+                date: matchArray[j].date,
+                formattedDate: matchArray[j].formatted_date,
+                dateTimeUtc: matchArray[j].datetime_utc,
+                timezone: matchArray[j].timezone,
+                attendance: matchArray[j].attendance,
+                goalServeMatchId: matchArray[j].id,
+                status: matchArray[j].status,
+                time: matchArray[j].time,
+                timer: matchArray[j]?.timer ? matchArray[j]?.timer : "",
+                goalServeVenueId: matchArray[j].venue_id,
+                venueName: matchArray[j].venue_name,
+                homeTeamTotalScore: matchArray[j].hometeam.totalscore,
+                awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+                // new entries
+                awayTeamOt: matchArray[j].awayteam.ot,
+                awayTeamQ1: matchArray[j].awayteam.q1,
+                awayTeamQ2: matchArray[j].awayteam.q2,
+                awayTeamQ3: matchArray[j].awayteam.q3,
+                awayTeamQ4: matchArray[j].awayteam.q4,
+                awayTeamPosession: matchArray[j].awayteam.posession,
+    
+                homeTeamOt: matchArray[j].hometeam.ot,
+                homeTeamQ1: matchArray[j].hometeam.q1,
+                homeTeamQ2: matchArray[j].hometeam.q2,
+                homeTeamQ3: matchArray[j].hometeam.q3,
+                homeTeamQ4: matchArray[j].hometeam.q4,
+                homeTeamPosession: matchArray[j].hometeam.posession,
+    
+                teamStatsHomeTeam: matchArray[j]?.team_stats?.hometeam
+                  ? matchArray[j]?.team_stats?.hometeam
+                  : {},
+                teamStatsAwayTeam: matchArray[j]?.team_stats?.awayteam
+                  ? matchArray[j]?.team_stats?.awayteam
+                  : {},
+    
+                playerStatsBenchAwayTeam: matchArray[j]?.player_stats?.awayteam?.bench?.player
+                  ? matchArray[j]?.player_stats?.awayteam?.bench?.player
+                  : [],
+                playerStatsBenchHomeTeam: matchArray[j]?.player_stats?.hometeam?.bench?.player
+                  ? matchArray[j]?.player_stats?.hometeam?.bench?.player
+                  : [],
+                playerStatsStartersAwayTeam: matchArray[j]?.player_stats?.awayteam?.starters?.player
+                  ? matchArray[j]?.player_stats?.awayteam?.starters?.player
+                  : [],
+                playerStatsStartersHomeTeam: matchArray[j]?.player_stats?.hometeam?.starters?.player
+                  ? matchArray[j]?.player_stats?.hometeam?.starters?.player
+                  : [], 
+              };
+              const teamIdAway: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray[j].awayteam.id,
+              });
+    
+              data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
+                ? teamIdAway.goalServeTeamId
+                : 1;
+    
+              const teamIdHome: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray[j].hometeam.id,
+              });
+    
+              data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
+                ? teamIdHome.goalServeTeamId
+                : 1;
+    
+              const matchData = new NbaMatch(data);
+              savedMatchData = await matchData.save();
+            
+             }
+          } else {
+            if (matchArray) {
+              const data: any = {
+                leagueId: league._id,
+                goalServeLeagueId: league.goalServeLeagueId,
+                date: matchArray.date,
+                formattedDate: matchArray.formatted_date,
+                dateTimeUtc: matchArray.datetime_utc,
+                timezone: matchArray.timezone,
+                attendance: matchArray.attendance,
+                goalServematchArrayId: matchArray.id,
+                status: matchArray.status,
+                time: matchArray.time,
+                timer: matchArray?.timer ? matchArray?.timer : "",
+                goalServeVenueId: matchArray.venue_id,
+                venueName: matchArray.venue_name,
+                homeTeamTotalScore: matchArray.hometeam.totalscore,
+                awayTeamTotalScore: matchArray.awayteam.totalscore,
+                // new entries
+                awayTeamOt: matchArray.awayteam.ot,
+                awayTeamQ1: matchArray.awayteam.q1,
+                awayTeamQ2: matchArray.awayteam.q2,
+                awayTeamQ3: matchArray.awayteam.q3,
+                awayTeamQ4: matchArray.awayteam.q4,
+                awayTeamPosession: matchArray.awayteam.posession,
+    
+                homeTeamOt: matchArray.hometeam.ot,
+                homeTeamQ1: matchArray.hometeam.q1,
+                homeTeamQ2: matchArray.hometeam.q2,
+                homeTeamQ3: matchArray.hometeam.q3,
+                homeTeamQ4: matchArray.hometeam.q4,
+                homeTeamPosession: matchArray.hometeam.posession,
+    
+                teamStatsHomeTeam: matchArray?.team_stats?.hometeam
+                  ? matchArray?.team_stats?.hometeam
+                  : {},
+                teamStatsAwayTeam: matchArray?.team_stats?.awayteam
+                  ? matchArray?.team_stats?.awayteam
+                  : {},
+    
+                playerStatsBenchAwayTeam: matchArray?.player_stats?.awayteam?.bench?.player
+                  ? matchArray?.player_stats?.awayteam?.bench?.player
+                  : [],
+                playerStatsBenchHomeTeam: matchArray?.player_stats?.hometeam?.bench?.player
+                  ? matchArray?.player_stats?.hometeam?.bench?.player
+                  : [],
+                playerStatsStartersAwayTeam: matchArray?.player_stats?.awayteam?.starters?.player
+                  ? matchArray?.player_stats?.awayteam?.starters?.player
+                  : [],
+                playerStatsStartersHomeTeam: matchArray?.player_stats?.hometeam?.starters?.player
+                  ? matchArray?.player_stats?.hometeam?.starters?.player
+                  : [], 
+              };
+    
+              const teamIdAway: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray.awayteam.id,
+              });
+              if (teamIdAway) {
+                data.awayTeamId = teamIdAway.id;
+                data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
+                  ? teamIdAway.goalServeTeamId
+                  : 0;
+              }
+              const teamIdHome: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray.hometeam.id,
+              });
+              if (teamIdHome) {
+                data.homeTeamId = teamIdHome.id;
+                data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
+                  ? teamIdHome.goalServeTeamId
+                  : 0;
+              }
+              const matchData = new NbaMatch(data);
+              savedMatchData = await matchData.save();
+            }
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+    return true;
+  } catch (error: any) {
+    console.log("error", error);
+  }
+};
+
+const addMatchDataFutureForNba = async () => {
+  try {
+    const getDaysArray = function (start: any, end: any) {
+      for (
+        var arr = [], dt = new Date(start);
+        dt <= new Date(end);
+        dt.setDate(dt.getDate() + 1)
+      ) {
+        let day = moment(dt).format("DD");
+        let month = moment(dt).format("MM");
+        let year = moment(dt).format("YYYY");
+        let date = `${day}.${month}.${year}`;
+        arr.push(date);
+      }
+      return arr;
+    };
+    const daylist = getDaysArray(new Date("2023-05-26"), new Date("2023-06-19"));
+    for (let i = 0; i < daylist?.length; i++) {
+      try {
+        const getMatch = await axiosGet(
+          `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/bsktbl/nba-shedule`,
+          { json: true, date1: daylist[i] }
+        );
+        if (getMatch) {
+          const matchArray = await getMatch?.data?.shedules?.matches?.match;
+          const league: any = await League.findOne({
+            goalServeLeagueId: getMatch?.data?.shedules?.id,
+          });
+          console.log(matchArray);
+
+          let savedMatchData: any = "";
+          if (matchArray?.length > 0 && matchArray) {            
+            // array logic
+            for (let j = 0; j < matchArray?.length; j++) {
+              const data: any = {
+                leagueId: league.id,
+                goalServeLeagueId: league.goalServeLeagueId,
+                date: matchArray[j].date,
+                formattedDate: matchArray[j].formatted_date,
+                timezone: matchArray[j].timezone,
+                attendance: matchArray[j].attendance,
+                goalServeMatchId: matchArray[j].id,
+                dateTimeUtc: matchArray[j].datetime_utc,
+                status: matchArray[j].status,
+                time: matchArray[j].time,
+                goalServeVenueId: matchArray[j].venue_id,
+                venueName: matchArray[j].venue_name,
+                homeTeamTotalScore: matchArray[j].hometeam.totalscore,
+                awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+                // new entries
+                timer: matchArray[j]?.timer ? matchArray[j]?.timer : "",
+                awayTeamOt: matchArray[j].awayteam.ot,
+                awayTeamQ1: matchArray[j].awayteam.q1,
+                awayTeamQ2: matchArray[j].awayteam.q2,
+                awayTeamQ3: matchArray[j].awayteam.q3,
+                awayTeamQ4: matchArray[j].awayteam.q4,
+                awayTeamPosession: matchArray[j].awayteam.posession,
+    
+                homeTeamOt: matchArray[j].hometeam.ot,
+                homeTeamQ1: matchArray[j].hometeam.q1,
+                homeTeamQ2: matchArray[j].hometeam.q2,
+                homeTeamQ3: matchArray[j].hometeam.q3,
+                homeTeamQ4: matchArray[j].hometeam.q4,
+                homeTeamPosession: matchArray[j].hometeam.posession,
+    
+                teamStatsHomeTeam: matchArray[j]?.team_stats?.hometeam
+                    ? matchArray[j]?.team_stats?.hometeam
+                    : {},
+                  teamStatsAwayTeam: matchArray[j]?.team_stats?.awayteam
+                    ? matchArray[j]?.team_stats?.awayteam
+                    : {},
+      
+                  playerStatsBenchAwayTeam: matchArray[j]?.player_stats?.awayteam?.bench?.player
+                    ? matchArray[j]?.player_stats?.awayteam?.bench?.player
+                    : [],
+                  playerStatsBenchHomeTeam: matchArray[j]?.player_stats?.hometeam?.bench?.player
+                    ? matchArray[j]?.player_stats?.hometeam?.bench?.player
+                    : [],
+                  playerStatsStartersAwayTeam: matchArray[j]?.player_stats?.awayteam?.starters?.player
+                    ? matchArray[j]?.player_stats?.awayteam?.starters?.player
+                    : [],
+                  playerStatsStartersHomeTeam: matchArray[j]?.player_stats?.hometeam?.starters?.player
+                    ? matchArray[j]?.player_stats?.hometeam?.starters?.player
+                    : [], 
+              };
+    
+              const teamIdAway: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray[j].awayteam.id,
+              });
+    
+              data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId ? teamIdAway.goalServeTeamId : 1;
+    
+              const teamIdHome: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray[j].hometeam.id,
+              });
+    
+              data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId ? teamIdHome.goalServeTeamId : 1;
+              const matchData = new NbaMatch(data);
+              savedMatchData = await matchData.save();
+            }
+          }
+          else {
+            if (matchArray) {
+              const data: any = {
+                leagueId: league._id,
+                goalServeLeagueId: league.goalServeLeagueId,
+                date: matchArray.date,
+                formattedDate: matchArray.formatted_date,
+                dateTimeUtc: matchArray.datetime_utc,
+                timezone: matchArray.timezone,
+                attendance: matchArray.attendance,
+                goalServematchArrayId: matchArray.id,
+                status: matchArray.status,
+                time: matchArray.time,
+                timer: matchArray?.timer ? matchArray?.timer : "",
+                goalServeVenueId: matchArray.venue_id,
+                venueName: matchArray.venue_name,
+                homeTeamTotalScore: matchArray.hometeam.totalscore,
+                awayTeamTotalScore: matchArray.awayteam.totalscore,
+                // new entries
+                awayTeamOt: matchArray.awayteam.ot,
+                awayTeamQ1: matchArray.awayteam.q1,
+                awayTeamQ2: matchArray.awayteam.q2,
+                awayTeamQ3: matchArray.awayteam.q3,
+                awayTeamQ4: matchArray.awayteam.q4,
+                awayTeamPosession: matchArray.awayteam.posession,
+    
+                homeTeamOt: matchArray.hometeam.ot,
+                homeTeamQ1: matchArray.hometeam.q1,
+                homeTeamQ2: matchArray.hometeam.q2,
+                homeTeamQ3: matchArray.hometeam.q3,
+                homeTeamQ4: matchArray.hometeam.q4,
+                homeTeamPosession: matchArray.hometeam.posession,
+    
+                teamStatsHomeTeam: matchArray?.team_stats?.hometeam
+                  ? matchArray?.team_stats?.hometeam
+                  : {},
+                teamStatsAwayTeam: matchArray?.team_stats?.awayteam
+                  ? matchArray?.team_stats?.awayteam
+                  : {},
+    
+                playerStatsBenchAwayTeam: matchArray?.player_stats?.awayteam?.bench?.player
+                  ? matchArray?.player_stats?.awayteam?.bench?.player
+                  : [],
+                playerStatsBenchHomeTeam: matchArray?.player_stats?.hometeam?.bench?.player
+                  ? matchArray?.player_stats?.hometeam?.bench?.player
+                  : [],
+                playerStatsStartersAwayTeam: matchArray?.player_stats?.awayteam?.starters?.player
+                  ? matchArray?.player_stats?.awayteam?.starters?.player
+                  : [],
+                playerStatsStartersHomeTeam: matchArray?.player_stats?.hometeam?.starters?.player
+                  ? matchArray?.player_stats?.hometeam?.starters?.player
+                  : [], 
+              };
+    
+              const teamIdAway: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray.awayteam.id,
+              });
+              if (teamIdAway) {
+                data.awayTeamId = teamIdAway.id;
+                data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
+                  ? teamIdAway.goalServeTeamId
+                  : 0;
+              }
+              const teamIdHome: any = await TeamNBA.findOne({
+                goalServeTeamId: matchArray.hometeam.id,
+              });
+              if (teamIdHome) {
+                data.homeTeamId = teamIdHome.id;
+                data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
+                  ? teamIdHome.goalServeTeamId
+                  : 0;
+              }
+              const matchData = new NbaMatch(data);
+              savedMatchData = await matchData.save();
+            }
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+    return true;
+  } catch (error: any) {
+    console.log("error", error);
+  }
+}
+
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -5295,5 +5674,7 @@ export default {
   nhlScoreWithCurrentDate,
   getLiveDataOfNhl,
   createTeamNBA,
-  addNBATeamImage
+  addNBATeamImage,
+  addNbaMatch,
+  addMatchDataFutureForNba
 };
