@@ -381,6 +381,17 @@ const nhlSingleGameBoxScoreUpcomming=async (req: Request, res: Response) => {
 
   }
 }
+
+const nhlSingleGameBoxScoreLive=async (req: Request, res: Response) => {
+  try {
+    const nhlSingleGameBoxScoreLive = await goalserveService.nhlSingleGameBoxScoreLive(req.query)
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScoreLive);
+
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -422,5 +433,6 @@ export default {
   nhlScoreWithDate,
   nhlScoreWithCurrentDate,
   nhlGetTeam,
-  nhlSingleGameBoxScoreUpcomming
+  nhlSingleGameBoxScoreUpcomming,
+  nhlSingleGameBoxScoreLive
 };

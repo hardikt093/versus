@@ -3847,7 +3847,7 @@ const addNhlMatch = async () => {
       }
       return arr;
     };
-    var daylist = getDaysArray(new Date("2023-05-20"), new Date("2023-05-25"));
+    var daylist = getDaysArray(new Date("2023-05-20"), new Date("2023-05-29"));
     for (let i = 0; i < daylist?.length; i++) {
       const getMatch = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/nhl-scores`,
@@ -5924,7 +5924,7 @@ const updateCurruntDateRecordNhl = async () => {
 
         // const matchData = new NhlMatch(data);
         console.log("data.status", data);
-        const recordUpdate = await Match.findOneAndUpdate(
+        const recordUpdate = await NhlMatch.findOneAndUpdate(
           { goalServeMatchId: data.goalServeMatchId },
           { $set: data },
           { new: true }
@@ -6043,13 +6043,12 @@ const updateCurruntDateRecordNhl = async () => {
             ? teamIdHome.goalServeTeamId
             : 0;
         }
-        console.log("data.status", data.goalServeMatchId);
-        const recordUpdate = await Match.findOneAndUpdate(
+        const recordUpdate = await NhlMatch.findOneAndUpdate(
           { goalServeMatchId: data.goalServeMatchId },
           { $set: data },
           { new: true }
         );
-        console.log("recordUpdate", recordUpdate);
+      
       }
     }
   } catch (error: any) {
@@ -6110,6 +6109,7 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             $project: {
               won: 1,
               lost: 1,
+              goals_against:1
             },
           },
         ],
@@ -6154,30 +6154,6 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
         localField: "goalServeAwayTeamId",
         foreignField: "goalServeTeamId",
         as: "awayTeamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "nhlteamimages",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
-              },
-            },
-          },
-          {
-            $project: {
-              image: 1,
-            },
-          },
-        ],
-        as: "teamImages",
       },
     },
     {
@@ -6322,11 +6298,170 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
           lose: { $arrayElemAt: ["$standings.lost", 1] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
         },
+     
       },
     },
   ]);
   return getMatch[0];
 };
+
+const nhlSingleGameBoxScoreLive=async(params:any)=>{
+  const goalServeMatchId = params.goalServeMatchId;
+  const getMatch = await NhlMatch.aggregate([
+    {
+      $match: {
+        goalServeMatchId: Number(goalServeMatchId),
+      },
+    },
+    {
+      $lookup: {
+        from: "nhlteams",
+        let: {
+          awayTeamId: "$goalServeAwayTeamId",
+          homeTeamId: "$goalServeHomeTeamId",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+              },
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              abbreviation: 1,
+              goalServeTeamId: 1,
+            },
+          },
+        ],
+        as: "teams",
+      },
+
+    },
+    {
+      $lookup: {
+        from: "nhlteamimages",
+        let: {
+          awayTeamId: "$goalServeAwayTeamId",
+          homeTeamId: "$goalServeHomeTeamId",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+              },
+            },
+          },
+          {
+            $project: {
+              image: 1,
+            },
+          },
+        ],
+        as: "teamImages",
+      },
+    },
+    {
+      $lookup: {
+        from: "nhlstandings",
+        let: {
+          awayTeamId: "$goalServeAwayTeamId",
+          homeTeamId: "$goalServeHomeTeamId",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+              },
+            },
+          },
+          {
+            $project: {
+              won: 1,
+              lost: 1,
+              goals_against:1
+            },
+          },
+        ],
+        as: "standings",
+      },
+    },
+    
+    {
+      $project: {
+        id: 1,
+        attendance: 1,
+        status: 1,
+        venueName: 1,
+        datetime_utc: "$dateTimeUtc",
+        awayTeamFullName: { $arrayElemAt: ["$teams.name", 0] },
+        homeTeamFullName: { $arrayElemAt: ["$teams.name", 1] },
+        awayTeamAbbreviation: { $arrayElemAt: ["$teams.abbreviation", 0] },
+        homeTeamAbbreviation: { $arrayElemAt: ["$teams.abbreviation", 1] },
+        homeTeamImage: { $arrayElemAt: ["$teamImages.image", 1] },
+        awayTeamImage: { $arrayElemAt: ["$teamImages.image", 0] },
+        awayTeam: {
+          awayTeamName: { $arrayElemAt: ["$teams.name", 0] },
+          awayTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 0] },
+          awayTeamRun: "$awayTeamTotalScore",
+          awayTeamHit: "$awayTeamHit",
+          awayTeamErrors: "$awayTeamError",
+          won: { $arrayElemAt: ["$standings.won", 0] },
+          lose: { $arrayElemAt: ["$standings.lost", 0] },
+          teamImage: { $arrayElemAt: ["$teamImages.image", 0] },
+        },
+        homeTeam: {
+          homeTeamName: { $arrayElemAt: ["$teams.name", 1] },
+          homeTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 1] },
+          homeTeamRun: "$homeTeamTotalScore",
+          homeTeamHit: "$homeTeamHit",
+          homeTeamErrors: "$homeTeamError",
+          won: { $arrayElemAt: ["$standings.won", 1] },
+          lose: { $arrayElemAt: ["$standings.lost", 1] },
+          teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
+        },
+        scoringSummary: {
+          scoringFirstperiod: "$scoringFirstperiod",
+          scoringSecondperiod: "$scoringSecondperiod",
+          scoringThirdperiod: "$scoringThirdperiod",
+        },
+        penaltySummary: {
+          penaltiesFirstperiod: "$penaltiesFirstperiod",
+          penaltiesSecondperiod: "$penaltiesSecondperiod",
+          penaltiesThirdperiod: "$penaltiesThirdperiod",
+        },
+        goalKeeperReasult: {
+          homeTeam: "$goalkeeperStatsHomeTeam",
+          awayTeam: "$goalkeeperStatsAwayTeam",
+        },
+   
+        teamStatistics: {
+          homeTeam: {
+            faceoffs_won: "$teamStatsHomeTeam.faceoffs_won.total",
+            giveaways: "$teamStatsHomeTeam.giveaways.total",
+            hits: "$teamStatsHomeTeam.hits.total",
+            penalty_minutes: "$teamStatsHomeTeam.penalty_minutes.total",
+            shots: "$teamStatsHomeTeam.shots.total",
+            takeaways: "$teamStatsHomeTeam.takeaways.total",
+          },
+          awayTeam: {
+            faceoffs_won: "$teamStatsAwayTeam.faceoffs_won.total",
+            giveaways: "$teamStatsAwayTeam.giveaways.total",
+            hits: "$teamStatsAwayTeam.hits.total",
+            penalty_minutes: "$teamStatsAwayTeam.penalty_minutes.total",
+            shots: "$teamStatsAwayTeam.shots.total",
+            takeaways: "$teamStatsAwayTeam.takeaways.total",
+          },
+        },
+      }
+    }
+  ])
+  return { getMatch:getMatch[0]}
+}
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -6382,4 +6517,5 @@ export default {
   nhlGetTeam,
   nhlSingleGameBoxScoreUpcomming,
   updateCurruntDateRecordNhl,
+  nhlSingleGameBoxScoreLive
 };

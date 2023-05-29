@@ -155,6 +155,18 @@ const nhlSingleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
 };
+const nhlSingleGameBoxScoreLive = async (req: Request, res: Response) => {
+  try {
+    const nhlSingleGameBoxScoreLive = await axiosGet(
+      `${config.leagueServer}/nhl/single-game-boxscore-live`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScoreLive.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
 export default {
   standings,
   mlbScoreWithDate,
@@ -167,4 +179,5 @@ export default {
   nhlGetTeam,
   nhlScoreWithCurrentDate,
   nhlSingleGameBoxScoreUpcomming,
+  nhlSingleGameBoxScoreLive
 };

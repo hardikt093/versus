@@ -15,6 +15,7 @@ router.get("/mlb/scoreWithCurrentDate", auth, leagueProxyController.scoreWithCur
 router.get("/nhl/standings", leagueProxyController.nhlStandings);
 router.get("/nhl/single-game-boxscore-final", leagueProxyController.nhlSingleGameBoxScore);
 router.get("/nhl/single-game-boxscore-upcomming", leagueProxyController.nhlSingleGameBoxScoreUpcomming);
+router.get("/nhl/single-game-boxscore-live", leagueProxyController.nhlSingleGameBoxScoreLive);
 router.get("/nhl/scoreWithDate", leagueProxyController.nhlScoreWithDate);
 router.get("/nhl/get-team", leagueProxyController.nhlGetTeam);
 router.get("/nhl/scoreWithCurrentDate", leagueProxyController.nhlScoreWithCurrentDate);
