@@ -25,17 +25,35 @@ var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
 var createAndUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron createAndUpdateOdds");
   await goalserveService.createAndUpdateOdds();
-})
+});
 
 var updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron updateCurruntDateRecord");
   await goalserveService.updateCurruntDateRecord();
-})
+});
 
+// NHL
 var updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
   console.info("inside score cron updateCurruntDateRecordNhl");
   await goalserveService.updateCurruntDateRecordNhl();
-})
+});
 
-// export default { getUpcomingMatch, getFinalMatch, getLiveMatch, createAndUpdateOdds };
-export default { createAndUpdateOdds, getLiveMatch, getUpcomingMatch, getFinalMatch, updateCurruntDateRecord, updateCurruntDateRecordNhl };
+var updateStandingNhl = cron.schedule("* * * * *", async () => {
+  console.info("inside score cron updateStandingNhl");
+  await goalserveService.updateStandingNhl();
+});
+
+var updatePlayersNhl = cron.schedule("* * * * *", async () => {
+  console.info("inside score cron updatePlayersNhl");
+  await goalserveService.updatePlayersNhl();
+});
+export default {
+  createAndUpdateOdds,
+  getLiveMatch,
+  getUpcomingMatch,
+  getFinalMatch,
+  updateCurruntDateRecord,
+  updateCurruntDateRecordNhl,
+  updateStandingNhl,
+  updatePlayersNhl,
+};

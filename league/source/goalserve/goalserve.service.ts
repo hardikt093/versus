@@ -4586,24 +4586,100 @@ const nhlSingleGameBoxScore = async (params: any) => {
           homeTeam: "$goalkeeperStatsHomeTeam",
           awayTeam: "$goalkeeperStatsAwayTeam",
         },
-        teamStatistics: {
-          homeTeam: {
-            faceoffs_won: "$teamStatsHomeTeam.faceoffs_won.total",
-            giveaways: "$teamStatsHomeTeam.giveaways.total",
-            hits: "$teamStatsHomeTeam.hits.total",
-            penalty_minutes: "$teamStatsHomeTeam.penalty_minutes.total",
-            shots: "$teamStatsHomeTeam.shots.total",
-            takeaways: "$teamStatsHomeTeam.takeaways.total",
+        teamStatistics: [
+          {
+            title: "Faceoffs won",
+            homeTeam: "$teamStatsHomeTeam.faceoffs_won.total",
+            awayTeam: "$teamStatsAwayTeam.faceoffs_won.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.faceoffs_won.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.faceoffs_won.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
           },
-          awayTeam: {
-            faceoffs_won: "$teamStatsAwayTeam.faceoffs_won.total",
-            giveaways: "$teamStatsAwayTeam.giveaways.total",
-            hits: "$teamStatsAwayTeam.hits.total",
-            penalty_minutes: "$teamStatsAwayTeam.penalty_minutes.total",
-            shots: "$teamStatsAwayTeam.shots.total",
-            takeaways: "$teamStatsAwayTeam.takeaways.total",
+          {
+            title: "Penalties",
+            homeTeam: "$teamStatsHomeTeam.penalty_minutes.total",
+            awayTeam: "$teamStatsAwayTeam.penalty_minutes.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.penalty_minutes.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.penalty_minutes.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
           },
-        },
+          {
+            title: "Hits",
+            homeTeam: "$teamStatsHomeTeam.hits.total",
+            awayTeam: "$teamStatsAwayTeam.hits.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.hits.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.hits.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          {
+            title: "Shots",
+            awayTeam: "$teamStatsAwayTeam.shots.total",
+            homeTeam: "$teamStatsHomeTeam.shots.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.shots.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.shots.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
       },
     },
   ]);
@@ -6167,10 +6243,12 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             $match: {
               $expr: {
                 $and: [
-                  { $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]] },
-                  { $eq: ["$isGoalKeeper", false] }
-                ]
-              }
+                  {
+                    $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+                  },
+                  { $eq: ["$isGoalKeeper", false] },
+                ],
+              },
             },
           },
         ],
@@ -6307,7 +6385,7 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
       },
     },
   ]);
-  return getMatch[0];
+  return { getMatch: getMatch[0] };
 };
 
 const nhlSingleGameBoxScoreLive = async (params: any) => {
@@ -6433,6 +6511,7 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
           scoringSecondperiod: "$scoringSecondperiod",
           scoringThirdperiod: "$scoringThirdperiod",
         },
+       
         penaltySummary: {
           penaltiesFirstperiod: "$penaltiesFirstperiod",
           penaltiesSecondperiod: "$penaltiesSecondperiod",
@@ -6443,29 +6522,254 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
           awayTeam: "$goalkeeperStatsAwayTeam",
         },
 
-        teamStatistics: {
-          homeTeam: {
-            faceoffs_won: "$teamStatsHomeTeam.faceoffs_won.total",
-            giveaways: "$teamStatsHomeTeam.giveaways.total",
-            hits: "$teamStatsHomeTeam.hits.total",
-            penalty_minutes: "$teamStatsHomeTeam.penalty_minutes.total",
-            shots: "$teamStatsHomeTeam.shots.total",
-            takeaways: "$teamStatsHomeTeam.takeaways.total",
+        teamStatistics: [
+          {
+            title: "Faceoffs won",
+            homeTeam: "$teamStatsHomeTeam.faceoffs_won.total",
+            awayTeam: "$teamStatsAwayTeam.faceoffs_won.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.faceoffs_won.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.faceoffs_won.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
           },
-          awayTeam: {
-            faceoffs_won: "$teamStatsAwayTeam.faceoffs_won.total",
-            giveaways: "$teamStatsAwayTeam.giveaways.total",
-            hits: "$teamStatsAwayTeam.hits.total",
-            penalty_minutes: "$teamStatsAwayTeam.penalty_minutes.total",
-            shots: "$teamStatsAwayTeam.shots.total",
-            takeaways: "$teamStatsAwayTeam.takeaways.total",
+          {
+            title: "Penalties",
+            homeTeam: "$teamStatsHomeTeam.penalty_minutes.total",
+            awayTeam: "$teamStatsAwayTeam.penalty_minutes.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.penalty_minutes.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.penalty_minutes.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
           },
-        },
+          {
+            title: "Hits",
+            homeTeam: "$teamStatsHomeTeam.hits.total",
+            awayTeam: "$teamStatsAwayTeam.hits.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.hits.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.hits.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          {
+            title: "Shots",
+            awayTeam: "$teamStatsAwayTeam.shots.total",
+            homeTeam: "$teamStatsHomeTeam.shots.total",
+            total: {
+              $toInt: {
+                $sum: [
+                  {
+                    $convert: {
+                      input: "$teamStatsHomeTeam.shots.total",
+                      to: "int",
+                    },
+                  },
+                  {
+                    $convert: {
+                      input: "$teamStatsAwayTeam.shots.total",
+                      to: "int",
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
       },
     },
   ]);
   return { getMatch: getMatch[0] };
 };
+
+// for cron
+const updateStandingNhl = async () => {
+  let data = {
+    json: true,
+  };
+  const getstanding = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "hockey/nhl-standings"
+  );
+
+  const league: any = await League.findOne({
+    goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+  });
+  getstanding?.data?.standings?.category?.league?.map((item: any) => {
+    item.division.map((div: any) => {
+      div.team.map(async (team: any) => {
+        const teamId: any = await TeamNHL.findOne({
+          goalServeTeamId: team.id,
+        });
+        let data = {
+          leagueId: league?.id,
+          leagueType: item?.name,
+          goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+          division: div?.name,
+          teamId: teamId?.id,
+          goalServeTeamId: teamId?.goalServeTeamId,
+          difference: team.difference,
+          games_played: team.games_played,
+          goals_against: team.goals_against,
+          goals_for: team.goals_for,
+          home_record: team.home_record,
+          last_ten: team.last_ten,
+          ot_losses: team.ot_losses,
+          points: team.points,
+          regular_ot_wins: team.regular_ot_wins,
+          road_record: team.road_record,
+          shootout_losses: team.shootout_losses,
+          shootout_wins: team.shootout_wins,
+          streak: team.streak,
+          pct: +(
+            (Number(team.won) * 100) /
+            (Number(team.won) + Number(team.lost))
+          ).toFixed(3),
+          lost: team.lost,
+          name: team.name,
+          position: team.position,
+          won: team.won,
+        };
+        const standingData = NhlStandings.findOneAndUpdate(
+          { goalServeTeamId: teamId?.goalServeTeamId },
+          { $set: data },
+          { new: true }
+        );
+      });
+    });
+  });
+};
+const updatePlayersNhl = async () => {
+  const team = await TeamNHL.find();
+  let data = {
+    json: true,
+  };
+  await Promise.all(
+    team.map(async (item) => {
+      const roasterApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `hockey/${item.goalServeTeamId}_rosters`
+      );
+      let allRosterPlayers: any = [];
+      roasterApi?.data?.team?.position?.map((roasterApiItem: any) => {
+        if (roasterApiItem?.player?.length) {
+          roasterApiItem.player.map((player: any) => {
+            player.position = roasterApiItem?.name;
+            player.teamId = item.id;
+            player.goalServeTeamId = item.goalServeTeamId;
+            player.goalServePlayerId = player.id;
+            allRosterPlayers.push(player);
+          });
+        } else {
+          let player = roasterApiItem.player;
+          player.position = item?.name;
+          player.teamId = item.id;
+          player.goalServeTeamId = item.goalServeTeamId;
+          player.goalServePlayerId = roasterApiItem.player.id;
+
+          allRosterPlayers.push(player);
+        }
+      });
+      const statsApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `hockey/${item.goalServeTeamId}_stats`
+      );
+      let allStatePlayer: any = [];
+      if (statsApi?.data?.statistic?.goalkeepers?.player?.length) {
+        statsApi?.data?.statistic?.goalkeepers?.player?.map(
+          (statsPlayer: any) => {
+            statsPlayer.teamId = item.id;
+            statsPlayer.isGoalKeeper = true;
+            statsPlayer.goalServePlayerId = statsPlayer.id;
+            allStatePlayer.push(statsPlayer);
+          }
+        );
+      } else {
+        let player: any = statsApi?.data?.statistic?.goalkeepers?.player;
+        player.isGoalKeeper = true;
+        player.goalServePlayerId =
+          statsApi?.data?.statistic?.goalkeepers?.player?.id;
+        player.teamId = item.id;
+        allStatePlayer.push(player);
+      }
+      if (statsApi?.data?.statistic?.team?.length) {
+        if (statsApi?.data?.statistic?.team[1]?.player?.length) {
+          statsApi?.data?.statistic?.team[1]?.player?.map(
+            (statsPlayer: any) => {
+              statsPlayer.teamId = item.id;
+              statsPlayer.goalServePlayerId = statsPlayer.id;
+              allStatePlayer.push(statsPlayer);
+            }
+          );
+        } else {
+          let player: any = statsApi?.data?.statistic?.team[1]?.player;
+          player.goalServePlayerId =
+            statsApi?.data?.statistic?.team[1]?.player?.id;
+          player.teamId = item.id;
+          allStatePlayer.push(player);
+        }
+      }
+      const mergedArr = allStatePlayer.map((obj1: any) => {
+        const obj2 = allRosterPlayers.find(
+          (obj2: any) => obj1?.goalServePlayerId === obj2?.goalServePlayerId
+        );
+        return { ...obj1, ...obj2 };
+      });
+      mergedArr.map(async (item: any) => {
+        await Player.findOneAndUpdate(
+          { goalServePlayerId: item.goalServePlayerId },
+          { $set: item },
+          { new: true }
+        );
+      });
+    })
+  );
+};
+
+
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -6522,4 +6826,6 @@ export default {
   nhlSingleGameBoxScoreUpcomming,
   updateCurruntDateRecordNhl,
   nhlSingleGameBoxScoreLive,
+  updateStandingNhl,
+  updatePlayersNhl,
 };
