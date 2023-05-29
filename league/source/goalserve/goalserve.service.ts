@@ -6048,7 +6048,6 @@ const updateCurruntDateRecordNhl = async () => {
           { $set: data },
           { new: true }
         );
-      
       }
     }
   } catch (error: any) {
@@ -6109,7 +6108,7 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             $project: {
               won: 1,
               lost: 1,
-              goals_against:1
+              goals_against: 1,
             },
           },
         ],
@@ -6167,8 +6166,11 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
           {
             $match: {
               $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
-              },
+                $and: [
+                  { $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]] },
+                  { $eq: ["$isGoalKeeper", false] }
+                ]
+              }
             },
           },
         ],
@@ -6241,10 +6243,11 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
                     goalServePlayerId: "$$player.goalServePlayerId",
                     goalServeTeamId: "$$player.goalServeTeamId",
                     number: "$$player.number",
-                    games_played:"$$player.games_played",
-                    points:"$$player.points",
-                    assists:"$$player.assists",
-                    goals:"$$player.goals",
+                    games_played: "$$player.games_played",
+                    points: "$$player.points",
+                    assists: "$$player.assists",
+                    goals_against_diff: "$$player.assists",
+                    goals: "$$player.goals",
                   },
                 ],
               },
@@ -6270,8 +6273,11 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
                     goalServePlayerId: "$$player.goalServePlayerId",
                     goalServeTeamId: "$$player.goalServeTeamId",
                     number: "$$player.number",
-                    games_played:"$$player.games_played",
-                    points:"$$player.points",
+                    games_played: "$$player.games_played",
+                    points: "$$player.points",
+                    assists: "$$player.assists",
+                    goals_against_diff: "$$player.assists",
+                    goals: "$$player.goals",
                   },
                 ],
               },
@@ -6298,14 +6304,13 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
           lose: { $arrayElemAt: ["$standings.lost", 1] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
         },
-     
       },
     },
   ]);
   return getMatch[0];
 };
 
-const nhlSingleGameBoxScoreLive=async(params:any)=>{
+const nhlSingleGameBoxScoreLive = async (params: any) => {
   const goalServeMatchId = params.goalServeMatchId;
   const getMatch = await NhlMatch.aggregate([
     {
@@ -6338,7 +6343,6 @@ const nhlSingleGameBoxScoreLive=async(params:any)=>{
         ],
         as: "teams",
       },
-
     },
     {
       $lookup: {
@@ -6383,14 +6387,14 @@ const nhlSingleGameBoxScoreLive=async(params:any)=>{
             $project: {
               won: 1,
               lost: 1,
-              goals_against:1
+              goals_against: 1,
             },
           },
         ],
         as: "standings",
       },
     },
-    
+
     {
       $project: {
         id: 1,
@@ -6438,7 +6442,7 @@ const nhlSingleGameBoxScoreLive=async(params:any)=>{
           homeTeam: "$goalkeeperStatsHomeTeam",
           awayTeam: "$goalkeeperStatsAwayTeam",
         },
-   
+
         teamStatistics: {
           homeTeam: {
             faceoffs_won: "$teamStatsHomeTeam.faceoffs_won.total",
@@ -6457,11 +6461,11 @@ const nhlSingleGameBoxScoreLive=async(params:any)=>{
             takeaways: "$teamStatsAwayTeam.takeaways.total",
           },
         },
-      }
-    }
-  ])
-  return { getMatch:getMatch[0]}
-}
+      },
+    },
+  ]);
+  return { getMatch: getMatch[0] };
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -6517,5 +6521,5 @@ export default {
   nhlGetTeam,
   nhlSingleGameBoxScoreUpcomming,
   updateCurruntDateRecordNhl,
-  nhlSingleGameBoxScoreLive
+  nhlSingleGameBoxScoreLive,
 };
