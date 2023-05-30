@@ -1,5 +1,5 @@
 import express from "express";
-import goalserveController from "../goalserve/goalserve.controller";
+import goalserveController from "../goalserve/NBA/goalserve.controller";
 
 const router = express.Router();
 router.post("/team", goalserveController.createTeamNBA);
