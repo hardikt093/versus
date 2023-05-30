@@ -15,5 +15,6 @@ router.get("/get-team", goalserveController.nhlGetTeam);
 router.get("/scoreWithDate", goalserveController.nhlScoreWithDate)
 router.get("/scoreWithCurrentDate", goalserveController.nhlScoreWithCurrentDate)
 router.get("/single-game-boxscore-upcomming", goalserveController.nhlSingleGameBoxScoreUpcomming)
+router.get("/single-game-boxscore-live", goalserveController.nhlSingleGameBoxScoreLive)
 
 export = router;

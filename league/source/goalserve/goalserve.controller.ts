@@ -171,7 +171,7 @@ const createDivison = async (req: Request, res: Response) => {
 };
 const scoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
-    const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate();
+    const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate(req.query);
     createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -382,6 +382,16 @@ const nhlSingleGameBoxScoreUpcomming=async (req: Request, res: Response) => {
   }
 }
 
+const nhlSingleGameBoxScoreLive=async (req: Request, res: Response) => {
+  try {
+    const nhlSingleGameBoxScoreLive = await goalserveService.nhlSingleGameBoxScoreLive(req.query)
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScoreLive);
+
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -424,4 +434,5 @@ export default {
   nhlScoreWithCurrentDate,
   nhlGetTeam,
   nhlSingleGameBoxScoreUpcomming,
+  nhlSingleGameBoxScoreLive
 };
