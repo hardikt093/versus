@@ -30,6 +30,7 @@ import TeamNBA from "../models/documents/NBA/team.model";
 import TeamImageNBA from "../models/documents/NBA/teamImage.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import PlayersNBA from "../models/documents/NBA/player.model";
+import NbaInjury from "../models/documents/NBA/injury.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -7048,6 +7049,63 @@ async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   }));
 }
 
+const addNbaInjuredPlayer = async () => {
+  const team = await TeamNBA.find();
+  await Promise.all(
+    team.map(async (item) => {
+      let data = {
+        json: true,
+      };
+      const injuryApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `bsktbl/${item?.goalServeTeamId}_injuries`
+      );
+
+      const injuryArray1 = injuryApi?.data?.team;
+      if (injuryArray1?.report?.length) {
+        await Promise.all(
+          injuryArray1?.report?.map(async (val: any) => {
+            const player = await PlayersNBA.findOne({
+              goalServePlayerId: val?.player_id,
+            });
+            const data = {
+              date: val?.date,
+              description: val?.description,
+              goalServePlayerId: val?.player_id,
+              playerName: val?.player_name,
+              playerId: player?.id,
+              status: val?.status,
+              goalServeTeamId: injuryApi?.data?.team?.id,
+              teamId: item?.id,
+            };
+            const playerData = new NbaInjury(data);
+            const saveInjuries = await playerData.save();
+          })
+        );
+      } else if (injuryArray1?.report && !injuryArray1?.report?.length) {
+        const val = injuryArray1?.report;
+        const player = await Player.findOne({
+          goalServePlayerId: val?.player_id,
+        });
+
+        const data = {
+          date: val?.date,
+          description: val?.description,
+          goalServePlayerId: val?.player_id,
+          playerName: val?.player_name,
+          status: val?.status,
+          goalServeTeamId: injuryArray1?.id,
+          teamId: item?.id,
+          playerId: player?.id,
+        };
+        const playerData = new NbaInjury(data);
+        const saveInjuries = await playerData.save();
+      }
+    })
+  );
+};
+
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -7109,4 +7167,5 @@ export default {
   addMatchDataFutureForNba,
   updateCurruntDateRecordNba,
   addNbaPlayer,
+  addNbaInjuredPlayer
 };
