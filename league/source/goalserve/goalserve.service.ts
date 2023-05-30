@@ -6890,9 +6890,7 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
         awayTeam: {
           awayTeamName: { $arrayElemAt: ["$teams.name", 0] },
           awayTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 0] },
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
+          homeTeamTotalScore: "$awayTeamTotalScore",
           won: { $arrayElemAt: ["$standings.won", 0] },
           lose: { $arrayElemAt: ["$standings.lost", 0] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 0] },
@@ -6900,9 +6898,7 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
         homeTeam: {
           homeTeamName: { $arrayElemAt: ["$teams.name", 1] },
           homeTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 1] },
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
+          homeTeamTotalScore: "$homeTeamTotalScore",
           won: { $arrayElemAt: ["$standings.won", 1] },
           lose: { $arrayElemAt: ["$standings.lost", 1] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
