@@ -27,6 +27,11 @@ var createAndUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
   await goalserveService.createAndUpdateOdds();
 });
 
+var createAndUpdateOddsNhl = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron createAndUpdateOddsNhl");
+  await goalserveService.createAndUpdateOddsNhl();
+});
+
 var updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron updateCurruntDateRecord");
   await goalserveService.updateCurruntDateRecord();
@@ -80,5 +85,6 @@ export default {
   updateInjuryRecored,
   updateStandingRecord,
   updateTeamStats,
-  updateInjuredPlayerNHL
+  updateInjuredPlayerNHL,
+  createAndUpdateOddsNhl
 };

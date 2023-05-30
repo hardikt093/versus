@@ -26,6 +26,7 @@ import NhlMatch from "../models/documents/NHL/match.model";
 import PlayersNHL from "../models/documents/NHL/player.model";
 import NhlInjury from "../models/documents/NHL/injury.model";
 import NhlStandings from "../models/documents/NHL/standing,model";
+import NhlOdds from "../models/documents/NHL/odds.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -5353,33 +5354,36 @@ const addMatchDataFutureForNhl = async () => {
 };
 
 const nhlScoreWithDate = async (params: any, type: string) => {
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+
   const getUpcomingMatch = await NhlMatch.aggregate([
     {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateutc: {
-          $toDate: {
-            $arrayElemAt: ["$spliteTime", 0],
-          },
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
     },
     {
       $match: {
-        dateInString: params.date1,
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
         status: "Not Started",
       },
     },
@@ -5474,6 +5478,14 @@ const nhlScoreWithDate = async (params: any, type: string) => {
       },
     },
     {
+      $lookup: {
+        from: "nhlodds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
+    },
+    {
       $sort: {
         formattedDate: 1,
         time: 1,
@@ -5494,6 +5506,15 @@ const nhlScoreWithDate = async (params: any, type: string) => {
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
           goalServeAwayTeamId: "$goalServeAwayTeamId",
+          moneyline: {
+            $arrayElemAt: ["$odds.awayTeamMoneyline", 0],
+          },
+          spread: {
+            $arrayElemAt: ["$odds.awayTeamSpread", 0],
+          },
+          total: {
+            $arrayElemAt: ["$odds.awayTeamTotal", 0],
+          },
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -5503,6 +5524,15 @@ const nhlScoreWithDate = async (params: any, type: string) => {
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
           goalServeHomeTeamId: "$goalServeHomeTeamId",
+          moneyline: {
+            $arrayElemAt: ["$odds.homeTeamMoneyline", 0],
+          },
+          spread: {
+            $arrayElemAt: ["$odds.homeTeamSpread", 0],
+          },
+          total: {
+            $arrayElemAt: ["$odds.homeTeamTotal", 0],
+          },
         },
       },
     },
@@ -5510,31 +5540,32 @@ const nhlScoreWithDate = async (params: any, type: string) => {
 
   const getFinalMatch = await NhlMatch.aggregate([
     {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateutc: {
-          $toDate: {
-            $arrayElemAt: ["$spliteTime", 0],
-          },
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
     },
     {
       $match: {
-        dateInString: params.date1,
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
         $or: [
           {
             status: {
@@ -5749,6 +5780,8 @@ const nhlScoreWithDate = async (params: any, type: string) => {
   }
 };
 const getLiveDataOfNhl = async (params: any) => {
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+
   const getLiveDataOfNhl = await NhlMatch.aggregate([
     {
       $match: {
@@ -5787,33 +5820,32 @@ const getLiveDataOfNhl = async (params: any) => {
       },
     },
     {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
         },
-      },
+      }
     },
     {
-      $addFields: {
-        dateutc: {
-          $toDate: {
-            $arrayElemAt: ["$spliteTime", 0],
-          },
-        },
-      },
+      '$match': {
+        'dateInString': params.date1
+      }
     },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
-    },
-    // {
-    //   '$match': {
-    //     'dateInString': params.date1
-    //   }
-    // },
     {
       $lookup: {
         from: "nhlteams",
@@ -7345,6 +7377,251 @@ const updateInjuredPlayerNHL = async () => {
     })
   );
 };
+
+
+const createAndUpdateOddsNhl = async () => {
+  let day = moment().format("D");
+  let month = moment().format("MM");
+  let year = moment().format("YYYY");
+  let date = `${day}.${month}.${year}`;
+  try {
+    let data = { json: true, date1: "29.05.2023", showodds: "1", bm: "451," };
+    const getScore = await goalserveApi(
+      "http://www.goalserve.com/getfeed",
+      data,
+      "hockey/nhl-shedule"
+    );
+    console.log("matchData", getScore?.data)
+    var matchData = getScore?.data?.shedules?.matches?.match;
+
+    if (matchData?.length > 0) {
+      const takeData = await matchData?.map(async (item: any) => {
+        if (item.status) {
+          const league: any = await League.findOne({
+            goalServeLeagueId: getScore?.data?.shedules?.id,
+          });
+          const findMatchOdds = await NhlOdds.find({ goalServeMatchId: item?.id });
+          if (findMatchOdds?.length == 0) {
+            // getMoneyLine
+            const getMoneyLine: any = await getOdds(
+              "Home/Away",
+              item?.odds?.type
+            );
+            console.log("getMoneyLine", getMoneyLine)
+            const awayTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "2"
+              )
+              : {};
+            const homeTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "1"
+              )
+              : {};
+            // getSpread
+            const getSpread = await getOdds("Run Line", item?.odds?.type);
+            const getAwayTeamRunLine = await getRunLine(
+              item?.awayteam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const getHomeTeamRunLine = await getRunLine(
+              item?.hometeam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const awayTeamSpread = getAwayTeamRunLine
+              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "";
+
+            const homeTeamSpread = getHomeTeamRunLine
+              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "";
+            const total = await getTotal("Over/Under", item?.odds?.type);
+            const totalValues = await getTotalValues(total);
+            let data = {
+              goalServerLeagueId: league.goalServeLeagueId,
+              goalServeMatchId: item?.id,
+              goalServeHomeTeamId: item?.hometeam?.id,
+              goalServeAwayTeamId: item?.awayteam?.id,
+              homeTeamSpread: homeTeamSpread,
+              homeTeamTotal: totalValues,
+              awayTeamSpread: awayTeamSpread,
+              awayTeamTotal: totalValues,
+              awayTeamMoneyline: awayTeamMoneyline,
+              homeTeamMoneyline: homeTeamMoneyline,
+            };
+            const oddsData = new NhlOdds(data);
+            const savedOddsData = await oddsData.save();
+          } else {
+            // getMoneyLine
+            const getMoneyLine: any = await getOdds(
+              "Home/Away",
+              item?.odds?.type
+            );
+            const awayTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "2"
+              )
+              : {};
+            const homeTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "1"
+              )
+              : {};
+            // getSpread
+            const getSpread = await getOdds("Run Line", item?.odds?.type);
+            const getAwayTeamRunLine = await getRunLine(
+              item?.awayteam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const getHomeTeamRunLine = await getRunLine(
+              item?.hometeam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const awayTeamSpread = getAwayTeamRunLine
+              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "null";
+
+            const homeTeamSpread = getHomeTeamRunLine
+              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "null";
+            const total = await getTotal("Over/Under", item?.odds?.type);
+            const totalValues = await getTotalValues(total);
+            let data = {
+              goalServerLeagueId: league.goalServeLeagueId,
+              goalServeMatchId: item?.id,
+              goalServeHomeTeamId: item?.hometeam?.id,
+              goalServeAwayTeamId: item?.awayteam?.id,
+              homeTeamSpread: homeTeamSpread,
+              homeTeamTotal: totalValues,
+              awayTeamSpread: awayTeamSpread,
+              awayTeamTotal: totalValues,
+              awayTeamMoneyline: awayTeamMoneyline,
+              homeTeamMoneyline: homeTeamMoneyline,
+            };
+            const updateOdds = await NhlOdds.findOneAndUpdate(
+              { goalServerMatchId: item?.id },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      });
+    }
+    else {
+      if (matchData) {
+        const league: any = await League.findOne({
+          goalServeLeagueId: getScore?.data?.shedules?.id,
+        });
+        const findMatchOdds = await NhlOdds.find({ goalServeMatchId: matchData?.id });
+        if (findMatchOdds?.length == 0) {
+          // getMoneyLine
+          const getMoneyLine: any = await getOdds(
+            "Home/Away",
+            matchData?.odds?.type
+          );
+          console.log("getMoneyLine", getMoneyLine)
+          const awayTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+              (item: any) => item?.name === "2"
+            )
+            : {};
+          const homeTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+              (item: any) => item?.name === "1"
+            )
+            : {};
+          // getSpread
+          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
+          const getAwayTeamRunLine = await getRunLine(
+            matchData?.awayteam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const getHomeTeamRunLine = await getRunLine(
+            matchData?.hometeam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const awayTeamSpread = getAwayTeamRunLine
+            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
+
+          const homeTeamSpread = getHomeTeamRunLine
+            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
+          const total = await getTotal("Over/Under", matchData?.odds?.type);
+          const totalValues = await getTotalValues(total);
+          let data = {
+            goalServerLeagueId: league.goalServeLeagueId,
+            goalServeMatchId: matchData?.id,
+            goalServeHomeTeamId: matchData?.hometeam?.id,
+            goalServeAwayTeamId: matchData?.awayteam?.id,
+            homeTeamSpread: homeTeamSpread,
+            homeTeamTotal: totalValues,
+            awayTeamSpread: awayTeamSpread,
+            awayTeamTotal: totalValues,
+            awayTeamMoneyline: awayTeamMoneyline,
+            homeTeamMoneyline: homeTeamMoneyline,
+          };
+          const oddsData = new NhlOdds(data);
+          const savedOddsData = await oddsData.save();
+        } else {
+          // getMoneyLine
+          const getMoneyLine: any = await getOdds(
+            "Home/Away",
+            matchData?.odds?.type
+          );
+          const awayTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+              (item: any) => item?.name === "2"
+            )
+            : {};
+          const homeTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+              (item: any) => item?.name === "1"
+            )
+            : {};
+          // getSpread
+          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
+          const getAwayTeamRunLine = await getRunLine(
+            matchData?.awayteam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const getHomeTeamRunLine = await getRunLine(
+            matchData?.hometeam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const awayTeamSpread = getAwayTeamRunLine
+            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "null";
+
+          const homeTeamSpread = getHomeTeamRunLine
+            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "null";
+          const total = await getTotal("Over/Under", matchData?.odds?.type);
+          const totalValues = await getTotalValues(total);
+          let data = {
+            goalServerLeagueId: league.goalServeLeagueId,
+            goalServeMatchId: matchData?.id,
+            goalServeHomeTeamId: matchData?.hometeam?.id,
+            goalServeAwayTeamId: matchData?.awayteam?.id,
+            homeTeamSpread: homeTeamSpread,
+            homeTeamTotal: totalValues,
+            awayTeamSpread: awayTeamSpread,
+            awayTeamTotal: totalValues,
+            awayTeamMoneyline: awayTeamMoneyline,
+            homeTeamMoneyline: homeTeamMoneyline,
+          };
+          const updateOdds = await NhlOdds.findOneAndUpdate(
+            { goalServerMatchId: matchData?.id },
+            { $set: data },
+            { new: true }
+          );
+        }
+      }
+    }
+  } catch (error: any) {
+    console.log("error", error);
+  }
+}
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -7409,4 +7686,5 @@ export default {
   updateStandingNhl,
   updatePlayersNhl,
   updateInjuredPlayerNHL,
+  createAndUpdateOddsNhl
 };
