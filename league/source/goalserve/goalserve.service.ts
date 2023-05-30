@@ -7167,6 +7167,116 @@ const addNbaStandings = async () => {
   });
 };
 
+
+const getNbaStandingData = async () => {
+  const getStandingData = await NbaStandings.aggregate([
+    {
+      $lookup: {
+        from: "nbateamimages",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "images",
+      },
+    },
+    {
+      $unwind: {
+        path: "$images",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: { leagueType: "$leagueType", division: "$division" },
+        teams: {
+          $push: {
+            id: { $toString: "$goalServeTeamId" },
+            average_points_agains: "$average_points_agains",
+            average_points_for: "$average_points_for",
+            difference: "$difference",
+            gb: "$gb",
+            home_record: "$home_record",
+            last_10: "$last_10",
+            lost: "$lost",
+            name: "$name",
+            percentage: "$percentage",
+            position: "$position",
+            road_record: "$road_record",
+            streak: "$streak",
+            won: "$won",
+          },
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: null,
+
+        conference: {
+          $push: {
+            name: {
+              $let: {
+                vars: {
+                  words: { $split: ["$_id.leagueType", " "] },
+                },
+                in: {
+                  $cond: [
+                    { $eq: [{ $size: "$$words" }, 1] },
+                    { $toUpper: { $arrayElemAt: ["$$words", 0] } },
+                    { $toUpper: { $arrayElemAt: ["$$words", 0] } },
+                  ],
+                },
+              },
+            },
+            teams: "$teams",
+          },
+        },
+        division: {
+          $push: {
+            name: {
+              $let: {
+                vars: {
+                  words: { $split: ["$_id.division", " "] },
+                },
+                in: {
+                  $cond: [
+                    { $eq: [{ $size: "$$words" }, 1] },
+                    { $toUpper: { $arrayElemAt: ["$$words", 0] } },
+                    { $toUpper: { $arrayElemAt: ["$$words", 0] } },
+                  ],
+                },
+              },
+            },
+            teams: "$teams",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        conference: 1,
+        division: 1,
+      },
+    },
+  ]);
+
+  const mergedObject: any = getStandingData[0].conference.reduce(
+    (result: any, current: any) => {
+      if (result[current.name]) {
+        result[current.name].teams.push(...current.teams);
+      } else {
+        result[current.name] = current;
+      }
+      return result;
+    },
+    {}
+  );
+  getStandingData[0].conference = Object.values(mergedObject);
+
+  return getStandingData[0];
+};
+
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -7229,5 +7339,6 @@ export default {
   updateCurruntDateRecordNba,
   addNbaPlayer,
   addNbaInjuredPlayer,
-  addNbaStandings
+  addNbaStandings,
+  getNbaStandingData
 };
