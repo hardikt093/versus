@@ -8,4 +8,6 @@ router.post("/addMatchData", goalserveController.addNbaMatch);
 router.post("/addMatchDataFutureForNba", goalserveController.addMatchDataFutureForNba);
 router.post("/addPlayer", goalserveController.addNbaPlayer);
 router.post("/addNbaInjuredPlayer", goalserveController.addNbaInjuredPlayer);
+router.post("/addStandings", goalserveController.addNbaStandings);
+
 export = router;

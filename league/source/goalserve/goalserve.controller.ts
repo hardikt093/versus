@@ -438,6 +438,15 @@ const addNbaInjuredPlayer = async (req: Request, res: Response) => {
   }
 }
 
+const addNbaStandings = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.addNbaStandings();
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -485,5 +494,6 @@ export default {
   addNbaMatch,
   addMatchDataFutureForNba,
   addNbaPlayer,
-  addNbaInjuredPlayer
+  addNbaInjuredPlayer,
+  addNbaStandings
 };

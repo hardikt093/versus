@@ -31,6 +31,7 @@ import TeamImageNBA from "../models/documents/NBA/teamImage.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import PlayersNBA from "../models/documents/NBA/player.model";
 import NbaInjury from "../models/documents/NBA/injury.model";
+import NbaStandings from "../models/documents/NBA/standings.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -6972,21 +6973,26 @@ const addNbaPlayer = async () => {
           for (let l = 0; l < shootingPlayers.length; l++) {
             const shootingPlayer = shootingPlayers[l];
             const playerData = {
-              isShootingPlayer : true,
+              isShootingPlayer: true,
               shooting: {
                 fg_attempts_per_game: shootingPlayer.fg_attempts_per_game,
                 fg_made_per_game: shootingPlayer.fg_made_per_game,
                 fg_pct: shootingPlayer.fg_pct,
                 field_goal_pct_avg: shootingPlayer.field_goal_pct_avg,
-                free_throws_attempts_per_game: shootingPlayer.free_throws_attempts_per_game,
-                free_throws_made_per_game: shootingPlayer.free_throws_made_per_game,
+                free_throws_attempts_per_game:
+                  shootingPlayer.free_throws_attempts_per_game,
+                free_throws_made_per_game:
+                  shootingPlayer.free_throws_made_per_game,
                 free_throws_pct: shootingPlayer.free_throws_pct,
                 points_per_shot: shootingPlayer.points_per_shot,
                 rank: shootingPlayer.rank,
-                three_point_attempts_per_game: shootingPlayer.three_point_attempts_per_game,
-                three_point_made_per_game: shootingPlayer.three_point_made_per_game,
+                three_point_attempts_per_game:
+                  shootingPlayer.three_point_attempts_per_game,
+                three_point_made_per_game:
+                  shootingPlayer.three_point_made_per_game,
                 three_point_pct: shootingPlayer.three_point_pct,
-                two_point_attemps_per_game: shootingPlayer.two_point_attemps_per_game,
+                two_point_attemps_per_game:
+                  shootingPlayer.two_point_attemps_per_game,
                 two_point_made_per_game: shootingPlayer.two_point_made_per_game,
                 two_point_pct: shootingPlayer.two_point_pct,
               },
@@ -6997,23 +7003,29 @@ const addNbaPlayer = async () => {
             allShootingPlayer.push(playerData);
           }
         } else {
-          const shootingPlayer: any = statsApi?.data?.statistic?.category[1].player;
+          const shootingPlayer: any =
+            statsApi?.data?.statistic?.category[1].player;
           const playerData = {
-            isShootingPlayer : true,
+            isShootingPlayer: true,
             shooting: {
               fg_attempts_per_game: shootingPlayer.fg_attempts_per_game,
               fg_made_per_game: shootingPlayer.fg_made_per_game,
               fg_pct: shootingPlayer.fg_pct,
               field_goal_pct_avg: shootingPlayer.field_goal_pct_avg,
-              free_throws_attempts_per_game: shootingPlayer.free_throws_attempts_per_game,
-              free_throws_made_per_game: shootingPlayer.free_throws_made_per_game,
+              free_throws_attempts_per_game:
+                shootingPlayer.free_throws_attempts_per_game,
+              free_throws_made_per_game:
+                shootingPlayer.free_throws_made_per_game,
               free_throws_pct: shootingPlayer.free_throws_pct,
               points_per_shot: shootingPlayer.points_per_shot,
               rank: shootingPlayer.rank,
-              three_point_attempts_per_game: shootingPlayer.three_point_attempts_per_game,
-              three_point_made_per_game: shootingPlayer.three_point_made_per_game,
+              three_point_attempts_per_game:
+                shootingPlayer.three_point_attempts_per_game,
+              three_point_made_per_game:
+                shootingPlayer.three_point_made_per_game,
               three_point_pct: shootingPlayer.three_point_pct,
-              two_point_attemps_per_game: shootingPlayer.two_point_attemps_per_game,
+              two_point_attemps_per_game:
+                shootingPlayer.two_point_attemps_per_game,
               two_point_made_per_game: shootingPlayer.two_point_made_per_game,
               two_point_pct: shootingPlayer.two_point_pct,
             },
@@ -7024,11 +7036,13 @@ const addNbaPlayer = async () => {
           allShootingPlayer.push(playerData);
         }
       }
-      const mergedArray: any = await mergeByPlayerId(allGamePlayer,allShootingPlayer);
+      const mergedArray: any = await mergeByPlayerId(
+        allGamePlayer,
+        allShootingPlayer
+      );
       await PlayersNBA.insertMany(mergedArray);
     }
   }
-  
 };
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
@@ -7106,6 +7120,53 @@ const addNbaInjuredPlayer = async () => {
   );
 };
 
+const addNbaStandings = async () => {
+  let data = {
+    json: true,
+  };
+  const getstanding = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "bsktbl/nba-standings"
+  );
+
+  const league: any = await League.findOne({
+    goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+  });
+  getstanding?.data?.standings?.category?.league?.map((item: any) => {
+    item.division.map((div: any) => {
+      div.team.map(async (team: any) => {
+        const teamId: any = await TeamNBA.findOne({
+          goalServeTeamId: team.id,
+        });
+        let data = {
+          leagueId: league?.id,
+          leagueType: item?.name,
+          goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+          division: div?.name,
+          teamId: teamId?.id,
+          goalServeTeamId: teamId?.goalServeTeamId,
+          average_points_agains: team.average_points_agains,
+          average_points_for: team.average_points_for,
+          difference: team.difference,
+          gb: team.gb,
+          home_record: team.home_record,
+          last_10: team.last_10,
+          lost: team.lost,
+          name: team.name,
+          percentage: team.percentage,
+          position: team.position,
+          road_record: team.road_record,
+          streak: team.streak,
+          won: team.won,
+        };
+        const standingData = new NbaStandings(data);
+        await standingData.save();
+      });
+    });
+  });
+};
+
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -7167,5 +7228,6 @@ export default {
   addMatchDataFutureForNba,
   updateCurruntDateRecordNba,
   addNbaPlayer,
-  addNbaInjuredPlayer
+  addNbaInjuredPlayer,
+  addNbaStandings
 };
