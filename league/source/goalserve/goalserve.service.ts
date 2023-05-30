@@ -7391,7 +7391,6 @@ const createAndUpdateOddsNhl = async () => {
       data,
       "hockey/nhl-shedule"
     );
-    console.log("matchData", getScore?.data)
     var matchData = getScore?.data?.shedules?.matches?.match;
 
     if (matchData?.length > 0) {
