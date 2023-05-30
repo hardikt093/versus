@@ -31,23 +31,7 @@ var updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron updateCurruntDateRecord");
   await goalserveService.updateCurruntDateRecord();
 });
-
-// NHL
-var updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
-  console.info("inside score cron updateCurruntDateRecordNhl");
-  await goalserveService.updateCurruntDateRecordNhl();
-});
-
-var updateStandingNhl = cron.schedule("* * * * *", async () => {
-  console.info("inside score cron updateStandingNhl");
-  await goalserveService.updateStandingNhl();
-});
-
-var updatePlayersNhl = cron.schedule("* * * * *", async () => {
-  console.info("inside score cron updatePlayersNhl");
-  await goalserveService.updatePlayersNhl();
-});
-var updateInjuryRecored = cron.schedule("* * * * *", async () => {
+var updateInjuryRecored = cron.schedule("*/10 * * * * *", async () => {
   console.info("inside score cron updateInjuryRecored");
   await goalserveService.updateInjuryRecored();
 });
@@ -63,7 +47,27 @@ var updatePlayerStats = cron.schedule("* * * * *", async () => {
   console.info("inside score cron updatePlayerStats");
   await goalserveService.updatePlayerStats();
 });
-// export default { getUpcomingMatch, getFinalMatch, getLiveMatch, createAndUpdateOdds };
+// NHL
+var updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron updateCurruntDateRecordNhl");
+  await goalserveService.updateCurruntDateRecordNhl();
+});
+
+var updateStandingNhl = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron updateStandingNhl");
+  await goalserveService.updateStandingNhl();
+});
+
+var updatePlayersNhl = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron updatePlayersNhl");
+  await goalserveService.updatePlayersNhl();
+});
+
+var updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
+  console.info("inside score cron updateInjuredPlayerNHL");
+  await goalserveService.updateInjuredPlayerNHL();
+});
+
 export default {
   createAndUpdateOdds,
   getLiveMatch,
@@ -76,4 +80,5 @@ export default {
   updateInjuryRecored,
   updateStandingRecord,
   updateTeamStats,
+  updateInjuredPlayerNHL
 };
