@@ -701,38 +701,38 @@ const mlbScoreWithDate = async (params: any) => {
   let year = moment(params.date1).format("YYYY");
   let date = `${day}.${month}.${year}`;
 
-  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
 
   const getFinalMatch = await Match.aggregate([
-
     {
-      '$addFields': {
-        'spliteTime': {
-          '$split': [
-            '$dateTimeUtc', ' '
-          ]
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateutc': {
-          '$toDate': '$dateTimeUtc'
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateInString': {
-          '$toString': '$dateutc'
-        }
-      }
-    }, {
-      '$match': {
-        'dateInString': {
-          '$gte': params.date1,
-          '$lte': date2
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
         },
-        'status': 'Final'
-      }
+      },
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
+    },
+    {
+      $match: {
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
+        },
+        status: "Final",
+      },
     },
     {
       $lookup: {
@@ -898,31 +898,31 @@ const mlbScoreWithDate = async (params: any) => {
 
   const getUpcomingMatch = await Match.aggregate([
     {
-      '$addFields': {
-        'spliteTime': {
-          '$split': [
-            '$dateTimeUtc', ' '
-          ]
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateutc': {
-          '$toDate': '$dateTimeUtc'
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateInString': {
-          '$toString': '$dateutc'
-        }
-      }
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
     },
     {
       $match: {
-        'dateInString': {
-          '$gte': params.date1,
-          '$lte': date2
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
         },
         status: "Not Started",
       },
@@ -1520,36 +1520,37 @@ const getFinalMatchDataFromDB = async (params: any) => {
   let month = moment().format("MM");
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
-  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
   return await Match.aggregate([
     {
-      '$addFields': {
-        'spliteTime': {
-          '$split': [
-            '$dateTimeUtc', ' '
-          ]
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateutc': {
-          '$toDate': '$dateTimeUtc'
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateInString': {
-          '$toString': '$dateutc'
-        }
-      }
-    }, {
-      '$match': {
-        'dateInString': {
-          '$gte': params.date1,
-          '$lte': date2
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
         },
-        'status': 'Final'
-      }
+      },
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
+    },
+    {
+      $match: {
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
+        },
+        status: "Final",
+      },
     },
     {
       $lookup: {
@@ -1712,34 +1713,34 @@ const getUpcomingDataFromMongodb = async (params: any) => {
   let month = moment().format("MM");
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
-  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
   return await Match.aggregate([
     {
-      '$addFields': {
-        'spliteTime': {
-          '$split': [
-            '$dateTimeUtc', ' '
-          ]
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateutc': {
-          '$toDate': '$dateTimeUtc'
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateInString': {
-          '$toString': '$dateutc'
-        }
-      }
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
     },
     {
       $match: {
-        'dateInString': {
-          '$gte': params.date1,
-          '$lte': date2
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
         },
         status: "Not Started",
       },
@@ -3883,7 +3884,7 @@ const teamStats = async () => {
 };
 
 const updateInjuryRecored = async () => {
-  await Injury.deleteMany({})
+  await Injury.deleteMany({});
   const team = await Team.find({ isDeleted: false });
   await Promise.all(
     team.map(async (item) => {
@@ -3987,11 +3988,10 @@ const updateStandingRecord = async () => {
         const option = { upsert: true, returnOriginal: false };
 
         const result = await Standings.findOneAndUpdate(
-            { goalServeTeamId: data.goalServeTeamId },
-            { $set: data },
-            { new: true }
-          );
-        
+          { goalServeTeamId: data.goalServeTeamId },
+          { $set: data },
+          { new: true }
+        );
       });
     });
   });
@@ -4174,14 +4174,10 @@ const updatePlayerStats = async () => {
           { $set: data },
           { new: true }
         );
-      
       });
     })
   );
 };
-
-
-
 
 // NHL
 const createTeamNHL = async (body: any) => {
@@ -4973,16 +4969,19 @@ const nhlSingleGameBoxScore = async (params: any) => {
             },
           },
         },
-        scoringSummary: {
-          scoringFirstperiod: "$scoringFirstperiod",
-          scoringSecondperiod: "$scoringSecondperiod",
-          scoringThirdperiod: "$scoringThirdperiod",
-        },
-        penaltySummary: {
-          penaltiesFirstperiod: "$penaltiesFirstperiod",
-          penaltiesSecondperiod: "$penaltiesSecondperiod",
-          penaltiesThirdperiod: "$penaltiesThirdperiod",
-        },
+        scoringSummary: [
+          { title: "Period 1", child: "$scoringFirstperiod" },
+          { title: "Period 2", child: "$scoringSecondperiod" },
+          { title: "Period 3", child: "$scoringThirdperiod" },
+          { title: "Overtime", child: "$scoringOvertime" },
+        ],
+
+        penaltySummary: [
+          { title: "Period 1", child: "$penaltiesFirstperiod" },
+          { title: "Period 2", child: "$penaltiesSecondperiod" },
+          { title: "Period 3", child: "$penaltiesThirdperiod" },
+          { title: "Overtime", child: "$penaltiesOvertime" },
+        ],
         goalKeeperReasult: {
           homeTeam: "$goalkeeperStatsHomeTeam",
           awayTeam: "$goalkeeperStatsAwayTeam",
@@ -6108,6 +6107,62 @@ const nhlGetTeam = async (params: any) => {
           {
             $limit: 5,
           },
+          {
+            $lookup: {
+              from: "nhlteams",
+              let: {
+                awayTeamId: "$goalServeAwayTeamId",
+                homeTeamId: "$goalServeHomeTeamId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $in: [
+                        "$goalServeTeamId",
+                        ["$$awayTeamId", "$$homeTeamId"],
+                      ],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    name: 1,
+                    abbreviation: 1,
+                    goalServeTeamId: 1,
+                  },
+                },
+              ],
+              as: "teams",
+            },
+          },
+          {
+            $lookup: {
+              from: "nhlteamimages",
+              let: {
+                awayTeamId: "$goalServeAwayTeamId",
+                homeTeamId: "$goalServeHomeTeamId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $in: [
+                        "$goalServeTeamId",
+                        ["$$awayTeamId", "$$homeTeamId"],
+                      ],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    image: 1,
+                  },
+                },
+              ],
+              as: "teamImages",
+            },
+          },
         ],
         as: "schedule",
       },
@@ -6127,6 +6182,8 @@ const nhlGetTeam = async (params: any) => {
               goals: { $toInt: "$goals" },
               assists: { $toInt: "$assists" },
               points: { $toInt: "$points" },
+              penalty_minutes: { $toInt: "$penalty_minutes" },
+              plus_minus: { $toInt: "$plus_minus" },
             },
           },
           {
@@ -6134,6 +6191,11 @@ const nhlGetTeam = async (params: any) => {
               maxGoalScorer: [{ $sort: { goals: -1 } }, { $limit: 1 }],
               maxAssistProvider: [{ $sort: { assists: -1 } }, { $limit: 1 }],
               maxPointsEarned: [{ $sort: { points: -1 } }, { $limit: 1 }],
+              maxPenalty_minutes: [
+                { $sort: { penalty_minutes: -1 } },
+                { $limit: 1 },
+              ],
+              maxPlus_minus: [{ $sort: { plus_minus: -1 } }, { $limit: 1 }],
             },
           },
           {
@@ -6141,6 +6203,8 @@ const nhlGetTeam = async (params: any) => {
               maxGoalScorer: { $arrayElemAt: ["$maxGoalScorer", 0] },
               maxAssistProvider: { $arrayElemAt: ["$maxAssistProvider", 0] },
               maxPointsEarned: { $arrayElemAt: ["$maxPointsEarned", 0] },
+              maxPenalty_minutes: { $arrayElemAt: ["$maxPenalty_minutes", 0] },
+              maxPlus_minus: { $arrayElemAt: ["$maxPlus_minus", 0] },
             },
           },
           {
@@ -6156,6 +6220,14 @@ const nhlGetTeam = async (params: any) => {
               maxPointsEarned: {
                 points: "$maxPointsEarned.points",
                 name: "$maxPointsEarned.name",
+              },
+              maxPenalty_minutes: {
+                penalty_minutes: "$maxPenalty_minutes.penalty_minutes",
+                name: "$maxPenalty_minutes.name",
+              },
+              maxPlus_minus: {
+                plus_minus: "$maxPlus_minus.plus_minus",
+                name: "$maxPlus_minus.name",
               },
             },
           },
@@ -6228,6 +6300,22 @@ const nhlGetTeam = async (params: any) => {
             },
           },
         },
+        playerSkatingStats: {
+          $map: {
+            input: "$teamPlayers",
+            as: "item",
+            in: {
+              games_played: "$$item.games_played",
+              goals: "$$item.goals",
+              assists: "$$item.assists",
+              points: "$$item.points",
+              plus_minus: "$$item.plus_minus",
+              name: "$$item.name",
+              goalServePlayerId: "$$item.goalServePlayerId",
+            },
+          },
+        },
+
         teamDetails: {
           divisionStandings: "$divisionStandings",
           teamLeaders: "$teamLeaders",
@@ -6262,8 +6350,20 @@ const nhlGetTeam = async (params: any) => {
                     else: false,
                   },
                 },
+                awayTeamFullName: { $arrayElemAt: ["$$item.teams.name", 0] },
+                homeTeamFullName: { $arrayElemAt: ["$$item.teams.name", 1] },
+                awayTeamAbbreviation: {
+                  $arrayElemAt: ["$$item.teams.abbreviation", 0],
+                },
+                homeTeamAbbreviation: {
+                  $arrayElemAt: ["$$item.teams.abbreviation", 1],
+                },
+                homeTeamImage: { $arrayElemAt: ["$$item.teamImages.image", 1] },
+                awayTeamImage: { $arrayElemAt: ["$$item.teamImages.image", 0] },
                 goalServeMatchId: "$$item.goalServeMatchId",
                 date: "$$item.date",
+                awayTeamTotalScore: "$$item.awayTeamTotalScore",
+                homeTeamTotalScore: "$$item.homeTeamTotalScore",
                 goalServeHomeTeamId: "$$item.goalServeHomeTeamId",
                 goalServeAwayTeamId: "$$item.goalServeAwayTeamId",
               },
@@ -6726,6 +6826,7 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
                     points: "$$player.points",
                     assists: "$$player.assists",
                     goals_against_diff: "$$player.assists",
+                    plus_minus: "$$player.plus_minus",
                     goals: "$$player.goals",
                   },
                 ],
@@ -6873,12 +6974,32 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
         as: "standings",
       },
     },
-
+    {
+      $addFields: {
+        statusWithPeriod: {
+          $regexMatch: {
+            input: "$status",
+            regex: new RegExp("[0-9]"),
+          },
+        },
+        statusWithCondition: {
+          $cond: {
+            if: {
+              $eq: ["$statusWithPeriod", true],
+            },
+            then: {
+              $concat: ["Period ", "", "$status"],
+            },
+            else: "Overtime",
+          },
+        },
+      },
+    },
     {
       $project: {
         id: 1,
         attendance: 1,
-        status: 1,
+        status: "$statusWithCondition",
         venueName: 1,
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
@@ -6903,17 +7024,19 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
           lose: { $arrayElemAt: ["$standings.lost", 1] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
         },
-        scoringSummary: {
-          scoringFirstperiod: "$scoringFirstperiod",
-          scoringSecondperiod: "$scoringSecondperiod",
-          scoringThirdperiod: "$scoringThirdperiod",
-        },
-       
-        penaltySummary: {
-          penaltiesFirstperiod: "$penaltiesFirstperiod",
-          penaltiesSecondperiod: "$penaltiesSecondperiod",
-          penaltiesThirdperiod: "$penaltiesThirdperiod",
-        },
+        scoringSummary: [
+          { title: "Period 1", child: "$scoringFirstperiod" },
+          { title: "Period 2", child: "$scoringSecondperiod" },
+          { title: "Period 3", child: "$scoringThirdperiod" },
+          { title: "Overtime", child: "$scoringOvertime" },
+        ],
+
+        penaltySummary: [
+          { title: "Period 1", child: "$penaltiesFirstperiod" },
+          { title: "Period 2", child: "$penaltiesSecondperiod" },
+          { title: "Period 3", child: "$penaltiesThirdperiod" },
+          { title: "Overtime", child: "$penaltiesOvertime" },
+        ],
         goalKeeperReasult: {
           homeTeam: "$goalkeeperStatsHomeTeam",
           awayTeam: "$goalkeeperStatsAwayTeam",
@@ -7165,8 +7288,8 @@ const updatePlayersNhl = async () => {
     })
   );
 };
-const updateInjuredPlayerNHL=async ()=>{
-  await NhlInjury.deleteMany({})
+const updateInjuredPlayerNHL = async () => {
+  await NhlInjury.deleteMany({});
   const team = await TeamNHL.find();
   await Promise.all(
     team.map(async (item) => {
@@ -7221,7 +7344,7 @@ const updateInjuredPlayerNHL=async ()=>{
       }
     })
   );
-}
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -7285,5 +7408,5 @@ export default {
   nhlSingleGameBoxScoreLive,
   updateStandingNhl,
   updatePlayersNhl,
-  updateInjuredPlayerNHL
+  updateInjuredPlayerNHL,
 };
