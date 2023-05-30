@@ -701,12 +701,38 @@ const mlbScoreWithDate = async (params: any) => {
   let year = moment(params.date1).format("YYYY");
   let date = `${day}.${month}.${year}`;
 
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+
   const getFinalMatch = await Match.aggregate([
+
     {
-      $match: {
-        formattedDate: date,
-        status: "Final",
-      },
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    }, {
+      '$match': {
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
+        'status': 'Final'
+      }
     },
     {
       $lookup: {
@@ -872,8 +898,32 @@ const mlbScoreWithDate = async (params: any) => {
 
   const getUpcomingMatch = await Match.aggregate([
     {
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    },
+    {
       $match: {
-        formattedDate: date,
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
         status: "Not Started",
       },
     },
@@ -1465,18 +1515,41 @@ const createDivison = async (body: any) => {
   return dataToSave;
 };
 
-const getFinalMatchDataFromDB = async () => {
+const getFinalMatchDataFromDB = async (params: any) => {
   let day = moment().format("D");
   let month = moment().format("MM");
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
-
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
   return await Match.aggregate([
     {
-      $match: {
-        formattedDate: date,
-        status: "Final",
-      },
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    }, {
+      '$match': {
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
+        'status': 'Final'
+      }
     },
     {
       $lookup: {
@@ -1634,15 +1707,40 @@ const getFinalMatchDataFromDB = async () => {
     },
   ]);
 };
-const getUpcomingDataFromMongodb = async () => {
+const getUpcomingDataFromMongodb = async (params: any) => {
   let day = moment().format("D");
   let month = moment().format("MM");
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
+  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
   return await Match.aggregate([
     {
+      '$addFields': {
+        'spliteTime': {
+          '$split': [
+            '$dateTimeUtc', ' '
+          ]
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateutc': {
+          '$toDate': '$dateTimeUtc'
+        }
+      }
+    }, {
+      '$addFields': {
+        'dateInString': {
+          '$toString': '$dateutc'
+        }
+      }
+    },
+    {
       $match: {
-        formattedDate: date,
+        'dateInString': {
+          '$gte': params.date1,
+          '$lte': date2
+        },
         status: "Not Started",
       },
     },
@@ -1971,11 +2069,13 @@ const getLiveDataFromMongodb = async () => {
     },
   ]);
 };
-const scoreWithCurrentDate = async () => {
+const scoreWithCurrentDate = async (params: any) => {
   return {
     getLiveMatch: await getLiveDataFromMongodb(),
-    getUpcomingMatch: await getUpcomingDataFromMongodb(),
-    getFinalMatch: await getFinalMatchDataFromDB(),
+    // getUpcomingMatch: await getUpcomingMatch(),
+    getUpcomingMatch: await getUpcomingDataFromMongodb(params),
+    // getFinalMatch: await getFinalMatch(),
+    getFinalMatch: await getFinalMatchDataFromDB(params),
   };
 };
 
@@ -3782,301 +3882,303 @@ const teamStats = async () => {
   );
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+const updateInjuryRecored = async () => {
+  await Injury.deleteMany({})
+  const team = await Team.find({ isDeleted: false });
+  await Promise.all(
+    team.map(async (item) => {
+      let data = {
+        json: true,
+      };
+      const injuryApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `baseball/${item?.goalServeTeamId}_injuries`
+      );
+
+      const injuryArray1 = injuryApi?.data?.team;
+      if (injuryArray1?.report?.length) {
+        await Promise.all(
+          injuryArray1?.report?.map(async (val: any) => {
+            const player = await Player.findOne({
+              goalServePlayerId: val?.player_id,
+            });
+            const data = {
+              date: val?.date,
+              description: val?.description,
+              goalServePlayerId: val?.player_id,
+              playerName: val?.player_name,
+              playerId: player?.id,
+              status: val?.status,
+              goalServeTeamId: injuryApi?.data?.team?.id,
+              teamId: item?.id,
+            };
+            const playerData = new Injury(data);
+            const saveInjuries = await playerData.save();
+          })
+        );
+      } else {
+        const val = injuryArray1?.report;
+        const player = await Player.findOne({
+          goalServePlayerId: val?.player_id,
+        });
+
+        const data = {
+          date: val?.date,
+          description: val?.description,
+          goalServePlayerId: val?.player_id,
+          playerName: val?.player_name,
+          status: val?.status,
+          goalServeTeamId: injuryArray1?.id,
+          teamId: item?.id,
+          playerId: player?.id,
+        };
+
+        // const option = { upsert: true, returnOriginal: false };
+        const playerData = new Injury(data);
+        const saveInjuries = await playerData.save();
+      }
+    })
+  );
+};
+
+const updateStandingRecord = async () => {
+  let data = {
+    json: true,
+  };
+  const getstanding = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "baseball/mlb_standings"
+  );
+
+  const league: any = await League.findOne({
+    goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+  });
+  getstanding?.data?.standings?.category?.league?.map((item: any) => {
+    item.division.map((div: any) => {
+      div.team.map(async (team: any) => {
+        const teamId: any = await Team.findOne({
+          goalServeTeamId: team.id,
+        });
+        let data = {
+          leagueId: league?.id,
+          leagueType: item?.name,
+          goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+          division: div?.name,
+          away_record: team?.away_record,
+          current_streak: team?.away_record,
+          games_back: team?.away_record,
+          home_record: team.home_record,
+          teamId: teamId?.id,
+          goalServeTeamId: teamId?.goalServeTeamId,
+          pct: +(
+            (Number(team.won) * 100) /
+            (Number(team.won) + Number(team.lost))
+          ).toFixed(3),
+          lost: team.lost,
+          name: team.name,
+          position: team.position,
+          runs_allowed: team.runs_allowed,
+          runs_diff: team.runs_diff,
+          runs_scored: team.runs_scored,
+          won: team.won,
+        };
+        const option = { upsert: true, returnOriginal: false };
+
+        const result = await Standings.findOneAndUpdate(
+            { goalServeTeamId: data.goalServeTeamId },
+            { $set: data },
+            { new: true }
+          );
+        
+      });
+    });
+  });
+};
+const updateTeamStats = async () => {
+  let data = {
+    json: true,
+  };
+  const teamStatsNl = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "baseball/nl_team_batting"
+  );
+
+  await Promise.all(
+    teamStatsNl.data.statistic.category.team.map(async (item: any) => {
+      const team = await Team.findOne({ name: item.name });
+      let data = item;
+      data.category = teamStatsNl.data.statistic.category.name;
+      data.teamId = team?.id;
+      data.goalServeTeamId = team?.goalServeTeamId;
+      const result = await StatsTeam.findOneAndUpdate(
+        { goalServeTeamId: data.goalServeTeamId },
+        { $set: data },
+        { new: true }
+      );
+    })
+  );
+
+  const teamStatsAL = await goalserveApi(
+    "https://www.goalserve.com/getfeed",
+    data,
+    "baseball/al_team_batting"
+  );
+
+  await Promise.all(
+    teamStatsAL.data.statistic.category.team.map(async (item: any) => {
+      const team = await Team.findOne({ name: item.name });
+      let data = item;
+      data.category = teamStatsAL.data.statistic.category.name;
+      data.teamId = team?.id;
+      data.goalServeTeamId = team?.goalServeTeamId;
+      const result = await StatsTeam.findOneAndUpdate(
+        { goalServeTeamId: data.goalServeTeamId },
+        { $set: data },
+        { new: true }
+      );
+    })
+  );
+};
+const updatePlayerStats = async () => {
+  const team = await Team.find({ isDeleted: false });
+
+  let data = {
+    json: true,
+  };
+
+  await Promise.all(
+    team.map(async (item) => {
+      const roasterApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `baseball/${item.goalServeTeamId}_rosters`
+      );
+
+      const statsApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `baseball/${item.goalServeTeamId}_stats`
+      );
+
+      let allRosterPlayers: any = [];
+      let allStatPlayers: any = [];
+      let finalArr: any = [];
+
+      roasterApi?.data?.team.position.map((item: any) => {
+        if (item.player.length) {
+          item.player.map((player: any) => {
+            allRosterPlayers.push(player);
+          });
+        }
+      });
+
+      statsApi?.data?.statistic.category.forEach((cat: any) => {
+        if (cat.team && cat.team.player.length) {
+          cat.team.player.forEach((player: any) => {
+            if (cat.name == "Batting") {
+              player.type = "batting";
+              allStatPlayers.push(player);
+            }
+            if (cat.name == "Pitching") {
+              player.type = "pitching";
+              allStatPlayers.push(player);
+            }
+          });
+        } else if (cat.position.length && cat.name == "Fielding") {
+          cat.position.forEach((item: any) => {
+            if (item.player.length) {
+              item.player.forEach((player: any) => {
+                player.type = "fielding";
+                allStatPlayers.push(player);
+              });
+            } else {
+              item.player.type = "fielding";
+              allStatPlayers.push(item.player);
+            }
+          });
+        }
+      });
+      let uniqueValues = [
+        ...new Map(
+          allStatPlayers.map((item: any) => [item["id"], item])
+        ).values(),
+      ];
+      uniqueValues.forEach((item: any) => {
+        let rosterData = allRosterPlayers.filter(
+          (player: any) => player.id == item.id
+        );
+        if (rosterData.length) {
+          let statData = allStatPlayers.filter(
+            (player: any) => player.id == rosterData[0].id
+          );
+          if (statData.length) {
+            statData.map((info: any) => {
+              if (info.type == "batting") {
+                rosterData[0].batting = info;
+              }
+              if (info.type == "pitching") {
+                rosterData[0].pitching = info;
+              }
+              if (info.type == "fielding") {
+                rosterData[0].fielding = info;
+              }
+            });
+            finalArr.push(rosterData[0]);
+          }
+        } else {
+          let statData = allStatPlayers.filter(
+            (player: any) => player.id == item.id
+          );
+          let data: any = {};
+          statData.map((info: any) => {
+            data = {
+              name: statData[0].name,
+              id: statData[0].id,
+            };
+            if (info.type == "batting") {
+              data.batting = info;
+            }
+            if (info.type == "pitching") {
+              data.pitching = info;
+            }
+            if (info.type == "fielding") {
+              data.fielding = info;
+            }
+          });
+          finalArr.push(data);
+        }
+      });
+
+      finalArr.map(async (eVal: any) => {
+        let data = {
+          goalServeTeamId: item.goalServeTeamId,
+          age: eVal.age,
+          bats: eVal.bats,
+          height: eVal.height,
+          goalServePlayerId: eVal.id,
+          name: eVal.name,
+          number: eVal.number,
+          position: eVal.position,
+          salary: eVal.salary,
+          throws: eVal.throws,
+          weight: eVal.weight,
+          pitching: eVal?.pitching,
+          batting: eVal?.batting,
+          fielding: eVal?.fielding,
+        };
+        const result = await Player.findOneAndUpdate(
+          { goalServePlayerId: eVal.id },
+          { $set: data },
+          { new: true }
+        );
+      
+      });
+    })
+  );
+};
 
 
 
@@ -7068,7 +7170,6 @@ const updatePlayersNhl = async () => {
   );
 };
 
-
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -7109,6 +7210,11 @@ export default {
   updateCurruntDateRecord,
   statsPlayerPitching,
   teamStats,
+  updateInjuryRecored,
+  updateStandingRecord,
+  updateTeamStats,
+  updatePlayerStats,
+
   createTeamNHL,
   addNHLTeamImage,
   addNhlMatch,

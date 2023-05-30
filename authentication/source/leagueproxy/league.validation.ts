@@ -6,6 +6,12 @@ const scoreWithDate = {
   }),
 };
 
+const scoreWithCurrentDate = {
+  query: Joi.object().keys({
+    date1: Joi.string().required(),
+  }),
+};
+
 const singleGameBoxscore = {
   query: Joi.object().keys({
     goalServeMatchId: Joi.string().required(),
@@ -16,4 +22,4 @@ const singleGameBoxscoreUpcomming = {
     goalServeMatchId: Joi.string().required(),
   }),
 };
-export default { scoreWithDate, singleGameBoxscore,singleGameBoxscoreUpcomming };
+export default { scoreWithDate, singleGameBoxscore,singleGameBoxscoreUpcomming, scoreWithCurrentDate };
