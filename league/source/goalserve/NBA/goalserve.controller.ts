@@ -76,6 +76,24 @@ const getNbaStandings = async (req: Request, res: Response) => {
   }
 }
 
+const nbaScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.nbaScoreWithDate(req.query, "")
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
+const nbaScoreWithCurrentDate = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.nbaScoreWithCurrentDate(req.query)
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
 export default {
   createTeamNBA,
   createTeamImageNBA,
@@ -84,5 +102,7 @@ export default {
   addNbaPlayer,
   addNbaInjuredPlayer,
   addNbaStandings,
-  getNbaStandings
+  getNbaStandings,
+  nbaScoreWithDate,
+  nbaScoreWithCurrentDate
 };

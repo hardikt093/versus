@@ -1,6 +1,7 @@
 import cron from "node-cron";
 
 import goalserveService from "../../goalserve/goalserve.service";
+import goalserveNbaService from "../../goalserve/NBA/goalserve.service";
 
 var getUpcomingMatch = cron.schedule("0 0 */1 * * *", async () => {
   console.info("inside score cron getUpcomingMatch");
@@ -68,6 +69,13 @@ var updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
   await goalserveService.updateInjuredPlayerNHL();
 });
 
+// NBA
+
+var updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron updateCurruntDateRecordNba");
+  await goalserveNbaService.updateCurruntDateRecordNba();
+});
+
 export default {
   createAndUpdateOdds,
   getLiveMatch,
@@ -80,5 +88,6 @@ export default {
   updateInjuryRecored,
   updateStandingRecord,
   updateTeamStats,
-  updateInjuredPlayerNHL
+  updateInjuredPlayerNHL,
+  updateCurruntDateRecordNba
 };
