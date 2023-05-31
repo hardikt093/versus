@@ -1074,8 +1074,9 @@ const getNbaStandingData = async () => {
   return getStandingData[0];
 };
 
-
 const nbaScoreWithDate = async (params: any, type: string) => {
+  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
+
   const getUpcomingMatch = await NbaMatch.aggregate([
     {
       $addFields: {
@@ -1087,9 +1088,7 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     {
       $addFields: {
         dateutc: {
-          $toDate: {
-            $arrayElemAt: ["$spliteTime", 0],
-          },
+          $toDate: "$dateTimeUtc",
         },
       },
     },
@@ -1102,7 +1101,10 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     },
     {
       $match: {
-        dateInString: params.date1,
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
+        },
         status: "Not Started",
       },
     },
@@ -1197,6 +1199,14 @@ const nbaScoreWithDate = async (params: any, type: string) => {
       },
     },
     {
+      $lookup: {
+        from: "nbaodds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
+    },
+    {
       $sort: {
         formattedDate: 1,
         time: 1,
@@ -1217,6 +1227,15 @@ const nbaScoreWithDate = async (params: any, type: string) => {
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
           goalServeAwayTeamId: "$goalServeAwayTeamId",
+          moneyline: {
+            $arrayElemAt: ["$odds.awayTeamMoneyline", 0],
+          },
+          spread: {
+            $arrayElemAt: ["$odds.awayTeamSpread", 0],
+          },
+          total: {
+            $arrayElemAt: ["$odds.awayTeamTotal", 0],
+          },
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -1226,6 +1245,15 @@ const nbaScoreWithDate = async (params: any, type: string) => {
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
           goalServeHomeTeamId: "$goalServeHomeTeamId",
+          moneyline: {
+            $arrayElemAt: ["$odds.homeTeamMoneyline", 0],
+          },
+          spread: {
+            $arrayElemAt: ["$odds.homeTeamSpread", 0],
+          },
+          total: {
+            $arrayElemAt: ["$odds.homeTeamTotal", 0],
+          },
         },
       },
     },
@@ -1242,9 +1270,7 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     {
       $addFields: {
         dateutc: {
-          $toDate: {
-            $arrayElemAt: ["$spliteTime", 0],
-          },
+          $toDate: "$dateTimeUtc",
         },
       },
     },
@@ -1257,7 +1283,10 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     },
     {
       $match: {
-        dateInString: params.date1,
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
+        },
         $or: [
           {
             status: {
@@ -1472,6 +1501,8 @@ const nbaScoreWithDate = async (params: any, type: string) => {
   }
 };
 const getLiveDataOfNba = async (params: any) => {
+  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
+
   const getLiveDataOfNba = await NbaMatch.aggregate([
     {
       $match: {
@@ -1519,9 +1550,7 @@ const getLiveDataOfNba = async (params: any) => {
     {
       $addFields: {
         dateutc: {
-          $toDate: {
-            $arrayElemAt: ["$spliteTime", 0],
-          },
+          $toDate: "$dateTimeUtc",
         },
       },
     },
@@ -1533,9 +1562,12 @@ const getLiveDataOfNba = async (params: any) => {
       },
     },
     {
-      '$match': {
-        'dateInString': params.date1
-      }
+      $match: {
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
+        },
+      },
     },
     {
       $lookup: {
