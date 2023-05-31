@@ -2,6 +2,7 @@ import { axiosGet } from "../../services/axios.service";
 import { goalserveApi } from "../../services/goalserve.service";
 import League from "../../models/documents/league.model";
 import moment from "moment";
+import { isArray } from "lodash";
 import Player from "../../models/documents/player.model";
 import TeamNBA from "../../models/documents/NBA/team.model";
 import TeamImageNBA from "../../models/documents/NBA/teamImage.model";
@@ -10,6 +11,7 @@ import PlayersNBA from "../../models/documents/NBA/player.model";
 import NbaInjury from "../../models/documents/NBA/injury.model";
 import NbaStandings from "../../models/documents/NBA/standings.model";
 import socket from "../../services/socket.service";
+import NbaOdds from "../../models/documents/NBA/odds.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -17,6 +19,53 @@ function camelize(str: string) {
     })
     .replace(/\s+/g, "");
 }
+const getOdds = (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray?.length; i++) {
+    if (myArray[i].value == nameKey) {
+      return myArray[i];
+    }
+  }
+};
+const getTotal = (nameKey: any, myArray: any) => {
+  if (myArray?.length > 0) {
+    for (let i = 0; i < myArray?.length; i++) {
+      if (myArray[i].value == nameKey) {
+        return myArray[i];
+      }
+    }
+  }
+};
+
+const getTotalValues = async (total: any) => {
+  if (total?.bookmaker) {
+    if (isArray(total?.bookmaker?.total)) {
+      return total?.bookmaker?.total[0]?.name
+        ? total?.bookmaker?.total[0]?.name
+        : "";
+    } else {
+      return total?.bookmaker?.total?.name ? total?.bookmaker?.total?.name : "";
+    }
+  } else {
+    return "";
+  }
+};
+
+const getRunLine = async (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray?.length; i++) {
+    if (myArray[i].name.split(" ").slice(0, -1).join(" ") == nameKey) {
+      return myArray[i];
+    }
+  }
+};
+
+const search = async (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray?.length; i++) {
+    if (myArray[i].id === nameKey) {
+      return myArray[i];
+    }
+  }
+  return;
+};
 const createTeamNBA = async (body: any) => {
   let dataJson = {
     json: true,
@@ -147,12 +196,12 @@ const addNbaMatch = async () => {
                 ?.bench?.player
                 ? matchArray[j]?.player_stats?.hometeam?.bench?.player
                 : [],
-              playerStatsStartersAwayTeam: matchArray[j]?.player_stats
-                ?.awayteam?.starters?.player
+              playerStatsStartersAwayTeam: matchArray[j]?.player_stats?.awayteam
+                ?.starters?.player
                 ? matchArray[j]?.player_stats?.awayteam?.starters?.player
                 : [],
-              playerStatsStartersHomeTeam: matchArray[j]?.player_stats
-                ?.hometeam?.starters?.player
+              playerStatsStartersHomeTeam: matchArray[j]?.player_stats?.hometeam
+                ?.starters?.player
                 ? matchArray[j]?.player_stats?.hometeam?.starters?.player
                 : [],
             };
@@ -285,177 +334,179 @@ const addMatchDataFutureForNba = async () => {
     );
     for (let i = 0; i < daylist?.length; i++) {
       let dataToStore: any = [];
+      let getMatch: any = {};
       try {
-        const getMatch = await axiosGet(
+        getMatch = await axiosGet(
           `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/bsktbl/nba-shedule`,
           { json: true, date1: daylist[i] }
         );
-        if (getMatch) {
-          const matchArray = await getMatch?.data?.shedules?.matches?.match;
-          const league: any = await League.findOne({
-            goalServeLeagueId: getMatch?.data?.shedules?.id,
-          });
-          console.log(matchArray);
-
-          if (matchArray?.length > 0 && matchArray) {
-            // array logic
-            for (let j = 0; j < matchArray?.length; j++) {
-              const data: any = {
-                leagueId: league.id,
-                goalServeLeagueId: league.goalServeLeagueId,
-                date: matchArray[j].date,
-                formattedDate: matchArray[j].formatted_date,
-                timezone: matchArray[j].timezone,
-                attendance: matchArray[j].attendance,
-                goalServeMatchId: matchArray[j].id,
-                dateTimeUtc: matchArray[j].datetime_utc,
-                status: matchArray[j].status,
-                time: matchArray[j].time,
-                goalServeVenueId: matchArray[j].venue_id,
-                venueName: matchArray[j].venue_name,
-                homeTeamTotalScore: matchArray[j].hometeam.totalscore,
-                awayTeamTotalScore: matchArray[j].awayteam.totalscore,
-                // new entries
-                timer: matchArray[j]?.timer ? matchArray[j]?.timer : "",
-                awayTeamOt: matchArray[j].awayteam.ot,
-                awayTeamQ1: matchArray[j].awayteam.q1,
-                awayTeamQ2: matchArray[j].awayteam.q2,
-                awayTeamQ3: matchArray[j].awayteam.q3,
-                awayTeamQ4: matchArray[j].awayteam.q4,
-                awayTeamPosession: matchArray[j].awayteam.posession,
-
-                homeTeamOt: matchArray[j].hometeam.ot,
-                homeTeamQ1: matchArray[j].hometeam.q1,
-                homeTeamQ2: matchArray[j].hometeam.q2,
-                homeTeamQ3: matchArray[j].hometeam.q3,
-                homeTeamQ4: matchArray[j].hometeam.q4,
-                homeTeamPosession: matchArray[j].hometeam.posession,
-
-                teamStatsHomeTeam: matchArray[j]?.team_stats?.hometeam
-                  ? matchArray[j]?.team_stats?.hometeam
-                  : {},
-                teamStatsAwayTeam: matchArray[j]?.team_stats?.awayteam
-                  ? matchArray[j]?.team_stats?.awayteam
-                  : {},
-
-                playerStatsBenchAwayTeam: matchArray[j]?.player_stats?.awayteam
-                  ?.bench?.player
-                  ? matchArray[j]?.player_stats?.awayteam?.bench?.player
-                  : [],
-                playerStatsBenchHomeTeam: matchArray[j]?.player_stats?.hometeam
-                  ?.bench?.player
-                  ? matchArray[j]?.player_stats?.hometeam?.bench?.player
-                  : [],
-                playerStatsStartersAwayTeam: matchArray[j]?.player_stats
-                  ?.awayteam?.starters?.player
-                  ? matchArray[j]?.player_stats?.awayteam?.starters?.player
-                  : [],
-                playerStatsStartersHomeTeam: matchArray[j]?.player_stats
-                  ?.hometeam?.starters?.player
-                  ? matchArray[j]?.player_stats?.hometeam?.starters?.player
-                  : [],
-              };
-
-              const teamIdAway: any = await TeamNBA.findOne({
-                goalServeTeamId: matchArray[j].awayteam.id,
-              });
-
-              data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
-                ? teamIdAway.goalServeTeamId
-                : 1;
-
-              const teamIdHome: any = await TeamNBA.findOne({
-                goalServeTeamId: matchArray[j].hometeam.id,
-              });
-
-              data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
-                ? teamIdHome.goalServeTeamId
-                : 1;
-              dataToStore.push(data);
-            }
-          } else {
-            if (matchArray) {
-              const data: any = {
-                leagueId: league._id,
-                goalServeLeagueId: league.goalServeLeagueId,
-                date: matchArray.date,
-                formattedDate: matchArray.formatted_date,
-                dateTimeUtc: matchArray.datetime_utc,
-                timezone: matchArray.timezone,
-                attendance: matchArray.attendance,
-                goalServematchArrayId: matchArray.id,
-                status: matchArray.status,
-                time: matchArray.time,
-                timer: matchArray?.timer ? matchArray?.timer : "",
-                goalServeVenueId: matchArray.venue_id,
-                venueName: matchArray.venue_name,
-                homeTeamTotalScore: matchArray.hometeam.totalscore,
-                awayTeamTotalScore: matchArray.awayteam.totalscore,
-                // new entries
-                awayTeamOt: matchArray.awayteam.ot,
-                awayTeamQ1: matchArray.awayteam.q1,
-                awayTeamQ2: matchArray.awayteam.q2,
-                awayTeamQ3: matchArray.awayteam.q3,
-                awayTeamQ4: matchArray.awayteam.q4,
-                awayTeamPosession: matchArray.awayteam.posession,
-
-                homeTeamOt: matchArray.hometeam.ot,
-                homeTeamQ1: matchArray.hometeam.q1,
-                homeTeamQ2: matchArray.hometeam.q2,
-                homeTeamQ3: matchArray.hometeam.q3,
-                homeTeamQ4: matchArray.hometeam.q4,
-                homeTeamPosession: matchArray.hometeam.posession,
-
-                teamStatsHomeTeam: matchArray?.team_stats?.hometeam
-                  ? matchArray?.team_stats?.hometeam
-                  : {},
-                teamStatsAwayTeam: matchArray?.team_stats?.awayteam
-                  ? matchArray?.team_stats?.awayteam
-                  : {},
-
-                playerStatsBenchAwayTeam: matchArray?.player_stats?.awayteam
-                  ?.bench?.player
-                  ? matchArray?.player_stats?.awayteam?.bench?.player
-                  : [],
-                playerStatsBenchHomeTeam: matchArray?.player_stats?.hometeam
-                  ?.bench?.player
-                  ? matchArray?.player_stats?.hometeam?.bench?.player
-                  : [],
-                playerStatsStartersAwayTeam: matchArray?.player_stats?.awayteam
-                  ?.starters?.player
-                  ? matchArray?.player_stats?.awayteam?.starters?.player
-                  : [],
-                playerStatsStartersHomeTeam: matchArray?.player_stats?.hometeam
-                  ?.starters?.player
-                  ? matchArray?.player_stats?.hometeam?.starters?.player
-                  : [],
-              };
-
-              const teamIdAway: any = await TeamNBA.findOne({
-                goalServeTeamId: matchArray.awayteam.id,
-              });
-              if (teamIdAway) {
-                data.awayTeamId = teamIdAway.id;
-                data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
-                  ? teamIdAway.goalServeTeamId
-                  : 0;
-              }
-              const teamIdHome: any = await TeamNBA.findOne({
-                goalServeTeamId: matchArray.hometeam.id,
-              });
-              if (teamIdHome) {
-                data.homeTeamId = teamIdHome.id;
-                data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
-                  ? teamIdHome.goalServeTeamId
-                  : 0;
-              }
-              dataToStore.push(data);
-            }
-          }
-        }
       } catch (error) {
         continue;
       }
+      if (getMatch) {
+        const matchArray = await getMatch?.data?.shedules?.matches?.match;
+        const league: any = await League.findOne({
+          goalServeLeagueId: getMatch?.data?.shedules?.id,
+        });
+        console.log(matchArray);
+
+        if (matchArray?.length > 0 && matchArray) {
+          // array logic
+          for (let j = 0; j < matchArray?.length; j++) {
+            const data: any = {
+              leagueId: league.id,
+              goalServeLeagueId: league.goalServeLeagueId,
+              date: matchArray[j].date,
+              formattedDate: matchArray[j].formatted_date,
+              timezone: matchArray[j].timezone,
+              attendance: matchArray[j].attendance,
+              goalServeMatchId: matchArray[j].id,
+              dateTimeUtc: matchArray[j].datetime_utc,
+              status: matchArray[j].status,
+              time: matchArray[j].time,
+              goalServeVenueId: matchArray[j].venue_id,
+              venueName: matchArray[j].venue_name,
+              homeTeamTotalScore: matchArray[j].hometeam.totalscore,
+              awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+              // new entries
+              timer: matchArray[j]?.timer ? matchArray[j]?.timer : "",
+              awayTeamOt: matchArray[j].awayteam.ot,
+              awayTeamQ1: matchArray[j].awayteam.q1,
+              awayTeamQ2: matchArray[j].awayteam.q2,
+              awayTeamQ3: matchArray[j].awayteam.q3,
+              awayTeamQ4: matchArray[j].awayteam.q4,
+              awayTeamPosession: matchArray[j].awayteam.posession,
+
+              homeTeamOt: matchArray[j].hometeam.ot,
+              homeTeamQ1: matchArray[j].hometeam.q1,
+              homeTeamQ2: matchArray[j].hometeam.q2,
+              homeTeamQ3: matchArray[j].hometeam.q3,
+              homeTeamQ4: matchArray[j].hometeam.q4,
+              homeTeamPosession: matchArray[j].hometeam.posession,
+
+              teamStatsHomeTeam: matchArray[j]?.team_stats?.hometeam
+                ? matchArray[j]?.team_stats?.hometeam
+                : {},
+              teamStatsAwayTeam: matchArray[j]?.team_stats?.awayteam
+                ? matchArray[j]?.team_stats?.awayteam
+                : {},
+
+              playerStatsBenchAwayTeam: matchArray[j]?.player_stats?.awayteam
+                ?.bench?.player
+                ? matchArray[j]?.player_stats?.awayteam?.bench?.player
+                : [],
+              playerStatsBenchHomeTeam: matchArray[j]?.player_stats?.hometeam
+                ?.bench?.player
+                ? matchArray[j]?.player_stats?.hometeam?.bench?.player
+                : [],
+              playerStatsStartersAwayTeam: matchArray[j]?.player_stats?.awayteam
+                ?.starters?.player
+                ? matchArray[j]?.player_stats?.awayteam?.starters?.player
+                : [],
+              playerStatsStartersHomeTeam: matchArray[j]?.player_stats?.hometeam
+                ?.starters?.player
+                ? matchArray[j]?.player_stats?.hometeam?.starters?.player
+                : [],
+            };
+
+            const teamIdAway: any = await TeamNBA.findOne({
+              goalServeTeamId: matchArray[j].awayteam.id,
+            });
+
+            data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
+              ? teamIdAway.goalServeTeamId
+              : 1;
+
+            const teamIdHome: any = await TeamNBA.findOne({
+              goalServeTeamId: matchArray[j].hometeam.id,
+            });
+
+            data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
+              ? teamIdHome.goalServeTeamId
+              : 1;
+            dataToStore.push(data);
+          }
+        } else {
+          if (matchArray) {
+            const data: any = {
+              leagueId: league._id,
+              goalServeLeagueId: league.goalServeLeagueId,
+              date: matchArray.date,
+              formattedDate: matchArray.formatted_date,
+              dateTimeUtc: matchArray.datetime_utc,
+              timezone: matchArray.timezone,
+              attendance: matchArray.attendance,
+              goalServematchArrayId: matchArray.id,
+              status: matchArray.status,
+              time: matchArray.time,
+              timer: matchArray?.timer ? matchArray?.timer : "",
+              goalServeVenueId: matchArray.venue_id,
+              venueName: matchArray.venue_name,
+              homeTeamTotalScore: matchArray.hometeam.totalscore,
+              awayTeamTotalScore: matchArray.awayteam.totalscore,
+              // new entries
+              awayTeamOt: matchArray.awayteam.ot,
+              awayTeamQ1: matchArray.awayteam.q1,
+              awayTeamQ2: matchArray.awayteam.q2,
+              awayTeamQ3: matchArray.awayteam.q3,
+              awayTeamQ4: matchArray.awayteam.q4,
+              awayTeamPosession: matchArray.awayteam.posession,
+
+              homeTeamOt: matchArray.hometeam.ot,
+              homeTeamQ1: matchArray.hometeam.q1,
+              homeTeamQ2: matchArray.hometeam.q2,
+              homeTeamQ3: matchArray.hometeam.q3,
+              homeTeamQ4: matchArray.hometeam.q4,
+              homeTeamPosession: matchArray.hometeam.posession,
+
+              teamStatsHomeTeam: matchArray?.team_stats?.hometeam
+                ? matchArray?.team_stats?.hometeam
+                : {},
+              teamStatsAwayTeam: matchArray?.team_stats?.awayteam
+                ? matchArray?.team_stats?.awayteam
+                : {},
+
+              playerStatsBenchAwayTeam: matchArray?.player_stats?.awayteam
+                ?.bench?.player
+                ? matchArray?.player_stats?.awayteam?.bench?.player
+                : [],
+              playerStatsBenchHomeTeam: matchArray?.player_stats?.hometeam
+                ?.bench?.player
+                ? matchArray?.player_stats?.hometeam?.bench?.player
+                : [],
+              playerStatsStartersAwayTeam: matchArray?.player_stats?.awayteam
+                ?.starters?.player
+                ? matchArray?.player_stats?.awayteam?.starters?.player
+                : [],
+              playerStatsStartersHomeTeam: matchArray?.player_stats?.hometeam
+                ?.starters?.player
+                ? matchArray?.player_stats?.hometeam?.starters?.player
+                : [],
+            };
+
+            const teamIdAway: any = await TeamNBA.findOne({
+              goalServeTeamId: matchArray.awayteam.id,
+            });
+            if (teamIdAway) {
+              data.awayTeamId = teamIdAway.id;
+              data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
+                ? teamIdAway.goalServeTeamId
+                : 0;
+            }
+            const teamIdHome: any = await TeamNBA.findOne({
+              goalServeTeamId: matchArray.hometeam.id,
+            });
+            if (teamIdHome) {
+              data.homeTeamId = teamIdHome.id;
+              data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
+                ? teamIdHome.goalServeTeamId
+                : 0;
+            }
+            dataToStore.push(data);
+          }
+        }
+      }
+
       if (dataToStore && dataToStore.length > 0) {
         await NbaMatch.insertMany(dataToStore);
       }
@@ -1762,6 +1813,252 @@ const nbaScoreWithCurrentDate = async (params: any) => {
   };
 };
 
+const createAndUpdateOddsNba = async () => {
+  let day = moment().format("D");
+  let month = moment().format("MM");
+  let year = moment().format("YYYY");
+  let date = `${day}.${month}.${year}`;
+  try {
+    let data = { json: true, date1: date, showodds: "1", bm: "451," };
+    const getScore = await goalserveApi(
+      "http://www.goalserve.com/getfeed",
+      data,
+      "bsktbl/nba-shedule"
+    );
+    var matchData = getScore?.data?.shedules?.matches?.match;
+
+    if (matchData?.length > 0) {
+      const takeData = await matchData?.map(async (item: any) => {
+        if (item.status) {
+          const league: any = await League.findOne({
+            goalServeLeagueId: getScore?.data?.shedules?.id,
+          });
+          const findMatchOdds = await NbaOdds.find({
+            goalServeMatchId: item?.id,
+          });
+          if (findMatchOdds?.length == 0) {
+            // getMoneyLine
+            const getMoneyLine: any = await getOdds(
+              "Home/Away",
+              item?.odds?.type
+            );
+            console.log("getMoneyLine", getMoneyLine);
+            const awayTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                  (item: any) => item?.name === "2"
+                )
+              : {};
+            const homeTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                  (item: any) => item?.name === "1"
+                )
+              : {};
+            // getSpread
+            const getSpread = await getOdds("Run Line", item?.odds?.type);
+            const getAwayTeamRunLine = await getRunLine(
+              item?.awayteam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const getHomeTeamRunLine = await getRunLine(
+              item?.hometeam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const awayTeamSpread = getAwayTeamRunLine
+              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "";
+
+            const homeTeamSpread = getHomeTeamRunLine
+              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "";
+            const total = await getTotal("Over/Under", item?.odds?.type);
+            const totalValues = await getTotalValues(total);
+            let data = {
+              goalServerLeagueId: league.goalServeLeagueId,
+              goalServeMatchId: item?.id,
+              goalServeHomeTeamId: item?.hometeam?.id,
+              goalServeAwayTeamId: item?.awayteam?.id,
+              homeTeamSpread: homeTeamSpread,
+              homeTeamTotal: totalValues,
+              awayTeamSpread: awayTeamSpread,
+              awayTeamTotal: totalValues,
+              awayTeamMoneyline: awayTeamMoneyline,
+              homeTeamMoneyline: homeTeamMoneyline,
+            };
+            const oddsData = new NbaOdds(data);
+            const savedOddsData = await oddsData.save();
+          } else {
+            // getMoneyLine
+            const getMoneyLine: any = await getOdds(
+              "Home/Away",
+              item?.odds?.type
+            );
+            const awayTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                  (item: any) => item?.name === "2"
+                )
+              : {};
+            const homeTeamMoneyline = getMoneyLine
+              ? getMoneyLine?.bookmaker?.odd?.find(
+                  (item: any) => item?.name === "1"
+                )
+              : {};
+            // getSpread
+            const getSpread = await getOdds("Run Line", item?.odds?.type);
+            const getAwayTeamRunLine = await getRunLine(
+              item?.awayteam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const getHomeTeamRunLine = await getRunLine(
+              item?.hometeam?.name,
+              getSpread?.bookmaker?.odd
+            );
+            const awayTeamSpread = getAwayTeamRunLine
+              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "null";
+
+            const homeTeamSpread = getHomeTeamRunLine
+              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+              : "null";
+            const total = await getTotal("Over/Under", item?.odds?.type);
+            const totalValues = await getTotalValues(total);
+            let data = {
+              goalServerLeagueId: league.goalServeLeagueId,
+              goalServeMatchId: item?.id,
+              goalServeHomeTeamId: item?.hometeam?.id,
+              goalServeAwayTeamId: item?.awayteam?.id,
+              homeTeamSpread: homeTeamSpread,
+              homeTeamTotal: totalValues,
+              awayTeamSpread: awayTeamSpread,
+              awayTeamTotal: totalValues,
+              awayTeamMoneyline: awayTeamMoneyline,
+              homeTeamMoneyline: homeTeamMoneyline,
+            };
+            const updateOdds = await NbaOdds.findOneAndUpdate(
+              { goalServerMatchId: item?.id },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      });
+    } else {
+      if (matchData) {
+        const league: any = await League.findOne({
+          goalServeLeagueId: getScore?.data?.shedules?.id,
+        });
+        const findMatchOdds = await NbaOdds.find({
+          goalServeMatchId: matchData?.id,
+        });
+        if (findMatchOdds?.length == 0) {
+          // getMoneyLine
+          const getMoneyLine: any = await getOdds(
+            "Home/Away",
+            matchData?.odds?.type
+          );
+          console.log("getMoneyLine", getMoneyLine);
+          const awayTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "2"
+              )
+            : {};
+          const homeTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "1"
+              )
+            : {};
+          // getSpread
+          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
+          const getAwayTeamRunLine = await getRunLine(
+            matchData?.awayteam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const getHomeTeamRunLine = await getRunLine(
+            matchData?.hometeam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const awayTeamSpread = getAwayTeamRunLine
+            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
+
+          const homeTeamSpread = getHomeTeamRunLine
+            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
+          const total = await getTotal("Over/Under", matchData?.odds?.type);
+          const totalValues = await getTotalValues(total);
+          let data = {
+            goalServerLeagueId: league.goalServeLeagueId,
+            goalServeMatchId: matchData?.id,
+            goalServeHomeTeamId: matchData?.hometeam?.id,
+            goalServeAwayTeamId: matchData?.awayteam?.id,
+            homeTeamSpread: homeTeamSpread,
+            homeTeamTotal: totalValues,
+            awayTeamSpread: awayTeamSpread,
+            awayTeamTotal: totalValues,
+            awayTeamMoneyline: awayTeamMoneyline,
+            homeTeamMoneyline: homeTeamMoneyline,
+          };
+          const oddsData = new NbaOdds(data);
+          const savedOddsData = await oddsData.save();
+        } else {
+          // getMoneyLine
+          const getMoneyLine: any = await getOdds(
+            "Home/Away",
+            matchData?.odds?.type
+          );
+          const awayTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "2"
+              )
+            : {};
+          const homeTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "1"
+              )
+            : {};
+          // getSpread
+          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
+          const getAwayTeamRunLine = await getRunLine(
+            matchData?.awayteam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const getHomeTeamRunLine = await getRunLine(
+            matchData?.hometeam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const awayTeamSpread = getAwayTeamRunLine
+            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "null";
+
+          const homeTeamSpread = getHomeTeamRunLine
+            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "null";
+          const total = await getTotal("Over/Under", matchData?.odds?.type);
+          const totalValues = await getTotalValues(total);
+          let data = {
+            goalServerLeagueId: league.goalServeLeagueId,
+            goalServeMatchId: matchData?.id,
+            goalServeHomeTeamId: matchData?.hometeam?.id,
+            goalServeAwayTeamId: matchData?.awayteam?.id,
+            homeTeamSpread: homeTeamSpread,
+            homeTeamTotal: totalValues,
+            awayTeamSpread: awayTeamSpread,
+            awayTeamTotal: totalValues,
+            awayTeamMoneyline: awayTeamMoneyline,
+            homeTeamMoneyline: homeTeamMoneyline,
+          };
+          const updateOdds = await NbaOdds.findOneAndUpdate(
+            { goalServerMatchId: matchData?.id },
+            { $set: data },
+            { new: true }
+          );
+        }
+      }
+    }
+  } catch (error: any) {
+    console.log("error", error);
+  }
+};
+
 export default {
   createTeamNBA,
   addNBATeamImage,
@@ -1773,5 +2070,6 @@ export default {
   addNbaStandings,
   getNbaStandingData,
   nbaScoreWithDate,
-  nbaScoreWithCurrentDate
+  nbaScoreWithCurrentDate,
+  createAndUpdateOddsNba
 };

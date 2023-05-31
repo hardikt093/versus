@@ -81,6 +81,11 @@ var updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
   await goalserveNbaService.updateCurruntDateRecordNba();
 });
 
+const createAndUpdateOddsNba = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron createAndUpdateOddsNba");
+  await goalserveNbaService.createAndUpdateOddsNba();
+});
+
 export default {
   createAndUpdateOdds,
   getLiveMatch,
@@ -95,5 +100,6 @@ export default {
   updateTeamStats,
   updateInjuredPlayerNHL,
   createAndUpdateOddsNhl,
-  updateCurruntDateRecordNba
+  updateCurruntDateRecordNba,
+  createAndUpdateOddsNba
 };
