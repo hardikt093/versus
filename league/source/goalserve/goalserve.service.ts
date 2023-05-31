@@ -4976,6 +4976,163 @@ const nhlSingleGameBoxScore = async (params: any) => {
           { title: "Period 3", child: "$scoringThirdperiod" },
           { title: "Overtime", child: "$scoringOvertime" },
         ],
+        scoring: {
+          awayTeam: {
+            $concatArrays: [
+              [
+                {
+                  title: "Period 1",
+                  score: {
+                    $cond: {
+                      if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
+                      then: 0,
+                      else: { $arrayElemAt: ["$scoringFirstperiod.away_score", -1] }
+                    }
+                  }
+                },
+                {
+                  title: "Period 2",
+                  score: {
+                    $cond: [
+                      { $eq: [{ $size: "$scoringSecondperiod.away_score" }, 0] },
+                      0,
+                      {
+                        $subtract: [
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.away_score", -1] },
+                          },
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringFirstperiod.away_score", -1] },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "Period 3",
+                  score: {
+                    $cond: [
+                      { $eq: [{ $size: "$scoringThirdperiod.away_score" }, 0] },
+                      0,
+                      {
+                        $subtract: [
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.away_score", -1] },
+                          },
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.away_score", -1] },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "Overtime",
+                  score: {
+                    $cond: [
+                      { $eq: [{ $size: "$scoringOvertime.away_score" }, 0] },
+                      0,
+                      {
+                        $subtract: [
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringOvertime.away_score", -1] },
+                          },
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.away_score", -1] },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "Total",
+                  score: "$awayTeamTotalScoreInNumber"
+                },
+              ],
+            ],
+          },
+          homeTeam: {
+            $concatArrays: [
+              [
+                {
+                  title: "Period 1",
+                  score: {
+                    $cond: {
+                      if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
+                      then: 0,
+                      else: { $arrayElemAt: ["$scoringFirstperiod.home_score", -1] }
+                    }
+                  }
+                },
+                {
+                  title: "Period 2",
+                  score: {
+                    $cond: [
+                      { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
+                      0,
+                      {
+                        $subtract: [
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.home_score", -1] },
+                          },
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringFirstperiod.home_score", -1] },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "Period 3",
+                  score: {
+                    $cond: [
+                      { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
+                      0,
+                      {
+                        $subtract: [
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.home_score", -1] },
+                          },
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.home_score", -1] },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "Overtime",
+                  score: {
+                    $cond: [
+                      { $eq: [{ $size: "$scoringOvertime" }, 0] },
+                      0,
+                      {
+                        $subtract: [
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringOvertime.home_score", -1] },
+                          },
+                          {
+                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.home_score", -1] },
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: "Total",
+                  score: "$homeTeamTotalScoreInNumber"
+                },
+              ],
+            ],
+          },
+        },
+    
 
         penaltySummary: [
           { title: "Period 1", child: "$penaltiesFirstperiod" },
@@ -5354,35 +5511,35 @@ const addMatchDataFutureForNhl = async () => {
 };
 
 const nhlScoreWithDate = async (params: any, type: string) => {
-  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
 
   const getUpcomingMatch = await NhlMatch.aggregate([
     {
-      '$addFields': {
-        'spliteTime': {
-          '$split': [
-            '$dateTimeUtc', ' '
-          ]
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateutc': {
-          '$toDate': '$dateTimeUtc'
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateInString': {
-          '$toString': '$dateutc'
-        }
-      }
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
     },
     {
       $match: {
-        'dateInString': {
-          '$gte': params.date1,
-          '$lte': date2
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
         },
         status: "Not Started",
       },
@@ -5540,31 +5697,31 @@ const nhlScoreWithDate = async (params: any, type: string) => {
 
   const getFinalMatch = await NhlMatch.aggregate([
     {
-      '$addFields': {
-        'spliteTime': {
-          '$split': [
-            '$dateTimeUtc', ' '
-          ]
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateutc': {
-          '$toDate': '$dateTimeUtc'
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateInString': {
-          '$toString': '$dateutc'
-        }
-      }
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
     },
     {
       $match: {
-        'dateInString': {
-          '$gte': params.date1,
-          '$lte': date2
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
         },
         $or: [
           {
@@ -5780,7 +5937,7 @@ const nhlScoreWithDate = async (params: any, type: string) => {
   }
 };
 const getLiveDataOfNhl = async (params: any) => {
-  const date2 = moment(params.date1).add(24, 'hours').utc().toISOString()
+  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
 
   const getLiveDataOfNhl = await NhlMatch.aggregate([
     {
@@ -5820,31 +5977,31 @@ const getLiveDataOfNhl = async (params: any) => {
       },
     },
     {
-      '$addFields': {
-        'spliteTime': {
-          '$split': [
-            '$dateTimeUtc', ' '
-          ]
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateutc': {
-          '$toDate': '$dateTimeUtc'
-        }
-      }
-    }, {
-      '$addFields': {
-        'dateInString': {
-          '$gte': params.date1,
-          '$lte': date2
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
         },
-      }
+      },
     },
     {
-      '$match': {
-        'dateInString': params.date1
-      }
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
+        },
+      },
+    },
+    {
+      $match: {
+        dateInString: params.date1,
+      },
     },
     {
       $lookup: {
@@ -7448,7 +7605,6 @@ const updateInjuredPlayerNHL = async () => {
   );
 };
 
-
 const createAndUpdateOddsNhl = async () => {
   let day = moment().format("D");
   let month = moment().format("MM");
@@ -7469,23 +7625,25 @@ const createAndUpdateOddsNhl = async () => {
           const league: any = await League.findOne({
             goalServeLeagueId: getScore?.data?.shedules?.id,
           });
-          const findMatchOdds = await NhlOdds.find({ goalServeMatchId: item?.id });
+          const findMatchOdds = await NhlOdds.find({
+            goalServeMatchId: item?.id,
+          });
           if (findMatchOdds?.length == 0) {
             // getMoneyLine
             const getMoneyLine: any = await getOdds(
               "Home/Away",
               item?.odds?.type
             );
-            console.log("getMoneyLine", getMoneyLine)
+            console.log("getMoneyLine", getMoneyLine);
             const awayTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : {};
             const homeTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : {};
             // getSpread
             const getSpread = await getOdds("Run Line", item?.odds?.type);
@@ -7528,13 +7686,13 @@ const createAndUpdateOddsNhl = async () => {
             );
             const awayTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : {};
             const homeTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : {};
             // getSpread
             const getSpread = await getOdds("Run Line", item?.odds?.type);
@@ -7575,29 +7733,30 @@ const createAndUpdateOddsNhl = async () => {
           }
         }
       });
-    }
-    else {
+    } else {
       if (matchData) {
         const league: any = await League.findOne({
           goalServeLeagueId: getScore?.data?.shedules?.id,
         });
-        const findMatchOdds = await NhlOdds.find({ goalServeMatchId: matchData?.id });
+        const findMatchOdds = await NhlOdds.find({
+          goalServeMatchId: matchData?.id,
+        });
         if (findMatchOdds?.length == 0) {
           // getMoneyLine
           const getMoneyLine: any = await getOdds(
             "Home/Away",
             matchData?.odds?.type
           );
-          console.log("getMoneyLine", getMoneyLine)
+          console.log("getMoneyLine", getMoneyLine);
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "2"
-            )
+                (item: any) => item?.name === "2"
+              )
             : {};
           const homeTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "1"
-            )
+                (item: any) => item?.name === "1"
+              )
             : {};
           // getSpread
           const getSpread = await getOdds("Run Line", matchData?.odds?.type);
@@ -7640,13 +7799,13 @@ const createAndUpdateOddsNhl = async () => {
           );
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "2"
-            )
+                (item: any) => item?.name === "2"
+              )
             : {};
           const homeTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "1"
-            )
+                (item: any) => item?.name === "1"
+              )
             : {};
           // getSpread
           const getSpread = await getOdds("Run Line", matchData?.odds?.type);
@@ -7690,7 +7849,7 @@ const createAndUpdateOddsNhl = async () => {
   } catch (error: any) {
     console.log("error", error);
   }
-}
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -7755,5 +7914,5 @@ export default {
   updateStandingNhl,
   updatePlayersNhl,
   updateInjuredPlayerNHL,
-  createAndUpdateOddsNhl
+  createAndUpdateOddsNhl,
 };
