@@ -69,7 +69,100 @@ const singleGameBoxscoreUpcomming = async (req: Request, res: Response) => {
       { goalServeMatchId: req.query.goalServeMatchId },
       token
     );
-    createResponse(res, httpStatus.OK, "", singleGameBoxscoreUpcomming.data.data);
+    createResponse(
+      res,
+      httpStatus.OK,
+      "",
+      singleGameBoxscoreUpcomming.data.data
+    );
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+const nhlStandings = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const nhlStandings = await axiosGet(
+      `${config.leagueServer}/nhl/get-standings`,
+      {},
+      token
+    );
+    createResponse(res, httpStatus.OK, "", nhlStandings.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+
+const nhlSingleGameBoxScore = async (req: Request, res: Response) => {
+  try {
+    const nhlSingleGameBoxScore = await axiosGet(
+      `${config.leagueServer}/nhl/single-game-boxscore-final`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScore.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+const nhlScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    const mlbScoreWithDate = await axiosGet(
+      `${config.leagueServer}/nhl/scoreWithDate`,
+      { date1: req.query.date1 },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", mlbScoreWithDate.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+
+const nhlGetTeam = async (req: Request, res: Response) => {
+  try {
+    const nhlGetTeam = await axiosGet(
+      `${config.leagueServer}/nhl/get-team`,
+      { goalServeTeamId: req.query.goalServeTeamId },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", nhlGetTeam.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+const nhlScoreWithCurrentDate = async (req: Request, res: Response) => {
+  try {
+    const mlbScoreWithDate = await axiosGet(
+      `${config.leagueServer}/nhl/scoreWithCurrentDate`,
+      { date1: req.query.date1 },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", mlbScoreWithDate.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+
+const nhlSingleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
+  try {
+    const upcommingBoxScore = await axiosGet(
+      `${config.leagueServer}/nhl/single-game-boxscore-upcomming`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", upcommingBoxScore.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+const nhlSingleGameBoxScoreLive = async (req: Request, res: Response) => {
+  try {
+    const nhlSingleGameBoxScoreLive = await axiosGet(
+      `${config.leagueServer}/nhl/single-game-boxscore-live`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", nhlSingleGameBoxScoreLive.data.data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
@@ -79,5 +172,12 @@ export default {
   mlbScoreWithDate,
   scoreWithCurrentDate,
   singleGameBoxscore,
-  singleGameBoxscoreUpcomming
+  singleGameBoxscoreUpcomming,
+  nhlStandings,
+  nhlSingleGameBoxScore,
+  nhlScoreWithDate,
+  nhlGetTeam,
+  nhlScoreWithCurrentDate,
+  nhlSingleGameBoxScoreUpcomming,
+  nhlSingleGameBoxScoreLive
 };
