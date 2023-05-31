@@ -4985,24 +4985,40 @@ const nhlSingleGameBoxScore = async (params: any) => {
                   score: {
                     $cond: {
                       if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                      then: 0,
-                      else: { $arrayElemAt: ["$scoringFirstperiod.away_score", -1] }
-                    }
-                  }
+                      then: "-",
+                      else: {
+                        $toInt: {
+                          $arrayElemAt: ["$scoringFirstperiod.away_score", -1],
+                        },
+                      },
+                    },
+                  },
                 },
                 {
                   title: "Period 2",
                   score: {
                     $cond: [
-                      { $eq: [{ $size: "$scoringSecondperiod.away_score" }, 0] },
-                      0,
+                      {
+                        $eq: [{ $size: "$scoringSecondperiod.away_score" }, 0],
+                      },
+                      "-",
                       {
                         $subtract: [
                           {
-                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.away_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringSecondperiod.away_score",
+                                -1,
+                              ],
+                            },
                           },
                           {
-                            $toInt: { $arrayElemAt: ["$scoringFirstperiod.away_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringFirstperiod.away_score",
+                                -1,
+                              ],
+                            },
                           },
                         ],
                       },
@@ -5014,14 +5030,24 @@ const nhlSingleGameBoxScore = async (params: any) => {
                   score: {
                     $cond: [
                       { $eq: [{ $size: "$scoringThirdperiod.away_score" }, 0] },
-                      0,
+                      "-",
                       {
                         $subtract: [
                           {
-                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.away_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringThirdperiod.away_score",
+                                -1,
+                              ],
+                            },
                           },
                           {
-                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.away_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringSecondperiod.away_score",
+                                -1,
+                              ],
+                            },
                           },
                         ],
                       },
@@ -5033,14 +5059,21 @@ const nhlSingleGameBoxScore = async (params: any) => {
                   score: {
                     $cond: [
                       { $eq: [{ $size: "$scoringOvertime.away_score" }, 0] },
-                      0,
+                      "-",
                       {
                         $subtract: [
                           {
-                            $toInt: { $arrayElemAt: ["$scoringOvertime.away_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: ["$scoringOvertime.away_score", -1],
+                            },
                           },
                           {
-                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.away_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringThirdperiod.away_score",
+                                -1,
+                              ],
+                            },
                           },
                         ],
                       },
@@ -5049,7 +5082,7 @@ const nhlSingleGameBoxScore = async (params: any) => {
                 },
                 {
                   title: "Total",
-                  score: "$awayTeamTotalScoreInNumber"
+                  score: "$awayTeamTotalScoreInNumber",
                 },
               ],
             ],
@@ -5062,24 +5095,36 @@ const nhlSingleGameBoxScore = async (params: any) => {
                   score: {
                     $cond: {
                       if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                      then: 0,
-                      else: { $arrayElemAt: ["$scoringFirstperiod.home_score", -1] }
-                    }
-                  }
+                      then: "-",
+                      else: {
+                        $arrayElemAt: ["$scoringFirstperiod.home_score", -1],
+                      },
+                    },
+                  },
                 },
                 {
                   title: "Period 2",
                   score: {
                     $cond: [
                       { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
-                      0,
+                      "-",
                       {
                         $subtract: [
                           {
-                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.home_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringSecondperiod.home_score",
+                                -1,
+                              ],
+                            },
                           },
                           {
-                            $toInt: { $arrayElemAt: ["$scoringFirstperiod.home_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringFirstperiod.home_score",
+                                -1,
+                              ],
+                            },
                           },
                         ],
                       },
@@ -5091,14 +5136,24 @@ const nhlSingleGameBoxScore = async (params: any) => {
                   score: {
                     $cond: [
                       { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
-                      0,
+                      "-",
                       {
                         $subtract: [
                           {
-                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.home_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringThirdperiod.home_score",
+                                -1,
+                              ],
+                            },
                           },
                           {
-                            $toInt: { $arrayElemAt: ["$scoringSecondperiod.home_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringSecondperiod.home_score",
+                                -1,
+                              ],
+                            },
                           },
                         ],
                       },
@@ -5110,14 +5165,21 @@ const nhlSingleGameBoxScore = async (params: any) => {
                   score: {
                     $cond: [
                       { $eq: [{ $size: "$scoringOvertime" }, 0] },
-                      0,
+                      "-",
                       {
                         $subtract: [
                           {
-                            $toInt: { $arrayElemAt: ["$scoringOvertime.home_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: ["$scoringOvertime.home_score", -1],
+                            },
                           },
                           {
-                            $toInt: { $arrayElemAt: ["$scoringThirdperiod.home_score", -1] },
+                            $toInt: {
+                              $arrayElemAt: [
+                                "$scoringThirdperiod.home_score",
+                                -1,
+                              ],
+                            },
                           },
                         ],
                       },
@@ -5126,13 +5188,12 @@ const nhlSingleGameBoxScore = async (params: any) => {
                 },
                 {
                   title: "Total",
-                  score: "$homeTeamTotalScoreInNumber"
+                  score: "$homeTeamTotalScoreInNumber",
                 },
               ],
             ],
           },
         },
-    
 
         penaltySummary: [
           { title: "Period 1", child: "$penaltiesFirstperiod" },
@@ -6254,7 +6315,7 @@ const nhlGetTeam = async (params: any) => {
         as: "teamInjuredPlayers",
       },
     },
-   
+
     {
       $lookup: {
         from: "nhlmatches",
@@ -6281,10 +6342,10 @@ const nhlGetTeam = async (params: any) => {
                 $cond: {
                   if: { $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"] },
                   then: "$goalServeHomeTeamId",
-                  else: "$goalServeAwayTeamId"
-                }
-              }
-            }
+                  else: "$goalServeAwayTeamId",
+                },
+              },
+            },
           },
           {
             $addFields: {
@@ -6337,33 +6398,36 @@ const nhlGetTeam = async (params: any) => {
                     pipeline: [
                       {
                         $match: {
-                          $expr: { $eq: ["$goalServeTeamId", "$$opposingTeamId"] },
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$opposingTeamId"],
+                          },
                         },
                       },
                       {
                         $project: {
-                          _id:0,
+                          _id: 0,
                           image: 1,
                         },
                       },
                     ],
                     as: "opposingTeamImage",
                   },
-                 },
+                },
                 {
                   $project: {
                     _id: 0,
                     goalServeTeamId: 1,
                     name: 1,
                     abbreviation: 1,
-                    opposingTeamImage: { $arrayElemAt: ["$opposingTeamImage.image", 0] },
+                    opposingTeamImage: {
+                      $arrayElemAt: ["$opposingTeamImage.image", 0],
+                    },
                   },
                 },
               ],
               as: "opposingTeam",
             },
           },
-          
         ],
         as: "schedule",
       },
@@ -6557,7 +6621,7 @@ const nhlGetTeam = async (params: any) => {
                     else: false,
                   },
                 },
-                opposingTeam:{ $arrayElemAt: ['$$item.opposingTeam', 0] } ,
+                opposingTeam: { $arrayElemAt: ["$$item.opposingTeam", 0] },
                 goalServeMatchId: "$$item.goalServeMatchId",
                 date: "$$item.date",
                 awayTeamTotalScore: "$$item.awayTeamTotalScore",
@@ -6881,11 +6945,11 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
           },
           {
             $project: {
-              goalServeTeamId:1,
+              goalServeTeamId: 1,
               won: 1,
               lost: 1,
               goals_against: 1,
-              goals_for:1
+              goals_for: 1,
             },
           },
         ],
@@ -7092,10 +7156,10 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             total: {
               $add: [
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.won", 1] },
+                  $toInt: { $arrayElemAt: ["$standings.won", 1] },
                 },
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.won", 0] },
+                  $toInt: { $arrayElemAt: ["$standings.won", 0] },
                 },
               ],
             },
@@ -7107,10 +7171,10 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             total: {
               $add: [
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.goals_for", 1] },
+                  $toInt: { $arrayElemAt: ["$standings.goals_for", 1] },
                 },
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.goals_for", 0] },
+                  $toInt: { $arrayElemAt: ["$standings.goals_for", 0] },
                 },
               ],
             },
@@ -7122,10 +7186,10 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             total: {
               $add: [
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.goals_against", 1] },
+                  $toInt: { $arrayElemAt: ["$standings.goals_against", 1] },
                 },
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.goals_against", 0] },
+                  $toInt: { $arrayElemAt: ["$standings.goals_against", 0] },
                 },
               ],
             },
@@ -7137,14 +7201,14 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             total: {
               $add: [
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.lost", 1] },
+                  $toInt: { $arrayElemAt: ["$standings.lost", 1] },
                 },
                 {
-                  $toInt:{ $arrayElemAt: ["$standings.lost", 0] },
+                  $toInt: { $arrayElemAt: ["$standings.lost", 0] },
                 },
               ],
             },
-          },        
+          },
         ],
       },
     },
