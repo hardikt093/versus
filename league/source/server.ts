@@ -56,21 +56,23 @@ export const io = new Server(httpServer, {
       "https://localhost:3000",
       "http://localhost:3001",
       "http://192.168.1.15:3000",
+      "https://app.versus-social.com"
     ],
     credentials: true,
   },
 });
 
 mongoose.connect(config.mongoose.url).then((result: any) => {
-  logger.info(`Connected to MongoDB -${config.mongoose.url}`);
+  console.info(`Connected to MongoDB -${config.mongoose.url}`);
   httpServer.listen(PORT, () =>
     console.info(`The server is running on port ${PORT}`)
   );
+  /** runing cron */
+  cron;
 });
-mongoose.set("debug", true);
+// mongoose.set("debug", true);
 
-/** runing cron */
-cron;
+
 
 const exitHandler = () => {
   if (httpServer) {

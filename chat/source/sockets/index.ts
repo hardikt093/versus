@@ -18,7 +18,6 @@ import {
 } from "./socket.service";
 
 export default (socket: any) => {
-  console.log("socket.handshake.query.userId", socket.handshake.query.userId);
   const myId = socket.handshake.query.userId
     ? socket.handshake.query.userId
     : 0;

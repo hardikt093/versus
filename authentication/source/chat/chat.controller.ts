@@ -9,8 +9,6 @@ import config from "../config/config";
 const getContacts = async (req: Request, res: Response) => {
   try {
     let token: any = req.header("Authorization");
-    console.log("token", token);
-    console.log("here");
     const getContact = await axiosGet(
       `${config.chatServer}/contact/getContacts`,
       {},
@@ -23,7 +21,6 @@ const getContacts = async (req: Request, res: Response) => {
 };
 
 const createContact = async (req: Request, res: Response) => {
-  console.log(req.body);
   try {
     let token: any = req.header("Authorization");
     const createContact = await axiosPostMicro(

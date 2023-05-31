@@ -329,7 +329,6 @@ const socialLogin = async (data: any) => {
 
 const deleteUser = async (id: number) => {
   const data = await axiosGet("http://localhost:8002/mlb/standings", {}, "");
-  console.log("data", data.data.data.americanLeague);
 
   // await prisma.invite.deleteMany({
   //   where: {
@@ -349,8 +348,6 @@ const deleteUser = async (id: number) => {
 };
 
 const createContact = async (data: any) => {
-  console.log("data", data);
-
   const result = await data.reduce((acc: any, address: any) => {
     const dup = acc.find(
       (addr: any) =>
@@ -389,16 +386,11 @@ const createContact = async (data: any) => {
     }
   });
   return await Promise.all(extractContact).then(async (item) => {
-    console.log("in promiss", data.userId);
-    console.log("item", result);
-
     const contactData = await prisma.contact.findMany({
       where: {
         userId: result[0].userId,
       },
     });
-    console.log("contactData", contactData);
-
     return contactData;
   });
 };
@@ -438,6 +430,35 @@ const checkInviteExpire = async (data: any) => {
   }
 };
 
+const refreshAuthTokens = async (refreshToken: any) => {
+  try {
+    const refreshTokenDoc = await tokenService.refreshVerifyToken(refreshToken);
+
+    const userId = refreshTokenDoc.sub.id;
+    const findUser = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (findUser) {
+      await prisma.token.deleteMany({ where: { token: refreshToken } });
+      const tokens = await tokenService.generateAuthTokens(findUser?.id);
+      const user = {
+        id: findUser.id,
+        userName: findUser.userName,
+        firstName: findUser.firstName,
+        lastName: findUser.lastName,
+        profileImage: findUser.profileImage,
+        birthDate: findUser.birthDate,
+        accessToken: tokens.access.token,
+        refreshToken: tokens.refresh.token,
+      };
+      return { user };
+    }
+  } catch (error) {
+    throw new AppError(httpStatus.UNAUTHORIZED, Messages.INVALIDTOKEN);
+  }
+};
 export default {
   signUp,
   signIn,
@@ -449,4 +470,5 @@ export default {
   createContact,
   sendInvite,
   checkInviteExpire,
+  refreshAuthTokens,
 };

@@ -65,4 +65,5 @@ router.put(
 router.get("/", auth, userController.seacrchUsers);
 
 router.get("/user/getAllContact", userController.getAllContact);
+router.post("/friends", auth, userController.userContacts);
 export default router;

@@ -20,4 +20,64 @@ const standings = async (req: Request, res: Response) => {
   }
 };
 
-export default { standings };
+const mlbScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const mlbScoreWithDate = await axiosGet(
+      `${config.leagueServer}/mlb/scoreWithDate`,
+      { date1: req.query.date1 },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", mlbScoreWithDate.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+
+const scoreWithCurrentDate = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const scoreWithCurrentDate = await axiosGet(
+      `${config.leagueServer}/mlb/scoreWithCurrentDate`,
+      { date1: req.query.date1 },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", scoreWithCurrentDate.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+
+const singleGameBoxscore = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const singleGameBoxscore = await axiosGet(
+      `${config.leagueServer}/mlb/single-game-boxscore-final`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", singleGameBoxscore.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+const singleGameBoxscoreUpcomming = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const singleGameBoxscoreUpcomming = await axiosGet(
+      `${config.leagueServer}/mlb/single-game-boxscore-upcomming`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      token
+    );
+    createResponse(res, httpStatus.OK, "", singleGameBoxscoreUpcomming.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+export default {
+  standings,
+  mlbScoreWithDate,
+  scoreWithCurrentDate,
+  singleGameBoxscore,
+  singleGameBoxscoreUpcomming
+};

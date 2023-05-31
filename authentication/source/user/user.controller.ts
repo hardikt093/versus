@@ -41,9 +41,20 @@ const seacrchUsers = async (req: Request, res: Response) => {
     const allUsers = await userService.searchUser(req.query, req.loggedInUser);
     createResponse(res, httpStatus.OK, "", allUsers);
   } catch (error: any) {
-    console.log("error", error);
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
 
-export default { profileUpdate, getAllContact, seacrchUsers };
+const userContacts = async (req: Request, res: Response) => {
+  try {
+    const contactsData = await userService.userContacts(req.loggedInUser.id);
+    if (contactsData && contactsData.length > 0) {
+      return createResponse(res, httpStatus.OK, Messages.USERS_CONTACT_LIST, contactsData);
+    }
+    createResponse(res, httpStatus.NOT_FOUND, Messages.USERS_CONTACT_NOT_FOUND, []);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+export default { profileUpdate, getAllContact, seacrchUsers, userContacts };

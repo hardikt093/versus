@@ -44,7 +44,6 @@ const myMessage = async (
   conversation: IConversation,
   myUserId: number
 ) => {
-  console.log("in my msg");
   const myUser = await prisma.user.findUnique({ where: { id: myUserId } });
   const newMessage = await prisma.message.create({
     include: {

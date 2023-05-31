@@ -40,18 +40,13 @@ const getAllContact = async () => {
     },
   });
   const getContactRes = await getContact.map(async (item: any) => {
-    console.log("item", item);
-
-    const getInvite = await item.sendInvite.map(async (item: any) => {
-      console.log("item", item);
-    });
+    const getInvite = await item.sendInvite.map(async (item: any) => {});
   });
   // return getContact;
 };
 
 const searchUser = async (query: any, user: any) => {
   if (query.search) {
-    console.log("query.search", query.search);
     const { search } = query;
     return await prisma.user.findMany({
       where: {
@@ -81,4 +76,34 @@ const searchUser = async (query: any, user: any) => {
   }
 };
 
-export default { userProfileUpdate, getAllContact, searchUser };
+const userByIdMongoRelation = async (id: number) => {
+  return await prisma.user.findUnique({
+    where : {
+      id : id
+    },
+    select : {
+      id : true,
+      email : true,
+      firstName : true,
+      lastName : true,
+      userName : true,
+      profileImage : true
+    }
+  });
+}
+
+const userContacts = async (id: number) => {
+  return await prisma.contact.findMany({
+    where : {
+      userId : id
+    },
+    select : {
+      id : true,
+      email : true,
+      name : true,
+      phoneNumber : true,
+      userId : true,
+    }
+  });
+}
+export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation };

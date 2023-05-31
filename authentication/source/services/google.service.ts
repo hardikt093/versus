@@ -31,17 +31,12 @@ const getGoogleToken = async (code: string) => {
 };
 
 const setCredentials = async (token: string) => {
-  console.log("token", token);
-
   try {
     const data = await oAuth2Client.setCredentials({
       access_token: token,
     });
-    console.log("data", data);
     return data;
-  } catch (error) {
-    console.log("setCredentials", error);
-  }
+  } catch (error) {}
 };
 
 const countAge = async (JWTpayload: any) => {

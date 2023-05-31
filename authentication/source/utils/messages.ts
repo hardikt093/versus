@@ -19,5 +19,8 @@ class Messages {
   static INVALID_CONVERSATION_ID = "Conversation id is not a number.";
   static ACCESS_DENIED_CONVERSATION = "No access to this conversation";
   static CONVERSATION_NOT_FOUND = "Could not find the conversation";
+  static USERS_CONTACT_LIST = "Contact list fetched sucessfully";
+  static USERS_CONTACT_NOT_FOUND = "Contact not found";
+  static INVALIDTOKEN = "Your token is invalid";
 }
 export default Messages;

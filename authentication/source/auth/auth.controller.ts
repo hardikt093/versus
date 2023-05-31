@@ -164,8 +164,6 @@ const signUp = async (req: Request, res: Response) => {
       }
     }
   } catch (error: any) {
-    console.log("error", error);
-
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
@@ -219,8 +217,6 @@ const sendInvite = async (req: Request, res: Response) => {
     const sendInvite = await authService.sendInvite(req.body);
     createResponse(res, httpStatus.OK, "invite send successfully", true);
   } catch (error) {
-    console.log(error);
-
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
 };
@@ -237,6 +233,16 @@ const checkInviteExpire = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
 };
+const refreshAuthTokens = async (req: Request, res: Response) => {
+  try {
+    const refreshAuthTokens = await authService.refreshAuthTokens(
+      req.body.refreshToken
+    );
+    createResponse(res, httpStatus.OK, "", refreshAuthTokens);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   signIn,
   signUp,
@@ -246,4 +252,5 @@ export default {
   deleteUser,
   sendInvite,
   checkInviteExpire,
+  refreshAuthTokens,
 };

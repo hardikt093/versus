@@ -13,7 +13,6 @@ var deleteTempUser = cron.schedule("*/5 * * * *", async () => {
         isSignUp: "PENDING",
       },
     });
-    console.log("here", userDelete);
   } catch (error) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
