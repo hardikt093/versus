@@ -5993,14 +5993,16 @@ const getLiveDataOfNhl = async (params: any) => {
     {
       $addFields: {
         dateInString: {
-          $gte: params.date1,
-          $lte: date2,
+          $toString: "$dateutc",
         },
       },
     },
     {
       $match: {
-        dateInString: params.date1,
+        dateInString: {
+          $gte: params.date1,
+          $lte: date2,
+        },
       },
     },
     {
