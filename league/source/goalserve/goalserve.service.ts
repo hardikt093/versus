@@ -6344,6 +6344,11 @@ const nhlGetTeam = async (params: any) => {
               plus_minus: "$$item.plus_minus",
               name: "$$item.name",
               goalServePlayerId: "$$item.goalServePlayerId",
+              shootout_attempts: "$$item.shootout_attempts",
+              shootout_goals: "$$item.shootout_goals",
+              shootout_pct: "$$item.shootout_pct",
+              shifts: "$$item.shifts",
+              time_on_ice: "$$item.time_on_ice",
             },
           },
         },
@@ -6365,6 +6370,7 @@ const nhlGetTeam = async (params: any) => {
               },
             },
           },
+
           matches: {
             $map: {
               input: "$schedule",
@@ -6382,16 +6388,79 @@ const nhlGetTeam = async (params: any) => {
                     else: false,
                   },
                 },
-                awayTeamFullName: { $arrayElemAt: ["$$item.teams.name", 0] },
-                homeTeamFullName: { $arrayElemAt: ["$$item.teams.name", 1] },
+                awayTeamFullName: {
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$item.teams.goalServeTeamId",
+                        "$$item.goalServeAwayTeamId",
+                      ],
+                    },
+                    then: { $arrayElemAt: ["$$item.teams.name", 0] },
+                    else: { $arrayElemAt: ["$$item.teams.name", 1] },
+                  },
+                },
+                homeTeamFullName: {
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$item.teams.goalServeTeamId",
+                        "$$item.goalServeHomeTeamId",
+                      ],
+                    },
+                    then: { $arrayElemAt: ["$$item.teams.name", 1] },
+                    else: { $arrayElemAt: ["$$item.teams.name", 0] },
+                  },
+                },
                 awayTeamAbbreviation: {
-                  $arrayElemAt: ["$$item.teams.abbreviation", 0],
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$item.teams.goalServeTeamId",
+                        "$$item.goalServeAwayTeamId",
+                      ],
+                    },
+                    then: { $arrayElemAt: ["$$item.teams.abbreviation", 0] },
+                    else: { $arrayElemAt: ["$$item.teams.abbreviation", 1] },
+                  },
                 },
                 homeTeamAbbreviation: {
-                  $arrayElemAt: ["$$item.teams.abbreviation", 1],
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$item.teams.goalServeTeamId",
+                        "$$item.goalServeHomeTeamId",
+                      ],
+                    },
+                    then: { $arrayElemAt: ["$$item.teams.abbreviation", 1] },
+                    else: { $arrayElemAt: ["$$item.teams.abbreviation", 0] },
+                  },
                 },
-                homeTeamImage: { $arrayElemAt: ["$$item.teamImages.image", 1] },
-                awayTeamImage: { $arrayElemAt: ["$$item.teamImages.image", 0] },
+                homeTeamImage: {
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$item.teams.goalServeTeamId",
+                        "$$item.goalServeHomeTeamId",
+                      ],
+                    },
+                    then: { $arrayElemAt: ["$$item.teamImages.image", 1] },
+                    else: { $arrayElemAt: ["$$item.teamImages.image", 0] },
+                  },
+                },
+                awayTeamImage: {
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$$item.teams.goalServeTeamId",
+                        "$$item.goalServeAwayTeamId",
+                      ],
+                    },
+                    then: { $arrayElemAt: ["$$item.teamImages.image", 0] },
+                    else: { $arrayElemAt: ["$$item.teamImages.image", 1] },
+                  },
+                },
+
                 goalServeMatchId: "$$item.goalServeMatchId",
                 date: "$$item.date",
                 awayTeamTotalScore: "$$item.awayTeamTotalScore",
@@ -6857,7 +6926,7 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
                     games_played: "$$player.games_played",
                     points: "$$player.points",
                     assists: "$$player.assists",
-                    goals_against_diff: "$$player.assists",
+                    goals_against_diff: "$$player.goals_against_diff",
                     plus_minus: "$$player.plus_minus",
                     goals: "$$player.goals",
                   },
@@ -6888,7 +6957,8 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
                     games_played: "$$player.games_played",
                     points: "$$player.points",
                     assists: "$$player.assists",
-                    goals_against_diff: "$$player.assists",
+                    goals_against_diff: "$$player.goals_against_diff",
+                    plus_minus: "$$player.plus_minus",
                     goals: "$$player.goals",
                   },
                 ],
