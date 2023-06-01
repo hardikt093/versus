@@ -129,7 +129,7 @@ const addNbaMatch = async () => {
     };
     const daylist = getDaysArray(
       new Date("2022-10-02"),
-      new Date("2023-05-29")
+      new Date("2023-05-31")
     );
     for (let i = 0; i < daylist?.length; i++) {
       let dataToStore: any = [];
@@ -142,7 +142,7 @@ const addNbaMatch = async () => {
       } catch (error) {
         continue;
       }
-      if (getMatch) {
+      if (getMatch?.data) {
         const matchArray = await getMatch?.data?.scores?.category?.match;
         const league: any = await League.findOne({
           goalServeLeagueId: getMatch?.data.scores.category.id,
@@ -232,7 +232,7 @@ const addNbaMatch = async () => {
               dateTimeUtc: matchArray.datetime_utc,
               timezone: matchArray.timezone,
               attendance: matchArray.attendance,
-              goalServematchArrayId: matchArray.id,
+              goalServeMatchId: matchArray.id,
               status: matchArray.status,
               time: matchArray.time,
               timer: matchArray?.timer ? matchArray?.timer : "",
@@ -329,7 +329,7 @@ const addMatchDataFutureForNba = async () => {
       return arr;
     };
     const daylist = getDaysArray(
-      new Date("2023-05-28"),
+      new Date("2023-06-01"),
       new Date("2023-06-19")
     );
     for (let i = 0; i < daylist?.length; i++) {
@@ -343,12 +343,11 @@ const addMatchDataFutureForNba = async () => {
       } catch (error) {
         continue;
       }
-      if (getMatch) {
+      if (getMatch?.data) {
         const matchArray = await getMatch?.data?.shedules?.matches?.match;
         const league: any = await League.findOne({
           goalServeLeagueId: getMatch?.data?.shedules?.id,
         });
-        console.log(matchArray);
 
         if (matchArray?.length > 0 && matchArray) {
           // array logic
@@ -436,7 +435,7 @@ const addMatchDataFutureForNba = async () => {
               dateTimeUtc: matchArray.datetime_utc,
               timezone: matchArray.timezone,
               attendance: matchArray.attendance,
-              goalServematchArrayId: matchArray.id,
+              goalServeMatchId: matchArray.id,
               status: matchArray.status,
               time: matchArray.time,
               timer: matchArray?.timer ? matchArray?.timer : "",
@@ -617,7 +616,7 @@ const updateCurruntDateRecordNba = async () => {
           dateTimeUtc: matchArray.datetime_utc,
           timezone: matchArray.timezone,
           attendance: matchArray.attendance,
-          goalServematchArrayId: matchArray.id,
+          goalServeMatchId: matchArray.id,
           status: matchArray.status,
           time: matchArray.time,
           timer: matchArray?.timer ? matchArray?.timer : "",
