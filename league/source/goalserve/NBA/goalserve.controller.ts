@@ -93,6 +93,14 @@ const nbaScoreWithCurrentDate = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
+const nbaGetTeam = async (req: Request, res: Response) => {
+  try {
+    const nbaGetTeam = await goalserveService.nbaGetTeam(req.query)
+    createResponse(res, httpStatus.OK, "", nbaGetTeam);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 
 export default {
   createTeamNBA,
@@ -104,5 +112,6 @@ export default {
   addNbaStandings,
   getNbaStandings,
   nbaScoreWithDate,
-  nbaScoreWithCurrentDate
+  nbaScoreWithCurrentDate,
+  nbaGetTeam
 };
