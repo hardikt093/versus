@@ -3,17 +3,17 @@ import cron from "node-cron";
 import goalserveService from "../../goalserve/goalserve.service";
 import goalserveNbaService from "../../goalserve/NBA/goalserve.service";
 
-var getUpcomingMatch = cron.schedule("0 0 */1 * * *", async () => {
+var getUpcomingMatch = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron getUpcomingMatch");
   await goalserveService.getUpcomingMatch();
 });
 
-var getFinalMatch = cron.schedule("0 0 */1 * * *", async () => {
+var getFinalMatch = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron getFinalMatch");
   await goalserveService.getFinalMatch();
 });
 
-var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
+var getLiveMatchNhl = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron getLiveMatchNHL");
   await goalserveService.getLiveDataOfNhl("");
 });
@@ -100,6 +100,7 @@ export default {
   updateTeamStats,
   updateInjuredPlayerNHL,
   createAndUpdateOddsNhl,
+  getLiveMatchNhl,
   updateCurruntDateRecordNba,
   createAndUpdateOddsNba
 };
