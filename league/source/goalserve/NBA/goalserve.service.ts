@@ -132,7 +132,6 @@ const addNbaMatch = async () => {
       new Date("2023-05-31")
     );
     for (let i = 0; i < daylist?.length; i++) {
-      let dataToStore: any = [];
       let getMatch: any = {};
       try {
         getMatch = await axiosGet(
@@ -149,7 +148,8 @@ const addNbaMatch = async () => {
         });
         let savedMatchData: any = "";
         if (matchArray?.length > 0 && matchArray) {
-          for (let j = 0; j < matchArray?.length; j++) {
+        let dataToStore: any = [];
+          for (let j = 0; j < matchArray?.length; j++) {            
             const data: any = {
               leagueId: league._id,
               goalServeLeagueId: league.goalServeLeagueId,
@@ -166,6 +166,8 @@ const addNbaMatch = async () => {
               venueName: matchArray[j].venue_name,
               homeTeamTotalScore: matchArray[j].hometeam.totalscore,
               awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+              goalServeHomeTeamId : matchArray[j].hometeam.id,
+              goalServeAwayTeamId : matchArray[j].awayteam.id,
               // new entries
               awayTeamOt: matchArray[j].awayteam.ot,
               awayTeamQ1: matchArray[j].awayteam.q1,
@@ -221,6 +223,9 @@ const addNbaMatch = async () => {
               ? teamIdHome.goalServeTeamId
               : 1;
             dataToStore.push(data);
+          }
+          if (dataToStore && dataToStore.length > 0) {
+            await NbaMatch.insertMany(dataToStore);
           }
         } else {
           if (matchArray) {
@@ -278,6 +283,8 @@ const addNbaMatch = async () => {
                 ?.starters?.player
                 ? matchArray?.player_stats?.hometeam?.starters?.player
                 : [],
+                goalServeHomeTeamId : matchArray.hometeam.id,
+                goalServeAwayTeamId : matchArray.awayteam.id,
             };
 
             const teamIdAway: any = await TeamNBA.findOne({
@@ -287,7 +294,7 @@ const addNbaMatch = async () => {
               data.awayTeamId = teamIdAway.id;
               data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
                 ? teamIdAway.goalServeTeamId
-                : 0;
+                : 1;
             }
             const teamIdHome: any = await TeamNBA.findOne({
               goalServeTeamId: matchArray.hometeam.id,
@@ -296,14 +303,11 @@ const addNbaMatch = async () => {
               data.homeTeamId = teamIdHome.id;
               data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
                 ? teamIdHome.goalServeTeamId
-                : 0;
+                : 1;
             }
-            dataToStore.push(data);
+            await NbaMatch.create(data);
           }
         }
-      }
-      if (dataToStore && dataToStore.length > 0) {
-        await NbaMatch.insertMany(dataToStore);
       }
     }
     return true;
@@ -367,6 +371,8 @@ const addMatchDataFutureForNba = async () => {
               venueName: matchArray[j].venue_name,
               homeTeamTotalScore: matchArray[j].hometeam.totalscore,
               awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+              goalServeHomeTeamId : matchArray[j].hometeam.id,
+              goalServeAwayTeamId : matchArray[j].awayteam.id,
               // new entries
               timer: matchArray[j]?.timer ? matchArray[j]?.timer : "",
               awayTeamOt: matchArray[j].awayteam.ot,
@@ -443,6 +449,8 @@ const addMatchDataFutureForNba = async () => {
               venueName: matchArray.venue_name,
               homeTeamTotalScore: matchArray.hometeam.totalscore,
               awayTeamTotalScore: matchArray.awayteam.totalscore,
+              goalServeHomeTeamId : matchArray.hometeam.id,
+              goalServeAwayTeamId : matchArray.awayteam.id,
               // new entries
               awayTeamOt: matchArray.awayteam.ot,
               awayTeamQ1: matchArray.awayteam.q1,
@@ -490,7 +498,7 @@ const addMatchDataFutureForNba = async () => {
               data.awayTeamId = teamIdAway.id;
               data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
                 ? teamIdAway.goalServeTeamId
-                : 0;
+                : 1;
             }
             const teamIdHome: any = await TeamNBA.findOne({
               goalServeTeamId: matchArray.hometeam.id,
@@ -499,7 +507,7 @@ const addMatchDataFutureForNba = async () => {
               data.homeTeamId = teamIdHome.id;
               data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
                 ? teamIdHome.goalServeTeamId
-                : 0;
+                : 1;
             }
             dataToStore.push(data);
           }
@@ -546,6 +554,8 @@ const updateCurruntDateRecordNba = async () => {
           venueName: matchArray[j].venue_name,
           homeTeamTotalScore: matchArray[j].hometeam.totalscore,
           awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+          goalServeHomeTeamId : matchArray[j].hometeam.id,
+          goalServeAwayTeamId : matchArray[j].awayteam.id,
           // new entries
           awayTeamOt: matchArray[j].awayteam.ot,
           awayTeamQ1: matchArray[j].awayteam.q1,
@@ -624,6 +634,8 @@ const updateCurruntDateRecordNba = async () => {
           venueName: matchArray.venue_name,
           homeTeamTotalScore: matchArray.hometeam.totalscore,
           awayTeamTotalScore: matchArray.awayteam.totalscore,
+          goalServeHomeTeamId : matchArray.hometeam.id,
+          goalServeAwayTeamId : matchArray.awayteam.id,
           // new entries
           awayTeamOt: matchArray.awayteam.ot,
           awayTeamQ1: matchArray.awayteam.q1,
@@ -671,7 +683,7 @@ const updateCurruntDateRecordNba = async () => {
           data.awayTeamId = teamIdAway.id;
           data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
             ? teamIdAway.goalServeTeamId
-            : 0;
+            : 1;
         }
         const teamIdHome: any = await TeamNBA.findOne({
           goalServeTeamId: matchArray.hometeam.id,
@@ -680,7 +692,7 @@ const updateCurruntDateRecordNba = async () => {
           data.homeTeamId = teamIdHome.id;
           data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
             ? teamIdHome.goalServeTeamId
-            : 0;
+            : 1;
         }
         const recordUpdate = await NbaMatch.findOneAndUpdate(
           { goalServeMatchId: data.goalServeMatchId },
