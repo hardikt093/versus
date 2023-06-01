@@ -93,9 +93,12 @@ const getMLBStandings = async () => {
 
 const getUpcomingMatch = async () => {
   try {
-    let curruntDay = moment().utc().toISOString()
-    let subtractOneDay = moment(curruntDay).subtract(12, "hours").utc().toISOString()
-    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString()
+    let curruntDay = moment().utc().toISOString();
+    let subtractOneDay = moment(curruntDay)
+      .subtract(12, "hours")
+      .utc()
+      .toISOString();
+    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString();
 
     const getUpcomingMatch = await Match.aggregate([
       {
@@ -366,9 +369,12 @@ const search = async (nameKey: any, myArray: any) => {
 
 const getFinalMatch = async () => {
   try {
-    let curruntDay = moment().utc().toISOString()
-    let subtractOneDay = moment(curruntDay).subtract(12, "hours").utc().toISOString()
-    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString()
+    let curruntDay = moment().utc().toISOString();
+    let subtractOneDay = moment(curruntDay)
+      .subtract(12, "hours")
+      .utc()
+      .toISOString();
+    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString();
 
     const getFinalMatch = await Match.aggregate([
       {
@@ -7908,7 +7914,7 @@ const updateStandingNhl = async () => {
         const standingData = NhlStandings.findOneAndUpdate(
           { goalServeTeamId: teamId?.goalServeTeamId },
           { $set: data },
-          { new: true }
+          { upsert: true, new: true }
         );
       });
     });
@@ -7993,10 +7999,10 @@ const updatePlayersNhl = async () => {
         return { ...obj1, ...obj2 };
       });
       mergedArr.map(async (item: any) => {
-        await Player.findOneAndUpdate(
+        await PlayersNHL.findOneAndUpdate(
           { goalServePlayerId: item.goalServePlayerId },
           { $set: item },
-          { new: true }
+          { upsert: true, new: true }
         );
       });
     })
