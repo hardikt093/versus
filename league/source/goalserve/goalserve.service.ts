@@ -93,14 +93,38 @@ const getMLBStandings = async () => {
 
 const getUpcomingMatch = async () => {
   try {
-    let day = moment().format("D");
-    let month = moment().format("MM");
-    let year = moment().format("YYYY");
-    let date = `${day}.${month}.${year}`;
+    let curruntDay = moment().utc().toISOString()
+    let subtractOneDay = moment(curruntDay).subtract(12, "hours").utc().toISOString()
+    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString()
+
     const getUpcomingMatch = await Match.aggregate([
       {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
         $match: {
-          formattedDate: date,
+          dateInString: {
+            $gte: subtractOneDay,
+            $lte: addOneDay,
+          },
           status: "Not Started",
         },
       },
@@ -342,15 +366,38 @@ const search = async (nameKey: any, myArray: any) => {
 
 const getFinalMatch = async () => {
   try {
-    let day = moment().format("D");
-    let month = moment().format("MM");
-    let year = moment().format("YYYY");
-    let date = `${day}.${month}.${year}`;
+    let curruntDay = moment().utc().toISOString()
+    let subtractOneDay = moment(curruntDay).subtract(12, "hours").utc().toISOString()
+    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString()
 
     const getFinalMatch = await Match.aggregate([
       {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
         $match: {
-          formattedDate: date,
+          dateInString: {
+            $gte: subtractOneDay,
+            $lte: addOneDay,
+          },
           status: "Final",
         },
       },
@@ -6760,9 +6807,6 @@ const updateCurruntDateRecordNhl = async () => {
         data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
           ? teamIdHome.goalServeTeamId
           : 1;
-
-        // const matchData = new NhlMatch(data);
-        console.log("data.status", data);
         const recordUpdate = await NhlMatch.findOneAndUpdate(
           { goalServeMatchId: data.goalServeMatchId },
           { $set: data },
