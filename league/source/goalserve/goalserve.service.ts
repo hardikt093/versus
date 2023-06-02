@@ -94,12 +94,12 @@ const getMLBStandings = async () => {
 
 const getUpcomingMatch = async () => {
   try {
-    let curruntDay = moment().utc().toISOString();
+    let curruntDay = moment().startOf("day").utc().toISOString();
     let subtractOneDay = moment(curruntDay)
       .subtract(12, "hours")
       .utc()
       .toISOString();
-    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString();
+    let addOneDay = moment(curruntDay).add(38, "hours").utc().toISOString();
 
     const getUpcomingMatch = await Match.aggregate([
       {
@@ -370,12 +370,12 @@ const search = async (nameKey: any, myArray: any) => {
 
 const getFinalMatch = async () => {
   try {
-    let curruntDay = moment().utc().toISOString();
+    let curruntDay = moment().startOf("day").utc().toISOString();
     let subtractOneDay = moment(curruntDay)
       .subtract(12, "hours")
       .utc()
       .toISOString();
-    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString();
+    let addOneDay = moment(curruntDay).add(38, "hours").utc().toISOString();
 
     const getFinalMatch = await Match.aggregate([
       {
@@ -8778,12 +8778,12 @@ const updateNhlMatch = async () => {
 
 const getUpcommingMatchNhl = async () => {
   try {
-    let curruntDay = moment().utc().toISOString();
+    let curruntDay = moment().startOf("day").utc().toISOString();
     let subtractOneDay = moment(curruntDay)
       .subtract(12, "hours")
       .utc()
       .toISOString();
-    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString();
+    let addOneDay = moment(curruntDay).add(38, "hours").utc().toISOString();
     const getUpcomingMatch = await NhlMatch.aggregate([
       {
         $addFields: {
@@ -8976,12 +8976,12 @@ const getUpcommingMatchNhl = async () => {
 
 const getFinalMatchNhl = async () => {
   try {
-    let curruntDay = moment().utc().toISOString();
+    let curruntDay = moment().startOf("day").utc().toISOString();
     let subtractOneDay = moment(curruntDay)
       .subtract(12, "hours")
       .utc()
       .toISOString();
-    let addOneDay = moment(curruntDay).add(14, "hours").utc().toISOString();
+    let addOneDay = moment(curruntDay).add(38, "hours").utc().toISOString();
     const getFinalMatch = await NhlMatch.aggregate([
       {
         $addFields: {
