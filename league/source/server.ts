@@ -60,7 +60,6 @@ export const io = new Server(httpServer, {
     ],
     credentials: true,
   },
-  transports: ['websocket', 'polling'],
 });
 
 mongoose.connect(config.mongoose.url).then((result: any) => {
