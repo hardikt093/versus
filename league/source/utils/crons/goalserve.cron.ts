@@ -1,20 +1,16 @@
 import cron from "node-cron";
 
 import goalserveService from "../../goalserve/goalserve.service";
+import moment from "moment";
 
-var getUpcomingMatch = cron.schedule("0 0 */1 * * *", async () => {
+var getUpcomingMatch = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron getUpcomingMatch");
   await goalserveService.getUpcomingMatch();
 });
 
-var getFinalMatch = cron.schedule("0 0 */1 * * *", async () => {
+var getFinalMatch = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron getFinalMatch");
   await goalserveService.getFinalMatch();
-});
-
-var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron getLiveMatchNHL");
-  await goalserveService.getLiveDataOfNhl("");
 });
 
 var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
@@ -25,11 +21,6 @@ var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
 var createAndUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron createAndUpdateOdds");
   await goalserveService.createAndUpdateOdds();
-});
-
-var createAndUpdateOddsNhl = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron createAndUpdateOddsNhl");
-  await goalserveService.createAndUpdateOddsNhl();
 });
 
 var updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
@@ -72,6 +63,29 @@ var updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
   console.info("inside score cron updateInjuredPlayerNHL");
   await goalserveService.updateInjuredPlayerNHL();
 });
+var createAndUpdateOddsNhl = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron createAndUpdateOddsNhl");
+  await goalserveService.createAndUpdateOddsNhl();
+});
+var getLiveMatchNhl = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron getLiveMatchNHL");
+  await goalserveService.getLiveDataOfNhl({ date1: moment().startOf("day").utc().toISOString() });
+});
+
+var getUpcommingMatchNhl = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron getUpcommingMatchNhl");
+  await goalserveService.getUpcommingMatchNhl();
+});
+
+var getFinalMatchNhl = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron getFinalMatchNhl");
+  await goalserveService.getFinalMatchNhl();
+});
+
+var updateNhlMatch = cron.schedule("*/60 * * * * *", async () => {
+  console.info("inside score cron updateNhlMatch");
+  await goalserveService.updateNhlMatch();
+})
 
 export default {
   createAndUpdateOdds,
@@ -86,5 +100,9 @@ export default {
   updateStandingRecord,
   updateTeamStats,
   updateInjuredPlayerNHL,
-  createAndUpdateOddsNhl
+  createAndUpdateOddsNhl,
+  getLiveMatchNhl,
+  updateNhlMatch,
+  getUpcommingMatchNhl,
+  getFinalMatchNhl
 };
