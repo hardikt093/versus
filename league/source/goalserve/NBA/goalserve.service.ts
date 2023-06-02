@@ -2269,6 +2269,8 @@ const nbaGetTeam = async (params: any) => {
               rebounds_per_game: { $toDouble: "$game.rebounds_per_game" },
               points_per_game: { $toDouble: "$game.points_per_game" },
               assists_per_game: { $toDouble: "$game.assists_per_game" },
+              steals_per_game:{ $toDouble: "$game.steals_per_game" },
+              blocks_per_game:{ $toDouble: "$game.blocks_per_game" },
             },
           },
           {
@@ -2276,7 +2278,8 @@ const nbaGetTeam = async (params: any) => {
               rebounds_per_game: [{ $sort: { rebounds_per_game: -1 } }, { $limit: 1 }],
               points_per_game: [{ $sort: { points_per_game: -1 } }, { $limit: 1 }],
               assists_per_game: [{ $sort: { assists_per_game: -1 } }, { $limit: 1 }],
-            
+              steals_per_game:[{ $sort: { steals_per_game: -1 } }, { $limit: 1 }],
+              blocks_per_game:[{ $sort: { blocks_per_game: -1 } }, { $limit: 1 }],
             },
           },
           {
@@ -2284,7 +2287,8 @@ const nbaGetTeam = async (params: any) => {
              max_rebounds_per_game: { $arrayElemAt: ["$rebounds_per_game", 0] },
              max_points_per_game: { $arrayElemAt: ["$points_per_game", 0] },
              max_assists_per_game: { $arrayElemAt: ["$assists_per_game", 0] },
-              
+             max_steals_per_game: { $arrayElemAt: ["$steals_per_game", 0] },
+             max_blocks_per_game: { $arrayElemAt: ["$blocks_per_game", 0] },
             },
           },
           {
@@ -2301,7 +2305,14 @@ const nbaGetTeam = async (params: any) => {
                 assists_per_game: "$max_assists_per_game.assists_per_game",
                 name: "$max_assists_per_game.name",
               },
-              
+              max_steals_per_game: {
+                steals_per_game: "$max_steals_per_game.steals_per_game",
+                name: "$max_steals_per_game.name",
+              },
+              max_blocks_per_game: {
+                blocks_per_game: "$max_blocks_per_game.blocks_per_game",
+                name: "$max_blocks_per_game.name",
+              },
             },
           },
         ],
@@ -2367,7 +2378,7 @@ const nbaGetTeam = async (params: any) => {
               turnover_ratio: {$cond: {
                 if: { $eq: [{$toDouble:"$$item.game.turnovers_per_game"}, 0] },
                 then: 0, // or any other default value you want to assign
-                else: { $divide:[{$toDouble:"$$item.game.assists_per_game"},{$toDouble:"$$item.game.turnovers_per_game"}] }
+                else: {$round:[{ $divide:[{$toDouble:"$$item.game.assists_per_game"},{$toDouble:"$$item.game.turnovers_per_game"}] },2]}
               }
             },
              
@@ -2426,8 +2437,6 @@ const nbaGetTeam = async (params: any) => {
       },
     },
   ]);
-  console.log(getTeam);
-  
   return getTeam[0];
 };
 export default {

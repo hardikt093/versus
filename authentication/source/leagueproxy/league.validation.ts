@@ -22,4 +22,9 @@ const singleGameBoxscoreUpcomming = {
     goalServeMatchId: Joi.string().required(),
   }),
 };
-export default { scoreWithDate, singleGameBoxscore,singleGameBoxscoreUpcomming, scoreWithCurrentDate };
+const nbaGetTeam = {
+  query: Joi.object().keys({
+    goalServeTeamId: Joi.string().required(),
+  }),
+};
+export default { scoreWithDate, singleGameBoxscore,singleGameBoxscoreUpcomming, scoreWithCurrentDate ,nbaGetTeam};

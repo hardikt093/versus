@@ -6373,6 +6373,7 @@ const nhlScoreWithCurrentDate = async (params: any) => {
 };
 const nhlGetTeam = async (params: any) => {
   const goalServeTeamId = params.goalServeTeamId;
+  console.log(goalServeTeamId)
   const getTeam = await NhlStandings.aggregate([
     {
       $match: {
