@@ -289,31 +289,7 @@ const addNhlMatch = async (req: Request, res: Response) => {
   }
 }
 
-const addNhlPlayer = async (req: Request, res: Response) => {
-  try {
-    const addNhlPlayer = await goalserveService.addNhlPlayer();
-    createResponse(res, httpStatus.OK, "", addNhlPlayer);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-}
-const addNhlInjuredPlayer = async (req: Request, res: Response) => {
-  try {
-    const addNhlInjuredPlayer = await goalserveService.addNhlInjuredPlayer();
-    createResponse(res, httpStatus.OK, "", addNhlInjuredPlayer);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-}
 
-const addNhlStandings = async (req: Request, res: Response) => {
-  try {
-    const addNhlStandings = await goalserveService.addNhlStandings();
-    createResponse(res, httpStatus.OK, "", addNhlStandings);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-}
 
 const getNhlStandings = async (req: Request, res: Response) => {
   try {
@@ -424,9 +400,6 @@ export default {
   createTeamNHL,
   createTeamImageNHL,
   addNhlMatch,
-  addNhlPlayer,
-  addNhlInjuredPlayer,
-  addNhlStandings,
   getNhlStandings,
   nhlSingleGameBoxScore,
   addMatchDataFutureForNhl,

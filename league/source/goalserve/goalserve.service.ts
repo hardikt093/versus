@@ -4550,200 +4550,6 @@ const addNhlMatch = async () => {
   }
 };
 
-const addNhlPlayer = async () => {
-  const team = await TeamNHL.find();
-  let data = {
-    json: true,
-  };
-  await Promise.all(
-    team.map(async (item) => {
-      const roasterApi = await goalserveApi(
-        "https://www.goalserve.com/getfeed",
-        data,
-        `hockey/${item.goalServeTeamId}_rosters`
-      );
-      let allRosterPlayers: any = [];
-      roasterApi?.data?.team?.position?.map((roasterApiItem: any) => {
-        if (roasterApiItem?.player?.length) {
-          roasterApiItem.player.map((player: any) => {
-            player.position = roasterApiItem?.name;
-            player.teamId = item.id;
-            player.goalServeTeamId = item.goalServeTeamId;
-            player.goalServePlayerId = player.id;
-            allRosterPlayers.push(player);
-          });
-        } else {
-          let player = roasterApiItem.player;
-          player.position = item?.name;
-          player.teamId = item.id;
-          player.goalServeTeamId = item.goalServeTeamId;
-          player.goalServePlayerId = roasterApiItem.player.id;
-
-          allRosterPlayers.push(player);
-        }
-      });
-      const statsApi = await goalserveApi(
-        "https://www.goalserve.com/getfeed",
-        data,
-        `hockey/${item.goalServeTeamId}_stats`
-      );
-      let allStatePlayer: any = [];
-      if (statsApi?.data?.statistic?.goalkeepers?.player?.length) {
-        statsApi?.data?.statistic?.goalkeepers?.player?.map(
-          (statsPlayer: any) => {
-            statsPlayer.teamId = item.id;
-            statsPlayer.isGoalKeeper = true;
-            statsPlayer.goalServePlayerId = statsPlayer.id;
-            allStatePlayer.push(statsPlayer);
-          }
-        );
-      } else {
-        let player: any = statsApi?.data?.statistic?.goalkeepers?.player;
-        player.isGoalKeeper = true;
-        player.goalServePlayerId =
-          statsApi?.data?.statistic?.goalkeepers?.player?.id;
-        player.teamId = item.id;
-        allStatePlayer.push(player);
-      }
-      if (statsApi?.data?.statistic?.team?.length) {
-        if (statsApi?.data?.statistic?.team[1]?.player?.length) {
-          statsApi?.data?.statistic?.team[1]?.player?.map(
-            (statsPlayer: any) => {
-              statsPlayer.teamId = item.id;
-              statsPlayer.goalServePlayerId = statsPlayer.id;
-              allStatePlayer.push(statsPlayer);
-            }
-          );
-        } else {
-          let player: any = statsApi?.data?.statistic?.team[1]?.player;
-          player.goalServePlayerId =
-            statsApi?.data?.statistic?.team[1]?.player?.id;
-          player.teamId = item.id;
-          allStatePlayer.push(player);
-        }
-      }
-      const mergedArr = allStatePlayer.map((obj1: any) => {
-        const obj2 = allRosterPlayers.find(
-          (obj2: any) => obj1?.goalServePlayerId === obj2?.goalServePlayerId
-        );
-        return { ...obj1, ...obj2 };
-      });
-      await PlayersNHL.insertMany(mergedArr);
-    })
-  );
-};
-
-const addNhlInjuredPlayer = async () => {
-  const team = await TeamNHL.find();
-  await Promise.all(
-    team.map(async (item) => {
-      let data = {
-        json: true,
-      };
-      const injuryApi = await goalserveApi(
-        "https://www.goalserve.com/getfeed",
-        data,
-        `hockey/${item?.goalServeTeamId}_injuries`
-      );
-
-      const injuryArray1 = injuryApi?.data?.team;
-      if (injuryArray1?.report?.length) {
-        await Promise.all(
-          injuryArray1?.report?.map(async (val: any) => {
-            const player = await PlayersNHL.findOne({
-              goalServePlayerId: val?.player_id,
-            });
-            const data = {
-              date: val?.date,
-              description: val?.description,
-              goalServePlayerId: val?.player_id,
-              playerName: val?.player_name,
-              playerId: player?.id,
-              status: val?.status,
-              goalServeTeamId: injuryApi?.data?.team?.id,
-              teamId: item?.id,
-            };
-            const playerData = new NhlInjury(data);
-            const saveInjuries = await playerData.save();
-          })
-        );
-      } else if (injuryArray1?.report && !injuryArray1?.report?.length) {
-        const val = injuryArray1?.report;
-        const player = await PlayersNHL.findOne({
-          goalServePlayerId: val?.player_id,
-        });
-
-        const data = {
-          date: val?.date,
-          description: val?.description,
-          goalServePlayerId: val?.player_id,
-          playerName: val?.player_name,
-          status: val?.status,
-          goalServeTeamId: injuryArray1?.id,
-          teamId: item?.id,
-          playerId: player?.id,
-        };
-        const playerData = new NhlInjury(data);
-        const saveInjuries = await playerData.save();
-      }
-    })
-  );
-};
-
-const addNhlStandings = async () => {
-  let data = {
-    json: true,
-  };
-  const getstanding = await goalserveApi(
-    "https://www.goalserve.com/getfeed",
-    data,
-    "hockey/nhl-standings"
-  );
-
-  const league: any = await League.findOne({
-    goalServeLeagueId: getstanding?.data?.standings?.category?.id,
-  });
-  getstanding?.data?.standings?.category?.league?.map((item: any) => {
-    item.division.map((div: any) => {
-      div.team.map(async (team: any) => {
-        const teamId: any = await TeamNHL.findOne({
-          goalServeTeamId: team.id,
-        });
-        let data = {
-          leagueId: league?.id,
-          leagueType: item?.name,
-          goalServeLeagueId: getstanding?.data?.standings?.category?.id,
-          division: div?.name,
-          teamId: teamId?.id,
-          goalServeTeamId: teamId?.goalServeTeamId,
-          difference: team.difference,
-          games_played: team.games_played,
-          goals_against: team.goals_against,
-          goals_for: team.goals_for,
-          home_record: team.home_record,
-          last_ten: team.last_ten,
-          ot_losses: team.ot_losses,
-          points: team.points,
-          regular_ot_wins: team.regular_ot_wins,
-          road_record: team.road_record,
-          shootout_losses: team.shootout_losses,
-          shootout_wins: team.shootout_wins,
-          streak: team.streak,
-          pct: +(
-            (Number(team.won) * 100) /
-            (Number(team.won) + Number(team.lost))
-          ).toFixed(3),
-          lost: team.lost,
-          name: team.name,
-          position: team.position,
-          won: team.won,
-        };
-        const standingData = new NhlStandings(data);
-        await standingData.save();
-      });
-    });
-  });
-};
 
 const getNHLStandingData = async () => {
   const getStandingData = await NhlStandings.aggregate([
@@ -8267,53 +8073,58 @@ const updateStandingNhl = async () => {
     data,
     "hockey/nhl-standings"
   );
-
   const league: any = await League.findOne({
     goalServeLeagueId: getstanding?.data?.standings?.category?.id,
   });
-  getstanding?.data?.standings?.category?.league?.map((item: any) => {
-    item.division.map((div: any) => {
-      div.team.map(async (team: any) => {
-        const teamId: any = await TeamNHL.findOne({
-          goalServeTeamId: team.id,
-        });
-        let data = {
-          leagueId: league?.id,
-          leagueType: item?.name,
-          goalServeLeagueId: getstanding?.data?.standings?.category?.id,
-          division: div?.name,
-          teamId: teamId?.id,
-          goalServeTeamId: teamId?.goalServeTeamId,
-          difference: team.difference,
-          games_played: team.games_played,
-          goals_against: team.goals_against,
-          goals_for: team.goals_for,
-          home_record: team.home_record,
-          last_ten: team.last_ten,
-          ot_losses: team.ot_losses,
-          points: team.points,
-          regular_ot_wins: team.regular_ot_wins,
-          road_record: team.road_record,
-          shootout_losses: team.shootout_losses,
-          shootout_wins: team.shootout_wins,
-          streak: team.streak,
-          pct: +(
-            (Number(team.won) * 100) /
-            (Number(team.won) + Number(team.lost))
-          ).toFixed(3),
-          lost: team.lost,
-          name: team.name,
-          position: team.position,
-          won: team.won,
-        };
-        const standingData = NhlStandings.findOneAndUpdate(
-          { goalServeTeamId: teamId?.goalServeTeamId },
-          { $set: data },
-          { upsert: true, new: true }
-        );
-      });
-    });
-  });
+  await Promise.all(
+    getstanding?.data?.standings?.category?.league?.map(async (item: any) => {
+      await Promise.all(
+        item.division.map(async (div: any) => {
+          await Promise.all(
+            div.team.map(async (team: any) => {
+              const teamId: any = await TeamNHL.findOne({
+                goalServeTeamId: team.id,
+              });
+              let data = {
+                leagueId: league?.id,
+                leagueType: item?.name,
+                goalServeLeagueId: getstanding?.data?.standings?.category?.id,
+                division: div?.name,
+                teamId: teamId?.id,
+                goalServeTeamId: teamId?.goalServeTeamId,
+                difference: team.difference,
+                games_played: team.games_played,
+                goals_against: team.goals_against,
+                goals_for: team.goals_for,
+                home_record: team.home_record,
+                last_ten: team.last_ten,
+                ot_losses: team.ot_losses,
+                points: team.points,
+                regular_ot_wins: team.regular_ot_wins,
+                road_record: team.road_record,
+                shootout_losses: team.shootout_losses,
+                shootout_wins: team.shootout_wins,
+                streak: team.streak,
+                pct: +(
+                  (Number(team.won) * 100) /
+                  (Number(team.won) + Number(team.lost))
+                ).toFixed(3),
+                lost: team.lost,
+                name: team.name,
+                position: team.position,
+                won: team.won,
+              };
+              await NhlStandings.findOneAndUpdate(
+                { goalServeTeamId: teamId?.goalServeTeamId },
+                { $set: data },
+                { upsert: true }
+              );
+            })
+          );
+        })
+      );
+    })
+  );
 };
 const updatePlayersNhl = async () => {
   const team = await TeamNHL.find();
@@ -9459,9 +9270,6 @@ export default {
   createTeamNHL,
   addNHLTeamImage,
   addNhlMatch,
-  addNhlPlayer,
-  addNhlInjuredPlayer,
-  addNhlStandings,
   getNHLStandingData,
   nhlSingleGameBoxScore,
   addMatchDataFutureForNhl,
