@@ -14,6 +14,12 @@ const socket = async (eventName: string, data: object | Array<object>) => {
     case "nhlLiveMatch":
       io.emit("nhlLiveMatch", data);
       break;
+    case "nhlUpcomingMatch":
+      io.emit("nhlUpcomingMatch", data);
+      break;
+    case "nhlFinalMatch":
+      io.emit("nhlFinalMatch", data);
+      break;
 
     default:
       break;
