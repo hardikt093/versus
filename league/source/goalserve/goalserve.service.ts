@@ -4550,7 +4550,6 @@ const addNhlMatch = async () => {
   }
 };
 
-
 const getNHLStandingData = async () => {
   const getStandingData = await NhlStandings.aggregate([
     {
@@ -6641,7 +6640,7 @@ const nhlGetTeam = async (params: any) => {
             },
           },
           total: {
-            name:"Total",
+            name: "Total",
             games_played: {
               $max: {
                 $map: {
@@ -6727,79 +6726,6 @@ const nhlGetTeam = async (params: any) => {
                 },
               },
             },
-            time_on_ice: {
-              $let: {
-                vars: {
-                  totalMinutes: {
-                    $reduce: {
-                      input: "$teamPlayers",
-                      initialValue: 0,
-                      in: {
-                        $cond: [
-                          {
-                            $regexMatch: {
-                              input: "$$this.time_on_ice",
-                              regex: /^\d{2}:\d{2}$/,
-                            },
-                          },
-                          {
-                            $add: [
-                              "$$value",
-                              {
-                                $let: {
-                                  vars: {
-                                    timeParts: {
-                                      $split: ["$$this.time_on_ice", ":"],
-                                    },
-                                  },
-                                  in: {
-                                    $add: [
-                                      {
-                                        $multiply: [
-                                          {
-                                            $toInt: {
-                                              $arrayElemAt: ["$$timeParts", 0],
-                                            },
-                                          },
-                                          60,
-                                        ],
-                                      },
-                                      {
-                                        $toInt: {
-                                          $arrayElemAt: ["$$timeParts", 1],
-                                        },
-                                      },
-                                    ],
-                                  },
-                                },
-                              },
-                            ],
-                          },
-                          "$$value",
-                        ],
-                      },
-                    },
-                  },
-                },
-                in: {
-                  $cond: [
-                    { $gt: ["$$totalMinutes", 0] },
-                    {
-                      $concat: [
-                        {
-                          $toString: {
-                            $floor: { $divide: ["$$totalMinutes", 60] },
-                          },
-                        }, // Convert total minutes to hours
-                        ":",
-                        { $toString: { $mod: ["$$totalMinutes", 60] } }, // Get the remaining minutes
-                      ],
-                    },
-                    "-",
-                  ],
-                },
-              },
-            },
           },
         },
 
@@ -6853,6 +6779,20 @@ const nhlGetTeam = async (params: any) => {
       },
     },
   ]);
+
+  let getTeams: any = getTeam[0];
+  let totalMinutes: any = 0;
+  getTeams.playerSkatingStats.allPlayerStats.forEach((player: any) => {
+    if (player.time_on_ice) {
+      const [hours, minutes] = player.time_on_ice.split(":").map(Number);
+
+      totalMinutes += hours * 60 + minutes;
+    }
+  });
+  const totalHours = Math.floor(totalMinutes / 60);
+  const remainingMinutes = totalMinutes % 60;
+  getTeams.playerSkatingStats.total.time_on_ice = `${totalHours}:${remainingMinutes}`;
+
   return getTeam[0];
 };
 
@@ -8548,12 +8488,22 @@ const updateNhlMatch = async () => {
             time: matchArray[i]?.match[j]?.time,
             goalServeVenueId: matchArray[i]?.match[j]?.venue_id,
             venueName: matchArray[i]?.match[j]?.venue_name,
-            homeTeamTotalScore: matchArray[i]?.match[j]?.hometeam.totalscore ? matchArray[i]?.match[j]?.hometeam.totalscore : "",
-            awayTeamTotalScore: matchArray[i]?.match[j]?.awayteam.totalscore ? matchArray[i]?.match[j]?.awayteam.totalscore : "",
+            homeTeamTotalScore: matchArray[i]?.match[j]?.hometeam.totalscore
+              ? matchArray[i]?.match[j]?.hometeam.totalscore
+              : "",
+            awayTeamTotalScore: matchArray[i]?.match[j]?.awayteam.totalscore
+              ? matchArray[i]?.match[j]?.awayteam.totalscore
+              : "",
             // new entries
-            timer: matchArray[i]?.match[j]?.timer ? matchArray[i]?.match[j]?.timer : "",
-            isPp: matchArray[i]?.match[j]?.is_pp ? matchArray[i]?.match[j]?.is_pp : "",
-            ppTime: matchArray[i]?.match[j]?.pp_time ? matchArray[i]?.match[j]?.pp_time : "",
+            timer: matchArray[i]?.match[j]?.timer
+              ? matchArray[i]?.match[j]?.timer
+              : "",
+            isPp: matchArray[i]?.match[j]?.is_pp
+              ? matchArray[i]?.match[j]?.is_pp
+              : "",
+            ppTime: matchArray[i]?.match[j]?.pp_time
+              ? matchArray[i]?.match[j]?.pp_time
+              : "",
             awayTeamOt: matchArray[i]?.match[j]?.awayteam.ot,
             awayTeamP1: matchArray[i]?.match[j]?.awayteam.p1,
             awayTeamP2: matchArray[i]?.match[j]?.awayteam.p2,
@@ -8568,33 +8518,39 @@ const updateNhlMatch = async () => {
             homeTeamPp: matchArray[i]?.match[j]?.hometeam.pp,
             homeTeamSo: matchArray[i]?.match[j]?.hometeam.so,
 
-            scoringFirstperiod: matchArray[i]?.match[j]?.scoring?.firstperiod?.event
+            scoringFirstperiod: matchArray[i]?.match[j]?.scoring?.firstperiod
+              ?.event
               ? matchArray[i]?.match[j]?.scoring?.firstperiod?.event
               : [],
             scoringOvertime: matchArray[i]?.match[j]?.scoring?.overtime?.event
               ? matchArray[i]?.match[j]?.scoring?.overtime?.event
               : [],
-            scoringSecondperiod: matchArray[i]?.match[j]?.scoring?.secondperiod?.event
+            scoringSecondperiod: matchArray[i]?.match[j]?.scoring?.secondperiod
+              ?.event
               ? matchArray[i]?.match[j]?.scoring?.secondperiod?.event
               : [],
             scoringShootout: matchArray[i]?.match[j]?.scoring?.shootout?.event
               ? matchArray[i]?.match[j]?.scoring?.shootout?.event
               : [],
-            scoringThirdperiod: matchArray[i]?.match[j]?.scoring?.thirdperiod?.event
+            scoringThirdperiod: matchArray[i]?.match[j]?.scoring?.thirdperiod
+              ?.event
               ? matchArray[i]?.match[j]?.scoring?.thirdperiod?.event
               : [],
 
-            penaltiesFirstperiod: matchArray[i]?.match[j]?.penalties?.firstperiod?.penalty
+            penaltiesFirstperiod: matchArray[i]?.match[j]?.penalties
+              ?.firstperiod?.penalty
               ? matchArray[i]?.match[j]?.penalties?.firstperiod?.penalty
               : [],
-            penaltiesOvertime: matchArray[i]?.match[j]?.penalties?.overtime?.penalty
+            penaltiesOvertime: matchArray[i]?.match[j]?.penalties?.overtime
+              ?.penalty
               ? matchArray[i]?.match[j]?.penalties?.overtime?.penalty
               : [],
-            penaltiesSecondperiod: matchArray[i]?.match[j]?.penalties?.secondperiod
-              ?.penalty
+            penaltiesSecondperiod: matchArray[i]?.match[j]?.penalties
+              ?.secondperiod?.penalty
               ? matchArray[i]?.match[j]?.penalties?.secondperiod?.penalty
               : [],
-            penaltiesThirdperiod: matchArray[i]?.match[j]?.penalties?.thirdperiod?.penalty
+            penaltiesThirdperiod: matchArray[i]?.match[j]?.penalties
+              ?.thirdperiod?.penalty
               ? matchArray[i]?.match[j]?.penalties?.thirdperiod?.penalty
               : [],
 
@@ -8605,10 +8561,12 @@ const updateNhlMatch = async () => {
               ? matchArray[i]?.match[j]?.team_stats?.awayteam
               : {},
 
-            playerStatsAwayTeam: matchArray[i]?.match[j]?.player_stats?.awayteam?.player
+            playerStatsAwayTeam: matchArray[i]?.match[j]?.player_stats?.awayteam
+              ?.player
               ? matchArray[i]?.match[j]?.player_stats?.awayteam?.player
               : [],
-            playerStatsHomeTeam: matchArray[i]?.match[j]?.player_stats?.hometeam?.player
+            playerStatsHomeTeam: matchArray[i]?.match[j]?.player_stats?.hometeam
+              ?.player
               ? matchArray[i]?.match[j]?.player_stats?.hometeam?.player
               : [],
 
@@ -8619,12 +8577,12 @@ const updateNhlMatch = async () => {
               ? matchArray[i]?.match[j]?.powerplay?.hometeam
               : {},
 
-            goalkeeperStatsAwayTeam: matchArray[i]?.match[j]?.goalkeeper_stats?.awayteam
-              ?.player
+            goalkeeperStatsAwayTeam: matchArray[i]?.match[j]?.goalkeeper_stats
+              ?.awayteam?.player
               ? matchArray[i]?.match[j]?.goalkeeper_stats?.awayteam?.player
               : [],
-            goalkeeperStatsHomeTeam: matchArray[i]?.match[j]?.goalkeeper_stats?.hometeam
-              ?.player
+            goalkeeperStatsHomeTeam: matchArray[i]?.match[j]?.goalkeeper_stats
+              ?.hometeam?.player
               ? matchArray[i]?.match[j]?.goalkeeper_stats?.hometeam?.player
               : [],
           };
@@ -8648,7 +8606,6 @@ const updateNhlMatch = async () => {
           savedMatchData = await matchData.save();
         }
       }
-
 
       // }
     }
@@ -8774,7 +8731,7 @@ const updateNhlMatch = async () => {
   } catch (error: any) {
     console.log("error", error);
   }
-}
+};
 
 const getUpcommingMatchNhl = async () => {
   try {
@@ -8968,11 +8925,9 @@ const getUpcommingMatchNhl = async () => {
     await socket("nhlUpcomingMatch", {
       getUpcomingMatch,
     });
-    return getUpcomingMatch
-  } catch (error: any) {
-
-  }
-}
+    return getUpcomingMatch;
+  } catch (error: any) {}
+};
 
 const getFinalMatchNhl = async () => {
   try {
@@ -9216,12 +9171,9 @@ const getFinalMatchNhl = async () => {
     await socket("nhlFinalMatch", {
       getFinalMatch,
     });
-    return getFinalMatch
-
-  } catch (error: any) {
-
-  }
-}
+    return getFinalMatch;
+  } catch (error: any) {}
+};
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -9286,5 +9238,5 @@ export default {
   createAndUpdateOddsNhl,
   updateNhlMatch,
   getUpcommingMatchNhl,
-  getFinalMatchNhl
+  getFinalMatchNhl,
 };
