@@ -222,7 +222,7 @@ const addNbaMatch = async () => {
             data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
               ? teamIdHome.goalServeTeamId
               : 1;
-              dataToStore.push(data);
+            dataToStore.push(data);
           }
         } else {
           if (matchArray) {
@@ -2467,6 +2467,321 @@ const nbaGetTeam = async (params: any) => {
   ]);
   return getTeam[0];
 };
+const nbaSingleGameBoxScore = async (params: any) => {
+  const goalServeMatchId = params.goalServeMatchId;
+  const getMatch = await NbaMatch.aggregate([
+    {
+      $match: {
+        goalServeMatchId: Number(goalServeMatchId),
+      },
+    },
+    {
+      $lookup: {
+        from: "nbateams",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeam",
+      },
+    },
+    {
+      $lookup: {
+        from: "nbateams",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nbastandings",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nbastandings",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nbateamimages",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nbateamimages",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        awayTeamTotalScoreInNumber: {
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
+        },
+        homeTeamTotalScoreInNumber: {
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "nbaodds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
+    },
+    {
+      $unwind: {
+        path: "$odds",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nbaplayers",
+        let: { homeTeamId: "$goalServeHomeTeamId" },
+        pipeline: [
+          { $match: { $expr: 
+            {
+              $and: [
+                { $eq: ["$goalServeTeamId", "$$homeTeamId"] },
+              ]
+            }
+             } },
+             {
+               $project : {
+                 "player": "$name",
+                 "MIN": "$game.minutes",
+                 "3PT" : "$shooting.three_point_made_per_game",
+                 "GP": "$game.games_played",
+                 "PTS": "$game.points_per_game",
+                 "AST": "$game.assists_per_game",
+                 "BLK": "$game.blocks_per_game",
+                 "REB": "$game.rebounds_per_game",
+               }
+             }
+        ],
+        as: "homeTeamPlayersStatistic",
+      },
+    },
+    {
+      $lookup: {
+        from: "nbaplayers",
+        let: { awayTeamId: "$goalServeAwayTeamId" },
+        pipeline: [
+          { $match: { $expr: 
+            {
+              $and: [
+                { $eq: ["$goalServeTeamId", "$$awayTeamId"] },
+                { $eq: ["$isGamePlayer", true] }
+              ]
+            }
+             } },
+             {
+               $project : {
+                "player": "$name",
+                "MIN": "$game.minutes",
+                "3PT" : "$shooting.three_point_made_per_game",
+                "GP": "$game.games_played",
+                "PTS": "$game.points_per_game",
+                "AST": "$game.assists_per_game",
+                "BLK": "$game.blocks_per_game",
+                "REB": "$game.rebounds_per_game",
+               }
+             }
+        ],
+        as: "awayTeamPlayersStatistic",
+      },
+    },
+    {
+      $project: {
+        id: true,
+        attendance: true,
+        status: true,
+        venueName: true,
+        datetime_utc: "$dateTimeUtc",
+        goalServeMatchId: true,
+        awayTeamFullName: "$awayTeam.name",
+        homeTeamFullName: "$homeTeam.name",
+        awayTeamAbbreviation: "$awayTeam.abbreviation",
+        homeTeamAbbreviation: "$homeTeam.abbreviation",
+        homeTeamImage: "$homeTeamImage.image",
+        awayTeamImage: "$awayTeamImage.image",
+        homeTeamTotalScore: true,
+        awayTeamTotalScore: true,
+        awayTeam: {
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+          isWinner: {
+            $cond: {
+              if: {
+                $gte: [
+                  "$awayTeamTotalScoreInNumber",
+                  "$homeTeamTotalScoreInNumber",
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+        homeTeam: {
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+          isWinner: {
+            $cond: {
+              if: {
+                $gte: [
+                  "$homeTeamTotalScoreInNumber",
+                  "$awayTeamTotalScoreInNumber",
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+        scoring : {
+          homeTeam : {
+            Q1 : "$homeTeamQ1",
+            Q2 : "$homeTeamQ2",
+            Q3 : "$homeTeamQ3",
+            Q4 : "$homeTeamQ4",
+            F : "$homeTeamTotalScore",
+          },
+          awayTeam: {
+            Q1 : "$awayTeamQ1",
+            Q2 : "$awayTeamQ2",
+            Q3 : "$awayTeamQ3",
+            Q4 : "$awayTeamQ4",
+            F : "$awayTeamTotalScore",
+          }
+        },
+        teamStatistic: {
+          homeTeam : {
+            "FG" : "$teamStatsHomeTeam.field_goals_made.total",
+            "Field Goal %" : "$teamStatsHomeTeam.field_goals_made.pct",
+            "3PT" : "$teamStatsHomeTeam.threepoint_goals_made.total",
+            "Three Point %" : "$teamStatsHomeTeam.threepoint_goals_made.pct",
+            "FT" : "$teamStatsHomeTeam.freethrows_goals_made.total",
+            "Free throw %" : "$teamStatsHomeTeam.freethrows_goals_made.pct",
+            "Assists" : "$teamStatsHomeTeam.assists.total",
+            "Rebounds" : "$teamStatsHomeTeam.rebounds.total",
+            "Steals" : "$teamStatsHomeTeam.steals.total",
+            "Blocks" : "$teamStatsHomeTeam.blocks.total",
+            "Total Turnovers" : "$teamStatsHomeTeam.turnovers.total",
+            "Fouls" : "$teamStatsHomeTeam.personal_fouls.total",
+          },
+          awayTeam : {
+            "FG" : "$teamStatsAwayTeam.field_goals_made.total",
+            "Field Goal %" : "$teamStatsAwayTeam.field_goals_made.pct",
+            "3PT" : "$teamStatsAwayTeam.threepoint_goals_made.total",
+            "Three Point %" : "$teamStatsAwayTeam.threepoint_goals_made.pct",
+            "FT" : "$teamStatsAwayTeam.freethrows_goals_made.total",
+            "Free throw %" : "$teamStatsAwayTeam.freethrows_goals_made.pct",
+            "Assists" : "$teamStatsAwayTeam.assists.total",
+            "Rebounds" : "$teamStatsAwayTeam.rebounds.total",
+            "Steals" : "$teamStatsAwayTeam.steals.total",
+            "Blocks" : "$teamStatsAwayTeam.blocks.total",
+            "Total Turnovers" : "$teamStatsAwayTeam.turnovers.total",
+            "Fouls" : "$teamStatsAwayTeam.personal_fouls.total",
+          }
+        },
+        playersStatistic: {
+          homeTeam: "$homeTeamPlayersStatistic",
+          awayTeam: "$awayTeamPlayersStatistic"
+        },
+        closingOddsAndOutcome: {
+          awayTeamMoneyLine: "$odds.awayTeamMoneyline",
+          homeTeamMoneyLine: "$odds.homeTeamMoneyline",
+          homeTeamSpread: "$odds.homeTeamSpread",
+          awayTeamSpread: "$odds.awayTeamSpread",
+          homeTeamTotal: "$odds.homeTeamTotal",
+          awayTeamTotal: "$odds.awayTeamTotal",
+          awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
+          homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
+          scoreDifference: {
+            $abs: {
+              $subtract: [
+                "$awayTeamTotalScoreInNumber",
+                "$homeTeamTotalScoreInNumber",
+              ],
+            },
+          },
+          totalGameScore: {
+            $add: [
+              "$awayTeamTotalScoreInNumber",
+              "$homeTeamTotalScoreInNumber",
+            ],
+          },
+        },
+      },
+    },
+  ]);
+  return { getMatch: getMatch[0] };
+};
 export default {
   createTeamNBA,
   addNBATeamImage,
@@ -2481,4 +2796,5 @@ export default {
   nbaScoreWithCurrentDate,
   createAndUpdateOddsNba,
   nbaGetTeam,
+  nbaSingleGameBoxScore,
 };
