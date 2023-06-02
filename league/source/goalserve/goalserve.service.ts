@@ -6836,6 +6836,7 @@ const nhlGetTeam = async (params: any) => {
             },
           },
           total: {
+            name:"Total",
             games_played: {
               $max: {
                 $map: {
