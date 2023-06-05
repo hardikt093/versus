@@ -2,7 +2,6 @@ import cron from "node-cron";
 
 import goalserveService from "../../goalserve/goalserve.service";
 import moment from "moment";
-import goalserveNbaService from "../../goalserve/NBA/goalserve.service";
 
 var getUpcomingMatch = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron getUpcomingMatch");
@@ -88,23 +87,6 @@ var updateNhlMatch = cron.schedule("*/60 * * * * *", async () => {
   await goalserveService.updateNhlMatch();
 })
 
-// NBA
-
-var updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
-  console.info("inside score cron updateCurruntDateRecordNba");
-  await goalserveNbaService.updateCurruntDateRecordNba();
-});
-
-const createAndUpdateOddsNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron createAndUpdateOddsNba");
-  await goalserveNbaService.createAndUpdateOddsNba();
-});
-
-var updateNbaMatch = cron.schedule("*/60 * * * * *", async () => {
-  console.info("inside score cron updateNbaMatch");
-  await goalserveNbaService.updateNbaMatch();
-})
-
 export default {
   createAndUpdateOdds,
   getLiveMatch,
@@ -122,8 +104,5 @@ export default {
   getLiveMatchNhl,
   updateNhlMatch,
   getUpcommingMatchNhl,
-  getFinalMatchNhl,
-  updateCurruntDateRecordNba,
-  createAndUpdateOddsNba,
-  updateNbaMatch
+  getFinalMatchNhl
 };
