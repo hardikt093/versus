@@ -6235,6 +6235,43 @@ const nhlGetTeam = async (params: any) => {
               as: "opposingTeam",
             },
           },
+          {
+            $lookup: {
+              from: "nhlodds",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    spread:{$cond:{
+                      if: {
+                        $eq: ["$goalServeHomeTeamId", "$goalServeTeamId"],
+                      },
+                      then:"$homeTeamSpread",
+                      else:"$awayTeamSpread"
+                    }},
+                    total:{$cond:{
+                      if: {
+                        $eq: ["$goalServeHomeTeamId", "$goalServeTeamId"],
+                      },
+                      then:"$homeTeamTotal",
+                      else:"$awayTeamTotal"
+                    }}
+                  },
+                },
+               
+              ],
+              as: "odds",
+            },
+          },
         ],
         as: "schedule",
       },
@@ -6591,6 +6628,7 @@ const nhlGetTeam = async (params: any) => {
                 opposingTeam: {
                   $arrayElemAt: ["$$item.opposingTeam", 0],
                 },
+                odds:   { $arrayElemAt: ["$$item.odds", 0]},
                 goalServeMatchId: "$$item.goalServeMatchId",
                 date: "$$item.date",
                 awayTeamTotalScore: "$$item.awayTeamTotalScore",
