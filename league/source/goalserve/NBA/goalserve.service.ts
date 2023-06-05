@@ -1380,6 +1380,16 @@ const nbaScoreWithDate = async (params: any, type: string) => {
           },
           {
             status: {
+              $eq: "Final/OT",
+            },
+          },
+          {
+            status: {
+              $eq: "Final/2OT",
+            },
+          },
+          {
+            status: {
               $regex: '^Final',
               $options: 'i'
             },
@@ -1575,7 +1585,20 @@ const getLiveDataOfNba = async (params: any) => {
           },
           {
             status: {
-              $ne: "After Over Time",
+              $ne: "Final/OT",
+            },
+          },
+          {
+            status: {
+              $ne: "Final/2OT",
+            },
+          },
+          {
+            status: {
+              $not : {
+                $regex: '^Final',
+                $options: 'i'
+              }
             },
           },
           {
@@ -1585,12 +1608,12 @@ const getLiveDataOfNba = async (params: any) => {
           },
           {
             status: {
-              $ne: "After Penalties",
+              $ne: "Canceled",
             },
           },
           {
             status: {
-              $ne: "Final/4OT",
+              $ne: "Suspended",
             },
           },
         ],
@@ -2138,6 +2161,12 @@ const nbaGetTeam = async (params: any) => {
                     ],
                   },
                   { $eq: ["$status", "Final"] },
+                  {
+                    "$status": {
+                      $regex: '^Final',
+                      $options: 'i'
+                    },
+                  }
                 ],
               },
             },
@@ -2161,7 +2190,6 @@ const nbaGetTeam = async (params: any) => {
                   timezone: "UTC",
                 },
               },
-
               awayTeamTotalScoreInNumber: {
                 $convert: {
                   input: "$awayTeamTotalScore",
@@ -3118,17 +3146,12 @@ const getFinalMatchNba = async () => {
             },
             {
               status: {
-                $eq: "After Over Time",
+                $eq: "Final/OT",
               },
             },
             {
               status: {
-                $eq: "End Of Period",
-              },
-            },
-            {
-              status: {
-                $eq: "After Penalties",
+                $eq: "Final/2OT",
               },
             },
             {
@@ -3136,6 +3159,12 @@ const getFinalMatchNba = async () => {
                 $eq: "Final/4OT",
               },
             },
+            {
+              "status": {
+                $regex: '^Final',
+                $options: 'i'
+              },
+            }
           ],
         },
       },
