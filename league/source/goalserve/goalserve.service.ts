@@ -5768,21 +5768,6 @@ const nhlScoreWithDate = async (params: any, type: string) => {
               $eq: "Final/4OT",
             },
           },
-          {
-            status: {
-              $eq: "1st",
-            },
-          },
-          {
-            status: {
-              $eq: "2nd",
-            },
-          },
-          {
-            status: {
-              $eq: "3rd",
-            },
-          },
         ],
       },
     },
@@ -8989,21 +8974,6 @@ const getFinalMatchNhl = async () => {
             {
               status: {
                 $eq: "Final/4OT",
-              },
-            },
-            {
-              status: {
-                $eq: "1st",
-              },
-            },
-            {
-              status: {
-                $eq: "2nd",
-              },
-            },
-            {
-              status: {
-                $eq: "3rd",
               },
             },
           ],
