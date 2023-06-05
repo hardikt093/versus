@@ -2782,6 +2782,108 @@ const nbaSingleGameBoxScore = async (params: any) => {
   ]);
   return { getMatch: getMatch[0] };
 };
+
+const updateNbaMatch = async () => {
+  try {
+    const getMatch = await axiosGet(
+      `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/bsktbl/nba-shedule`,
+      { json: true }
+    );
+
+    const matchArray = await getMatch?.data?.shedules?.matches;
+    const league: any = await League.findOne({
+      goalServeLeagueId: getMatch?.data?.shedules?.id,
+    });
+    var savedMatchData: any = "";
+    for (let i = 0; i < matchArray?.length; i++) {
+      for (let j = 0; j < matchArray[i]?.match?.length; j++) {
+        const match: any = await NbaMatch.findOne({
+          goalServeMatchId: matchArray[i]?.match[j]?.id,
+        });
+        if (!match) {
+          const data: any = {
+            leagueId: league.id,
+            goalServeLeagueId: league.goalServeLeagueId,
+            date: matchArray[i]?.match[j].date,
+            formattedDate: matchArray[i]?.match[j].formatted_date,
+            timezone: matchArray[i]?.match[j].timezone,
+            attendance: matchArray[i]?.match[j].attendance,
+            goalServeMatchId: matchArray[i]?.match[j].id,
+            dateTimeUtc: matchArray[i]?.match[j].datetime_utc,
+            status: matchArray[i]?.match[j].status,
+            time: matchArray[i]?.match[j].time,
+            goalServeVenueId: matchArray[i]?.match[j].venue_id,
+            venueName: matchArray[i]?.match[j].venue_name,
+            homeTeamTotalScore: matchArray[i]?.match[j].hometeam.totalscore,
+            awayTeamTotalScore: matchArray[i]?.match[j].awayteam.totalscore,
+            goalServeHomeTeamId: matchArray[i]?.match[j].hometeam.id,
+            goalServeAwayTeamId: matchArray[i]?.match[j].awayteam.id,
+            // new entries
+            timer: matchArray[i]?.match[j]?.timer ? matchArray[i]?.match[j]?.timer : "",
+            awayTeamOt: matchArray[i]?.match[j].awayteam.ot,
+            awayTeamQ1: matchArray[i]?.match[j].awayteam.q1,
+            awayTeamQ2: matchArray[i]?.match[j].awayteam.q2,
+            awayTeamQ3: matchArray[i]?.match[j].awayteam.q3,
+            awayTeamQ4: matchArray[i]?.match[j].awayteam.q4,
+            awayTeamPosession: matchArray[i]?.match[j].awayteam.posession,
+
+            homeTeamOt: matchArray[i]?.match[j].hometeam.ot,
+            homeTeamQ1: matchArray[i]?.match[j].hometeam.q1,
+            homeTeamQ2: matchArray[i]?.match[j].hometeam.q2,
+            homeTeamQ3: matchArray[i]?.match[j].hometeam.q3,
+            homeTeamQ4: matchArray[i]?.match[j].hometeam.q4,
+            homeTeamPosession: matchArray[i]?.match[j].hometeam.posession,
+
+            teamStatsHomeTeam: matchArray[i]?.match[j]?.team_stats?.hometeam
+              ? matchArray[i]?.match[j]?.team_stats?.hometeam
+              : {},
+            teamStatsAwayTeam: matchArray[i]?.match[j]?.team_stats?.awayteam
+              ? matchArray[i]?.match[j]?.team_stats?.awayteam
+              : {},
+
+            playerStatsBenchAwayTeam: matchArray[i]?.match[j]?.player_stats?.awayteam
+              ?.bench?.player
+              ? matchArray[i]?.match[j]?.player_stats?.awayteam?.bench?.player
+              : [],
+            playerStatsBenchHomeTeam: matchArray[i]?.match[j]?.player_stats?.hometeam
+              ?.bench?.player
+              ? matchArray[i]?.match[j]?.player_stats?.hometeam?.bench?.player
+              : [],
+            playerStatsStartersAwayTeam: matchArray[i]?.match[j]?.player_stats?.awayteam
+              ?.starters?.player
+              ? matchArray[i]?.match[j]?.player_stats?.awayteam?.starters?.player
+              : [],
+            playerStatsStartersHomeTeam: matchArray[i]?.match[j]?.player_stats?.hometeam
+              ?.starters?.player
+              ? matchArray[i]?.match[j]?.player_stats?.hometeam?.starters?.player
+              : [],
+          };
+          console.log("updates", data.date, data.goalServeMatchId);
+          const teamIdAway: any = await TeamNBA.findOne({
+            goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
+          });
+
+          data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
+            ? teamIdAway.goalServeTeamId
+            : 1;
+
+          const teamIdHome: any = await TeamNBA.findOne({
+            goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
+          });
+
+          data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
+            ? teamIdHome.goalServeTeamId
+            : 1;
+          const matchData = new NbaMatch(data);
+          savedMatchData = await matchData.save();
+        }
+      }
+    }
+    return true;
+  } catch (error: any) {
+    console.log("error", error);
+  }
+};
 export default {
   createTeamNBA,
   addNBATeamImage,
@@ -2797,4 +2899,5 @@ export default {
   createAndUpdateOddsNba,
   nbaGetTeam,
   nbaSingleGameBoxScore,
+  updateNbaMatch
 };
