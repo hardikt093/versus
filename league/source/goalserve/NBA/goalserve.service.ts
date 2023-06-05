@@ -900,7 +900,14 @@ const addNbaPlayer = async () => {
         allGamePlayer,
         allShootingPlayer
       );
-      await PlayersNBA.insertMany(mergedArray);
+      for (let k = 0; k < mergedArray.length; k++) {
+        const player = mergedArray[k];
+        await PlayersNBA.updateOne(
+          { goalServeTeamId : player.goalServeTeamId, goalServePlayerId: player.goalServePlayerId },
+          { $set: player },
+          { upsert: true }
+        );
+      }
     }
   }
 };
@@ -993,8 +1000,11 @@ const addNbaStandings = async () => {
   const league: any = await League.findOne({
     goalServeLeagueId: getstanding?.data?.standings?.category?.id,
   });
-  getstanding?.data?.standings?.category?.league?.map((item: any) => {
-    item.division.map((div: any) => {
+  await Promise.all(
+  getstanding?.data?.standings?.category?.league?.map(async (item: any) => {
+    await Promise.all(
+    item.division.map(async (div: any) => {
+      await Promise.all(
       div.team.map(async (team: any) => {
         const teamId: any = await TeamNBA.findOne({
           goalServeTeamId: team.id,
@@ -1020,11 +1030,17 @@ const addNbaStandings = async () => {
           streak: team.streak,
           won: team.won,
         };
-        const standingData = new NbaStandings(data);
-        await standingData.save();
-      });
-    });
-  });
+        await NbaStandings.findOneAndUpdate(
+          { goalServeTeamId: teamId?.goalServeTeamId },
+          { $set: data },
+          { upsert: true }
+        );
+      })
+      );
+    })
+    );
+  })
+  );
 };
 
 const getNbaStandingData = async () => {
@@ -2858,7 +2874,6 @@ const updateNbaMatch = async () => {
               ? matchArray[i]?.match[j]?.player_stats?.hometeam?.starters?.player
               : [],
           };
-          console.log("updates", data.date, data.goalServeMatchId);
           const teamIdAway: any = await TeamNBA.findOne({
             goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
           });
