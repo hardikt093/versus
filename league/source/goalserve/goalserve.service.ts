@@ -4859,260 +4859,117 @@ const nhlSingleGameBoxScore = async (params: any) => {
           { title: "Overtime", child: "$scoringOvertime" },
         ],
         scoring: {
-          awayTeam: {
-            $concatArrays: [
-              [
-                {
-                  title: "Period 1",
-                  score: {
-                    $cond: {
-                      if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                      then: "-",
-                      else: {
-                        $toInt: {
-                          $arrayElemAt: ["$scoringFirstperiod.away_score", -1],
-                        },
-                      },
-                    },
+          awayTeam: [
+            {
+              title: "Period 1",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamP1", ""] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamP1",
                   },
                 },
-                {
-                  title: "Period 2",
-                  score: {
-                    $cond: [
-                      {
-                        $eq: [{ $size: "$scoringSecondperiod.away_score" }, 0],
-                      },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringSecondperiod.away_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringFirstperiod.away_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
+              },
+            },
+            {
+              title: "Period 2",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamP2", ""] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamP2",
                   },
                 },
-                {
-                  title: "Period 3",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringThirdperiod.away_score" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringThirdperiod.away_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringSecondperiod.away_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
+              },
+            },
+            {
+              title: "Period 3",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamP3", ""] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamP3",
                   },
                 },
-                {
-                  title: "Overtime",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringOvertime.away_score" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: ["$scoringOvertime.away_score", -1],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringThirdperiod.away_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
+              },
+            },
+            {
+              title: "Overtime",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamOt", ""] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamOt",
                   },
                 },
-                {
-                  title: "Total",
-                  score: "$awayTeamTotalScoreInNumber",
-                },
-              ],
-            ],
-          },
-          homeTeam: {
-            $concatArrays: [
-              [
-                {
-                  title: "Period 1",
-                  score: {
-                    $cond: {
-                      if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                      then: "-",
-                      else: {
-                        $arrayElemAt: ["$scoringFirstperiod.home_score", -1],
-                      },
-                    },
-                  },
-                },
-                {
-                  title: "Period 2",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringSecondperiod.home_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringFirstperiod.home_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "Period 3",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringThirdperiod.home_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringSecondperiod.home_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "Overtime",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringOvertime" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: ["$scoringOvertime.home_score", -1],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringThirdperiod.home_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "Total",
-                  score: "$homeTeamTotalScoreInNumber",
-                },
-              ],
-            ],
-          },
-        },
+              },
+            },
+            {
+              title: "Total",
+              score: "$awayTeamTotalScoreInNumber",
+            },
+          ],
 
+          homeTeam: [
+              {
+                title: "Period 1",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamP1", ""] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamP1",
+                    },
+                  },
+                },
+              },
+              {
+                title: "Period 2",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamP2", ""] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamP2",
+                    },
+                  },
+                },
+              },
+              {
+                title: "Period 3",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamP3", ""] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamP3",
+                    },
+                  },
+                },
+              },
+              {
+                title: "Overtime",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamOt", ""] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamOt",
+                    },
+                  },
+                },
+              },
+              {
+                title: "Total",
+                score: "$homeTeamTotalScoreInNumber",
+              },
+            ],
+          
+        },
         penaltySummary: [
           { title: "Period 1", child: "$penaltiesFirstperiod" },
           { title: "Period 2", child: "$penaltiesSecondperiod" },
@@ -7593,258 +7450,116 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
           { title: "Overtime", child: "$scoringOvertime" },
         ],
         scoring: {
-          awayTeam: {
-            $concatArrays: [
-              [
-                {
-                  title: "Period 1",
-                  score: {
-                    $cond: {
-                      if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                      then: "-",
-                      else: {
-                        $toInt: {
-                          $arrayElemAt: ["$scoringFirstperiod.away_score", -1],
-                        },
-                      },
+          awayTeam: [
+            {
+              title: "Period 1",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamP1", "0"] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamP1",
+                  },
+                },
+              },
+            },
+            {
+              title: "Period 2",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamP2", "0"] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamP2",
+                  },
+                },
+              },
+            },
+            {
+              title: "Period 3",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamP3", "0"] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamP3",
+                  },
+                },
+              },
+            },
+            {
+              title: "Overtime",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamOt", "0"] },
+                  then: "-",
+                  else: {
+                    $toInt: "$awayTeamOt",
+                  },
+                },
+              },
+            },
+            {
+              title: "Total",
+              score: "$awayTeamTotalScoreInNumber",
+            },
+          ],
+
+          homeTeam: [
+              {
+                title: "Period 1",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamP1", "0"] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamP1",
                     },
                   },
                 },
-                {
-                  title: "Period 2",
-                  score: {
-                    $cond: [
-                      {
-                        $eq: [{ $size: "$scoringSecondperiod.away_score" }, 0],
-                      },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringSecondperiod.away_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringFirstperiod.away_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "Period 3",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringThirdperiod.away_score" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringThirdperiod.away_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringSecondperiod.away_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "Overtime",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringOvertime.away_score" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: ["$scoringOvertime.away_score", -1],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringThirdperiod.away_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "Total",
-                  score: "$awayTeamTotalScoreInNumber",
-                },
-              ],
-            ],
-          },
-          homeTeam: {
-            $concatArrays: [
-              [
-                {
-                  title: "Period 1",
-                  score: {
-                    $cond: {
-                      if: { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                      then: "-",
-                      else: {
-                        $arrayElemAt: ["$scoringFirstperiod.home_score", -1],
-                      },
+              },
+              {
+                title: "Period 2",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamP2", "0"] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamP2",
                     },
                   },
                 },
-                {
-                  title: "Period 2",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringSecondperiod.home_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringFirstperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringFirstperiod.home_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
+              },
+              {
+                title: "Period 3",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamP3", "0"] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamP3",
+                    },
                   },
                 },
-                {
-                  title: "Period 3",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: [
-                                "$scoringThirdperiod.home_score",
-                                -1,
-                              ],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringSecondperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringSecondperiod.home_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
+              },
+              {
+                title: "Overtime",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamOt", "0"] },
+                    then: "-",
+                    else: {
+                      $toInt: "$homeTeamOt",
+                    },
                   },
                 },
-                {
-                  title: "Overtime",
-                  score: {
-                    $cond: [
-                      { $eq: [{ $size: "$scoringOvertime" }, 0] },
-                      "-",
-                      {
-                        $subtract: [
-                          {
-                            $toInt: {
-                              $arrayElemAt: ["$scoringOvertime.home_score", -1],
-                            },
-                          },
-                          {
-                            $cond: [
-                              { $eq: [{ $size: "$scoringThirdperiod" }, 0] },
-                              0,
-                              {
-                                $toInt: {
-                                  $arrayElemAt: [
-                                    "$scoringThirdperiod.home_score",
-                                    -1,
-                                  ],
-                                },
-                              },
-                            ],
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  title: "Total",
-                  score: "$homeTeamTotalScoreInNumber",
-                },
-              ],
+              },
+              {
+                title: "Total",
+                score: "$homeTeamTotalScoreInNumber",
+              },
             ],
-          },
+          
         },
         penaltySummary: [
           { title: "Period 1", child: "$penaltiesFirstperiod" },
