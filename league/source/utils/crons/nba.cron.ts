@@ -27,10 +27,16 @@ var updatePlayersNba = cron.schedule("*/5 * * * * *", async () => {
   await goalserveNbaService.addNbaPlayer();
 });
 
+var updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
+  console.info("inside score cron updateInjuredPlayerNBA");
+  await goalserveNbaService.addNbaInjuredPlayer();
+});
+
 export default {
   updateCurruntDateRecordNba,
   createAndUpdateOddsNba,
   updateNbaMatch,
   updateStandingNba,
-  updatePlayersNba
+  updatePlayersNba,
+  updateInjuredPlayerNBA
 };

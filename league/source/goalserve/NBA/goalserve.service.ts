@@ -931,6 +931,7 @@ async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
 }
 
 const addNbaInjuredPlayer = async () => {
+  await NbaInjury.deleteMany({});
   const team = await TeamNBA.find();
   await Promise.all(
     team.map(async (item) => {
@@ -944,12 +945,12 @@ const addNbaInjuredPlayer = async () => {
       );
 
       const injuryArray1 = injuryApi?.data?.team;
-      if (injuryArray1?.report?.length) {
+      if (injuryArray1?.report && injuryArray1?.report?.length > 0) {
         await Promise.all(
           injuryArray1?.report?.map(async (val: any) => {
             const player = await PlayersNBA.findOne({
               goalServePlayerId: val?.player_id,
-            });
+            }).lean();
             const data = {
               date: val?.date,
               description: val?.description,
@@ -958,17 +959,20 @@ const addNbaInjuredPlayer = async () => {
               playerId: player?.id,
               status: val?.status,
               goalServeTeamId: injuryApi?.data?.team?.id,
-              teamId: item?.id,
+              teamId: item?._id,
             };
-            const playerData = new NbaInjury(data);
-            const saveInjuries = await playerData.save();
+            await NbaInjury.updateOne(
+              { goalServeTeamId: data?.goalServeTeamId, goalServePlayerId: data?.goalServePlayerId },
+              { $set: data },
+              { upsert: true }
+            );
           })
         );
-      } else if (injuryArray1?.report && !injuryArray1?.report?.length) {
+      } else if (injuryArray1?.report) {
         const val = injuryArray1?.report;
-        const player = await Player.findOne({
+        const player = await PlayersNBA.findOne({
           goalServePlayerId: val?.player_id,
-        });
+        }).lean();
 
         const data = {
           date: val?.date,
@@ -978,10 +982,13 @@ const addNbaInjuredPlayer = async () => {
           status: val?.status,
           goalServeTeamId: injuryArray1?.id,
           teamId: item?.id,
-          playerId: player?.id,
+          playerId: player?._id,
         };
-        const playerData = new NbaInjury(data);
-        const saveInjuries = await playerData.save();
+        await NbaInjury.updateOne(
+          { goalServeTeamId: data?.goalServeTeamId, goalServePlayerId: data?.goalServePlayerId },
+          { $set: data },
+          { upsert: true }
+        );
       }
     })
   );
