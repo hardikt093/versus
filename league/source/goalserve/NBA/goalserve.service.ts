@@ -129,7 +129,7 @@ const addNbaMatch = async () => {
     };
     const daylist = getDaysArray(
       new Date("2022-10-02"),
-      new Date("2023-06-01")
+      new Date("2023-06-05")
     );
     for (let i = 0; i < daylist?.length; i++) {
       let dataToStore: any = [];
@@ -146,7 +146,7 @@ const addNbaMatch = async () => {
         const matchArray = await getMatch?.data?.scores?.category?.match;
         const league: any = await League.findOne({
           goalServeLeagueId: getMatch?.data.scores.category.id,
-        });
+        }).lean();
         let savedMatchData: any = "";
         if (matchArray?.length > 0 && matchArray) {
           for (let j = 0; j < matchArray?.length; j++) {
@@ -1380,37 +1380,8 @@ const nbaScoreWithDate = async (params: any, type: string) => {
           },
           {
             status: {
-              $eq: "After Over Time",
-            },
-          },
-          {
-            status: {
-              $eq: "End Of Period",
-            },
-          },
-          {
-            status: {
-              $eq: "After Penalties",
-            },
-          },
-          {
-            status: {
-              $eq: "Final/4OT",
-            },
-          },
-          {
-            status: {
-              $eq: "1st",
-            },
-          },
-          {
-            status: {
-              $eq: "2nd",
-            },
-          },
-          {
-            status: {
-              $eq: "3rd",
+              $regex: '^Final',
+              $options: 'i'
             },
           },
         ],

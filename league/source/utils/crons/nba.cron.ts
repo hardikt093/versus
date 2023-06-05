@@ -33,7 +33,7 @@ var updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
 });
 
 var getLiveMatchNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron getLiveMatchNHL");
+  console.info("inside score cron getLiveMatchNBA");
   await goalserveNbaService.getLiveDataOfNba({ date1: moment().startOf("day").utc().toISOString() });
 });
 
