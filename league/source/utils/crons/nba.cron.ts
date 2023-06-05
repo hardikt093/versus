@@ -32,11 +32,29 @@ var updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
   await goalserveNbaService.addNbaInjuredPlayer();
 });
 
+var getLiveMatchNba = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron getLiveMatchNHL");
+  await goalserveNbaService.getLiveDataOfNba({ date1: moment().startOf("day").utc().toISOString() });
+});
+
+var getUpcommingMatchNba = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron getUpcommingMatchNba");
+  await goalserveNbaService.getUpcommingMatchNba();
+});
+
+var getFinalMatchNba = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron getFinalMatchNba");
+  await goalserveNbaService.getFinalMatchNba();
+});
+
 export default {
   updateCurruntDateRecordNba,
   createAndUpdateOddsNba,
   updateNbaMatch,
   updateStandingNba,
   updatePlayersNba,
-  updateInjuredPlayerNBA
+  updateInjuredPlayerNBA,
+  getFinalMatchNba,
+  getUpcommingMatchNba,
+  getLiveMatchNba
 };
