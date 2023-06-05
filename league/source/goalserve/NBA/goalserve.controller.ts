@@ -110,7 +110,14 @@ const nbaSingleGameBoxScore = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
-
+const nbaSingleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.nbaSingleGameBoxScoreUpcomming(req.query);
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   createTeamNBA,
   createTeamImageNBA,
@@ -123,5 +130,6 @@ export default {
   nbaScoreWithDate,
   nbaScoreWithCurrentDate,
   nbaGetTeam,
-  nbaSingleGameBoxScore
+  nbaSingleGameBoxScore,
+  nbaSingleGameBoxScoreUpcomming
 };

@@ -14,4 +14,5 @@ router.get("/scoreWithDate", goalserveController.nbaScoreWithDate)
 router.get("/scoreWithCurrentDate", goalserveController.nbaScoreWithCurrentDate);
 router.get("/get-team", goalserveController.nbaGetTeam);
 router.get("/single-game-boxscore-final", goalserveController.nbaSingleGameBoxScore);
+router.get("/single-game-boxscore-upcomming", goalserveController.nbaSingleGameBoxScoreUpcomming);
 export = router;

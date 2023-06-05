@@ -8,6 +8,7 @@ const router = express.Router();
 router.get("/scoreWithDate", validate(leagueValidation.scoreWithCurrentDate), leagueNbaProxyController.nbaScoreWithDate);
 router.get("/scoreWithCurrentDate", validate(leagueValidation.scoreWithCurrentDate), leagueNbaProxyController.nbaScoreWithCurrentDate);
 router.get("/get-team", validate(leagueValidation.nbaGetTeam), leagueNbaProxyController.nbaGetTeam);
+router.get("/single-game-boxscore-upcomming", validate(leagueValidation.singleGameBoxscoreUpcomming), leagueNbaProxyController.nbaSingleGameBoxScoreUpcomming);
 
 
 export = router;
