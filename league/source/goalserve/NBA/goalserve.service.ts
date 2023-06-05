@@ -3608,6 +3608,15 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           won: { $arrayElemAt: ["$standings.won", 0] },
           lose: { $arrayElemAt: ["$standings.lost", 0] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 0] },
+          moneyline: {
+            $arrayElemAt: ["$odds.awayTeamMoneyline", 0],
+          },
+          spread: {
+            $arrayElemAt: ["$odds.awayTeamSpread", 0],
+          },
+          total: {
+            $arrayElemAt: ["$odds.awayTeamTotal", 0],
+          },
         },
         homeTeam: {
           homeTeamName: { $arrayElemAt: ["$teams.name", 1] },
@@ -3618,6 +3627,15 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           won: { $arrayElemAt: ["$standings.won", 1] },
           lose: { $arrayElemAt: ["$standings.lost", 1] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
+          moneyline: {
+            $arrayElemAt: ["$odds.homeTeamMoneyline", 0],
+          },
+          spread: {
+            $arrayElemAt: ["$odds.homeTeamSpread", 0],
+          },
+          total: {
+            $arrayElemAt: ["$odds.homeTeamTotal", 0],
+          },
         },
         teamStatistics: [
           {
