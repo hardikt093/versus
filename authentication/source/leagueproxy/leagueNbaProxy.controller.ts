@@ -74,7 +74,18 @@ const nbaStandings = async (req: Request, res: Response) => {
       {},
       token
     );
-    createResponse(res, httpStatus.OK, "", nbaStandings.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+const nbaSingleGameBoxScoreLive = async (req: Request, res: Response) => {
+  try {
+    const nbaGetTeam = await axiosGet(
+      `${config.leagueServer}/nba/single-game-boxscore-live`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", nbaGetTeam.data.data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
@@ -85,5 +96,6 @@ export default {
   nbaGetTeam,
   nbaSingleGameBoxScoreUpcomming,
   nbaSingleGameBoxScore,
-  nbaStandings
+  nbaStandings,
+  nbaSingleGameBoxScoreLive
 };
