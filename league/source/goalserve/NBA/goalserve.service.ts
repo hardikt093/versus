@@ -3380,10 +3380,12 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
               goalServeTeamId: 1,
             },
           },
+          
         ],
         as: "teams",
       },
     },
+  
     {
       $lookup: {
         from: "nbastandings",
@@ -3429,12 +3431,85 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           },
           {
             $project: {
+              goalServeTeamId:1,
               image: 1,
             },
           },
         ],
         as: "teamImages",
       },
+    },
+
+    {
+      $addFields:{
+        awayTeam:{
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: "$teams",
+                cond: { $eq: ["$$this.goalServeTeamId", "$goalServeAwayTeamId"] },
+              },
+            },
+            0
+          ],
+        },
+        homeTeam:{
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: "$teams",
+                cond: { $eq: ["$$this.goalServeTeamId", "$goalServeHomeTeamId"] },
+              },
+            },
+            0
+          ],
+        },
+
+        awayTeamStandings:{
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: "$standings",
+                cond: { $eq: ["$$this.goalServeTeamId", "$goalServeAwayTeamId"] },
+              },
+            },
+            0
+          ],
+        },
+        homeTeamStandings:{
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: "$standings",
+                cond: { $eq: ["$$this.goalServeTeamId", "$goalServeHomeTeamId"] },
+              },
+            },
+            0
+          ],
+        },
+        awayTeamImage:{
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: "$teamImages",
+                cond: { $eq: ["$$this.goalServeTeamId", "$goalServeAwayTeamId"] },
+              },
+            },
+            0
+          ],
+        },
+        homeTeamImage:{
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: "$teamImages",
+                cond: { $eq: ["$$this.goalServeTeamId", "$goalServeHomeTeamId"] },
+              },
+            },
+            0
+          ],
+        }
+      }
     },
     {
       $lookup: {
@@ -3501,12 +3576,12 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
         status: 1,
         venueName: 1,
         datetime_utc: "$dateTimeUtc",
-        awayTeamFullName: { $arrayElemAt: ["$teams.name", 0] },
-        homeTeamFullName: { $arrayElemAt: ["$teams.name", 1] },
-        awayTeamAbbreviation: { $arrayElemAt: ["$teams.abbreviation", 0] },
-        homeTeamAbbreviation: { $arrayElemAt: ["$teams.abbreviation", 1] },
-        homeTeamImage: { $arrayElemAt: ["$teamImages.image", 1] },
-        awayTeamImage: { $arrayElemAt: ["$teamImages.image", 0] },
+        awayTeamFullName:"$awayTeam.name",
+        homeTeamFullName:"$homeTeam.name", 
+        awayTeamAbbreviation:"$awayTeam.abbreviation",
+        homeTeamAbbreviation:"$homeTeam.abbreviation", 
+        homeTeamImage:"$homeTeamImages.image", 
+        awayTeamImage:"$awayTeamImages.image",
         injuredPlayers: {
           homeTeam: {
             $map: {
@@ -3602,14 +3677,11 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           },
         },
         awayTeam: {
-          awayTeamName: { $arrayElemAt: ["$teams.name", 0] },
-          awayTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 0] },
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          won: { $arrayElemAt: ["$standings.won", 0] },
-          lose: { $arrayElemAt: ["$standings.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.image", 0] },
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam.goalServeTeamId",
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+          teamImage: "$awayTeamImages.image",
           moneyline: {
             $arrayElemAt: ["$odds.awayTeamMoneyline", 0],
           },
@@ -3621,14 +3693,11 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           },
         },
         homeTeam: {
-          homeTeamName: { $arrayElemAt: ["$teams.name", 1] },
-          homeTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 1] },
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: { $arrayElemAt: ["$standings.won", 1] },
-          lose: { $arrayElemAt: ["$standings.lost", 1] },
-          teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
+          homeTeamName: '$homeTeam.name',
+          homeTeamId:'$homeTeam.goalServeTeamId',
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+          teamImage: "$homeTeamImages.image",
           moneyline: {
             $arrayElemAt: ["$odds.homeTeamMoneyline", 0],
           },
@@ -3642,68 +3711,68 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
         teamStatistics: [
           {
             title: "Wins",
-            homeTeam: { $arrayElemAt: ["$standings.won", 1] },
-            awayTeam: { $arrayElemAt: ["$standings.won", 0] },
+            homeTeam: "$homeTeamStandings.won",
+            awayTeam: "$awayTeamStandings.won",
             total: {
               $add: [
                 {
-                  $toInt: { $arrayElemAt: ["$standings.won", 1] },
+                  $toInt: "$awayTeamStandings.won",
                 },
                 {
-                  $toInt: { $arrayElemAt: ["$standings.won", 0] },
+                  $toInt: "$homeTeamStandings.won",
                 },
               ],
             },
           },
           {
             title: "Points For",
-            homeTeam: { $arrayElemAt: ["$standings.average_points_for", 1] },
-            awayTeam: { $arrayElemAt: ["$standings.average_points_for", 0] },
+            homeTeam: "$homeTeamStandings.average_points_for",
+            awayTeam: "$awayTeamStandings.average_points_for",
             total: {
               $add: [
                 {
-                  $toDouble: {
-                    $arrayElemAt: ["$standings.average_points_for", 1],
-                  },
+                  $toDouble: 
+                  "$awayTeamStandings.average_points_for"
+                  
                 },
                 {
-                  $toDouble: {
-                    $arrayElemAt: ["$standings.average_points_for", 0],
-                  },
-                },
+                  $toDouble: 
+                   "$homeTeamStandings.average_points_for"
+                  
+                }
               ],
             },
           },
           {
             title: "Points Against",
-            homeTeam: { $arrayElemAt: ["$standings.average_points_agains", 1] },
-            awayTeam: { $arrayElemAt: ["$standings.average_points_agains", 0] },
+            homeTeam: "$homeTeamStandings.average_points_agains",
+            awayTeam: "$awayTeamStandings.average_points_agains",
             total: {
               $add: [
                 {
-                  $toDouble: {
-                    $arrayElemAt: ["$standings.average_points_agains", 1],
-                  },
+                  $toDouble: 
+                "$homeTeamStandings.average_points_agains"
+                  
                 },
                 {
-                  $toDouble: {
-                    $arrayElemAt: ["$standings.average_points_agains", 0],
-                  },
+                  $toDouble: 
+                 "$awayTeamStandings.average_points_agains"
+                  
                 },
               ],
             },
           },
           {
             title: "Losses",
-            homeTeam: { $arrayElemAt: ["$standings.lost", 1] },
-            awayTeam: { $arrayElemAt: ["$standings.lost", 0] },
+            homeTeam: "$homeTeamStandings.lost",
+            awayTeam: "$awayTeamStandings.lost",
             total: {
               $add: [
                 {
-                  $toInt: { $arrayElemAt: ["$standings.lost", 1] },
+                  $toInt: "$homeTeamStandings.lost" ,
                 },
                 {
-                  $toInt: { $arrayElemAt: ["$standings.lost", 0] },
+                  $toInt: "$awayTeamStandings.lost" ,
                 },
               ],
             },
