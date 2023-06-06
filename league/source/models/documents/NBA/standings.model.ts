@@ -21,6 +21,7 @@ var standingSchema = new Schema(
     road_record: String,
     streak: String,
     won: String,
+    pct: Number,
   },
   {
     timestamps: true,

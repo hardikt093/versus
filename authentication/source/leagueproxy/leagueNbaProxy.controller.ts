@@ -54,9 +54,36 @@ const nbaSingleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
 };
+const nbaSingleGameBoxScore = async (req: Request, res: Response) => {
+  try {
+    const nbaSingleGameBoxScore = await axiosGet(
+      `${config.leagueServer}/nba/single-game-boxscore-final`,
+      { goalServeMatchId: req.query.goalServeMatchId },
+      ""
+    );
+    createResponse(res, httpStatus.OK, "", nbaSingleGameBoxScore.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
+const nbaStandings = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const nbaStandings = await axiosGet(
+      `${config.leagueServer}/nba/get-standings`,
+      {},
+      token
+    );
+    createResponse(res, httpStatus.OK, "", nbaStandings.data.data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message);
+  }
+};
 export default {
   nbaScoreWithDate,
   nbaScoreWithCurrentDate,
   nbaGetTeam,
-  nbaSingleGameBoxScoreUpcomming
+  nbaSingleGameBoxScoreUpcomming,
+  nbaSingleGameBoxScore,
+  nbaStandings
 };

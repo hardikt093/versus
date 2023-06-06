@@ -9,6 +9,7 @@ router.get("/scoreWithDate", validate(leagueValidation.scoreWithCurrentDate), le
 router.get("/scoreWithCurrentDate", validate(leagueValidation.scoreWithCurrentDate), leagueNbaProxyController.nbaScoreWithCurrentDate);
 router.get("/get-team", validate(leagueValidation.nbaGetTeam), leagueNbaProxyController.nbaGetTeam);
 router.get("/single-game-boxscore-upcomming", validate(leagueValidation.singleGameBoxscoreUpcomming), leagueNbaProxyController.nbaSingleGameBoxScoreUpcomming);
-
+router.get("/single-game-boxscore-final", auth, validate(leagueValidation.singleGameBoxscore), leagueNbaProxyController.nbaSingleGameBoxScore);
+router.get("/standings", leagueNbaProxyController.nbaStandings);
 
 export = router;

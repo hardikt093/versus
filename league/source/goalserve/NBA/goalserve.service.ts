@@ -1045,6 +1045,10 @@ const addNbaStandings = async () => {
                 road_record: team.road_record,
                 streak: team.streak,
                 won: team.won,
+                pct: +(
+                  (Number(team.won) * 100) /
+                  (Number(team.won) + Number(team.lost))
+                ).toFixed(3),
               };
               await NbaStandings.findOneAndUpdate(
                 { goalServeTeamId: teamId?.goalServeTeamId },
@@ -1094,6 +1098,7 @@ const getNbaStandingData = async () => {
             road_record: "$road_record",
             streak: "$streak",
             won: "$won",
+            pct: "$pct",
           },
         },
       },
