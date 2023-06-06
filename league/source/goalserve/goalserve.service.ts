@@ -7399,7 +7399,7 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
             then: {
               $concat: ["Period ", "", "$status"],
             },
-            else: "Overtime",
+            else: "$status",
           },
         },
 
@@ -7440,6 +7440,7 @@ const nhlSingleGameBoxScoreLive = async (params: any) => {
         attendance: 1,
         status: "$statusWithCondition",
         venueName: 1,
+        timer: "$timer",
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
         awayTeamTotalScore: "$awayTeamTotalScore",
