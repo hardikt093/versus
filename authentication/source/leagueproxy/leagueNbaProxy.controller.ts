@@ -74,6 +74,7 @@ const nbaStandings = async (req: Request, res: Response) => {
       {},
       token
     );
+    createResponse(res, httpStatus.OK, "", nbaStandings.data.data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message);
   }
