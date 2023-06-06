@@ -9333,7 +9333,7 @@ const liveBoxscore = async (params: any) => {
       },
     },
   ]);
-  await socket("nbaLiveBoxscore", {
+  await socket("nhlLiveBoxscore", {
     getMatch,
   });
   return getLiveDataOfNhl;
