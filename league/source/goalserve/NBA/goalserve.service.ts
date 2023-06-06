@@ -2739,49 +2739,128 @@ const nbaSingleGameBoxScore = async (params: any) => {
           },
         },
         scoring: {
-          homeTeam: {
-            Q1: "$homeTeamQ1",
-            Q2: "$homeTeamQ2",
-            Q3: "$homeTeamQ3",
-            Q4: "$homeTeamQ4",
-            F: "$homeTeamTotalScore",
-          },
-          awayTeam: {
-            Q1: "$awayTeamQ1",
-            Q2: "$awayTeamQ2",
-            Q3: "$awayTeamQ3",
-            Q4: "$awayTeamQ4",
-            F: "$awayTeamTotalScore",
-          },
+          awayTeam: [
+            {
+              title: "Quater 1",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamQ1", "0"] },
+                  then: "-",
+                  else: "$awayTeamQ1",
+                },
+              },
+            },
+            {
+              title: "Quater 2",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamQ2", "0"] },
+                  then: "-",
+                  else: "$awayTeamQ2",
+                },
+              },
+            },
+            {
+              title: "Quater 3",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamQ3", "0"] },
+                  then: "-",
+                  else: "$awayTeamQ3",
+                },
+              },
+            },
+            {
+              title: "Quater 4",
+              score: {
+                $cond: {
+                  if: { $eq: ["$awayTeamQ4", "0"] },
+                  then: "-",
+                  else: "$awayTeamQ4",
+                },
+              },
+            },
+            {
+              title: "Total",
+              score: "$awayTeamTotalScoreInNumber",
+            },
+          ],
+
+          homeTeam: [
+            {
+              title: "Quater 1",
+              score: {
+                $cond: {
+                  if: { $eq: ["$homeTeamQ1", "0"] },
+                  then: "-",
+                  else: "$homeTeamQ1",
+                },
+              },
+            },
+            {
+              title: "Quater 2",
+              score: {
+                $cond: {
+                  if: { $eq: ["$homeTeamQ2", "0"] },
+                  then: "-",
+                  else: "$homeTeamQ2",
+                },
+              },
+            },
+            {
+              title: "Quater 3",
+              score: {
+                $cond: {
+                  if: { $eq: ["$homeTeamQ3", "0"] },
+                  then: "-",
+                  else: "$homeTeamQ3",
+                },
+              },
+            },
+            {
+              title: "Quater 4",
+              score: {
+                $cond: {
+                  if: { $eq: ["$homeTeamQ4", "0"] },
+                  then: "-",
+                  else: "$homeTeamQ4",
+                },
+              },
+            },
+            {
+              title: "Total",
+              score: "$homeTeamTotalScoreInNumber",
+            },
+          ],
         },
         teamStatistic: {
           homeTeam: {
-            FG: "$teamStatsHomeTeam.field_goals_made.total",
-            "Field Goal %": "$teamStatsHomeTeam.field_goals_made.pct",
-            "3PT": "$teamStatsHomeTeam.threepoint_goals_made.total",
-            "Three Point %": "$teamStatsHomeTeam.threepoint_goals_made.pct",
-            FT: "$teamStatsHomeTeam.freethrows_goals_made.total",
-            "Free throw %": "$teamStatsHomeTeam.freethrows_goals_made.pct",
-            Assists: "$teamStatsHomeTeam.assists.total",
-            Rebounds: "$teamStatsHomeTeam.rebounds.total",
-            Steals: "$teamStatsHomeTeam.steals.total",
-            Blocks: "$teamStatsHomeTeam.blocks.total",
-            "Total Turnovers": "$teamStatsHomeTeam.turnovers.total",
-            Fouls: "$teamStatsHomeTeam.personal_fouls.total",
+            "field_goals_made_total": "$teamStatsHomeTeam.field_goals_made.total",
+            "field_goals_made_pct": "$teamStatsHomeTeam.field_goals_made.pct",
+            "threepoint_goals_made_total": "$teamStatsHomeTeam.threepoint_goals_made.total",
+            "threepoint_goals_made_pct": "$teamStatsHomeTeam.threepoint_goals_made.pct",
+            "freethrows_goals_made_total": "$teamStatsHomeTeam.freethrows_goals_made.total",
+            "freethrows_goals_made_pct": "$teamStatsHomeTeam.freethrows_goals_made.pct",
+            "assists": "$teamStatsHomeTeam.assists.total",
+            "rebounds_total": "$teamStatsHomeTeam.rebounds.total",
+            "steals": "$teamStatsHomeTeam.steals.total",
+            "blocks": "$teamStatsHomeTeam.blocks.total",
+            "turnovers_total": "$teamStatsHomeTeam.turnovers.total",
+            "personal_fouls_total": "$teamStatsHomeTeam.personal_fouls.total",
           },
           awayTeam: {
-            FG: "$teamStatsAwayTeam.field_goals_made.total",
-            "Field Goal %": "$teamStatsAwayTeam.field_goals_made.pct",
-            "3PT": "$teamStatsAwayTeam.threepoint_goals_made.total",
-            "Three Point %": "$teamStatsAwayTeam.threepoint_goals_made.pct",
-            FT: "$teamStatsAwayTeam.freethrows_goals_made.total",
-            "Free throw %": "$teamStatsAwayTeam.freethrows_goals_made.pct",
-            Assists: "$teamStatsAwayTeam.assists.total",
-            Rebounds: "$teamStatsAwayTeam.rebounds.total",
-            Steals: "$teamStatsAwayTeam.steals.total",
-            Blocks: "$teamStatsAwayTeam.blocks.total",
-            "Total Turnovers": "$teamStatsAwayTeam.turnovers.total",
-            Fouls: "$teamStatsAwayTeam.personal_fouls.total",
+            "field_goals_made_total": "$teamStatsAwayTeam.field_goals_made.total",
+            "field_goals_made_pct": "$teamStatsAwayTeam.field_goals_made.pct",
+            "threepoint_goals_made_total": "$teamStatsAwayTeam.threepoint_goals_made.total",
+            "threepoint_goals_made_pct": "$teamStatsAwayTeam.threepoint_goals_made.pct",
+            "freethrows_goals_made_total": "$teamStatsAwayTeam.freethrows_goals_made.total",
+            "freethrows_goals_made_pct": "$teamStatsAwayTeam.freethrows_goals_made.pct",
+            "assists": "$teamStatsAwayTeam.assists.total",
+            "rebounds_total": "$teamStatsAwayTeam.rebounds.total",
+            "steals": "$teamStatsAwayTeam.steals.total",
+            "blocks": "$teamStatsAwayTeam.blocks.total",
+            "turnovers_total": "$teamStatsAwayTeam.turnovers.total",
+            "personal_fouls_total": "$teamStatsAwayTeam.personal_fouls.total",
           },
         },
         playersStatistic: {
