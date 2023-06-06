@@ -115,7 +115,6 @@ const nbaSingleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
     const data = await goalserveService.nbaSingleGameBoxScoreUpcomming(req.query);
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
-    console.log(error)
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }

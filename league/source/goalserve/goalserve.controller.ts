@@ -321,6 +321,7 @@ const nhlGetTeam = async (req: Request, res: Response) => {
     const nhlGetTeam = await goalserveService.nhlGetTeam(req.query);
     createResponse(res, httpStatus.OK, "", nhlGetTeam);
   } catch (error: any) {
+   
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }

@@ -2172,12 +2172,6 @@ const nbaGetTeam = async (params: any) => {
                     ],
                   },
                   { $eq: ["$status", "Final"] },
-                  {
-                    $status: {
-                      $regex: "^Final",
-                      $options: "i",
-                    },
-                  },
                 ],
               },
             },
