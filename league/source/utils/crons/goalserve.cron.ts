@@ -87,6 +87,11 @@ var updateNhlMatch = cron.schedule("*/60 * * * * *", async () => {
   await goalserveService.updateNhlMatch();
 })
 
+var liveBoxscore = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron updateNhlMatch");
+  await goalserveService.liveBoxscore({ date1: moment().startOf("day").utc().toISOString() });
+})
+
 export default {
   // createAndUpdateOdds,
   // getLiveMatch,
@@ -104,5 +109,6 @@ export default {
   getLiveMatchNhl,
   updateNhlMatch,
   getUpcommingMatchNhl,
-  getFinalMatchNhl
+  getFinalMatchNhl,
+  liveBoxscore
 };
