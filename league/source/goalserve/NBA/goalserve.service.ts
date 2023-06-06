@@ -3478,7 +3478,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           {
             $match: {
               $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+                $in: ["$goalServeTeamId", ["$$awayTeamId"]],
               },
             },
           },
@@ -3898,30 +3898,64 @@ const nbaSingleGameScoreLive = async (params: any) => {
       },
     },
     {
-      $lookup: {
-        from: "nbateams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+      
+        $lookup: {
+          from: "nbateams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"]
+                      }
+                    }
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1
+                    }
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"]
+                      }
+                    }
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
               },
             },
-          },
-          {
-            $project: {
-              name: 1,
-              abbreviation: 1,
-              goalServeTeamId: 1,
-            },
-          },
-        ],
-        as: "teams",
-      },
+          ],
+          as: "teams"
+        }
+    
     },
     {
       $lookup: {
@@ -3932,16 +3966,47 @@ const nbaSingleGameScoreLive = async (params: any) => {
         },
         pipeline: [
           {
-            $match: {
-              $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
-              },
-            },
+            $facet: {
+              awayTeam: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeTeamId", "$$awayTeamId"]
+                    }
+                  }
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    image: 1,
+                  }
+                },
+              ],
+              homeTeam: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeTeamId", "$$homeTeamId"]
+                    }
+                  }
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    image: 1,
+                  }
+                }
+              ]
+            }
           },
           {
             $project: {
-              _id: 0,
-              image: 1,
+              awayTeam: {
+                $arrayElemAt: ["$awayTeam", 0],
+              },
+              homeTeam: {
+                $arrayElemAt: ["$homeTeam", 0],
+              },
             },
           },
         ],
@@ -3957,19 +4022,53 @@ const nbaSingleGameScoreLive = async (params: any) => {
         },
         pipeline: [
           {
-            $match: {
-              $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
-              },
-            },
+            $facet: {
+              awayTeam: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeTeamId", "$$awayTeamId"]
+                    }
+                  }
+                },
+                {
+                  $project: {
+                    won: 1,
+                    lost: 1,
+                    percentage:1,
+                    last_10:1,
+                    streak:1
+                  }
+                },
+              ],
+              homeTeam: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeTeamId", "$$homeTeamId"]
+                    }
+                  }
+                },
+                {
+                  $project: {
+                    won: 1,
+                    lost: 1,
+                    percentage:1,
+                    last_10:1,
+                    streak:1
+                  }
+                }
+              ]
+            }
           },
           {
             $project: {
-              won: 1,
-              lost: 1,
-              percentage:1,
-              last_10:1,
-              streak:1
+              awayTeam: {
+                $arrayElemAt: ["$awayTeam", 0],
+              },
+              homeTeam: {
+                $arrayElemAt: ["$homeTeam", 0],
+              },
             },
           },
         ],
@@ -4047,26 +4146,26 @@ const nbaSingleGameScoreLive = async (params: any) => {
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
         awayTeamTotalScore: "$awayTeamTotalScore",
-        awayTeamFullName: { $arrayElemAt: ["$teams.name", 0] },
-        homeTeamFullName: { $arrayElemAt: ["$teams.name", 1] },
-        awayTeamAbbreviation: { $arrayElemAt: ["$teams.abbreviation", 0] },
-        homeTeamAbbreviation: { $arrayElemAt: ["$teams.abbreviation", 1] },
-        homeTeamImage: { $arrayElemAt: ["$teamImages.image", 1] },
-        awayTeamImage: { $arrayElemAt: ["$teamImages.image", 0] },
+        awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name",0]},
+        homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name",0]},
+        awayTeamAbbreviation: { $arrayElemAt: ["$teams.awayTeam.abbreviation", 0] },
+        homeTeamAbbreviation: { $arrayElemAt: ["$teams.homeTeam.abbreviation",0] },
+        homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image",0] },
+        awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
         timer: "$timer",
         awayTeam: {
-          awayTeamName: { $arrayElemAt: ["$teams.name", 0] },
-          awayTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 0] },
-          won: { $arrayElemAt: ["$standings.won", 0] },
-          lose: { $arrayElemAt: ["$standings.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.image", 0] },
+          awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+          awayTeamId: { $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0] },
+          won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+          lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+          teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
         },
         homeTeam: {
-          homeTeamName: { $arrayElemAt: ["$teams.name", 1] },
-          homeTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 1] },
-          won: { $arrayElemAt: ["$standings.won", 1] },
-          lose: { $arrayElemAt: ["$standings.lost", 1] },
-          teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
+          homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name",0] },
+          homeTeamId: { $arrayElemAt: ["$teams.homeTeam.goalServeTeamId",0] },
+          won: { $arrayElemAt: ["$standings.homeTeam.won",0] },
+          lose: { $arrayElemAt: ["$standings.homeTeam.lost",0] },
+          teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image",0] },
         },
         playerStatistics: {
           homeTeam: {
@@ -4122,18 +4221,18 @@ const nbaSingleGameScoreLive = async (params: any) => {
         },
         teamStatistics: {
           homeTeam: {
-            won: { $arrayElemAt: ["$standings.won", 0] },
-            lose: { $arrayElemAt: ["$standings.lost", 0] },
-            pct: { $arrayElemAt: ["$standings.percentage", 0] },
-            last_10: { $arrayElemAt: ["$standings.last_10", 0] },
-            streak: { $arrayElemAt: ["$standings.streak", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            pct: { $arrayElemAt: ["$standings.homeTeam.percentage", 0] },
+            last_10: { $arrayElemAt: ["$standings.homeTeam.last_10", 0] },
+            streak: { $arrayElemAt: ["$standings.homeTeam.streak", 0] },
           },
           awayTeam: {
-            won: { $arrayElemAt: ["$standings.won", 1] },
-            lose: { $arrayElemAt: ["$standings.lost", 1] },
-            pct: { $arrayElemAt: ["$standings.percentage", 1] },
-            last_10: { $arrayElemAt: ["$standings.last_10", 1] },
-            streak: { $arrayElemAt: ["$standings.streak", 1] },
+            won: { $arrayElemAt: ["$standings.awayTeam.won",0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.lost",0] },
+            pct: { $arrayElemAt: ["$standings.awayTeam.percentage",0] },
+            last_10: { $arrayElemAt: ["$standings.awayTeam.last_10",0] },
+            streak: { $arrayElemAt: ["$standings.awayTeam.streak",0] },
           },
         },
         scoring: {
