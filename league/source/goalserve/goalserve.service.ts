@@ -5965,7 +5965,7 @@ const getLiveDataOfNhl = async (params: any) => {
             then: {
               $concat: ["Period ", "", "$status"],
             },
-            else: "Overtime",
+            else: "$status",
           },
         },
       },
