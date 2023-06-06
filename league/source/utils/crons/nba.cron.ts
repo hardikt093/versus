@@ -47,6 +47,10 @@ var getFinalMatchNba = cron.schedule("*/5 * * * * *", async () => {
   await goalserveNbaService.getFinalMatchNba();
 });
 
+var liveBoxscoreNba = cron.schedule("*/5 * * * * *", async () => {
+  console.info("inside score cron updateNhlMatchNba");
+  await goalserveNbaService.liveBoxscoreNBA({ date1: moment().startOf("day").utc().toISOString() });
+})
 export default {
   updateCurruntDateRecordNba,
   createAndUpdateOddsNba,
@@ -56,5 +60,6 @@ export default {
   updateInjuredPlayerNBA,
   getFinalMatchNba,
   getUpcommingMatchNba,
-  getLiveMatchNba
+  getLiveMatchNba,
+  liveBoxscoreNba
 };
