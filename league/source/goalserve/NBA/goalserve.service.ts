@@ -1889,7 +1889,6 @@ const createAndUpdateOddsNba = async () => {
               "Home/Away",
               item?.odds?.type
             );
-            console.log("getMoneyLine", getMoneyLine);
             const awayTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
                   (item: any) => item?.name === "2"
@@ -2469,6 +2468,7 @@ const nbaGetTeam = async (params: any) => {
                 blocks_per_game: "$$item.game.blocks_per_game",
                 turnovers_per_game: "$$item.game.turnovers_per_game",
                 fouls_per_game: "$$item.game.fouls_per_game",
+                name: "$$item.name",
                 turnover_ratio: {
                   $cond: {
                     if: {
