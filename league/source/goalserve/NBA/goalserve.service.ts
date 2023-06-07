@@ -3932,8 +3932,8 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
         homeTeamFullName: "$homeTeam.name",
         awayTeamAbbreviation: "$awayTeam.abbreviation",
         homeTeamAbbreviation: "$homeTeam.abbreviation",
-        homeTeamImage: "$homeTeamImages.image",
-        awayTeamImage: "$awayTeamImages.image",
+        homeTeamImage: "$awayTeamImage.image",
+        awayTeamImage: "$awayTeamImage.image",
         injuredPlayers: {
           homeTeam: {
             $map: {
@@ -4033,7 +4033,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           awayTeamId: "$awayTeam.goalServeTeamId",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImages.image",
+          teamImage: "$awayTeamImage.image",
           moneyline: {
             $cond: [
               { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
@@ -4049,7 +4049,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           homeTeamId: "$homeTeam.goalServeTeamId",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImages.image",
+          teamImage: "$awayTeamImage.image",
           moneyline: {
             $cond: [
               { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
