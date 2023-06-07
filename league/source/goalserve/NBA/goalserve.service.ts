@@ -1309,6 +1309,13 @@ const nbaScoreWithDate = async (params: any, type: string) => {
       },
     },
     {
+      $unwind: {
+        path: "$odds",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $project: {
         id: true,
         date: true,
@@ -1330,12 +1337,8 @@ const nbaScoreWithDate = async (params: any, type: string) => {
               "$odds.awayTeamMoneyline.us",
             ],
           },
-          spread: {
-            $arrayElemAt: ["$odds.awayTeamSpread", 0],
-          },
-          total: {
-            $arrayElemAt: ["$odds.awayTeamTotal", 0],
-          },
+          spread: "$odds.awayTeamSpread",
+          total: "$odds.awayTeamTotal",
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -1352,12 +1355,9 @@ const nbaScoreWithDate = async (params: any, type: string) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          spread: {
-            $arrayElemAt: ["$odds.homeTeamSpread", 0],
-          },
-          total: {
-            $arrayElemAt: ["$odds.homeTeamTotal", 0],
-          },
+          spread: "$odds.homeTeamSpread",
+          total:"$odds.homeTeamTotal",
+          
         },
       },
     },
@@ -3356,6 +3356,13 @@ const getUpcommingMatchNba = async () => {
         },
       },
       {
+        $unwind: {
+          path: "$odds",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $project: {
           id: true,
           date: true,
@@ -3377,12 +3384,10 @@ const getUpcommingMatchNba = async () => {
                 "$odds.awayTeamMoneyline.us",
               ],
             },
-            spread: {
-              $arrayElemAt: ["$odds.awayTeamSpread", 0],
-            },
-            total: {
-              $arrayElemAt: ["$odds.awayTeamTotal", 0],
-            },
+            spread: "$odds.awayTeamSpread",
+            
+            total: "$odds.awayTeamTotal",
+            
           },
           homeTeam: {
             homeTeamName: "$homeTeam.name",
@@ -3399,12 +3404,10 @@ const getUpcommingMatchNba = async () => {
                 "$odds.homeTeamMoneyline.us",
               ],
             },
-            spread: {
-              $arrayElemAt: ["$odds.homeTeamSpread", 0],
-            },
-            total: {
-              $arrayElemAt: ["$odds.homeTeamTotal", 0],
-            },
+            spread:  "$odds.homeTeamSpread",
+          
+            total: "$odds.homeTeamTotal",
+            
           },
         },
       },
