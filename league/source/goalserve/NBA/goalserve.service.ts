@@ -2001,7 +2001,6 @@ const createAndUpdateOddsNba = async () => {
             "Home/Away",
             matchData?.odds?.type
           );
-          console.log("getMoneyLine", getMoneyLine);
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
                 (item: any) => item?.name === "2"
