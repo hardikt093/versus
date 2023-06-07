@@ -4017,7 +4017,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
                     goalServePlayerId: "$$player.goalServePlayerId",
                     goalServeTeamId: "$$player.goalServeTeamId",
                     number: "$$player.number",
-                    games_played: "$$player.gamwe.games_played",
+                    games_played: "$$player.game.games_played",
                     points_per_game: "$$player.game.points_per_game",
                     assists_per_game: "$$player.game.assists_per_game",
                     blocks_per_game: "$$player.game.blocks_per_game",
