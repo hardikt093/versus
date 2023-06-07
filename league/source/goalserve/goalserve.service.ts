@@ -509,10 +509,18 @@ const getFinalMatch = async () => {
       {
         $addFields: {
           awayTeamTotalScoreInNumber: {
-            $toInt: "$awayTeamTotalScore",
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
           },
           homeTeamTotalScoreInNumber: {
-            $toInt: "$homeTeamTotalScore",
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
           },
         },
       },
@@ -890,10 +898,18 @@ const mlbScoreWithDate = async (params: any) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
       },
     },
@@ -1708,10 +1724,18 @@ const getFinalMatchDataFromDB = async (params: any) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
       },
     },
@@ -1963,8 +1987,7 @@ const getUpcomingDataFromMongodb = async (params: any) => {
             ],
           },
           spread: "$odds.homeTeamSpread",
-          total:"$odds.homeTeamTotal",
-          
+          total: "$odds.homeTeamTotal",
         },
       },
     },
@@ -2375,14 +2398,21 @@ const singleGameBoxScore = async (params: any) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
       },
     },
-
     {
       $project: {
         id: true,
@@ -3453,7 +3483,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
                         input: "$homeTeamStats.on_base_percentage",
                         to: "double",
                         onError: 0,
-                        onNull: 0
+                        onNull: 0,
                       },
                     },
                     {
@@ -3461,7 +3491,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
                         input: "$homeTeamStats.slugging_percentage",
                         to: "double",
                         onError: 0,
-                        onNull: 0
+                        onNull: 0,
                       },
                     },
                   ],
@@ -3488,7 +3518,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
                         input: "$awayTeamStats.on_base_percentage",
                         to: "double",
                         onError: 0,
-                        onNull: 0
+                        onNull: 0,
                       },
                     },
                     {
@@ -3496,7 +3526,7 @@ const singleGameBoxScoreUpcomming = async (params: any) => {
                         input: "$awayTeamStats.slugging_percentage",
                         to: "double",
                         onError: 0,
-                        onNull: 0
+                        onNull: 0,
                       },
                     },
                   ],
@@ -5587,7 +5617,7 @@ const nhlScoreWithDate = async (params: any, type: string) => {
               "$odds.awayTeamMoneyline.us",
             ],
           },
-          spread:"$odds.awayTeamSpread",
+          spread: "$odds.awayTeamSpread",
           total: "$odds.awayTeamTotal",
         },
         homeTeam: {
@@ -5605,10 +5635,9 @@ const nhlScoreWithDate = async (params: any, type: string) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          spread:"$odds.homeTeamSpread",
-          
+          spread: "$odds.homeTeamSpread",
+
           total: "$odds.homeTeamTotal",
-          
         },
       },
     },
@@ -5764,10 +5793,18 @@ const nhlScoreWithDate = async (params: any, type: string) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
       },
     },
@@ -6002,10 +6039,18 @@ const getLiveDataOfNhl = async (params: any) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         statusWithPeriod: {
           $regexMatch: {
@@ -6103,7 +6148,7 @@ const nhlScoreWithCurrentDate = async (params: any) => {
 };
 const nhlGetTeam = async (params: any) => {
   const goalServeTeamId = params.goalServeTeamId;
-  console.log(goalServeTeamId)
+  console.log(goalServeTeamId);
   const getTeam = await NhlStandings.aggregate([
     {
       $match: {
@@ -7135,10 +7180,18 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
       },
     },
@@ -7267,9 +7320,8 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
             ],
           },
           spread: "$odds.awayTeamSpread",
-          
-          total:"$odds.awayTeamTotal",
-          
+
+          total: "$odds.awayTeamTotal",
         },
         homeTeam: {
           homeTeamName: { $arrayElemAt: ["$teams.name", 1] },
@@ -7287,11 +7339,9 @@ const nhlSingleGameBoxScoreUpcomming = async (params: any) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          spread: 
-         "$odds.homeTeamSpread",
-          
+          spread: "$odds.homeTeamSpread",
+
           total: "$odds.homeTeamTotal",
-          
         },
         teamStatistics: [
           {
@@ -8721,9 +8771,8 @@ const getUpcommingMatchNhl = async () => {
               ],
             },
             spread: "$odds.awayTeamSpread",
-            
+
             total: "$odds.awayTeamTotal",
-            
           },
           homeTeam: {
             homeTeamName: "$homeTeam.name",
@@ -8741,7 +8790,7 @@ const getUpcommingMatchNhl = async () => {
               ],
             },
             spread: "$odds.homeTeamSpread",
-            
+
             total: "$odds.homeTeamTotal",
           },
         },
