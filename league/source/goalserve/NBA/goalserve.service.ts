@@ -2438,174 +2438,38 @@ const nbaGetTeam = async (params: any) => {
             input: "$teamPlayers",
             as: "item",
             in: {
+              name: "$$item.name",
               salary: "$$item.salary",
               position: "$$item.position",
               goalServePlayerId: "$$item.goalServePlayerId",
               age: "$$item.age",
               heigth: "$$item.heigth",
               weigth: "$$item.weigth",
-              college: "$$item.college"
+              college: "$$item.college",
             },
           },
         },
         playerSkatingStats: {
-          $map: {
-            input: "$teamPlayers",
-            as: "item",
-            in: {
-              games_played: "$$item.game.games_played",
-              games_started: "$$item.game.games_started",
-              minutes: "$$item.game.minutes",
-              points: "$$item.game.points_per_game",
-              offensive_rebounds_per_game:
-                "$$item.game.offensive_rebounds_per_game",
-              defensive_rebounds_per_game:
-                "$$item.game.defensive_rebounds_per_game",
-              rebounds_per_game: "$$item.game.rebounds_per_game",
-              assists_per_game: "$$item.game.assists_per_game",
-              steals_per_game: "$$item.game.steals_per_game",
-              blocks_per_game: "$$item.game.blocks_per_game",
-              turnovers_per_game: "$$item.game.turnovers_per_game",
-              fouls_per_game: "$$item.game.fouls_per_game",
-              turnover_ratio: {
-                $cond: {
-                  if: {
-                    $eq: [{ $toDouble: "$$item.game.turnovers_per_game" }, 0],
-                  },
-                  then: 0, // or any other default value you want to assign
-                  else: {
-                    $round: [
-                      {
-                        $divide: [
-                          { $toDouble: "$$item.game.assists_per_game" },
-                          { $toDouble: "$$item.game.turnovers_per_game" },
-                        ],
-                      },
-                      2,
-                    ],
-                  },
-                },
-              },
-
-              goalServePlayerId: "$$item.goalServePlayerId",
-            },
-          },
-        },
-        total: {
-          name: "Total",
-          games_played: {
-            $max: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.games_played", // Convert the string to an integer
-                },
-              },
-            },
-          },
-
-
-          points_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.points_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-
-          offensive_rebounds_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.offensive_rebounds_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-
-          defensive_rebounds_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.defensive_rebounds_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-
-          rebounds_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.rebounds_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-
-          steals_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.steals_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-
-          
-          blocks_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.blocks_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-          turnovers_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.turnovers_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-          fouls_per_game: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
-                  $toDouble: "$$item.game.fouls_per_game", // Convert the string to an integer
-                },
-              },
-            },
-          },
-          turnover_ratio: {
-            $sum: {
-              $map: {
-                input: "$teamPlayers",
-                as: "item",
-                in: {
+          allPlayerStats: {
+            $map: {
+              input: "$teamPlayers",
+              as: "item",
+              in: {
+                games_played: "$$item.game.games_played",
+                games_started: "$$item.game.games_started",
+                minutes: "$$item.game.minutes",
+                points: "$$item.game.points_per_game",
+                offensive_rebounds_per_game:
+                  "$$item.game.offensive_rebounds_per_game",
+                defensive_rebounds_per_game:
+                  "$$item.game.defensive_rebounds_per_game",
+                rebounds_per_game: "$$item.game.rebounds_per_game",
+                assists_per_game: "$$item.game.assists_per_game",
+                steals_per_game: "$$item.game.steals_per_game",
+                blocks_per_game: "$$item.game.blocks_per_game",
+                turnovers_per_game: "$$item.game.turnovers_per_game",
+                fouls_per_game: "$$item.game.fouls_per_game",
+                turnover_ratio: {
                   $cond: {
                     if: {
                       $eq: [{ $toDouble: "$$item.game.turnovers_per_game" }, 0],
@@ -2622,13 +2486,152 @@ const nbaGetTeam = async (params: any) => {
                         2,
                       ],
                     },
-                  }, // Convert the string to an integer
+                  },
+                },
+
+                goalServePlayerId: "$$item.goalServePlayerId",
+              },
+            },
+          },
+          total: {
+            name: "Total",
+            games_played: {
+              $max: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.games_played", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+
+            points_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.points_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+
+            offensive_rebounds_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.offensive_rebounds_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+
+            defensive_rebounds_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.defensive_rebounds_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+
+            rebounds_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.rebounds_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+
+            steals_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.steals_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+
+            blocks_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.blocks_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+            turnovers_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.turnovers_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+            fouls_per_game: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.fouls_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+            turnover_ratio: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $cond: {
+                      if: {
+                        $eq: [
+                          { $toDouble: "$$item.game.turnovers_per_game" },
+                          0,
+                        ],
+                      },
+                      then: 0, // or any other default value you want to assign
+                      else: {
+                        $round: [
+                          {
+                            $divide: [
+                              { $toDouble: "$$item.game.assists_per_game" },
+                              { $toDouble: "$$item.game.turnovers_per_game" },
+                            ],
+                          },
+                          2,
+                        ],
+                      },
+                    }, // Convert the string to an integer
+                  },
                 },
               },
             },
           },
         },
-   
         teamDetails: {
           divisionStandings: "$divisionStandings",
           teamLeaders: "$teamLeaders",
