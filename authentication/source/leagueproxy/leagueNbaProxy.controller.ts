@@ -68,11 +68,10 @@ const nbaSingleGameBoxScore = async (req: Request, res: Response) => {
 };
 const nbaStandings = async (req: Request, res: Response) => {
   try {
-    let token: any = req.header("Authorization");
     const nbaStandings = await axiosGet(
       `${config.leagueServer}/nba/get-standings`,
       {},
-      token
+      ""
     );
     createResponse(res, httpStatus.OK, "", nbaStandings.data.data);
   } catch (error: any) {
