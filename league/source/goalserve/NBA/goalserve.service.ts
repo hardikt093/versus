@@ -3693,7 +3693,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
           {
             $match: {
               $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId"]],
+                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
               },
             },
           },
@@ -3863,6 +3863,13 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
       },
     },
     {
+      $unwind: {
+        path: "$odds",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $lookup: {
         from: "nbaodds",
         localField: "goalServeMatchId",
@@ -3875,6 +3882,16 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
         path: "$closingOdds",
         includeArrayIndex: "string",
         preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        awayTeamTotalScoreInNumber: {
+          $toInt: "$awayTeamTotalScore",
+        },
+        homeTeamTotalScoreInNumber: {
+          $toInt: "$homeTeamTotalScore",
+        },
       },
     },
     {
@@ -3997,12 +4014,8 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
               "$odds.awayTeamMoneyline.us",
             ],
           },
-          spread: {
-            $arrayElemAt: ["$odds.awayTeamSpread", 0],
-          },
-          total: {
-            $arrayElemAt: ["$odds.awayTeamTotal", 0],
-          },
+          spread: "$odds.awayTeamSpread",
+          total: "$odds.awayTeamTotal",
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -4017,12 +4030,8 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          spread: {
-            $arrayElemAt: ["$odds.homeTeamSpread", 0],
-          },
-          total: {
-            $arrayElemAt: ["$odds.homeTeamTotal", 0],
-          },
+          spread: "$odds.homeTeamSpread",
+          total: "$odds.homeTeamTotal",
         },
         teamStatistics: [
           {
