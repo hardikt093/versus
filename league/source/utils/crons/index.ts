@@ -1,3 +1,7 @@
 import goalserveCron from "./goalserve.cron";
+import nbaCron from "./nba.cron";
 
-export default { goalserveCron };
+export default { 
+    goalserveCron, 
+    nbaCron 
+};

@@ -1,5 +1,6 @@
 import express from "express";
 import leagueBetRoute from "./leagueBet.route";
+import leagueNbaRoute from "./nbaLeague.route";
 import leagueProxyController from "../leagueproxy/leagueProxy.controller";
 import auth from "../middlewares/auth";
 import validate from "../middlewares/validate";
@@ -7,6 +8,7 @@ import leagueValidation from "../leagueproxy/league.validation";
 const router = express.Router();
 
 router.use("/bet", leagueBetRoute);
+router.use("/nba", leagueNbaRoute);
 router.get("/mlb/standings", auth, leagueProxyController.standings);
 router.get("/mlb/scoreWithDate", auth, validate(leagueValidation.scoreWithDate), leagueProxyController.mlbScoreWithDate);
 router.get("/mlb/single-game-boxscore-final", auth, validate(leagueValidation.singleGameBoxscore), leagueProxyController.singleGameBoxscore);
