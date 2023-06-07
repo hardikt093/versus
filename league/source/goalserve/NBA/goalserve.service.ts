@@ -1509,10 +1509,18 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
       },
     },
@@ -1760,10 +1768,18 @@ const getLiveDataOfNba = async (params: any) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         statusWithPeriod: {
           $regexMatch: {
@@ -3890,10 +3906,18 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
     {
       $addFields: {
         awayTeamTotalScoreInNumber: {
-          $toInt: "$awayTeamTotalScore",
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
         homeTeamTotalScoreInNumber: {
-          $toInt: "$homeTeamTotalScore",
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
         },
       },
     },
