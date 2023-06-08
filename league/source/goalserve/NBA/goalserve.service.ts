@@ -12,6 +12,7 @@ import NbaInjury from "../../models/documents/NBA/injury.model";
 import NbaStandings from "../../models/documents/NBA/standings.model";
 import socket from "../../services/socket.service";
 import NbaOdds from "../../models/documents/NBA/odds.model";
+import NbaScoreSummary from "../../models/documents/NBA/scoreSummary.model";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -1356,8 +1357,7 @@ const nbaScoreWithDate = async (params: any, type: string) => {
             ],
           },
           spread: "$odds.homeTeamSpread",
-          total:"$odds.homeTeamTotal",
-          
+          total: "$odds.homeTeamTotal",
         },
       },
     },
@@ -3401,9 +3401,8 @@ const getUpcommingMatchNba = async () => {
               ],
             },
             spread: "$odds.awayTeamSpread",
-            
+
             total: "$odds.awayTeamTotal",
-            
           },
           homeTeam: {
             homeTeamName: "$homeTeam.name",
@@ -3420,10 +3419,9 @@ const getUpcommingMatchNba = async () => {
                 "$odds.homeTeamMoneyline.us",
               ],
             },
-            spread:  "$odds.homeTeamSpread",
-          
+            spread: "$odds.homeTeamSpread",
+
             total: "$odds.homeTeamTotal",
-            
           },
         },
       },
@@ -5173,6 +5171,64 @@ const liveBoxscoreNBA = async (params: any) => {
   });
   return getMatch;
 };
+
+const updateScoreSummary = async () => {
+  try {
+    let dataJson = {
+      json: true,
+    };
+    let playByPlayData = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      dataJson,
+      `bsktbl/nba-playbyplay`
+    );
+    if (playByPlayData) {
+      if (playByPlayData.data?.scores?.category?.match) {
+        const matchData = playByPlayData.data?.scores?.category?.match;
+        if (matchData && matchData.length > 0) {
+          for (let i = 0; i < matchData.length; i++) {
+            const match = matchData[i];
+            let data = {
+              goalServeLeagueId: playByPlayData.data?.scores?.category?.id,
+              goalServeMatchId:
+                playByPlayData.data?.scores?.category?.match?.id,
+              goalServeAwayTeamId: match?.hometeam.id,
+              goalServeHomeTeamId: match?.awayteam.id,
+              play: match?.playbyplay?.play,
+            };
+            await NbaScoreSummary.updateOne(
+              {
+                goalServeLeagueId: data.goalServeLeagueId,
+                goalServeMatchId: data.goalServeMatchId,
+              },
+              { $set: data },
+              { upsert: true }
+            );
+          }
+        } else {
+          const match = matchData;
+          let data = {
+            goalServeLeagueId: playByPlayData.data?.scores?.category?.id,
+            goalServeMatchId: playByPlayData.data?.scores?.category?.match?.id,
+            goalServeAwayTeamId: match?.hometeam.id,
+            goalServeHomeTeamId: match?.awayteam.id,
+            play: match?.playbyplay?.play,
+          };
+          await NbaScoreSummary.updateOne(
+            {
+              goalServeLeagueId: data.goalServeLeagueId,
+              goalServeMatchId: data.goalServeMatchId,
+            },
+            { $set: data },
+            { upsert: true }
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
 export default {
   createTeamNBA,
   addNBATeamImage,
@@ -5195,4 +5251,5 @@ export default {
   nbaSingleGameBoxScoreUpcomming,
   nbaSingleGameScoreLive,
   liveBoxscoreNBA,
+  updateScoreSummary,
 };
