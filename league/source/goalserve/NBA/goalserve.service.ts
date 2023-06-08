@@ -4529,6 +4529,7 @@ const nbaSingleGameScoreLive = async (params: any) => {
               as: "item",
               in: {
                 playerName: "$$item.name",
+                points: "$$item.points",
               },
             },
           },
@@ -4538,24 +4539,31 @@ const nbaSingleGameScoreLive = async (params: any) => {
               as: "item",
               in: {
                 playerName: "$$item.name",
+                points: "$$item.points",
               },
             },
           },
         },
         teamStatistics: {
           homeTeam: {
-            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
-            pct: { $arrayElemAt: ["$standings.homeTeam.percentage", 0] },
-            last_ten: { $arrayElemAt: ["$standings.homeTeam.last_10", 0] },
-            streak: { $arrayElemAt: ["$standings.homeTeam.streak", 0] },
+            points: "$homeTeamTotalScore",
+            name: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            assists: "$teamStatsHomeTeam.assists.total",
+            rebounds: "$teamStatsHomeTeam.rebounds.total",
+            fouls: "$teamStatsHomeTeam.personal_fouls.total",
+            field_goals_made: "$teamStatsHomeTeam.field_goals_made.total",
+            threepoint_goals_made:
+              "$teamStatsHomeTeam.threepoint_goals_made.total",
           },
           awayTeam: {
-            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
-            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
-            pct: { $arrayElemAt: ["$standings.awayTeam.percentage", 0] },
-            last_ten: { $arrayElemAt: ["$standings.awayTeam.last_10", 0] },
-            streak: { $arrayElemAt: ["$standings.awayTeam.streak", 0] },
+            points: "$awayTeamTotalScore",
+            name: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            assists: "$teamStatsAwayTeam.assists.total",
+            rebounds: "$teamStatsAwayTeam.rebounds.total",
+            fouls: "$teamStatsAwayTeam.personal_fouls.total",
+            field_goals_made: "$teamStatsAwayTeam.field_goals_made.total",
+            threepoint_goals_made:
+              "$teamStatsAwayTeam.threepoint_goals_made.total",
           },
         },
         scoring: {
