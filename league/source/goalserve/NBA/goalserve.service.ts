@@ -2897,6 +2897,50 @@ const nbaSingleGameBoxScore = async (params: any) => {
       },
     },
     {
+      $addFields: {
+        topPlayerHomeTeam: {
+          $reduce: {
+            input: "$awayTeamPlayersStatistic",
+            initialValue: { points_per_game: 0 },
+            in: {
+              $cond: [
+                {
+                  $gte: [
+                    { $toDouble: "$$this.points_per_game" },
+                    { $toDouble: "$$value.points_per_game" },
+                  ],
+                },
+                "$$this",
+                "$$value",
+              ],
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        topPlayerAwayTeam: {
+          $reduce: {
+            input: "$homeTeamPlayersStatistic",
+            initialValue: { points_per_game: 0 },
+            in: {
+              $cond: [
+                {
+                  $gte: [
+                    { $toDouble: "$$this.points_per_game" },
+                    { $toDouble: "$$value.points_per_game" },
+                  ],
+                },
+                "$$this",
+                "$$value",
+              ],
+            },
+          },
+        },
+      },
+    },
+    {
       $project: {
         id: true,
         attendance: true,
@@ -3076,6 +3120,10 @@ const nbaSingleGameBoxScore = async (params: any) => {
             turnovers_total: "$teamStatsAwayTeam.turnovers.total",
             personal_fouls_total: "$teamStatsAwayTeam.personal_fouls.total",
           },
+        },
+        topPlayers: {
+          homeTeam: "$topPlayerHomeTeam",
+          awayTeam: "$topPlayerAwayTeam",
         },
         playersStatistic: {
           homeTeam: "$homeTeamPlayersStatistic",
