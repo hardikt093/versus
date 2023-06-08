@@ -3684,7 +3684,7 @@ const getFinalMatchNba = async () => {
           goalServeMatchId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
-            awayTeamId: "$awayTeam._id",
+            goalServeAwayTeamId: "$goalServeAwayTeamId",
             awayTeamRun: "$awayTeamTotalScore",
             won: "$awayTeamStandings.won",
             lose: "$awayTeamStandings.lost",
@@ -3701,11 +3701,9 @@ const getFinalMatchNba = async () => {
                 else: false,
               },
             },
-            goalServeAwayTeamId: "$goalServeAwayTeamId",
           },
           homeTeam: {
             homeTeamName: "$homeTeam.name",
-            homeTeamId: "$homeTeam._id",
             homeTeamRun: "$homeTeamTotalScore",
             won: "$homeTeamStandings.won",
             lose: "$homeTeamStandings.lost",
@@ -4097,7 +4095,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
         },
         awayTeam: {
           awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam.goalServeTeamId",
+          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
@@ -4113,7 +4111,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
-          homeTeamId: "$homeTeam.goalServeTeamId",
+          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
@@ -4499,14 +4497,14 @@ const nbaSingleGameScoreLive = async (params: any) => {
         timer: "$timer",
         awayTeam: {
           awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-          awayTeamId: { $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0] },
+          goalServeAwayTeamId: { $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0] },
           won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
           lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
           teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
         },
         homeTeam: {
           homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-          homeTeamId: { $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0] },
+          goalServeHomeTeamId: { $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0] },
           won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
           lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
           teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
@@ -4996,14 +4994,14 @@ const liveBoxscoreNBA = async (params: any) => {
         timer: "$timer",
         awayTeam: {
           awayTeamName: { $arrayElemAt: ["$teams.name", 0] },
-          awayTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 0] },
+          goalServeAwayTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 0] },
           won: { $arrayElemAt: ["$standings.won", 0] },
           lose: { $arrayElemAt: ["$standings.lost", 0] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 0] },
         },
         homeTeam: {
           homeTeamName: { $arrayElemAt: ["$teams.name", 1] },
-          homeTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 1] },
+          goalServeHomeTeamId: { $arrayElemAt: ["$teams.goalServeTeamId", 1] },
           won: { $arrayElemAt: ["$standings.won", 1] },
           lose: { $arrayElemAt: ["$standings.lost", 1] },
           teamImage: { $arrayElemAt: ["$teamImages.image", 1] },
