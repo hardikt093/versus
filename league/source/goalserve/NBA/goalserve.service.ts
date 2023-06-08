@@ -2919,16 +2919,34 @@ const nbaSingleGameBoxScore = async (params: any) => {
     },
     {
       $addFields: {
+        mergePlayersAwayTeam: {
+          "$concatArrays" : [
+            "$playerStatsBenchAwayTeam", "$playerStatsStartersAwayTeam"
+          ]
+        },
+      },
+    },
+    {
+      $addFields: {
+        mergePlayersHomeTeam: {
+          "$concatArrays" : [
+            "$playerStatsBenchHomeTeam", "$playerStatsStartersHomeTeam"
+          ]
+        },
+      },
+    },
+    {
+      $addFields: {
         topPlayerHomeTeam: {
           $reduce: {
-            input: "$awayTeamPlayersStatistic",
-            initialValue: { points_per_game: 0 },
+            input: "$mergePlayersAwayTeam",
+            initialValue: { points: 0 },
             in: {
               $cond: [
                 {
                   $gte: [
-                    { $toDouble: "$$this.points_per_game" },
-                    { $toDouble: "$$value.points_per_game" },
+                    { $toDouble: "$$this.points" },
+                    { $toDouble: "$$value.points" },
                   ],
                 },
                 "$$this",
@@ -2943,14 +2961,14 @@ const nbaSingleGameBoxScore = async (params: any) => {
       $addFields: {
         topPlayerAwayTeam: {
           $reduce: {
-            input: "$homeTeamPlayersStatistic",
+            input: "$mergePlayersHomeTeam",
             initialValue: { points_per_game: 0 },
             in: {
               $cond: [
                 {
                   $gte: [
-                    { $toDouble: "$$this.points_per_game" },
-                    { $toDouble: "$$value.points_per_game" },
+                    { $toDouble: "$$this.points" },
+                    { $toDouble: "$$value.points" },
                   ],
                 },
                 "$$this",
