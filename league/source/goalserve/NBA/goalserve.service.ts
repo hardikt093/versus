@@ -3165,8 +3165,8 @@ const nbaSingleGameBoxScore = async (params: any) => {
           awayTeam: "$topPlayerAwayTeam",
         },
         playersStatistic: {
-          homeTeam: "$homeTeamPlayersStatistic",
-          awayTeam: "$awayTeamPlayersStatistic",
+          homeTeam: "$mergePlayersHomeTeam",
+          awayTeam: "$mergePlayersAwayTeam",
         },
         closingOddsAndOutcome: {
           awayTeamMoneyLine: {
