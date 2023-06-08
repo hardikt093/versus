@@ -6739,13 +6739,32 @@ const nhlGetTeam = async (params: any) => {
                 isWinner: {
                   $cond: {
                     if: {
-                      $gte: [
-                        "$$item.homeTeamTotalScoreInNumber",
-                        "$$item.awayTeamTotalScoreInNumber",
-                      ],
+                      $eq: ["$$item.goalServeAwayTeamId", "$goalServeTeamId"],
                     },
-                    then: "W",
-                    else: "L",
+                    then: {
+                      $cond: {
+                        if: {
+                          $gte: [
+                            "$$item.homeTeamTotalScoreInNumber",
+                            "$$item.awayTeamTotalScoreInNumber",
+                          ],
+                        },
+                        then: "L",
+                        else: "W",
+                      },
+                    },
+                    else: {
+                      $cond: {
+                        if: {
+                          $gte: [
+                            "$$item.homeTeamTotalScoreInNumber",
+                            "$$item.awayTeamTotalScoreInNumber",
+                          ],
+                        },
+                        then: "w",
+                        else: "L",
+                      },
+                    },
                   },
                 },
                 opposingTeam: {
@@ -6775,7 +6794,10 @@ const nhlGetTeam = async (params: any) => {
                 oppositeGoalie: {
                   $cond: {
                     if: {
-                      $eq: ["$$item.oppositeTeamId", "$$item.goalServeAwayTeamId"],
+                      $eq: [
+                        "$$item.oppositeTeamId",
+                        "$$item.goalServeAwayTeamId",
+                      ],
                     },
                     then: {
                       $map: {

@@ -2672,16 +2672,37 @@ const nbaGetTeam = async (params: any) => {
               as: "item",
               in: {
                 isWinner: {
-                  $cond: {
+                  $cond:{
                     if: {
-                      $gte: [
-                        "$$item.homeTeamTotalScoreInNumber",
-                        "$$item.awayTeamTotalScoreInNumber",
-                      ],
+                      $eq:["$$item.goalServeAwayTeamId", "$goalServeTeamId"]
                     },
-                    then: "W",
-                    else: "L",
-                  },
+                    then:{
+                      $cond: {
+                        if: {
+                          $gte: [
+                            "$$item.homeTeamTotalScoreInNumber",
+                            "$$item.awayTeamTotalScoreInNumber",
+                          ],
+                        },
+                        then: "L",
+                        else: "W",
+                      },
+                    },
+                    else:{
+                      $cond: {
+                        if: {
+                          $gte: [
+                            "$$item.homeTeamTotalScoreInNumber",
+                            "$$item.awayTeamTotalScoreInNumber",
+                          ],
+                        },
+                        then: "w",
+                        else: "L",
+                      },
+                    }
+
+                  }
+              
                 },
                 opposingTeam: { $arrayElemAt: ["$$item.opposingTeam", 0] },
                 goalServeMatchId: "$$item.goalServeMatchId",
