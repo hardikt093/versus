@@ -2,7 +2,6 @@ import express from "express";
 
 import goalserveController from "../goalserve/goalserve.controller";
 import goalserveValidation from "./../goalserve/goalserve.validation";
-import auth from "../middlewares/auth";
 import validate from "../middlewares/validate";
 
 const router = express.Router();
@@ -28,8 +27,8 @@ const router = express.Router();
  *         description: get standings
  */
 // router.get("/standings", goalserveController.baseballStandings);
-router.get("/scoreWithDate", auth, goalserveController.mlbScoreWithDate);
-router.get("/standings", auth, goalserveController.getBseballStandings);
+router.get("/scoreWithDate", goalserveController.mlbScoreWithDate);
+router.get("/standings", goalserveController.getBseballStandings);
 
 /**
  * @swagger
@@ -57,7 +56,7 @@ router.get("/standings", auth, goalserveController.getBseballStandings);
  *       200:
  *         description: get league
  */
-router.get("/league", auth, goalserveController.getAllLeague);
+router.get("/league", goalserveController.getAllLeague);
 /**
  * @swagger
  * definitions:
@@ -92,44 +91,44 @@ router.post(
 );
 router.put(
   "/league/:id",
-  auth,
+
   validate(goalserveValidation.updateLeague),
   goalserveController.updateLeague
 );
 router.delete(
   "/league/:id",
-  auth,
+
   validate(goalserveValidation.deleteApi),
   goalserveController.deleteLeague
 );
 
-router.get("/player", auth, goalserveController.getAllPlayer);
-router.post("/player", auth, goalserveController.createPlayer);
+router.get("/player", goalserveController.getAllPlayer);
+router.post("/player", goalserveController.createPlayer);
 router.put(
   "/player/:id",
-  auth,
+
   validate(goalserveValidation.updatePlayer),
   goalserveController.updatePlayer
 );
 router.delete(
   "/player/:id",
-  auth,
+
   validate(goalserveValidation.deleteApi),
   goalserveController.deletePlayer
 );
 
-router.get("/team", auth, goalserveController.getAllTeam);
+router.get("/team", goalserveController.getAllTeam);
 
 router.post(
   "/team",
-  auth,
+
   // validate(goalserveValidation.createTeam),
   goalserveController.createTeam
 );
 
 router.put(
   "/team/:id",
-  auth,
+
   validate(goalserveValidation.updateTeam),
   goalserveController.updateTeam
 );
@@ -137,22 +136,22 @@ router.put(
 router.delete(
   "/team/:id",
   validate(goalserveValidation.deleteApi),
-  auth,
+
   goalserveController.deleteTeam
 );
 
-router.get("/division", auth, goalserveController.getAllDivison);
+router.get("/division", goalserveController.getAllDivison);
 
 router.post(
   "/division",
-  auth,
+
   validate(goalserveValidation.createTeam),
   goalserveController.createDivison
 );
 
 router.put(
   "/division/:id",
-  auth,
+
   validate(goalserveValidation.updateTeam),
   goalserveController.updateDivison
 );
@@ -160,12 +159,12 @@ router.put(
 router.delete(
   "/division/:id",
   validate(goalserveValidation.deleteApi),
-  auth,
+
   goalserveController.deleteDivision
 );
 router.get(
   "/scoreWithCurrentDate",
-  auth,
+
   goalserveController.scoreWithCurrentDate
 );
 router.post("/addMatchData", goalserveController.addMatchData);
@@ -176,12 +175,12 @@ router.post("/addPlayerStats", goalserveController.statsPlayerPitching);
 router.post("/addTeamStats", goalserveController.statsTeam);
 router.get(
   "/single-game-boxscore-final",
-  auth,
+
   goalserveController.singleGameBoxScore
 );
 router.get(
   "/single-game-boxscore-upcomming",
-  auth,
+
   goalserveController.singleGameBoxScoreUpcomming
 );
 export default router;

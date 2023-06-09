@@ -1,6 +1,5 @@
 import express from "express";
 import leagueNbaProxyController from "../leagueproxy/leagueNbaProxy.controller";
-import auth from "../middlewares/auth";
 import validate from "../middlewares/validate";
 import leagueValidation from "../leagueproxy/league.validation";
 const router = express.Router();
