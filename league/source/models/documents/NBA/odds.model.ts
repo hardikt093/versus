@@ -6,9 +6,24 @@ var oddSchema = new Schema(
         goalServeMatchId: { type: Number, required: true },
         goalServeHomeTeamId: { type: Number, required: true },
         goalServeAwayTeamId: { type: Number, required: true },
-        homeTeamSpread: { type: String, },
+        homeTeamSpread: {
+            "dp3": { type: String },
+            "handicap": { type: String },
+            "id": { type: String },
+            "name": { type: String },
+            "us": { type: String },
+            "value": { type: String }
+        },
+        status: { type: String },
         homeTeamTotal: { type: String },
-        awayTeamSpread: { type: String, },
+        awayTeamSpread: {
+            "dp3": { type: String },
+            "handicap": { type: String },
+            "id": { type: String },
+            "name": { type: String },
+            "us": { type: String },
+            "value": { type: String }
+        },
         awayTeamTotal: { type: String },
         awayTeamMoneyline:
         {

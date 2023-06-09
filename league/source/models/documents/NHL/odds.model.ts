@@ -10,6 +10,7 @@ var oddSchema = new Schema(
         homeTeamTotal: { type: String },
         awayTeamSpread: { type: String, },
         awayTeamTotal: { type: String },
+        status: { type: String },
         awayTeamMoneyline:
         {
             dp3: { type: String },
