@@ -4910,6 +4910,8 @@ const nhlSingleGameBoxScore = async (params: any) => {
         homeTeamTotalScore: true,
         awayTeamTotalScore: true,
         awayTeam: {
+          awayTeamName: "$awayTeam.name",
+          goalServeAwayTeamId: "$goalServeAwayTeamId",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           isWinner: {
@@ -4926,6 +4928,8 @@ const nhlSingleGameBoxScore = async (params: any) => {
           },
         },
         homeTeam: {
+          homeTeamName: "$homeTeam.name",
+          goalServeHomeTeamId: "$goalServeHomeTeamId",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           isWinner: {
