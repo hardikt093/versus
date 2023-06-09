@@ -53,7 +53,7 @@ const getTotalValues = async (total: any) => {
 
 const getRunLine = async (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
-    if (myArray[i].name.split(" ").slice(0, -1).join(" ") == nameKey) {
+    if (myArray[i].value == nameKey) {
       return myArray[i];
     }
   }
@@ -1889,7 +1889,6 @@ const createAndUpdateOddsNba = async () => {
       "bsktbl/nba-shedule"
     );
     var matchData = getScore?.data?.shedules?.matches?.match;
-
     if (matchData?.length > 0) {
       const takeData = await matchData?.map(async (item: any) => {
         if (item.status) {
@@ -1916,22 +1915,17 @@ const createAndUpdateOddsNba = async () => {
                 )
               : {};
             // getSpread
-            const getSpread = await getOdds("Run Line", item?.odds?.type);
-            const getAwayTeamRunLine = await getRunLine(
-              item?.awayteam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const getHomeTeamRunLine = await getRunLine(
-              item?.hometeam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const awayTeamSpread = getAwayTeamRunLine
-              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
-
-            const homeTeamSpread = getHomeTeamRunLine
-              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
+            const getSpread = await getOdds("Handicap", item?.odds?.type);
+            const getAwayTeamRunLine = await getSpread
+              ? getSpread?.bookmaker?.handicap?.odd?.find(
+                (item: any) => item?.name === "2"
+              )
+              : {};
+            const getHomeTeamRunLine = await getSpread
+              ? getSpread?.bookmaker?.handicap?.odd?.find(
+                (item: any) => item?.name === "1"
+              )
+              : {};
             const total = await getTotal("Over/Under", item?.odds?.type);
             const totalValues = await getTotalValues(total);
             let data = {
@@ -1939,9 +1933,9 @@ const createAndUpdateOddsNba = async () => {
               goalServeMatchId: item?.id,
               goalServeHomeTeamId: item?.hometeam?.id,
               goalServeAwayTeamId: item?.awayteam?.id,
-              homeTeamSpread: homeTeamSpread,
+              homeTeamSpread: getHomeTeamRunLine,
               homeTeamTotal: totalValues,
-              awayTeamSpread: awayTeamSpread,
+              awayTeamSpread: getAwayTeamRunLine,
               awayTeamTotal: totalValues,
               awayTeamMoneyline: awayTeamMoneyline,
               homeTeamMoneyline: homeTeamMoneyline,
@@ -1965,22 +1959,17 @@ const createAndUpdateOddsNba = async () => {
                 )
               : {};
             // getSpread
-            const getSpread = await getOdds("Run Line", item?.odds?.type);
-            const getAwayTeamRunLine = await getRunLine(
-              item?.awayteam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const getHomeTeamRunLine = await getRunLine(
-              item?.hometeam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const awayTeamSpread = getAwayTeamRunLine
-              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "null";
-
-            const homeTeamSpread = getHomeTeamRunLine
-              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "null";
+            const getSpread = await getOdds("Handicap", item?.odds?.type);
+            const getAwayTeamRunLine = await getSpread
+              ? getSpread?.bookmaker?.handicap?.odd?.find(
+                (item: any) => item?.name === "2"
+              )
+              : {};
+            const getHomeTeamRunLine = await getSpread
+              ? getSpread?.bookmaker?.handicap?.odd?.find(
+                (item: any) => item?.name === "1"
+              )
+              : {};
             const total = await getTotal("Over/Under", item?.odds?.type);
             const totalValues = await getTotalValues(total);
             let data = {
@@ -1988,9 +1977,9 @@ const createAndUpdateOddsNba = async () => {
               goalServeMatchId: item?.id,
               goalServeHomeTeamId: item?.hometeam?.id,
               goalServeAwayTeamId: item?.awayteam?.id,
-              homeTeamSpread: homeTeamSpread,
+              homeTeamSpread: getHomeTeamRunLine,
               homeTeamTotal: totalValues,
-              awayTeamSpread: awayTeamSpread,
+              awayTeamSpread: getAwayTeamRunLine,
               awayTeamTotal: totalValues,
               awayTeamMoneyline: awayTeamMoneyline,
               homeTeamMoneyline: homeTeamMoneyline,
@@ -2012,12 +2001,13 @@ const createAndUpdateOddsNba = async () => {
           goalServeMatchId: matchData?.id,
         });
         if (findMatchOdds?.length == 0) {
+
+
           // getMoneyLine
           const getMoneyLine: any = await getOdds(
             "Home/Away",
             matchData?.odds?.type
           );
-          console.log("getMoneyLine", getMoneyLine);
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
                 (item: any) => item?.name === "2"
@@ -2029,22 +2019,18 @@ const createAndUpdateOddsNba = async () => {
               )
             : {};
           // getSpread
-          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
-          const getAwayTeamRunLine = await getRunLine(
-            matchData?.awayteam?.name,
-            getSpread?.bookmaker?.odd
-          );
-          const getHomeTeamRunLine = await getRunLine(
-            matchData?.hometeam?.name,
-            getSpread?.bookmaker?.odd
-          );
-          const awayTeamSpread = getAwayTeamRunLine
-            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-            : "";
+          const getSpread = await getOdds("Handicap", matchData?.odds?.type);
+          const getAwayTeamRunLine = getSpread
+            ? getSpread?.bookmaker?.handicap?.odd?.find(
+              (item: any) => item?.name === "2"
+            )
+            : {};
 
-          const homeTeamSpread = getHomeTeamRunLine
-            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-            : "";
+          const getHomeTeamRunLine = getSpread
+            ? getSpread?.bookmaker?.handicap?.odd?.find(
+              (item: any) => item?.name === "1"
+            )
+            : {};
           const total = await getTotal("Over/Under", matchData?.odds?.type);
           const totalValues = await getTotalValues(total);
           let data = {
@@ -2052,9 +2038,9 @@ const createAndUpdateOddsNba = async () => {
             goalServeMatchId: matchData?.id,
             goalServeHomeTeamId: matchData?.hometeam?.id,
             goalServeAwayTeamId: matchData?.awayteam?.id,
-            homeTeamSpread: homeTeamSpread,
+            homeTeamSpread: getHomeTeamRunLine,
             homeTeamTotal: totalValues,
-            awayTeamSpread: awayTeamSpread,
+            awayTeamSpread: getAwayTeamRunLine,
             awayTeamTotal: totalValues,
             awayTeamMoneyline: awayTeamMoneyline,
             homeTeamMoneyline: homeTeamMoneyline,
@@ -2078,22 +2064,18 @@ const createAndUpdateOddsNba = async () => {
               )
             : {};
           // getSpread
-          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
-          const getAwayTeamRunLine = await getRunLine(
-            matchData?.awayteam?.name,
-            getSpread?.bookmaker?.odd
-          );
-          const getHomeTeamRunLine = await getRunLine(
-            matchData?.hometeam?.name,
-            getSpread?.bookmaker?.odd
-          );
-          const awayTeamSpread = getAwayTeamRunLine
-            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-            : "null";
+          const getSpread = await getOdds("Handicap", matchData?.odds?.type);
+          const getAwayTeamRunLine = getSpread
+            ? getSpread?.bookmaker?.handicap?.odd?.find(
+              (item: any) => item?.name === "2"
+            )
+            : {};
 
-          const homeTeamSpread = getHomeTeamRunLine
-            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-            : "null";
+          const getHomeTeamRunLine = getSpread
+            ? getSpread?.bookmaker?.handicap?.odd?.find(
+              (item: any) => item?.name === "1"
+            )
+            : {};
           const total = await getTotal("Over/Under", matchData?.odds?.type);
           const totalValues = await getTotalValues(total);
           let data = {
@@ -2101,9 +2083,9 @@ const createAndUpdateOddsNba = async () => {
             goalServeMatchId: matchData?.id,
             goalServeHomeTeamId: matchData?.hometeam?.id,
             goalServeAwayTeamId: matchData?.awayteam?.id,
-            homeTeamSpread: homeTeamSpread,
+            homeTeamSpread: getHomeTeamRunLine,
             homeTeamTotal: totalValues,
-            awayTeamSpread: awayTeamSpread,
+            awayTeamSpread: getAwayTeamRunLine,
             awayTeamTotal: totalValues,
             awayTeamMoneyline: awayTeamMoneyline,
             homeTeamMoneyline: homeTeamMoneyline,
