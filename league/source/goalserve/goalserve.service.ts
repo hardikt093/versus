@@ -8316,7 +8316,7 @@ const createAndUpdateOddsNhl = async () => {
                 )
               : {};
             // getSpread
-            const getSpread = await getOdds("Run Line", item?.odds?.type);
+            const getSpread = await getOdds("Puck Line", item?.odds?.type);
             const getAwayTeamRunLine = await getRunLine(
               item?.awayteam?.name,
               getSpread?.bookmaker?.odd
@@ -8345,6 +8345,7 @@ const createAndUpdateOddsNhl = async () => {
               awayTeamTotal: totalValues,
               awayTeamMoneyline: awayTeamMoneyline,
               homeTeamMoneyline: homeTeamMoneyline,
+              status: item?.status
             };
             const oddsData = new NhlOdds(data);
             const savedOddsData = await oddsData.save();
@@ -8365,7 +8366,7 @@ const createAndUpdateOddsNhl = async () => {
                 )
               : {};
             // getSpread
-            const getSpread = await getOdds("Run Line", item?.odds?.type);
+            const getSpread = await getOdds("Puck Line", item?.odds?.type);
             const getAwayTeamRunLine = await getRunLine(
               item?.awayteam?.name,
               getSpread?.bookmaker?.odd
@@ -8394,6 +8395,7 @@ const createAndUpdateOddsNhl = async () => {
               awayTeamTotal: totalValues,
               awayTeamMoneyline: awayTeamMoneyline,
               homeTeamMoneyline: homeTeamMoneyline,
+              status: item?.status
             };
             const updateOdds = await NhlOdds.findOneAndUpdate(
               { goalServerMatchId: item?.id },
@@ -8428,7 +8430,7 @@ const createAndUpdateOddsNhl = async () => {
               )
             : {};
           // getSpread
-          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
+          const getSpread = await getOdds("Puck Line", matchData?.odds?.type);
           const getAwayTeamRunLine = await getRunLine(
             matchData?.awayteam?.name,
             getSpread?.bookmaker?.odd
@@ -8457,6 +8459,7 @@ const createAndUpdateOddsNhl = async () => {
             awayTeamTotal: totalValues,
             awayTeamMoneyline: awayTeamMoneyline,
             homeTeamMoneyline: homeTeamMoneyline,
+            status: matchData?.status
           };
           const oddsData = new NhlOdds(data);
           const savedOddsData = await oddsData.save();
@@ -8477,7 +8480,7 @@ const createAndUpdateOddsNhl = async () => {
               )
             : {};
           // getSpread
-          const getSpread = await getOdds("Run Line", matchData?.odds?.type);
+          const getSpread = await getOdds("Puck Line", matchData?.odds?.type);
           const getAwayTeamRunLine = await getRunLine(
             matchData?.awayteam?.name,
             getSpread?.bookmaker?.odd
@@ -8506,6 +8509,7 @@ const createAndUpdateOddsNhl = async () => {
             awayTeamTotal: totalValues,
             awayTeamMoneyline: awayTeamMoneyline,
             homeTeamMoneyline: homeTeamMoneyline,
+            status: matchData?.status
           };
           const updateOdds = await NhlOdds.findOneAndUpdate(
             { goalServerMatchId: matchData?.id },

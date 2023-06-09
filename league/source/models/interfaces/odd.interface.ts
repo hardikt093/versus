@@ -9,6 +9,7 @@ import { Document } from "mongoose";
 export interface IOddModel extends Document {
     goalServerLeagueId: string,
     goalServerMatchId: string,
+  status: string,
     goalServerHomeTeamId: string,
     goalServeAwayTeamId: string,
     homeTeamSpread: string,
@@ -17,5 +18,6 @@ export interface IOddModel extends Document {
     awayTeamRunLine: string,
     homeTeamMoneyline : moneyLine
     awayTeamMoneyline : moneyLine
+
 }
 export default IOddModel;
