@@ -1331,6 +1331,7 @@ const nbaScoreWithDate = async (params: any, type: string) => {
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
           goalServeAwayTeamId: "$goalServeAwayTeamId",
+          spread: "$odds.awayTeamSpread.handicap",
           moneyline: {
             $cond: [
               { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
@@ -1338,7 +1339,6 @@ const nbaScoreWithDate = async (params: any, type: string) => {
               "$odds.awayTeamMoneyline.us",
             ],
           },
-          spread: "$odds.awayTeamSpread",
           total: "$odds.awayTeamTotal",
         },
         homeTeam: {
@@ -1356,7 +1356,7 @@ const nbaScoreWithDate = async (params: any, type: string) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          spread: "$odds.homeTeamSpread",
+          spread: "$odds.homeTeamSpread.handicap",
           total: "$odds.homeTeamTotal",
         },
       },
