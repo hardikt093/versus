@@ -6861,8 +6861,8 @@ const nhlGetTeam = async (params: any) => {
                           $gt: [{ $size: "$$item.goalkeeperStatsAwayTeam" }, 0],
                         },
                         {
-                          $eq: [
-                            "$$item.oppositeTeamId",
+                          $ne: [
+                            "$goalServeTeamId",
                             "$$item.goalServeAwayTeamId",
                           ],
                         },
@@ -6902,6 +6902,7 @@ const nhlGetTeam = async (params: any) => {
                     },
                   },
                 },
+                oppositeTeamId:"$$item.oppositeTeamId",
                 odds: { $arrayElemAt: ["$$item.odds", 0] },
                 goalServeMatchId: "$$item.goalServeMatchId",
                 date: "$$item.date",
