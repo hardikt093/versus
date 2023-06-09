@@ -2154,6 +2154,14 @@ const nbaGetTeam = async (params: any) => {
             },
           },
           {
+            $lookup: {
+              from: "nbateamimages",
+              localField: "goalServeTeamId",
+              foreignField: "goalServeTeamId",
+              as: "teamImage",
+            },
+          },
+          {
             $project: {
               name: true,
               won: true,
@@ -2163,6 +2171,7 @@ const nbaGetTeam = async (params: any) => {
               average_points_for: true,
               average_points_agains: true,
               difference: true,
+              teamImage:{ $arrayElemAt: ["$teamImage.image", 0]} ,
             },
           },
         ],

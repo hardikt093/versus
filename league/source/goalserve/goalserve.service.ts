@@ -6204,6 +6204,14 @@ const nhlGetTeam = async (params: any) => {
             },
           },
           {
+            $lookup: {
+              from: "nhlteamimages",
+              localField: "goalServeTeamId",
+              foreignField: "goalServeTeamId",
+              as: "teamImage",
+            },
+          },
+          {
             $project: {
               name: true,
               won: true,
@@ -6213,6 +6221,7 @@ const nhlGetTeam = async (params: any) => {
               points: true,
               goals_for: true,
               goals_against: true,
+              teamImage:{ $arrayElemAt: ["$teamImage.image", 0]} ,
             },
           },
         ],
