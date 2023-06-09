@@ -1310,10 +1310,10 @@ const nbaScoreWithDate = async (params: any, type: string) => {
       },
     },
     {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
       },
     },
     {
@@ -1916,15 +1916,15 @@ const createAndUpdateOddsNba = async () => {
               : {};
             // getSpread
             const getSpread = await getOdds("Handicap", item?.odds?.type);
-            const getAwayTeamRunLine = await getSpread
+            const getAwayTeamRunLine = (await getSpread)
               ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : {};
-            const getHomeTeamRunLine = await getSpread
+            const getHomeTeamRunLine = (await getSpread)
               ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : {};
             const total = await getTotal("Over/Under", item?.odds?.type);
             const totalValues = await getTotalValues(total);
@@ -1960,15 +1960,15 @@ const createAndUpdateOddsNba = async () => {
               : {};
             // getSpread
             const getSpread = await getOdds("Handicap", item?.odds?.type);
-            const getAwayTeamRunLine = await getSpread
+            const getAwayTeamRunLine = (await getSpread)
               ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : {};
-            const getHomeTeamRunLine = await getSpread
+            const getHomeTeamRunLine = (await getSpread)
               ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : {};
             const total = await getTotal("Over/Under", item?.odds?.type);
             const totalValues = await getTotalValues(total);
@@ -2001,8 +2001,6 @@ const createAndUpdateOddsNba = async () => {
           goalServeMatchId: matchData?.id,
         });
         if (findMatchOdds?.length == 0) {
-
-
           // getMoneyLine
           const getMoneyLine: any = await getOdds(
             "Home/Away",
@@ -2022,14 +2020,14 @@ const createAndUpdateOddsNba = async () => {
           const getSpread = await getOdds("Handicap", matchData?.odds?.type);
           const getAwayTeamRunLine = getSpread
             ? getSpread?.bookmaker?.handicap?.odd?.find(
-              (item: any) => item?.name === "2"
-            )
+                (item: any) => item?.name === "2"
+              )
             : {};
 
           const getHomeTeamRunLine = getSpread
             ? getSpread?.bookmaker?.handicap?.odd?.find(
-              (item: any) => item?.name === "1"
-            )
+                (item: any) => item?.name === "1"
+              )
             : {};
           const total = await getTotal("Over/Under", matchData?.odds?.type);
           const totalValues = await getTotalValues(total);
@@ -2067,14 +2065,14 @@ const createAndUpdateOddsNba = async () => {
           const getSpread = await getOdds("Handicap", matchData?.odds?.type);
           const getAwayTeamRunLine = getSpread
             ? getSpread?.bookmaker?.handicap?.odd?.find(
-              (item: any) => item?.name === "2"
-            )
+                (item: any) => item?.name === "2"
+              )
             : {};
 
           const getHomeTeamRunLine = getSpread
             ? getSpread?.bookmaker?.handicap?.odd?.find(
-              (item: any) => item?.name === "1"
-            )
+                (item: any) => item?.name === "1"
+              )
             : {};
           const total = await getTotal("Over/Under", matchData?.odds?.type);
           const totalValues = await getTotalValues(total);
@@ -2838,10 +2836,10 @@ const nbaSingleGameBoxScore = async (params: any) => {
       },
     },
     {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
       },
     },
     {
@@ -3525,10 +3523,10 @@ const getUpcommingMatchNba = async () => {
         },
       },
       {
-        $unwind: {
-          path: "$odds",
-          includeArrayIndex: "string",
-          preserveNullAndEmptyArrays: true,
+        $addFields: {
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
         },
       },
       {
@@ -4031,10 +4029,10 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
       },
     },
     {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
       },
     },
     {
@@ -4552,10 +4550,10 @@ const nbaSingleGameScoreLive = async (params: any) => {
       },
     },
     {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
       },
     },
 
@@ -5154,10 +5152,10 @@ const liveBoxscoreNBA = async (params: any) => {
       },
     },
     {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
       },
     },
 
