@@ -9,7 +9,7 @@ const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
 
 const createAndUpdateOddsNba = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron createAndUpdateOddsNba");
-  await goalserveNbaService.createAndUpdateOddsNba();
+  await goalserveNbaService.createAndUpdateMatchOdds();
 });
 
 const updateNbaMatch = cron.schedule("*/60 * * * * *", async () => {
