@@ -3,7 +3,6 @@ import { goalserveApi } from "../../services/goalserve.service";
 import League from "../../models/documents/league.model";
 import moment from "moment";
 import { isArray } from "lodash";
-import Player from "../../models/documents/player.model";
 import TeamNBA from "../../models/documents/NBA/team.model";
 import TeamImageNBA from "../../models/documents/NBA/teamImage.model";
 import NbaMatch from "../../models/documents/NBA/match.model";
@@ -13,21 +12,14 @@ import NbaStandings from "../../models/documents/NBA/standings.model";
 import socket from "../../services/socket.service";
 import NbaOdds from "../../models/documents/NBA/odds.model";
 import NbaScoreSummary from "../../models/documents/NBA/scoreSummary.model";
-function camelize(str: string) {
-  return str
-    .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
-      return index === 0 ? word.toLowerCase() : word.toUpperCase();
-    })
-    .replace(/\s+/g, "");
-}
-const getOdds = (nameKey: any, myArray: any) => {
+const getOdds = (nameKey: string, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
       return myArray[i];
     }
   }
 };
-const getTotal = (nameKey: any, myArray: any) => {
+const getTotal = (nameKey: string, myArray: any) => {
   if (myArray?.length > 0) {
     for (let i = 0; i < myArray?.length; i++) {
       if (myArray[i].value == nameKey) {
@@ -51,23 +43,7 @@ const getTotalValues = async (total: any) => {
   }
 };
 
-const getRunLine = async (nameKey: any, myArray: any) => {
-  for (let i = 0; i < myArray?.length; i++) {
-    if (myArray[i].value == nameKey) {
-      return myArray[i];
-    }
-  }
-};
-
-const search = async (nameKey: any, myArray: any) => {
-  for (let i = 0; i < myArray?.length; i++) {
-    if (myArray[i].id === nameKey) {
-      return myArray[i];
-    }
-  }
-  return;
-};
-const createTeamNBA = async (body: any) => {
+const createTeamNBA = async () => {
   let dataJson = {
     json: true,
   };
@@ -114,7 +90,7 @@ const addNBATeamImage = async (body: any) => {
 
 const addNbaMatch = async () => {
   try {
-    let getDaysArray = function (start: any, end: any) {
+    let getDaysArray = function (start: Date, end: Date) {
       for (
         var arr = [], dt = new Date(start);
         dt <= new Date(end);
@@ -148,7 +124,6 @@ const addNbaMatch = async () => {
         const league: any = await League.findOne({
           goalServeLeagueId: getMatch?.data.scores.category.id,
         }).lean();
-        let savedMatchData: any = "";
         if (matchArray?.length > 0 && matchArray) {
           for (let j = 0; j < matchArray?.length; j++) {
             const data: any = {
@@ -535,7 +510,6 @@ const updateCurruntDateRecordNba = async () => {
     const league: any = await League.findOne({
       goalServeLeagueId: getMatch?.data.scores.category.id,
     });
-    var savedMatchData: any = "";
     if (matchArray?.length > 0 && matchArray) {
       // array logic
       for (let j = 0; j < matchArray?.length; j++) {
@@ -611,7 +585,7 @@ const updateCurruntDateRecordNba = async () => {
         data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
           ? teamIdHome.goalServeTeamId
           : 1;
-        const recordUpdate = await NbaMatch.findOneAndUpdate(
+        await NbaMatch.findOneAndUpdate(
           { goalServeMatchId: data.goalServeMatchId },
           { $set: data },
           { new: true }
@@ -695,7 +669,7 @@ const updateCurruntDateRecordNba = async () => {
             ? teamIdHome.goalServeTeamId
             : 1;
         }
-        const recordUpdate = await NbaMatch.findOneAndUpdate(
+        await NbaMatch.findOneAndUpdate(
           { goalServeMatchId: data.goalServeMatchId },
           { $set: data },
           { new: true }
@@ -1171,8 +1145,8 @@ const getNbaStandingData = async () => {
   return getStandingData[0];
 };
 
-const nbaScoreWithDate = async (params: any, type: string) => {
-  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
+const nbaScoreWithDate = async (date1: string, type: string) => {
+  const date2 = moment(date1).add(24, "hours").utc().toISOString();
 
   const getUpcomingMatch = await NbaMatch.aggregate([
     {
@@ -1199,7 +1173,7 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
         status: "Not Started",
@@ -1388,7 +1362,7 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
         $or: [
@@ -1593,8 +1567,8 @@ const nbaScoreWithDate = async (params: any, type: string) => {
     return { getUpcomingMatch, getFinalMatch };
   }
 };
-const getLiveDataOfNba = async (params: any) => {
-  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
+const getLiveDataOfNba = async (date1: string) => {
+  const date2 = moment(date1).add(24, "hours").utc().toISOString();
 
   const getLiveDataOfNba = await NbaMatch.aggregate([
     {
@@ -1670,7 +1644,7 @@ const getLiveDataOfNba = async (params: any) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
       },
@@ -1781,7 +1755,6 @@ const getLiveDataOfNba = async (params: any) => {
             onError: 0, // Default value when conversion fails
           },
         },
-        
       },
     },
     {
@@ -1848,11 +1821,11 @@ const getLiveDataOfNba = async (params: any) => {
   });
   return getLiveDataOfNba;
 };
-const nbaScoreWithCurrentDate = async (params: any) => {
+const nbaScoreWithCurrentDate = async (date1: string) => {
   return {
-    getLiveMatch: await getLiveDataOfNba(params),
-    getUpcomingMatch: await nbaScoreWithDate(params, "upcoming"),
-    getFinalMatch: await nbaScoreWithDate(params, "final"),
+    getLiveMatch: await getLiveDataOfNba(date1),
+    getUpcomingMatch: await nbaScoreWithDate(date1, "upcoming"),
+    getFinalMatch: await nbaScoreWithDate(date1, "final"),
   };
 };
 
@@ -1870,7 +1843,7 @@ const createAndUpdateOddsNba = async () => {
     );
     var matchData = getScore?.data?.shedules?.matches?.match;
     if (matchData?.length > 0) {
-      const takeData = await matchData?.map(async (item: any) => {
+      await matchData?.map(async (item: any) => {
         if (item.status) {
           const league: any = await League.findOne({
             goalServeLeagueId: getScore?.data?.shedules?.id,
@@ -1964,7 +1937,7 @@ const createAndUpdateOddsNba = async () => {
               awayTeamMoneyline: awayTeamMoneyline,
               homeTeamMoneyline: homeTeamMoneyline,
             };
-            const updateOdds = await NbaOdds.findOneAndUpdate(
+            await NbaOdds.findOneAndUpdate(
               { goalServerMatchId: item?.id },
               { $set: data },
               { new: true }
@@ -2024,7 +1997,7 @@ const createAndUpdateOddsNba = async () => {
             homeTeamMoneyline: homeTeamMoneyline,
           };
           const oddsData = new NbaOdds(data);
-          const savedOddsData = await oddsData.save();
+          await oddsData.save();
         } else {
           // getMoneyLine
           const getMoneyLine: any = await getOdds(
@@ -2068,7 +2041,7 @@ const createAndUpdateOddsNba = async () => {
             awayTeamMoneyline: awayTeamMoneyline,
             homeTeamMoneyline: homeTeamMoneyline,
           };
-          const updateOdds = await NbaOdds.findOneAndUpdate(
+          await NbaOdds.findOneAndUpdate(
             { goalServerMatchId: matchData?.id },
             { $set: data },
             { new: true }
@@ -2082,7 +2055,11 @@ const createAndUpdateOddsNba = async () => {
 };
 
 const createAndUpdateMatchOdds = async () => {
-  let subDate = moment().startOf("day").subtract(12, "hours").utc().toISOString();
+  let subDate = moment()
+    .startOf("day")
+    .subtract(12, "hours")
+    .utc()
+    .toISOString();
   let addDate = moment().add(24, "hours").utc().toISOString();
   let day1 = moment(subDate).format("D");
   let month1 = moment(subDate).format("MM");
@@ -2095,7 +2072,13 @@ const createAndUpdateMatchOdds = async () => {
   let date2 = `${day2}.${month2}.${year2}`;
 
   try {
-    let data = { json: true, date1: date1, date2: date2, showodds: "1", bm: "451," };
+    let data = {
+      json: true,
+      date1: date1,
+      date2: date2,
+      showodds: "1",
+      bm: "451,",
+    };
     const getScore = await goalserveApi(
       "http://www.goalserve.com/getfeed",
       data,
@@ -2107,32 +2090,28 @@ const createAndUpdateMatchOdds = async () => {
     });
     if (matchData?.length > 0) {
       const takeData = await matchData?.map(async (item: any) => {
-        const getMoneyLine: any = await getOdds(
-          "Home/Away",
-          item?.odds?.type
-        );
-        console.log("getMoneyLine", getMoneyLine)
+        const getMoneyLine: any = await getOdds("Home/Away", item?.odds?.type);
         const awayTeamMoneyline = getMoneyLine
           ? getMoneyLine?.bookmaker?.odd?.find(
-            (item: any) => item?.name === "2"
-          )
+              (item: any) => item?.name === "2"
+            )
           : {};
         const homeTeamMoneyline = getMoneyLine
           ? getMoneyLine?.bookmaker?.odd?.find(
-            (item: any) => item?.name === "1"
-          )
+              (item: any) => item?.name === "1"
+            )
           : {};
         // getSpread
         const getSpread = await getOdds("Handicap", item?.odds?.type);
         const getAwayTeamRunLine = (await getSpread)
           ? getSpread?.bookmaker?.handicap?.odd?.find(
-            (item: any) => item?.name === "2"
-          )
+              (item: any) => item?.name === "2"
+            )
           : {};
         const getHomeTeamRunLine = (await getSpread)
           ? getSpread?.bookmaker?.handicap?.odd?.find(
-            (item: any) => item?.name === "1"
-          )
+              (item: any) => item?.name === "1"
+            )
           : {};
         const total = await getTotal("Over/Under", item?.odds?.type);
         const totalValues = await getTotalValues(total);
@@ -2147,49 +2126,55 @@ const createAndUpdateMatchOdds = async () => {
           awayTeamTotal: totalValues,
           awayTeamMoneyline: awayTeamMoneyline,
           homeTeamMoneyline: homeTeamMoneyline,
-          status: item.status
+          status: item.status,
         };
         if (item.status == "Not Started") {
           const findMatchOdds = await NbaOdds.find({
-            goalServeMatchId: item?.id, status: item?.status
+            goalServeMatchId: item?.id,
+            status: item?.status,
           });
           if (findMatchOdds?.length == 0) {
             const oddsData = new NbaOdds(data);
-            const savedOddsData = await oddsData.save();
-          }
-          else {
-            const updateOdds = await NbaOdds.findOneAndUpdate(
+            await oddsData.save();
+          } else {
+            await NbaOdds.findOneAndUpdate(
               { goalServerMatchId: item?.id },
               { $set: data },
               { new: true }
             );
           }
-        }
-        else if (item.status != "Not Started" && item.status != "Final" && item.status != "Final/OT" && item.status != "Final/2OT" && item.status != "Postponed" && item.status != "Canceled", item.status != "Suspended") {
+        } else if (
+          (item.status != "Not Started" &&
+            item.status != "Final" &&
+            item.status != "Final/OT" &&
+            item.status != "Final/2OT" &&
+            item.status != "Postponed" &&
+            item.status != "Canceled",
+          item.status != "Suspended")
+        ) {
           const findMatchOdds = await NbaOdds.find({
-            goalServeMatchId: item?.id, status: item?.status
+            goalServeMatchId: item?.id,
+            status: item?.status,
           });
           if (findMatchOdds?.length == 0) {
             const oddsData = new NbaOdds(data);
-            const savedOddsData = await oddsData.save();
-          }
-          else {
-            const updateOdds = await NbaOdds.findOneAndUpdate(
+            await oddsData.save();
+          } else {
+            await NbaOdds.findOneAndUpdate(
               { goalServerMatchId: item?.id },
               { $set: data },
               { new: true }
             );
           }
-        }
-        else {
+        } else {
           const findMatchOdds = await NbaOdds.find({
-            goalServeMatchId: item?.id, status: item?.status
+            goalServeMatchId: item?.id,
+            status: item?.status,
           });
           if (findMatchOdds?.length == 0) {
             const oddsData = new NbaOdds(data);
-            const savedOddsData = await oddsData.save();
-          }
-          else {
+            oddsData.save();
+          } else {
             const updateOdds = await NbaOdds.findOneAndUpdate(
               { goalServerMatchId: item?.id },
               { $set: data },
@@ -2197,9 +2182,8 @@ const createAndUpdateMatchOdds = async () => {
             );
           }
         }
-      })
-    }
-    else {
+      });
+    } else {
       if (matchData) {
         const league: any = await League.findOne({
           goalServeLeagueId: getScore?.data?.shedules?.id,
@@ -2209,29 +2193,28 @@ const createAndUpdateMatchOdds = async () => {
           "Home/Away",
           matchData?.odds?.type
         );
-        console.log("getMoneyLine", getMoneyLine)
         const awayTeamMoneyline = getMoneyLine
           ? getMoneyLine?.bookmaker?.odd?.find(
-            (item: any) => item?.name === "2"
-          )
+              (item: any) => item?.name === "2"
+            )
           : {};
         const homeTeamMoneyline = getMoneyLine
           ? getMoneyLine?.bookmaker?.odd?.find(
-            (item: any) => item?.name === "1"
-          )
+              (item: any) => item?.name === "1"
+            )
           : {};
         // getSpread
         const getSpread = await getOdds("Handicap", matchData?.odds?.type);
         const getAwayTeamRunLine = getSpread
           ? getSpread?.bookmaker?.handicap?.odd?.find(
-            (item: any) => item?.name === "2"
-          )
+              (item: any) => item?.name === "2"
+            )
           : {};
 
         const getHomeTeamRunLine = getSpread
           ? getSpread?.bookmaker?.handicap?.odd?.find(
-            (item: any) => item?.name === "1"
-          )
+              (item: any) => item?.name === "1"
+            )
           : {};
         const total = await getTotal("Over/Under", matchData?.odds?.type);
         const totalValues = await getTotalValues(total);
@@ -2246,51 +2229,57 @@ const createAndUpdateMatchOdds = async () => {
           awayTeamTotal: totalValues,
           awayTeamMoneyline: awayTeamMoneyline,
           homeTeamMoneyline: homeTeamMoneyline,
-          status: matchData.status
+          status: matchData.status,
         };
 
         if (matchData.status == "Not Started") {
           const findMatchOdds = await NbaOdds.find({
-            goalServeMatchId: matchData?.id, status: matchData?.status
+            goalServeMatchId: matchData?.id,
+            status: matchData?.status,
           });
           if (findMatchOdds?.length == 0) {
             const oddsData = new NbaOdds(data);
             const savedOddsData = await oddsData.save();
-          }
-          else {
-            const updateOdds = await NbaOdds.findOneAndUpdate(
+          } else {
+            await NbaOdds.findOneAndUpdate(
               { goalServerMatchId: matchData?.id },
               { $set: data },
               { new: true }
             );
           }
-        }
-        else if (matchData.status != "Not Started" && matchData.status != "Final" && matchData.status != "Final/OT" && matchData.status != "Final/2OT" && matchData.status != "Postponed" && matchData.status != "Canceled", matchData.status != "Suspended") {
+        } else if (
+          (matchData.status != "Not Started" &&
+            matchData.status != "Final" &&
+            matchData.status != "Final/OT" &&
+            matchData.status != "Final/2OT" &&
+            matchData.status != "Postponed" &&
+            matchData.status != "Canceled",
+          matchData.status != "Suspended")
+        ) {
           const findMatchOdds = await NbaOdds.find({
-            goalServeMatchId: matchData?.id, status: matchData?.status
+            goalServeMatchId: matchData?.id,
+            status: matchData?.status,
           });
           if (findMatchOdds?.length == 0) {
             const oddsData = new NbaOdds(data);
-            const savedOddsData = await oddsData.save();
-          }
-          else {
-            const updateOdds = await NbaOdds.findOneAndUpdate(
+            await oddsData.save();
+          } else {
+            await NbaOdds.findOneAndUpdate(
               { goalServerMatchId: matchData?.id },
               { $set: data },
               { new: true }
             );
           }
-        }
-        else {
+        } else {
           const findMatchOdds = await NbaOdds.find({
-            goalServeMatchId: matchData?.id, status: matchData?.status
+            goalServeMatchId: matchData?.id,
+            status: matchData?.status,
           });
           if (findMatchOdds?.length == 0) {
             const oddsData = new NbaOdds(data);
-            const savedOddsData = await oddsData.save();
-          }
-          else {
-            const updateOdds = await NbaOdds.findOneAndUpdate(
+            await oddsData.save();
+          } else {
+            await NbaOdds.findOneAndUpdate(
               { goalServerMatchId: matchData?.id },
               { $set: data },
               { new: true }
@@ -2298,16 +2287,13 @@ const createAndUpdateMatchOdds = async () => {
           }
         }
       }
-
     }
   } catch (error: any) {
-    console.log("error", error)
+    console.log("error", error);
   }
+};
 
-}
-
-const nbaGetTeam = async (params: any) => {
-  const goalServeTeamId = params.goalServeTeamId;
+const nbaGetTeam = async (goalServeTeamId: string) => {
   const getTeam = await NbaStandings.aggregate([
     {
       $match: {
@@ -2916,8 +2902,7 @@ const nbaGetTeam = async (params: any) => {
   getTeam[0].teamStandings = standingData;
   return getTeam[0];
 };
-const nbaSingleGameBoxScore = async (params: any) => {
-  const goalServeMatchId = params.goalServeMatchId;
+const nbaSingleGameBoxScore = async (goalServeMatchId: string) => {
   const getMatch = await NbaMatch.aggregate([
     {
       $match: {
@@ -3490,7 +3475,6 @@ const updateNbaMatch = async () => {
     const league: any = await League.findOne({
       goalServeLeagueId: getMatch?.data?.shedules?.id,
     });
-    var savedMatchData: any = "";
     for (let i = 0; i < matchArray?.length; i++) {
       for (let j = 0; j < matchArray[i]?.match?.length; j++) {
         const match: any = await NbaMatch.findOne({
@@ -3574,7 +3558,7 @@ const updateNbaMatch = async () => {
             ? teamIdHome.goalServeTeamId
             : 1;
           const matchData = new NbaMatch(data);
-          savedMatchData = await matchData.save();
+          await matchData.save();
         }
       }
     }
@@ -4018,8 +4002,7 @@ const getFinalMatchNba = async () => {
     return getFinalMatch;
   } catch (error: any) {}
 };
-const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
-  const goalServeMatchId = params.goalServeMatchId;
+const nbaSingleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
   const getMatch = await NbaMatch.aggregate([
     {
       $match: {
@@ -4516,8 +4499,7 @@ const nbaSingleGameBoxScoreUpcomming = async (params: any) => {
   return { getMatch: getMatch[0] };
 };
 
-const nbaSingleGameScoreLive = async (params: any) => {
-  const goalServeMatchId = params.goalServeMatchId;
+const nbaSingleGameScoreLive = async (goalServeMatchId: string) => {
   const getMatch = await NbaMatch.aggregate([
     {
       $match: {
@@ -5045,8 +5027,8 @@ const nbaSingleGameScoreLive = async (params: any) => {
   ]);
   return { getMatch: getMatch[0] };
 };
-const liveBoxscoreNBA = async (params: any) => {
-  const date2 = moment(params.date1).add(48, "hours").utc().toISOString();
+const liveBoxscoreNBA = async (date1: string) => {
+  const date2 = moment(date1).add(48, "hours").utc().toISOString();
   const getMatch = await NbaMatch.aggregate([
     {
       $match: {
@@ -5121,7 +5103,7 @@ const liveBoxscoreNBA = async (params: any) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
       },
@@ -5731,5 +5713,5 @@ export default {
   nbaSingleGameScoreLive,
   liveBoxscoreNBA,
   updateScoreSummary,
-  createAndUpdateMatchOdds
+  createAndUpdateMatchOdds,
 };
