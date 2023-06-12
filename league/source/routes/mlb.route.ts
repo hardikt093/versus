@@ -1,7 +1,7 @@
 import express from "express";
 
-import goalserveController from "../goalserve/goalserve.controller";
-import goalserveValidation from "./../goalserve/goalserve.validation";
+import mlbController from "../goalserve/MLB/goalserve.controller";
+import mlbValidation from "./../goalserve/MLB/goalserve.validation";
 import validate from "../middlewares/validate";
 
 const router = express.Router();
@@ -27,8 +27,8 @@ const router = express.Router();
  *         description: get standings
  */
 // router.get("/standings", goalserveController.baseballStandings);
-router.get("/scoreWithDate", goalserveController.mlbScoreWithDate);
-router.get("/standings", goalserveController.getBseballStandings);
+router.get("/scoreWithDate", mlbController.mlbScoreWithDate);
+router.get("/standings", mlbController.getBseballStandings);
 
 /**
  * @swagger
@@ -56,7 +56,7 @@ router.get("/standings", goalserveController.getBseballStandings);
  *       200:
  *         description: get league
  */
-router.get("/league", goalserveController.getAllLeague);
+router.get("/league", mlbController.getAllLeague);
 /**
  * @swagger
  * definitions:
@@ -85,102 +85,102 @@ router.get("/league", goalserveController.getAllLeague);
  */
 router.post(
   "/league",
-  validate(goalserveValidation.createLeague),
+  validate(mlbValidation.createLeague),
   // auth,
-  goalserveController.createLeague
+  mlbController.createLeague
 );
 router.put(
   "/league/:id",
 
-  validate(goalserveValidation.updateLeague),
-  goalserveController.updateLeague
+  validate(mlbValidation.updateLeague),
+  mlbController.updateLeague
 );
 router.delete(
   "/league/:id",
 
-  validate(goalserveValidation.deleteApi),
-  goalserveController.deleteLeague
+  validate(mlbValidation.deleteApi),
+  mlbController.deleteLeague
 );
 
-router.get("/player", goalserveController.getAllPlayer);
-router.post("/player", goalserveController.createPlayer);
+router.get("/player", mlbController.getAllPlayer);
+router.post("/player", mlbController.createPlayer);
 router.put(
   "/player/:id",
 
-  validate(goalserveValidation.updatePlayer),
-  goalserveController.updatePlayer
+  validate(mlbValidation.updatePlayer),
+  mlbController.updatePlayer
 );
 router.delete(
   "/player/:id",
 
-  validate(goalserveValidation.deleteApi),
-  goalserveController.deletePlayer
+  validate(mlbValidation.deleteApi),
+  mlbController.deletePlayer
 );
 
-router.get("/team", goalserveController.getAllTeam);
+router.get("/team", mlbController.getAllTeam);
 
 router.post(
   "/team",
 
   // validate(goalserveValidation.createTeam),
-  goalserveController.createTeam
+  mlbController.createTeam
 );
 
 router.put(
   "/team/:id",
 
-  validate(goalserveValidation.updateTeam),
-  goalserveController.updateTeam
+  validate(mlbValidation.updateTeam),
+  mlbController.updateTeam
 );
 
 router.delete(
   "/team/:id",
-  validate(goalserveValidation.deleteApi),
+  validate(mlbValidation.deleteApi),
 
-  goalserveController.deleteTeam
+  mlbController.deleteTeam
 );
 
-router.get("/division", goalserveController.getAllDivison);
+router.get("/division", mlbController.getAllDivison);
 
 router.post(
   "/division",
 
-  validate(goalserveValidation.createTeam),
-  goalserveController.createDivison
+  validate(mlbValidation.createTeam),
+  mlbController.createDivison
 );
 
 router.put(
   "/division/:id",
 
-  validate(goalserveValidation.updateTeam),
-  goalserveController.updateDivison
+  validate(mlbValidation.updateTeam),
+  mlbController.updateDivison
 );
 
 router.delete(
   "/division/:id",
-  validate(goalserveValidation.deleteApi),
+  validate(mlbValidation.deleteApi),
 
-  goalserveController.deleteDivision
+  mlbController.deleteDivision
 );
 router.get(
   "/scoreWithCurrentDate",
 
-  goalserveController.scoreWithCurrentDate
+  mlbController.scoreWithCurrentDate
 );
-router.post("/addMatchData", goalserveController.addMatchData);
-router.post("/addInjuredPlayers", goalserveController.addInjuredPlayers);
-router.post("/addMatchDataFuture", goalserveController.addMatchDataFuture);
-router.get("/addstandings", goalserveController.addStanding);
-router.post("/addPlayerStats", goalserveController.statsPlayerPitching);
-router.post("/addTeamStats", goalserveController.statsTeam);
+router.post("/addMatchData", mlbController.addMatchData);
+router.post("/addInjuredPlayers", mlbController.addInjuredPlayers);
+router.post("/addMatchDataFuture", mlbController.addMatchDataFuture);
+router.get("/addstandings", mlbController.addStanding);
+router.post("/addPlayerStats", mlbController.statsPlayerPitching);
+router.post("/addTeamStats", mlbController.statsTeam);
 router.get(
   "/single-game-boxscore-final",
 
-  goalserveController.singleGameBoxScore
+  mlbController.singleGameBoxScore
 );
 router.get(
   "/single-game-boxscore-upcomming",
 
-  goalserveController.singleGameBoxScoreUpcomming
+  mlbController.singleGameBoxScoreUpcomming
 );
 export default router;

@@ -1,7 +1,9 @@
-import goalserveCron from "./goalserve.cron";
 import nbaCron from "./nba.cron";
+import nhlCron from "./nhl.cron";
+import mlbCron from "./mlb.cron";
 
 export default { 
-    goalserveCron,
-    // nbaCron 
+    nbaCron,
+    nhlCron,
+    mlbCron
 };
