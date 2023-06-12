@@ -34,7 +34,7 @@ const updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
 
 const getLiveMatchNba = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron getLiveMatchNBA");
-  await goalserveNbaService.getLiveDataOfNba({ date1: moment().startOf("day").utc().toISOString() });
+  await goalserveNbaService.getLiveDataOfNba(moment().startOf("day").utc().toISOString() as string);
 });
 
 const getUpcommingMatchNba = cron.schedule("*/5 * * * * *", async () => {
@@ -49,7 +49,7 @@ const getFinalMatchNba = cron.schedule("*/5 * * * * *", async () => {
 
 const liveBoxscoreNba = cron.schedule("*/5 * * * * *", async () => {
   console.info("inside score cron updateNhlMatchNba");
-  await goalserveNbaService.liveBoxscoreNBA({ date1: moment().startOf("day").utc().toISOString() });
+  await goalserveNbaService.liveBoxscoreNBA(moment().startOf("day").utc().toISOString() as string);
 })
 
 const updateScoreSummary = cron.schedule("*/5 * * * * *", async () => {

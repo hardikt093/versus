@@ -1938,7 +1938,7 @@ const createAndUpdateOddsNba = async () => {
               homeTeamMoneyline: homeTeamMoneyline,
             };
             await NbaOdds.findOneAndUpdate(
-              { goalServerMatchId: item?.id },
+              { goalServeMatchId: item?.id },
               { $set: data },
               { new: true }
             );
@@ -2042,7 +2042,7 @@ const createAndUpdateOddsNba = async () => {
             homeTeamMoneyline: homeTeamMoneyline,
           };
           await NbaOdds.findOneAndUpdate(
-            { goalServerMatchId: matchData?.id },
+            { goalServeMatchId: matchData?.id },
             { $set: data },
             { new: true }
           );
@@ -2138,7 +2138,7 @@ const createAndUpdateMatchOdds = async () => {
             await oddsData.save();
           } else {
             await NbaOdds.findOneAndUpdate(
-              { goalServerMatchId: item?.id },
+              { goalServeMatchId: item?.id },
               { $set: data },
               { new: true }
             );
@@ -2161,7 +2161,7 @@ const createAndUpdateMatchOdds = async () => {
             await oddsData.save();
           } else {
             await NbaOdds.findOneAndUpdate(
-              { goalServerMatchId: item?.id },
+              { goalServeMatchId: item?.id },
               { $set: data },
               { new: true }
             );
@@ -2176,7 +2176,7 @@ const createAndUpdateMatchOdds = async () => {
             oddsData.save();
           } else {
             const updateOdds = await NbaOdds.findOneAndUpdate(
-              { goalServerMatchId: item?.id },
+              { goalServeMatchId: item?.id },
               { $set: data },
               { new: true }
             );
@@ -2242,7 +2242,7 @@ const createAndUpdateMatchOdds = async () => {
             const savedOddsData = await oddsData.save();
           } else {
             await NbaOdds.findOneAndUpdate(
-              { goalServerMatchId: matchData?.id },
+              { goalServeMatchId: matchData?.id },
               { $set: data },
               { new: true }
             );
@@ -2265,7 +2265,7 @@ const createAndUpdateMatchOdds = async () => {
             await oddsData.save();
           } else {
             await NbaOdds.findOneAndUpdate(
-              { goalServerMatchId: matchData?.id },
+              { goalServeMatchId: matchData?.id },
               { $set: data },
               { new: true }
             );
@@ -2280,7 +2280,7 @@ const createAndUpdateMatchOdds = async () => {
             await oddsData.save();
           } else {
             await NbaOdds.findOneAndUpdate(
-              { goalServerMatchId: matchData?.id },
+              { goalServeMatchId: matchData?.id },
               { $set: data },
               { new: true }
             );
