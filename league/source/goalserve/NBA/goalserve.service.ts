@@ -1781,27 +1781,7 @@ const getLiveDataOfNba = async (params: any) => {
             onError: 0, // Default value when conversion fails
           },
         },
-        statusWithPeriod: {
-          $regexMatch: {
-            input: "$status",
-            regex: new RegExp("[0-9]"),
-          },
-        },
-      },
-    },
-    {
-      $addFields: {
-        statusWithCondition: {
-          $cond: {
-            if: {
-              $eq: ["$statusWithPeriod", true],
-            },
-            then: {
-              $concat: ["Period ", "", "$status"],
-            },
-            else: "Overtime",
-          },
-        },
+        
       },
     },
     {
@@ -1813,7 +1793,7 @@ const getLiveDataOfNba = async (params: any) => {
       $project: {
         id: true,
         date: true,
-        status: "$statusWithCondition",
+        status: "$status",
         datetime_utc: "$dateTimeUtc",
         time: true,
         goalServeMatchId: true,
