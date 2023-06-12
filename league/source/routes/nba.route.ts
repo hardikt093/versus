@@ -9,7 +9,7 @@ router.post("/addMatchDataFutureForNba", goalserveController.addMatchDataFutureF
 router.post("/addPlayer", goalserveController.addNbaPlayer);
 router.post("/addNbaInjuredPlayer", goalserveController.addNbaInjuredPlayer);
 router.post("/addStandings", goalserveController.addNbaStandings);
-router.get("/get-standings", goalserveController.getNbaStandings);
+router.get("/standings", goalserveController.getNbaStandings);
 router.get("/scoreWithDate", goalserveController.nbaScoreWithDate)
 router.get("/scoreWithCurrentDate", goalserveController.nbaScoreWithCurrentDate);
 router.get("/get-team", goalserveController.nbaGetTeam);

@@ -6,7 +6,7 @@ router.post("/team", nhlController.createTeamNHL);
 router.post("/team-image", nhlController.createTeamImageNHL);
 router.post("/addMatchData", nhlController.addNhlMatch);
 router.post("/addMatchDataFutureForNhl", nhlController.addMatchDataFutureForNhl);
-router.get("/get-standings", nhlController.getNhlStandings);
+router.get("/standings", nhlController.getNhlStandings);
 router.get("/single-game-boxscore-final", nhlController.nhlSingleGameBoxScore);
 router.get("/get-team", nhlController.nhlGetTeam);
 router.get("/scoreWithDate", nhlController.nhlScoreWithDate)

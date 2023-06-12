@@ -10,9 +10,9 @@ import apiDocsRoute from "./api.docs.route";
 const router = express.Router();
 
 router.use("/api-docs", apiDocsRoute);
-router.use("/mlb", mlbRoute);
-router.use("/nhl", nhlRoute);
-router.use("/nba", nbaRoute);
+router.use("/league/mlb", mlbRoute);
+router.use("/league/nhl", nhlRoute);
+router.use("/league/nba", nbaRoute);
 router.use("/bet", betRoute);
 
 export = router;
