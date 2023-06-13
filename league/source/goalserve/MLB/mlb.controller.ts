@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import { Request, Response } from "express";
 import createResponse from "../../utils/response";
-import goalserveService from "./goalserve.service";
+import goalserveService from "./mlb.service";
 
 const baseballStandings = async (req: Request, res: Response) => {
   try {

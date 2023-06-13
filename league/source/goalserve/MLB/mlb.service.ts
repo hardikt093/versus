@@ -305,7 +305,7 @@ const getWinLost = async () => {
     dataJson,
     `baseball/mlb_standings`
   );
-  const winLossData = await winLoss.data.standings.category.league.map(
+   await winLoss.data.standings.category.league.map(
     async (item: any) => {
       const getTeam = await item.division.map(async (item: any) => {
         const fff = Object.entries(item?.team);
@@ -1322,7 +1322,7 @@ const createPlayer = async (body: any) => {
     })
   );
 };
-const createMatch = async (body: any) => {
+const createMatch = async () => {
   var getDaysArray = function (start: any, end: any) {
     for (
       var arr = [], dt = new Date(start);
@@ -1340,7 +1340,7 @@ const createMatch = async (body: any) => {
 
   var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
 
-  const createFutureMatch = await daylist.map(async (item) => {
+  await daylist.map(async (item) => {
     let dataJson = { json: true, date1: item };
     const mlb_shedule = await goalserveApi(
       "https://www.goalserve.com/getfeed",
@@ -1385,7 +1385,7 @@ const createMatch = async (body: any) => {
         data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
       }
       const matchData = new Match(data);
-      const savedMatchData = await matchData.save();
+       await matchData.save();
     }
   });
 

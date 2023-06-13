@@ -2336,7 +2336,7 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
                 penalty_minutes: "$$item.penalty_minutes",
                 shifts: "$$item.shifts",
                 game_winning_goals: "$$item.game_winning_goals",
-                faceoffs_lost: "$$item.game_winning_goals",
+                faceoffs_lost: "$$item.faceoffs_lost",
                 faceoffs_pct: "$$item.faceoffs_pct",
                 faceoffs_won: "$$item.faceoffs_won",
               },
@@ -2393,38 +2393,69 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
               },
             },
 
-            shootout_attempts: {
+            penalty_minutes: {
               $sum: {
                 $map: {
                   input: "$teamPlayers",
                   as: "item",
                   in: {
-                    $toDouble: "$$item.shootout_attempts", // Convert the string to an integer
+                    $toDouble: "$$item.penalty_minutes", // Convert the string to an integer
                   },
                 },
               },
             },
 
-            shootout_goals: {
+            game_winning_goals: {
               $sum: {
                 $map: {
                   input: "$teamPlayers",
                   as: "item",
                   in: {
-                    $toDouble: "$$item.shootout_goals", // Convert the string to an integer
+                    $toDouble: "$$item.game_winning_goals", // Convert the string to an integer
                   },
                 },
               },
             },
-
-            saves_pct: "-",
-            saves: {
+            faceoffs_lost: {
               $sum: {
                 $map: {
                   input: "$teamPlayers",
                   as: "item",
                   in: {
-                    $toDouble: "$$item.saves", // Convert the string to an integer
+                    $toDouble: "$$item.faceoffs_lost", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+            faceoffs_pct: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.faceoffs_pct", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+            faceoffs_won: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.faceoffs_won", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+            shifts: {
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.shifts", // Convert the string to an integer
                   },
                 },
               },

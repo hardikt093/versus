@@ -1,7 +1,7 @@
 import express from "express";
 
-import mlbController from "../goalserve/MLB/goalserve.controller";
-import mlbValidation from "./../goalserve/MLB/goalserve.validation";
+import mlbController from "../goalserve/MLB/mlb.controller";
+import mlbValidation from "./../goalserve/MLB/mlb.validation";
 import validate from "../middlewares/validate";
 
 const router = express.Router();

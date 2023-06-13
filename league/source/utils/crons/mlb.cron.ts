@@ -1,6 +1,6 @@
 import cron from "node-cron";
 
-import goalserveService from "../../goalserve/MLB/goalserve.service";
+import goalserveService from "../../goalserve/MLB/mlb.service";
 import moment from "moment";
 
 var getUpcomingMatch = cron.schedule("*/5 * * * * *", async () => {
