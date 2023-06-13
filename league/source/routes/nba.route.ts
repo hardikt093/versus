@@ -1,9 +1,7 @@
 import express from "express";
-import goalserveController from "../goalserve/NBA/goalserve.controller";
+import goalserveController from "../goalserve/NBA/nba.goalserve.controller";
 
-const router = express.Router();
-router.post("/team", goalserveController.createTeamNBA);
-router.post("/team-image", goalserveController.createTeamImageNBA);
+const router = express.Router()
 router.post("/addMatchData", goalserveController.addNbaMatch);
 router.post("/addMatchDataFutureForNba", goalserveController.addMatchDataFutureForNba);
 router.post("/addPlayer", goalserveController.addNbaPlayer);

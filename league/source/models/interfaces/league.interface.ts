@@ -1,7 +1,7 @@
-import { Document } from "mongoose";
 export interface ILeagueModel extends Document {
-    name: String;
-    year?: String ;
-    goalServeLeagueId:Number
+    _id:string;
+  name?: string;
+  year?: string;
+  goalServeLeagueId: number;
 }
 export default ILeagueModel;

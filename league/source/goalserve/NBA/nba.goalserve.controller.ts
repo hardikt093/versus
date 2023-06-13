@@ -1,25 +1,7 @@
 import httpStatus from "http-status";
 import { Request, Response } from "express";
 import createResponse from "../../utils/response";
-import goalserveService from "./goalserve.service";
-
-const createTeamNBA = async (req: Request, res: Response) => {
-  try {
-    const createdTeamData = await goalserveService.createTeamNBA();
-    createResponse(res, httpStatus.OK, "", createdTeamData);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const createTeamImageNBA = async (req: Request, res: Response) => {
-  try {
-    const createTeamImageNBA = await goalserveService.addNBATeamImage(req.body);
-    createResponse(res, httpStatus.OK, "", createTeamImageNBA);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
+import goalserveService from "./nba.goalserve.service";
 
 const addNbaMatch = async (req: Request, res: Response) => {
   try {
@@ -126,8 +108,7 @@ const nbaSingleGameBoxScoreLive = async (req: Request, res: Response) => {
   }
 }
 export default {
-  createTeamNBA,
-  createTeamImageNBA,
+  
   addNbaMatch,
   addMatchDataFutureForNba,
   addNbaPlayer,

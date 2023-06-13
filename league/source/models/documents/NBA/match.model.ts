@@ -13,7 +13,7 @@ var nbaMatchSchema = new Schema(
         status: String,
         time: String,
         timezone: String,
-        goalServeVenueId: String,
+        goalServeVenueId: Number,
         venueName: String,
         awayTeamTotalScore: String,
         homeTeamTotalScore: String,

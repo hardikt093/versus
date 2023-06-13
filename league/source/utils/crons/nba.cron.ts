@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import moment from "moment";
-import goalserveNbaService from "../../goalserve/NBA/goalserve.service";
+import goalserveNbaService from "../../goalserve/NBA/nba.goalserve.service";
 
 const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
   console.info("inside score cron updateCurruntDateRecordNba");
