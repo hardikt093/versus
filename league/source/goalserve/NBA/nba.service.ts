@@ -5369,6 +5369,7 @@ const liveBoxscoreNBA = async (date1: string) => {
       $project: {
         id: 1,
         attendance: 1,
+        goalServeMatchId: "$goalServeMatchId",
         status: "$status",
         venueName: 1,
         datetime_utc: "$dateTimeUtc",
