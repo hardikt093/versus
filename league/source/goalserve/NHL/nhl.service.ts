@@ -4432,11 +4432,11 @@ const createAndUpdateOddsNhl = async () => {
           );
           const awayTeamSpread = getAwayTeamRunLine
             ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-            : "null";
+            : "";
 
           const homeTeamSpread = getHomeTeamRunLine
             ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-            : "null";
+            : "";
           const total = await getTotal("Over/Under", matchData?.odds?.type);
           const totalValues = await getTotalValues(total);
           let data = {
