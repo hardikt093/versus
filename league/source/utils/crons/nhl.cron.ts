@@ -1,6 +1,6 @@
 import cron from "node-cron";
 
-import goalserveService from "../../goalserve/NHL/goalserve.service";
+import goalserveService from "../../goalserve/NHL/nhl.service";
 import moment from "moment";
 
 var updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
@@ -28,7 +28,7 @@ var createAndUpdateOddsNhl = cron.schedule("*/5 * * * * *", async () => {
 });
 var getLiveMatchNhl = cron.schedule("*/5 * * * * *", async () => {
     console.info("inside score cron getLiveMatchNHL");
-    await goalserveService.getLiveDataOfNhl({ date1: moment().startOf("day").utc().toISOString() });
+    await goalserveService.getLiveDataOfNhl(moment().startOf("day").utc().toISOString());
 });
 
 var getUpcommingMatchNhl = cron.schedule("*/5 * * * * *", async () => {

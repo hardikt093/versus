@@ -1,9 +1,7 @@
 import express from "express";
-import nhlController from "../goalserve/NHL/goalserve.controller";
+import nhlController from "../goalserve/NHL/nhl.controller";
 
 const router = express.Router();
-router.post("/team", nhlController.createTeamNHL);
-router.post("/team-image", nhlController.createTeamImageNHL);
 router.post("/addMatchData", nhlController.addNhlMatch);
 router.post("/addMatchDataFutureForNhl", nhlController.addMatchDataFutureForNhl);
 router.get("/standings", nhlController.getNhlStandings);
