@@ -3237,7 +3237,7 @@ const nhlSingleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                   { $eq: ["$$player", []] },
                   [],
                   {
-                    name: "$$player.name",
+                    playerName: "$$player.name",
                     goalServePlayerId: "$$player.goalServePlayerId",
                     goalServeTeamId: "$$player.goalServeTeamId",
                     number: "$$player.number",
@@ -3267,7 +3267,7 @@ const nhlSingleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                   { $eq: ["$$player", []] },
                   [],
                   {
-                    name: "$$player.name",
+                    playerName: "$$player.name",
                     goalServePlayerId: "$$player.goalServePlayerId",
                     goalServeTeamId: "$$player.goalServeTeamId",
                     number: "$$player.number",
