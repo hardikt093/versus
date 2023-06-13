@@ -12,6 +12,17 @@ import NbaStandings from "../../models/documents/NBA/standings.model";
 import socket from "../../services/socket.service";
 import NbaOdds from "../../models/documents/NBA/odds.model";
 import NbaScoreSummary from "../../models/documents/NBA/scoreSummary.model";
+function removeByAttr(arr : any, attr : string, value: number){
+  let i = arr.length;
+  while(i--){
+     if( arr[i] 
+         && arr[i].hasOwnProperty(attr) 
+         && (arguments.length > 2 && arr[i][attr] === value ) ){ 
+         arr.splice(i,1);
+     }
+  }
+  return arr;
+}
 const getOdds = (nameKey: string, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
@@ -3470,13 +3481,17 @@ const updateNbaMatch = async () => {
       `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/bsktbl/nba-shedule`,
       { json: true }
     );
-
+    let matchesNeedToRemove = await NbaMatch.find({
+      goalServeLeagueId: getMatch?.data?.shedules?.id,
+      "status" : "Not Started"
+    }).lean();
     const matchArray = await getMatch?.data?.shedules?.matches;
     const league: any = await League.findOne({
       goalServeLeagueId: getMatch?.data?.shedules?.id,
     });
     for (let i = 0; i < matchArray?.length; i++) {
       for (let j = 0; j < matchArray[i]?.match?.length; j++) {
+        matchesNeedToRemove = await removeByAttr(matchesNeedToRemove, 'goalServerMatchId', Number(matchArray[i]?.match[j]?.id))
         const match: any = await NbaMatch.findOne({
           goalServeMatchId: matchArray[i]?.match[j]?.id,
         });
@@ -3561,6 +3576,12 @@ const updateNbaMatch = async () => {
           await matchData.save();
         }
       }
+    }
+    for (let k = 0; k < matchesNeedToRemove.length; k++) {
+      const match = matchesNeedToRemove[k];
+      await NbaMatch.deleteOne({
+        goalServeMatchId : match.goalServeMatchId
+      });
     }
     return true;
   } catch (error: any) {
