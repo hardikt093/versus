@@ -18,6 +18,7 @@ import StatsPlayer from "../../models/documents/MLB/statsPlayer.model";
 import StatsTeam from "../../models/documents/MLB/teamStats.model";
 import ITeamModel from "../../models/interfaces/team.interface";
 import IMatchModel from "../../models/interfaces/match.interface";
+import ILeagueModel from "../../models/interfaces/league.interface";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -1863,17 +1864,17 @@ const addStanding = async () => {
     "baseball/mlb_standings"
   );
 
-  const league: any = await League.findOne({
+  const league: ILeagueModel | undefined | null = await League.findOne({
     goalServeLeagueId: getstanding?.data?.standings?.category?.id,
   });
   getstanding?.data?.standings?.category?.league?.map((item: any) => {
     item.division.map((div: any) => {
       div.team.map(async (team: any) => {
-        const teamId: any = await Team.findOne({
+        const teamId: ITeamModel | null | undefined = await Team.findOne({
           goalServeTeamId: team.id,
         });
         let data = {
-          leagueId: league?.id,
+          leagueId: league?._id,
           leagueType: item?.name,
           goalServeLeagueId: getstanding?.data?.standings?.category?.id,
           division: div?.name,
@@ -2435,14 +2436,13 @@ const addMatchDataFuture = async (data: any) => {
     const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches
       ?.match;
     if (matchArray?.length > 0 && matchArray) {
-      const league: any = await League.findOne({
+      const league: ILeagueModel | undefined | null = await League.findOne({
         goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
       });
-      var savedMatchData: any = "";
       for (let j = 0; j < matchArray?.length; j++) {
-        const data: any = {
-          leagueId: league.id,
-          goalServeLeagueId: league.goalServeLeagueId,
+        const data: Partial<IMatchModel> = {
+          leagueId: league?._id,
+          goalServeLeagueId: league?.goalServeLeagueId,
           outs: matchArray[j].outs,
           date: matchArray[j].date,
           formattedDate: matchArray[j].formatted_date,
@@ -2490,9 +2490,9 @@ const addMatchDataFuture = async (data: any) => {
           data.awayTeamId = teamIdAway.id;
           data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
             ? teamIdAway?.goalServeTeamId
-            : "";
+            : undefined;
         }
-        const teamIdHome: any = await Team.findOne({
+        const teamIdHome: ITeamModel | null | undefined  = await Team.findOne({
           goalServeTeamId: matchArray[j].hometeam.id,
         });
         if (teamIdHome) {
@@ -2500,7 +2500,7 @@ const addMatchDataFuture = async (data: any) => {
           data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
         }
         const matchData = new Match(data);
-        savedMatchData = await matchData.save();
+        await matchData.save();
       }
     }
   }
@@ -2613,14 +2613,14 @@ const addMatchWithNewModel = async () => {
 
     const matchArray = await getMatch?.data?.scores?.category?.match;
     if (matchArray?.length > 0) {
-      const league: any = await League.findOne({
+      const league: ILeagueModel | undefined | null = await League.findOne({
         goalServeLeagueId: getMatch?.data.scores.category.id,
       });
-      var savedMatchData: any = "";
+
       for (let j = 0; j < matchArray?.length; j++) {
-        const data: any = {
-          leagueId: league.id,
-          goalServeLeagueId: league.goalServeLeagueId,
+        const data: Partial<IMatchModel> = {
+          leagueId: league?._id,
+          goalServeLeagueId: league?.goalServeLeagueId,
           outs: matchArray[j].outs,
           date: matchArray[j].date,
           formattedDate: matchArray[j].formatted_date,
@@ -2668,7 +2668,7 @@ const addMatchWithNewModel = async () => {
           data.awayTeamId = teamIdAway.id;
           data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
         }
-        const teamIdHome: any = await Team.findOne({
+        const teamIdHome: ITeamModel | null | undefined = await Team.findOne({
           goalServeTeamId: matchArray[j].hometeam.id,
         });
         if (teamIdHome) {
@@ -2676,7 +2676,7 @@ const addMatchWithNewModel = async () => {
           data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
         }
         const matchData = new Match(data);
-        savedMatchData = await matchData.save();
+        await matchData.save();
       }
     }
   }
@@ -3310,62 +3310,69 @@ const createAndUpdateOdds = async () => {
     if (matchData?.length > 0) {
       for (let i = 0; i < matchData?.length; i++) {
         for (let j = 0; j < matchData[i]?.match?.length; j++) {
-          const findOdd = await Odd.find({ goalServeMatchId: matchData[i]?.match[j].id })
-          const league: any = await League.findOne({
+          const findOdd = await Odd.find({
+            goalServeMatchId: matchData[i]?.match[j].id,
+          });
+          const league: ILeagueModel | undefined | null = await League.findOne({
             goalServeLeagueId: getScore?.data.fixtures?.category?.id,
           });
           const getMoneyLine: any = await getOdds(
-              "Home/Away",
+            "Home/Away",
             matchData[i]?.match[j]?.odds?.type
-            );
-            const awayTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
-                  (item: any) => item?.name === "2"
-                )
-              : {};
-            const homeTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
-                  (item: any) => item?.name === "1"
-                )
-              : {};
-            // getSpread
-          const getSpread = await getOdds("Run Line", matchData[i]?.match[j]?.odds?.type);
-            const getAwayTeamRunLine = await getRunLine(
-              matchData[i]?.match[j]?.awayteam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const getHomeTeamRunLine = await getRunLine(
-              matchData[i]?.match[j]?.hometeam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const awayTeamSpread = getAwayTeamRunLine
-              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
+          );
+          const awayTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "2"
+              )
+            : {};
+          const homeTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+                (item: any) => item?.name === "1"
+              )
+            : {};
+          // getSpread
+          const getSpread = await getOdds(
+            "Run Line",
+            matchData[i]?.match[j]?.odds?.type
+          );
+          const getAwayTeamRunLine = await getRunLine(
+            matchData[i]?.match[j]?.awayteam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const getHomeTeamRunLine = await getRunLine(
+            matchData[i]?.match[j]?.hometeam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const awayTeamSpread = getAwayTeamRunLine
+            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
 
-            const homeTeamSpread = getHomeTeamRunLine
-              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
-          const total = await getTotal("Over/Under", matchData[i]?.match[j]?.odds?.type);
-            const totalValues = await getTotalValues(total);
-            let data = {
-              goalServerLeagueId: league.goalServeLeagueId,
-              goalServeMatchId: matchData[i]?.match[j]?.id,
-              goalServeHomeTeamId: matchData[i]?.match[j]?.hometeam?.id,
-              goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
-              homeTeamSpread: homeTeamSpread,
-              homeTeamTotal: totalValues,
-              awayTeamSpread: awayTeamSpread,
-              awayTeamTotal: totalValues,
-              awayTeamMoneyline: awayTeamMoneyline,
-              homeTeamMoneyline: homeTeamMoneyline,
-              status: matchData[i]?.match[j]?.status
-            };
+          const homeTeamSpread = getHomeTeamRunLine
+            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
+          const total = await getTotal(
+            "Over/Under",
+            matchData[i]?.match[j]?.odds?.type
+          );
+          const totalValues = await getTotalValues(total);
+          let data = {
+            goalServerLeagueId: league?.goalServeLeagueId,
+            goalServeMatchId: matchData[i]?.match[j]?.id,
+            goalServeHomeTeamId: matchData[i]?.match[j]?.hometeam?.id,
+            goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
+            homeTeamSpread: homeTeamSpread,
+            homeTeamTotal: totalValues,
+            awayTeamSpread: awayTeamSpread,
+            awayTeamTotal: totalValues,
+            awayTeamMoneyline: awayTeamMoneyline,
+            homeTeamMoneyline: homeTeamMoneyline,
+            status: matchData[i]?.match[j]?.status,
+          };
           if (findOdd?.length == 0) {
             const oddsData = new Odd(data);
             const savedOddsData = await oddsData.save();
           }
         }
-
       }
     }
   } catch (error: any) {
@@ -3387,16 +3394,16 @@ const updateCurruntDateRecord = async () => {
     const matchArray = await getMatch?.data?.scores?.category?.match;
     if (matchArray?.length > 0) {
       for (let j = 0; j < matchArray?.length; j++) {
-        const league: any = await League.findOne({
+        const league: ILeagueModel | undefined | null = await League.findOne({
           goalServeLeagueId: getMatch?.data.scores.category.id,
         });
         if (
           matchArray[j].status != "Not Started" &&
           matchArray[j].status != "Final"
         ) {
-          const data: any = {
-            leagueId: league.id,
-            goalServeLeagueId: league.goalServeLeagueId,
+          const data: Partial<IMatchModel> = {
+            leagueId: league?._id,
+            goalServeLeagueId: league?.goalServeLeagueId,
             outs: matchArray[j].outs,
             date: matchArray[j].date,
             formattedDate: matchArray[j].formatted_date,
@@ -3460,8 +3467,8 @@ const updateCurruntDateRecord = async () => {
           );
         } else {
           const data: Partial<IMatchModel> = {
-            leagueId: league.id,
-            goalServeLeagueId: league.goalServeLeagueId,
+            leagueId: league?._id,
+            goalServeLeagueId: league?.goalServeLeagueId,
             outs: matchArray[j].outs,
             date: matchArray[j].date,
             formattedDate: matchArray[j].formatted_date,
@@ -3511,14 +3518,14 @@ const updateCurruntDateRecord = async () => {
             data.awayTeamId = teamIdAway.id;
             data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
           }
-          const teamIdHome: any = await Team.findOne({
+          const teamIdHome: ITeamModel | null | undefined = await Team.findOne({
             goalServeTeamId: matchArray[j].hometeam.id,
           });
           if (teamIdHome) {
             data.homeTeamId = teamIdHome.id;
             data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
           }
-           await Match.findOneAndUpdate(
+          await Match.findOneAndUpdate(
             { goalServeMatchId: data.goalServeMatchId },
             { $set: data },
             { new: true }
@@ -3742,17 +3749,17 @@ const updateStandingRecord = async () => {
     "baseball/mlb_standings"
   );
 
-  const league: any = await League.findOne({
+  const league: ILeagueModel | undefined | null = await League.findOne({
     goalServeLeagueId: getstanding?.data?.standings?.category?.id,
   });
   getstanding?.data?.standings?.category?.league?.map((item: any) => {
     item.division.map((div: any) => {
       div.team.map(async (team: any) => {
-        const teamId: any = await Team.findOne({
+        const teamId: ITeamModel | null | undefined = await Team.findOne({
           goalServeTeamId: team.id,
         });
         let data = {
-          leagueId: league?.id,
+          leagueId: league?._id,
           leagueType: item?.name,
           goalServeLeagueId: getstanding?.data?.standings?.category?.id,
           division: div?.name,
@@ -3774,7 +3781,6 @@ const updateStandingRecord = async () => {
           runs_scored: team.runs_scored,
           won: team.won,
         };
-  
 
         await Standings.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
@@ -3823,7 +3829,7 @@ const updateTeamStats = async () => {
       data.category = teamStatsAL.data.statistic.category.name;
       data.teamId = team?.id;
       data.goalServeTeamId = team?.goalServeTeamId;
-       await StatsTeam.findOneAndUpdate(
+      await StatsTeam.findOneAndUpdate(
         { goalServeTeamId: data.goalServeTeamId },
         { $set: data },
         { new: true }
@@ -3958,7 +3964,7 @@ const updatePlayerStats = async () => {
           batting: eVal?.batting,
           fielding: eVal?.fielding,
         };
-       await Player.findOneAndUpdate(
+        await Player.findOneAndUpdate(
           { goalServePlayerId: eVal.id },
           { $set: data },
           { new: true }
