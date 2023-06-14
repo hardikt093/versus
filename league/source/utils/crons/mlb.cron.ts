@@ -1,52 +1,53 @@
 import cron from "node-cron";
 
-import goalserveService from "../../goalserve/MLB/mlb.service";
+import mlbService from "../../goalserve/MLB/mlb.service";
 import moment from "moment";
 
 var getUpcomingMatch = cron.schedule("*/5 * * * * *", async () => {
     console.info("inside score cron getUpcomingMatch");
-    await goalserveService.getUpcomingMatch();
+    await mlbService.getUpcomingMatch();
 });
 
 var getFinalMatch = cron.schedule("*/5 * * * * *", async () => {
     console.info("inside score cron getFinalMatch");
-    await goalserveService.getFinalMatch();
+    await mlbService.getFinalMatch();
 });
 
 var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
     console.info("inside score cron getLiveMatch");
-    await goalserveService.getLiveMatch();
+    await mlbService.getLiveMatch();
 });
 
-// var createAndUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
-//     console.info("inside score cron createAndUpdateOdds");
-//     await goalserveService.createAndUpdateOdds();
-// });
+var createAndUpdateOdds = cron.schedule("*/50 * * * * *", async () => {
+    console.info("inside score cron createAndUpdateOdds");
+    await mlbService.createAndUpdateOdds();
+});
 
 var updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
     console.info("inside score cron updateCurruntDateRecord");
-    await goalserveService.updateCurruntDateRecord();
+    await mlbService.updateCurruntDateRecord();
 });
 var updateInjuryRecored = cron.schedule("*/10 * * * * *", async () => {
     console.info("inside score cron updateInjuryRecored");
-    await goalserveService.updateInjuryRecored();
+    await mlbService.updateInjuryRecored();
 });
 var updateStandingRecord = cron.schedule("* * * * *", async () => {
     console.info("inside score cron updateStandingRecord");
-    await goalserveService.updateStandingRecord();
+    await mlbService.updateStandingRecord();
 });
 var updateTeamStats = cron.schedule("* * * * *", async () => {
     console.info("inside score cron updateTeamStats");
-    await goalserveService.updateTeamStats();
+    await mlbService.updateTeamStats();
 });
 var updatePlayerStats = cron.schedule("* * * * *", async () => {
     console.info("inside score cron updatePlayerStats");
-    await goalserveService.updatePlayerStats();
+    await mlbService.updatePlayerStats();
 });
 
 
+
 export default {
-    // createAndUpdateOdds,
+    createAndUpdateOdds,
     getLiveMatch,
     getUpcomingMatch,
     getFinalMatch,
