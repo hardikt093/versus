@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IInjuryModel from "../interfaces/injury.interface";
+import IInjuryModel from "../../interfaces/injury.interface";
 var injurySchema = new Schema(
   {
     date: String,

@@ -56,7 +56,7 @@ router.get("/standings", mlbController.getBseballStandings);
  *       200:
  *         description: get league
  */
-router.get("/league", mlbController.getAllLeague);
+
 /**
  * @swagger
  * definitions:
@@ -89,79 +89,10 @@ router.post(
   // auth,
   mlbController.createLeague
 );
-router.put(
-  "/league/:id",
 
-  validate(mlbValidation.updateLeague),
-  mlbController.updateLeague
-);
-router.delete(
-  "/league/:id",
-
-  validate(mlbValidation.deleteApi),
-  mlbController.deleteLeague
-);
-
-router.get("/player", mlbController.getAllPlayer);
 router.post("/player", mlbController.createPlayer);
-router.put(
-  "/player/:id",
 
-  validate(mlbValidation.updatePlayer),
-  mlbController.updatePlayer
-);
-router.delete(
-  "/player/:id",
 
-  validate(mlbValidation.deleteApi),
-  mlbController.deletePlayer
-);
-
-router.get("/team", mlbController.getAllTeam);
-
-router.post(
-  "/team",
-
-  // validate(goalserveValidation.createTeam),
-  mlbController.createTeam
-);
-
-router.put(
-  "/team/:id",
-
-  validate(mlbValidation.updateTeam),
-  mlbController.updateTeam
-);
-
-router.delete(
-  "/team/:id",
-  validate(mlbValidation.deleteApi),
-
-  mlbController.deleteTeam
-);
-
-router.get("/division", mlbController.getAllDivison);
-
-router.post(
-  "/division",
-
-  validate(mlbValidation.createTeam),
-  mlbController.createDivison
-);
-
-router.put(
-  "/division/:id",
-
-  validate(mlbValidation.updateTeam),
-  mlbController.updateDivison
-);
-
-router.delete(
-  "/division/:id",
-  validate(mlbValidation.deleteApi),
-
-  mlbController.deleteDivision
-);
 router.get(
   "/scoreWithCurrentDate",
 

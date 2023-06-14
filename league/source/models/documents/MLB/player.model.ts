@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IPlayerModel from "../interfaces/player.interface";
+import IPlayerModel from "../../interfaces/player.interface";
 var playerSchema = new Schema(
   {
     name: { type: String },

@@ -6,19 +6,18 @@ import socket from "../../services/socket.service";
 import AppError from "../../utils/AppError";
 import League from "../../models/documents/league.model";
 import moment from "moment";
-import Player from "../../models/documents/player.model";
-import Team from "../../models/documents/team.model";
-import Division from "../../models/documents/division.model";
+import Player from "../../models/documents/MLB/player.model";
+import Team from "../../models/documents/MLB/team.model";
 import { isArray } from "lodash";
-import Match from "../../models/documents/match.model";
+import Match from "../../models/documents/MLB/match.model";
 import Bet from "../../models/documents/bet.model";
-import Inning from "../../models/documents/inning.model";
-import StartingPitchers from "../../models/documents/startingPictures";
-import Standings from "../../models/documents/standing.model";
-import Injury from "../../models/documents/injuy.model";
-import Odd from "../../models/documents/odd.model";
-import StatsPlayer from "../../models/documents/statsPlayer.model";
-import StatsTeam from "../../models/documents/teamStats.model";
+import Standings from "../../models/documents/MLB/standing.model";
+import Injury from "../../models/documents/MLB/injuy.model";
+import Odd from "../../models/documents/MLB/odd.model";
+import StatsPlayer from "../../models/documents/MLB/statsPlayer.model";
+import StatsTeam from "../../models/documents/MLB/teamStats.model";
+import ITeamModel from "../../models/interfaces/team.interface";
+import IMatchModel from "../../models/interfaces/match.interface";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -305,20 +304,18 @@ const getWinLost = async () => {
     dataJson,
     `baseball/mlb_standings`
   );
-   await winLoss.data.standings.category.league.map(
-    async (item: any) => {
-      const getTeam = await item.division.map(async (item: any) => {
-        const fff = Object.entries(item?.team);
-        for (let index = 0; index < fff.length; index++) {
-          const [key, value] = fff[index];
-          winlossArray.push(value);
-        }
+  await winLoss.data.standings.category.league.map(async (item: any) => {
+    const getTeam = await item.division.map(async (item: any) => {
+      const fff = Object.entries(item?.team);
+      for (let index = 0; index < fff.length; index++) {
+        const [key, value] = fff[index];
+        winlossArray.push(value);
+      }
 
-        return winlossArray;
-      });
-      return getTeam;
-    }
-  );
+      return winlossArray;
+    });
+    return getTeam;
+  });
   return winlossArray;
 };
 
@@ -764,13 +761,8 @@ const getLiveMatch = async () => {
   }
 };
 
-const mlbScoreWithDate = async (params: any) => {
-  let day = moment(params.date1).format("D");
-  let month = moment(params.date1).format("MM");
-  let year = moment(params.date1).format("YYYY");
-  let date = `${day}.${month}.${year}`;
-
-  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
+const mlbScoreWithDate = async (date1: string) => {
+  const date2 = moment(date1).add(24, "hours").utc().toISOString();
 
   const getFinalMatch = await Match.aggregate([
     {
@@ -797,7 +789,7 @@ const mlbScoreWithDate = async (params: any) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
         status: "Final",
@@ -1000,7 +992,7 @@ const mlbScoreWithDate = async (params: any) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
         status: "Not Started",
@@ -1147,49 +1139,7 @@ const createLeague = async (body: any) => {
   return dataToSave;
 };
 
-const updateLeague = async (param: any, body: any) => {
-  const id = param.id;
-  const result = await League.findByIdAndUpdate(id, body, {
-    returnDocument: "after",
-  });
-  return result;
-};
-
-const deleteLeague = async (param: any) => {
-  const id = param.id;
-  await League.findByIdAndUpdate(
-    id,
-    { isDeleted: true },
-    {
-      returnDocument: "after",
-    }
-  );
-  return { message: `League is deleted successfully` };
-};
-
-const getAllLeague = async () => {
-  const leagues = await League.find({ isDeleted: false });
-  return leagues;
-};
-
-const getAllPlayer = async () => {
-  const players = await Player.find({ isDeleted: false });
-  return players;
-};
-
-const deletePlayer = async (param: any) => {
-  const id = param.id;
-  await Player.findByIdAndUpdate(
-    id,
-    { isDeleted: true },
-    {
-      returnDocument: "after",
-    }
-  );
-  return { message: `Player is deleted successfully` };
-};
-
-const createPlayer = async (body: any) => {
+const createPlayer = async () => {
   const team = await Team.find({ isDeleted: false });
 
   let data = {
@@ -1322,285 +1272,8 @@ const createPlayer = async (body: any) => {
     })
   );
 };
-const createMatch = async () => {
-  var getDaysArray = function (start: any, end: any) {
-    for (
-      var arr = [], dt = new Date(start);
-      dt <= new Date(end);
-      dt.setDate(dt.getDate() + 1)
-    ) {
-      let day = moment(dt).format("DD");
-      let month = moment(dt).format("MM");
-      let year = moment(dt).format("YYYY");
-      let date = `${day}.${month}.${year}`;
-      arr.push(date);
-    }
-    return arr;
-  };
-
-  var daylist = getDaysArray(new Date("2023-02-11"), new Date("2023-10-01"));
-
-  await daylist.map(async (item) => {
-    let dataJson = { json: true, date1: item };
-    const mlb_shedule = await goalserveApi(
-      "https://www.goalserve.com/getfeed",
-      dataJson,
-      `baseball/mlb_shedule`
-    );
-
-    const matches = mlb_shedule?.data?.fixtures?.category?.matches.flatMap(
-      (match: any) => match.match
-    );
-    for (const item of matches) {
-      const data: any = {
-        date: item.date,
-        formattedDate: item.formatted_date,
-        timezone: item.timezone,
-        seasonType: item.seasonType,
-        goalServeMatchId: item.id,
-        dateTimeUtc: item.datetime_utc,
-        status: item.status,
-        time: item.time,
-        goalServeVenueId: item.venue_id,
-        venueName: item.venue_name,
-        homeTeamHit: item.hometeam.hits,
-        homeTeamTotalScore: item.hometeam.totalscore,
-        homeTeamError: item.hometeam.errors,
-        awayTeamHit: item.awayteam.hits,
-        awayTeamTotalScore: item.awayteam.totalscore,
-        awayTeamError: item.awayteam.errors,
-      };
-      const teamIdAway: any = await Team.findOne({
-        goalServeTeamId: item.awayteam.id,
-      });
-      if (teamIdAway) {
-        data.awayTeamId = teamIdAway.id;
-        data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
-      }
-      const teamIdHome: any = await Team.findOne({
-        goalServeTeamId: item.hometeam.id,
-      });
-      if (teamIdHome) {
-        data.homeTeamId = teamIdHome.id;
-        data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-      }
-      const matchData = new Match(data);
-       await matchData.save();
-    }
-  });
-
-  // Flatten the array of matches
-};
-
-const createMatchStatsApi = async (body: any) => {
-  let dataJson = { json: true, date: "28.04.2023" };
-  const mlb_shedule = await goalserveApi(
-    "https://www.goalserve.com/getfeed",
-    dataJson,
-    `baseball/usa`
-  );
-  const matchArray = mlb_shedule?.data?.scores?.category?.match;
-  const league: any = await League.findOne({
-    goalServeLeagueId: mlb_shedule?.data.scores.category.id,
-  });
-  for (const item of matchArray) {
-    const data: any = {
-      leagueId: league.id,
-      goalServeLeagueId: league.goalServeLeagueId,
-      outs: item.outs,
-      date: item.date,
-      formattedDate: item.formatted_date,
-      timezone: item.timezone,
-      oddsid: item.seasonType,
-      attendance: item.attendance,
-      goalServeMatchId: item.id,
-      dateTimeUtc: item.datetime_utc,
-      status: item.status,
-      time: item.time,
-      goalServeVenueId: item.venue_id,
-      venueName: item.venue_name,
-      homeTeamHit: item.hometeam.hits,
-      homeTeamTotalScore: item.hometeam.totalscore,
-      homeTeamError: item.hometeam.errors,
-      awayTeamHit: item.awayteam.hits,
-      awayTeamTotalScore: item.awayteam.totalscore,
-      awayTeamError: item.awayteam.errors,
-    };
-    const teamIdAway: any = await Team.findOne({
-      goalServeTeamId: item.awayteam.id,
-    });
-    if (teamIdAway) {
-      data.awayTeamId = teamIdAway.id;
-      data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
-    }
-    const teamIdHome: any = await Team.findOne({
-      goalServeTeamId: item.hometeam.id,
-    });
-    if (teamIdHome) {
-      data.homeTeamId = teamIdHome.id;
-      data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-    }
-    const matchData = new Match(data);
-    const savedMatchData = await matchData.save();
-    const awayInnings = item?.awayteam?.innings?.inning;
-    if (awayInnings) {
-      for (const val of awayInnings) {
-        const inningData = {
-          score: val.score,
-          number: val.number,
-          hits: val.hits,
-          leagueId: league.id,
-          goalServeLeagueId: league.goalServeLeagueId,
-          teamId: teamIdAway.id,
-          goalServeTeamId: teamIdAway.goalServeTeamId,
-          teamType: "awayteam",
-          matchId: savedMatchData?.id,
-          goalServeMatchId: savedMatchData?.goalServeMatchId,
-        };
-        const inningDataSaved = new Inning(inningData);
-        const savediningData = await inningDataSaved.save();
-      }
-    }
-    const homeInning = item?.hometeam?.innings?.inning;
-    if (homeInning) {
-      for (const val of awayInnings) {
-        const inningData = {
-          score: val.score,
-          number: val.number,
-          hits: val.hits,
-          leagueId: league.id,
-          goalServeLeagueId: league.goalServeLeagueId,
-          teamId: teamIdHome.id,
-          goalServeTeamId: teamIdHome.goalServeTeamId,
-          teamType: "hometeam",
-          matchId: savedMatchData?.id,
-          goalServeMatchId: savedMatchData?.goalServeMatchId,
-        };
-
-        const inningDataSaved = new Inning(inningData);
-        const savediningData = await inningDataSaved.save();
-      }
-    }
-    const starting_pitchersAway = item?.starting_pitchers?.awayteam?.player?.id;
-    if (starting_pitchersAway) {
-      const awayTeamPlayer: any = await Player.findOne({
-        goalServePlayerId: starting_pitchersAway,
-      });
-      if (awayTeamPlayer) {
-        const starting_pitcherData = {
-          playerId: awayTeamPlayer.id,
-          goalServePlayerId: awayTeamPlayer.goalServePlayerId,
-          matchId: savedMatchData?.id,
-          goalServeMatchId: savedMatchData?.goalServeMatchId,
-          leagueId: league.id,
-          goalServeLeagueId: league.goalServeLeagueId,
-          teamId: teamIdAway.id,
-          goalServeTeamId: teamIdAway.goalServeTeamId,
-          teamType: "awayteam",
-        };
-        const dataSaved = new StartingPitchers(starting_pitcherData);
-        const savedpitcherData = await dataSaved.save();
-      }
-    }
-
-    const starting_pitchershome = item?.starting_pitchers?.hometeam?.player?.id;
-    if (starting_pitchershome) {
-      const homeTeamPlayer: any = await Player.findOne({
-        goalServePlayerId: starting_pitchershome,
-      });
-      if (homeTeamPlayer) {
-        const starting_pitcherDataHome = {
-          playerId: homeTeamPlayer.id,
-          goalServePlayerId: homeTeamPlayer.goalServePlayerId,
-          matchId: savedMatchData?.id,
-          goalServeMatchId: savedMatchData?.goalServeMatchId,
-          leagueId: league.id,
-          goalServeLeagueId: league.goalServeLeagueId,
-          teamId: teamIdHome.id,
-          goalServeTeamId: teamIdHome.goalServeTeamId,
-          teamType: "hometeam",
-        };
-        const dataSaved = new StartingPitchers(starting_pitcherDataHome);
-        const savedpitcherData = await dataSaved.save();
-      }
-    }
-  }
-};
-
-const updatePlayer = async (param: any, body: any) => {
-  const id = param.id;
-  const result = await Player.findByIdAndUpdate(id, body, {
-    returnDocument: "after",
-  });
-  return result;
-};
-
-const createTeam = async (body: any) => {
-  const data = new Team(body);
-  const dataToSave = await data.save();
-  return dataToSave;
-};
-
-const updateTeam = async (param: any, body: any) => {
-  const id = param.id;
-  const result = await Team.findByIdAndUpdate(id, body, {
-    returnDocument: "after",
-  });
-  return result;
-};
-
-const deleteTeam = async (param: any) => {
-  const id = param.id;
-  await Team.findByIdAndUpdate(
-    id,
-    { isDeleted: true },
-    {
-      returnDocument: "after",
-    }
-  );
-  return { message: `Team is deleted successfully` };
-};
-
-const getAllTeam = async () => {
-  const team = await Team.find({ isDeleted: false });
-  return team;
-};
-
-const getAllDivison = async () => {
-  const divison = await Division.find({ isDeleted: false });
-  return divison;
-};
-
-const deleteDivision = async (param: any) => {
-  const id = param.id;
-  await Division.findByIdAndUpdate(
-    id,
-    { isDeleted: true },
-    {
-      returnDocument: "after",
-    }
-  );
-  return { message: `Division is deleted successfully` };
-};
-
-const updateDivison = async (param: any, body: any) => {
-  const id = param.id;
-  const result = await Division.findByIdAndUpdate(id, body, {
-    returnDocument: "after",
-  });
-  return result;
-};
-const createDivison = async (body: any) => {
-  const data = new Division(body);
-  const dataToSave = await data.save();
-  return dataToSave;
-};
 
 const getFinalMatchDataFromDB = async (params: any) => {
-  let day = moment().format("D");
-  let month = moment().format("MM");
-  let year = moment().format("YYYY");
-  let date = `${day}.${month}.${year}`;
   const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
   return await Match.aggregate([
     {
@@ -2172,13 +1845,11 @@ const getLiveDataFromMongodb = async () => {
     },
   ]);
 };
-const scoreWithCurrentDate = async (params: any) => {
+const scoreWithCurrentDate = async (date1: string) => {
   return {
     getLiveMatch: await getLiveDataFromMongodb(),
-    // getUpcomingMatch: await getUpcomingMatch(),
-    getUpcomingMatch: await getUpcomingDataFromMongodb(params),
-    // getFinalMatch: await getFinalMatch(),
-    getFinalMatch: await getFinalMatchDataFromDB(params),
+    getUpcomingMatch: await getUpcomingDataFromMongodb(date1),
+    getFinalMatch: await getFinalMatchDataFromDB(date1),
   };
 };
 
@@ -2812,7 +2483,7 @@ const addMatchDataFuture = async (data: any) => {
             : [],
         };
 
-        const teamIdAway: any = await Team.findOne({
+        const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
           goalServeTeamId: matchArray[j].awayteam.id,
         });
         if (teamIdAway) {
@@ -2990,7 +2661,7 @@ const addMatchWithNewModel = async () => {
             : [],
         };
 
-        const teamIdAway: any = await Team.findOne({
+        const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
           goalServeTeamId: matchArray[j].awayteam.id,
         });
         if (teamIdAway) {
@@ -3649,13 +3320,13 @@ const createAndUpdateOdds = async () => {
             );
             const awayTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : {};
             const homeTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : {};
             // getSpread
           const getSpread = await getOdds("Run Line", matchData[i]?.match[j]?.odds?.type);
@@ -3768,27 +3439,27 @@ const updateCurruntDateRecord = async () => {
               ? matchArray[j].stats?.pitchers?.hometeam?.player
               : [],
           };
-          const teamIdAway: any = await Team.findOne({
+          const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
             goalServeTeamId: matchArray[j].awayteam.id,
           });
           if (teamIdAway) {
             data.awayTeamId = teamIdAway.id;
             data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
           }
-          const teamIdHome: any = await Team.findOne({
+          const teamIdHome: ITeamModel | null | undefined = await Team.findOne({
             goalServeTeamId: matchArray[j].hometeam.id,
           });
           if (teamIdHome) {
             data.homeTeamId = teamIdHome.id;
             data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
           }
-          const recordUpdate = await Match.findOneAndUpdate(
+          await Match.findOneAndUpdate(
             { goalServeMatchId: data.goalServeMatchId },
             { $set: data },
             { new: true }
           );
         } else {
-          const data: any = {
+          const data: Partial<IMatchModel> = {
             leagueId: league.id,
             goalServeLeagueId: league.goalServeLeagueId,
             outs: matchArray[j].outs,
@@ -3833,7 +3504,7 @@ const updateCurruntDateRecord = async () => {
               ? matchArray[j].stats?.pitchers?.hometeam?.player
               : [],
           };
-          const teamIdAway: any = await Team.findOne({
+          const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
             goalServeTeamId: matchArray[j].awayteam.id,
           });
           if (teamIdAway) {
@@ -3847,7 +3518,7 @@ const updateCurruntDateRecord = async () => {
             data.homeTeamId = teamIdHome.id;
             data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
           }
-          const recordUpdate = await Match.findOneAndUpdate(
+           await Match.findOneAndUpdate(
             { goalServeMatchId: data.goalServeMatchId },
             { $set: data },
             { new: true }
@@ -3965,7 +3636,6 @@ const teamStats = async () => {
 };
 
 const updateInjuryRecored = async () => {
-  await Injury.deleteMany({});
   const team = await Team.find({ isDeleted: false });
   await Promise.all(
     team.map(async (item) => {
@@ -3979,7 +3649,21 @@ const updateInjuryRecored = async () => {
       );
 
       const injuryArray1 = injuryApi?.data?.team;
+      const existingPlayers = await Injury.find({
+        goalServeTeamId: item?.goalServeTeamId,
+      });
       if (injuryArray1?.report?.length) {
+        // Find the extra entries in the existingPlayers array
+        const extraEntries = existingPlayers.filter((player) => {
+          const playerExists = injuryArray1?.report?.some(
+            (val: any) => val?.player_id === player.goalServePlayerId
+          );
+          return !playerExists;
+        });
+        await Injury.deleteMany({
+          _id: { $in: extraEntries.map((player) => player._id) },
+        });
+
         await Promise.all(
           injuryArray1?.report?.map(async (val: any) => {
             const player = await Player.findOne({
@@ -3995,11 +3679,26 @@ const updateInjuryRecored = async () => {
               goalServeTeamId: injuryApi?.data?.team?.id,
               teamId: item?.id,
             };
-            const playerData = new Injury(data);
-            const saveInjuries = await playerData.save();
+            await Injury.updateOne(
+              {
+                goalServeTeamId: data?.goalServeTeamId,
+                goalServePlayerId: data?.goalServePlayerId,
+              },
+              { $set: data },
+              { upsert: true }
+            );
           })
         );
-      } else {
+      } else if (injuryArray1?.report) {
+        const extraEntries = existingPlayers.filter((player) => {
+          const playerExists = Array(injuryArray1?.report)?.some(
+            (val: any) => val?.player_id === player.goalServePlayerId
+          );
+          return !playerExists;
+        });
+        await Injury.deleteMany({
+          _id: { $in: extraEntries.map((player) => player._id) },
+        });
         const val = injuryArray1?.report;
         const player = await Player.findOne({
           goalServePlayerId: val?.player_id,
@@ -4016,9 +3715,18 @@ const updateInjuryRecored = async () => {
           playerId: player?.id,
         };
 
-        // const option = { upsert: true, returnOriginal: false };
-        const playerData = new Injury(data);
-        const saveInjuries = await playerData.save();
+        await Injury.updateOne(
+          {
+            goalServeTeamId: data?.goalServeTeamId,
+            goalServePlayerId: data?.goalServePlayerId,
+          },
+          { $set: data },
+          { upsert: true }
+        );
+      } else {
+        await Injury.deleteMany({
+          _id: { $in: existingPlayers.map((player) => player._id) },
+        });
       }
     })
   );
@@ -4066,9 +3774,9 @@ const updateStandingRecord = async () => {
           runs_scored: team.runs_scored,
           won: team.won,
         };
-        const option = { upsert: true, returnOriginal: false };
+  
 
-        const result = await Standings.findOneAndUpdate(
+        await Standings.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
           { new: true }
@@ -4094,7 +3802,7 @@ const updateTeamStats = async () => {
       data.category = teamStatsNl.data.statistic.category.name;
       data.teamId = team?.id;
       data.goalServeTeamId = team?.goalServeTeamId;
-      const result = await StatsTeam.findOneAndUpdate(
+      await StatsTeam.findOneAndUpdate(
         { goalServeTeamId: data.goalServeTeamId },
         { $set: data },
         { new: true }
@@ -4115,7 +3823,7 @@ const updateTeamStats = async () => {
       data.category = teamStatsAL.data.statistic.category.name;
       data.teamId = team?.id;
       data.goalServeTeamId = team?.goalServeTeamId;
-      const result = await StatsTeam.findOneAndUpdate(
+       await StatsTeam.findOneAndUpdate(
         { goalServeTeamId: data.goalServeTeamId },
         { $set: data },
         { new: true }
@@ -4250,7 +3958,7 @@ const updatePlayerStats = async () => {
           batting: eVal?.batting,
           fielding: eVal?.fielding,
         };
-        const result = await Player.findOneAndUpdate(
+       await Player.findOneAndUpdate(
           { goalServePlayerId: eVal.id },
           { $set: data },
           { new: true }
@@ -4270,24 +3978,8 @@ export default {
   getLiveMatch,
   mlbScoreWithDate,
   createLeague,
-  updateLeague,
-  deleteLeague,
-  getAllLeague,
-  getAllPlayer,
-  deletePlayer,
   createPlayer,
-  updatePlayer,
-  createTeam,
-  updateTeam,
-  deleteTeam,
-  getAllTeam,
-  getAllDivison,
-  deleteDivision,
-  updateDivison,
-  createDivison,
   scoreWithCurrentDate,
-  createMatch,
-  createMatchStatsApi,
   addStanding,
   singleGameBoxScore,
   addMatchDataFuture,

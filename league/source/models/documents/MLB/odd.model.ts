@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IOddModel from "../interfaces/odd.interface";
+import IOddModel from "../../interfaces/odd.interface";
 var oddSchema = new Schema(
   {
     goalServerLeagueId: { type: Number, required: true },

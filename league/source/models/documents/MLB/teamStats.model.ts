@@ -1,6 +1,5 @@
 import { model, Schema } from "mongoose";
-import IInjuryModel from "../interfaces/injury.interface";
-import IStatsTeamModel from "../interfaces/teamStats.interface";
+import IStatsTeamModel from "../../interfaces/teamStats.interface";
 
 var statsTeamSchema = new Schema(
   {

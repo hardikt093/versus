@@ -2709,7 +2709,7 @@ const nbaGetTeam = async (goalServeTeamId: string) => {
               },
             },
 
-            points_per_game: {
+            points: {
               $sum: {
                 $map: {
                   input: "$teamPlayers",

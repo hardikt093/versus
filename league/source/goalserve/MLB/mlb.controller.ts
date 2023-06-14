@@ -14,7 +14,7 @@ const baseballStandings = async (req: Request, res: Response) => {
 
 const mlbScoreWithDate = async (req: Request, res: Response) => {
   try {
-    const mlbScoreWithDate = await goalserveService.mlbScoreWithDate(req.query);
+    const mlbScoreWithDate = await goalserveService.mlbScoreWithDate(req.query.date1 as string);
     createResponse(res, httpStatus.OK, "", mlbScoreWithDate);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -29,149 +29,20 @@ const createLeague = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-const updateLeague = async (req: Request, res: Response) => {
-  try {
-    const updateLeague = await goalserveService.updateLeague(
-      req.params,
-      req.body
-    );
-    createResponse(res, httpStatus.OK, "", updateLeague);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-const deleteLeague = async (req: Request, res: Response) => {
-  try {
-    const deleteLeague = await goalserveService.deleteLeague(req.params);
-    createResponse(res, httpStatus.OK, "", deleteLeague);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-const getAllLeague = async (req: Request, res: Response) => {
-  try {
-    const getAllLeague = await goalserveService.getAllLeague();
-    createResponse(res, httpStatus.OK, "", getAllLeague);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const getAllPlayer = async (req: Request, res: Response) => {
-  try {
-    const getAllPlayer = await goalserveService.getAllPlayer();
-    createResponse(res, httpStatus.OK, "", getAllPlayer);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const deletePlayer = async (req: Request, res: Response) => {
-  try {
-    const deletePlayer = await goalserveService.deletePlayer(req.params);
-    createResponse(res, httpStatus.OK, "", deletePlayer);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
 
 const createPlayer = async (req: Request, res: Response) => {
   try {
-    const createPlayer = await goalserveService.createPlayer(req.body);
+    const createPlayer = await goalserveService.createPlayer();
     createResponse(res, httpStatus.OK, "", createPlayer);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
 
-const updatePlayer = async (req: Request, res: Response) => {
-  try {
-    const updatePlayer = await goalserveService.updatePlayer(
-      req.params,
-      req.body
-    );
-    createResponse(res, httpStatus.OK, "", updatePlayer);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const createTeam = async (req: Request, res: Response) => {
-  try {
-    const createTeam = await goalserveService.createTeam(req.body);
-    createResponse(res, httpStatus.OK, "", createTeam);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const updateTeam = async (req: Request, res: Response) => {
-  try {
-    const updateTeam = await goalserveService.updateTeam(req.params, req.body);
-    createResponse(res, httpStatus.OK, "", updateTeam);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const deleteTeam = async (req: Request, res: Response) => {
-  try {
-    const deleteTeam = await goalserveService.deleteTeam(req.params);
-    createResponse(res, httpStatus.OK, "", deleteTeam);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-const getAllTeam = async (req: Request, res: Response) => {
-  try {
-    const getAllTeam = await goalserveService.getAllTeam();
-    createResponse(res, httpStatus.OK, "", getAllTeam);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const getAllDivison = async (req: Request, res: Response) => {
-  try {
-    const getAllDivison = await goalserveService.getAllDivison();
-    createResponse(res, httpStatus.OK, "", getAllDivison);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const deleteDivision = async (req: Request, res: Response) => {
-  try {
-    const deleteDivision = await goalserveService.deleteDivision(req.params);
-    createResponse(res, httpStatus.OK, "", deleteDivision);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const updateDivison = async (req: Request, res: Response) => {
-  try {
-    const updateDivison = await goalserveService.updateDivison(
-      req.params,
-      req.body
-    );
-    createResponse(res, httpStatus.OK, "", updateDivison);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-const createDivison = async (req: Request, res: Response) => {
-  try {
-    const createDivison = await goalserveService.createDivison(req.body);
-    createResponse(res, httpStatus.OK, "", createDivison);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
 const scoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
     const scoreWithCurrentDate = await goalserveService.scoreWithCurrentDate(
-      req.query
+      req.query.date1 as string
     );
     createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
   } catch (error: any) {
@@ -265,21 +136,7 @@ export default {
   baseballStandings,
   mlbScoreWithDate,
   createLeague,
-  updateLeague,
-  deleteLeague,
-  getAllLeague,
-  getAllPlayer,
-  deletePlayer,
   createPlayer,
-  updatePlayer,
-  createTeam,
-  updateTeam,
-  deleteTeam,
-  getAllTeam,
-  createDivison,
-  updateDivison,
-  deleteDivision,
-  getAllDivison,
   scoreWithCurrentDate,
   addMatchData,
   addStanding,

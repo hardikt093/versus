@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import Bet from "../models/documents/bet.model";
-import Match from "../models/documents/match.model";
-import Odd from "../models/documents/odd.model";
+import Match from "../models/documents/MLB/match.model";
+import Odd from "../models/documents/MLB/odd.model";
 import AppError from "../utils/AppError";
 import { ICreateBetRequest, IresponseBetRequest } from "./bet.interface";
 import { betStatus } from "../models/interfaces/bet.interface";

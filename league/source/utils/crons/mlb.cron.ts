@@ -1,8 +1,6 @@
 import cron from "node-cron";
 
 import mlbService from "../../goalserve/MLB/mlb.service";
-import moment from "moment";
-
 var getUpcomingMatch = cron.schedule("*/5 * * * * *", async () => {
     console.info("inside score cron getUpcomingMatch");
     await mlbService.getUpcomingMatch();
@@ -54,4 +52,6 @@ export default {
     updateCurruntDateRecord,
     updateStandingRecord,
     updateTeamStats,
+    updateInjuryRecored,
+    updatePlayerStats
 }; 
