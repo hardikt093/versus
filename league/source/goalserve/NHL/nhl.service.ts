@@ -1,4 +1,3 @@
-
 import { axiosGet } from "../../services/axios.service";
 import { goalserveApi } from "../../services/goalserve.service";
 import socket from "../../services/socket.service";
@@ -46,7 +45,6 @@ const getRunLine = async (nameKey: string, myArray: any) => {
     }
   }
 };
-
 
 const search = async (nameKey: string, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
@@ -187,17 +185,19 @@ const addNhlMatch = async () => {
               : [],
           };
 
-          const teamIdAway: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray[j].awayteam.id,
-          });
+          const teamIdAway: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray[j].awayteam.id,
+            });
 
           data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
             ? teamIdAway.goalServeTeamId
             : 1;
 
-          const teamIdHome: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray[j].hometeam.id,
-          });
+          const teamIdHome: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray[j].hometeam.id,
+            });
 
           data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
             ? teamIdHome.goalServeTeamId
@@ -300,18 +300,20 @@ const addNhlMatch = async () => {
               : [],
           };
 
-          const teamIdAway: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray.awayteam.id,
-          });
+          const teamIdAway: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray.awayteam.id,
+            });
           if (teamIdAway) {
             data.awayTeamId = teamIdAway?.id;
             data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
               ? teamIdAway.goalServeTeamId
               : 0;
           }
-          const teamIdHome: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray.hometeam.id,
-          });
+          const teamIdHome: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray.hometeam.id,
+            });
           if (teamIdHome) {
             data.homeTeamId = teamIdHome?.id;
             data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
@@ -1019,17 +1021,19 @@ const addMatchDataFutureForNhl = async () => {
               : [],
           };
 
-          const teamIdAway: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray[j].awayteam.id,
-          });
+          const teamIdAway: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray[j].awayteam.id,
+            });
 
           data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
             ? teamIdAway.goalServeTeamId
             : 1;
 
-          const teamIdHome: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray[j].hometeam.id,
-          });
+          const teamIdHome: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray[j].hometeam.id,
+            });
 
           data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
             ? teamIdHome.goalServeTeamId
@@ -1131,18 +1135,20 @@ const addMatchDataFutureForNhl = async () => {
               : [],
           };
 
-          const teamIdAway: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray.awayteam.id,
-          });
+          const teamIdAway: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray.awayteam.id,
+            });
           if (teamIdAway) {
             data.awayTeamId = teamIdAway?.id;
             data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
               ? teamIdAway.goalServeTeamId
               : 0;
           }
-          const teamIdHome: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray.hometeam.id,
-          });
+          const teamIdHome: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray.hometeam.id,
+            });
           if (teamIdHome) {
             data.homeTeamId = teamIdHome?.id;
             data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
@@ -2322,7 +2328,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
         playerSkatingStats: {
           allPlayerStats: {
             $map: {
-              input: "$teamPlayers",
+              input: {
+                $filter: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  cond: { $eq: ["$$item.isGoalKeeper", false] }
+                }
+              },
               as: "item",
               in: {
                 games_played: "$$item.games_played",
@@ -2332,7 +2344,6 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
                 plus_minus: "$$item.plus_minus",
                 name: "$$item.name",
                 goalServePlayerId: "$$item.goalServePlayerId",
-                time_on_ice: "$$item.time_on_ice",
                 penalty_minutes: "$$item.penalty_minutes",
                 shifts: "$$item.shifts",
                 game_winning_goals: "$$item.game_winning_goals",
@@ -2347,7 +2358,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             games_played: {
               $max: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toInt: "$$item.games_played", // Convert the string to an integer
@@ -2360,7 +2377,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             goals: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toInt: "$$item.goals", // Convert the string to an integer
@@ -2372,7 +2395,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             assists: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toInt: "$$item.assists", // Convert the string to an integer
@@ -2384,7 +2413,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             points: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toDouble: "$$item.points", // Convert the string to an integer
@@ -2396,7 +2431,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             penalty_minutes: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toDouble: "$$item.penalty_minutes", // Convert the string to an integer
@@ -2408,7 +2449,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             game_winning_goals: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toDouble: "$$item.game_winning_goals", // Convert the string to an integer
@@ -2419,7 +2466,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             faceoffs_lost: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toDouble: "$$item.faceoffs_lost", // Convert the string to an integer
@@ -2430,7 +2483,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             faceoffs_pct: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toDouble: "$$item.faceoffs_pct", // Convert the string to an integer
@@ -2441,7 +2500,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             faceoffs_won: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toDouble: "$$item.faceoffs_won", // Convert the string to an integer
@@ -2452,7 +2517,13 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
             shifts: {
               $sum: {
                 $map: {
-                  input: "$teamPlayers",
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "item",
+                      cond: { $eq: ["$$item.isGoalKeeper", false] }
+                    }
+                  },
                   as: "item",
                   in: {
                     $toDouble: "$$item.shifts", // Convert the string to an integer
@@ -2633,20 +2704,6 @@ const nhlGetTeam = async (goalServeTeamId: string) => {
       },
     },
   ]);
-
-  let getTeams: any = getTeam[0];
-  let totalMinutes: any = 0;
-  getTeams.playerSkatingStats.allPlayerStats.forEach((player: any) => {
-    if (player.time_on_ice) {
-      const [hours, minutes] = player.time_on_ice.split(":").map(Number);
-
-      totalMinutes += hours * 60 + minutes;
-    }
-  });
-  const totalHours = Math.floor(totalMinutes / 60);
-  const remainingMinutes = totalMinutes % 60;
-  getTeams.playerSkatingStats.total.time_on_ice = `${totalHours}:${remainingMinutes}`;
-
   return getTeam[0];
 };
 
@@ -2755,17 +2812,19 @@ const updateCurruntDateRecordNhl = async () => {
             : [],
         };
 
-        const teamIdAway: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-          goalServeTeamId: matchArray[j].awayteam.id,
-        });
+        const teamIdAway: ITeamNHLModel | null | undefined =
+          await TeamNHL.findOne({
+            goalServeTeamId: matchArray[j].awayteam.id,
+          });
 
         data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
           ? teamIdAway.goalServeTeamId
           : 1;
 
-        const teamIdHome: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-          goalServeTeamId: matchArray[j].hometeam.id,
-        });
+        const teamIdHome: ITeamNHLModel | null | undefined =
+          await TeamNHL.findOne({
+            goalServeTeamId: matchArray[j].hometeam.id,
+          });
 
         data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
           ? teamIdHome.goalServeTeamId
@@ -2870,18 +2929,20 @@ const updateCurruntDateRecordNhl = async () => {
             : [],
         };
 
-        const teamIdAway: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-          goalServeTeamId: matchArray.awayteam.id,
-        });
+        const teamIdAway: ITeamNHLModel | null | undefined =
+          await TeamNHL.findOne({
+            goalServeTeamId: matchArray.awayteam.id,
+          });
         if (teamIdAway) {
           data.awayTeamId = teamIdAway?.id;
           data.goalServeAwayTeamId = teamIdAway.goalServeTeamId
             ? teamIdAway.goalServeTeamId
             : 0;
         }
-        const teamIdHome: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-          goalServeTeamId: matchArray.hometeam.id,
-        });
+        const teamIdHome: ITeamNHLModel | null | undefined =
+          await TeamNHL.findOne({
+            goalServeTeamId: matchArray.hometeam.id,
+          });
         if (teamIdHome) {
           data.homeTeamId = teamIdHome?.id;
           data.goalServeHomeTeamId = teamIdHome.goalServeTeamId
@@ -4126,7 +4187,7 @@ const updatePlayersNhl = async () => {
         player.teamId = item.id;
         allStatePlayer.push(player);
       }
-      if (statsApi?.data?.statistic?.team?.length) {
+      if (statsApi?.data?.statistic?.team?.length > 0) {
         if (statsApi?.data?.statistic?.team[1]?.player?.length) {
           statsApi?.data?.statistic?.team[1]?.player?.map(
             (statsPlayer: any) => {
@@ -4160,7 +4221,6 @@ const updatePlayersNhl = async () => {
   );
 };
 const updateInjuredPlayerNHL = async () => {
-  await NhlInjury.deleteMany({});
   const team = await TeamNHL.find();
   await Promise.all(
     team.map(async (item) => {
@@ -4174,7 +4234,19 @@ const updateInjuredPlayerNHL = async () => {
       );
 
       const injuryArray1 = injuryApi?.data?.team;
+      const existingPlayers = await NhlInjury.find({
+        goalServeTeamId: item?.goalServeTeamId,
+      });
       if (injuryArray1?.report?.length) {
+        const extraEntries = existingPlayers.filter((player) => {
+          const playerExists = injuryArray1?.report?.some(
+            (val: any) => val?.player_id === player.goalServePlayerId
+          );
+          return !playerExists;
+        });
+        await NhlInjury.deleteMany({
+          _id: { $in: extraEntries.map((player) => player._id) },
+        });
         await Promise.all(
           injuryArray1?.report?.map(async (val: any) => {
             const player = await PlayersNHL.findOne({
@@ -4190,11 +4262,26 @@ const updateInjuredPlayerNHL = async () => {
               goalServeTeamId: injuryApi?.data?.team?.id,
               teamId: item?.id,
             };
-            const playerData = new NhlInjury(data);
-            const saveInjuries = await playerData.save();
+             await NhlInjury.updateOne(
+              {
+                goalServeTeamId: data?.goalServeTeamId,
+                goalServePlayerId: data?.goalServePlayerId,
+              },
+              { $set: data },
+              { upsert: true }
+            );
           })
         );
       } else if (injuryArray1?.report && !injuryArray1?.report?.length) {
+        const extraEntries = existingPlayers.filter((player) => {
+          const playerExists = Array(injuryArray1?.report)?.some(
+            (val: any) => val?.player_id === player.goalServePlayerId
+          );
+          return !playerExists;
+        });
+        await NhlInjury.deleteMany({
+          _id: { $in: extraEntries.map((player) => player._id) },
+        });
         const val = injuryArray1?.report;
         const player = await PlayersNHL.findOne({
           goalServePlayerId: val?.player_id,
@@ -4210,8 +4297,19 @@ const updateInjuredPlayerNHL = async () => {
           teamId: item?.id,
           playerId: player?.id,
         };
-        const playerData = new NhlInjury(data);
-        const saveInjuries = await playerData.save();
+        await NhlInjury.updateOne(
+          {
+            goalServeTeamId: data?.goalServeTeamId,
+            goalServePlayerId: data?.goalServePlayerId,
+          },
+          { $set: data },
+          { upsert: true }
+        );
+      
+      } else {
+        await NhlInjury.deleteMany({
+          _id: { $in: existingPlayers.map((player) => player._id) },
+        });
       }
     })
   );
@@ -4248,13 +4346,13 @@ const createAndUpdateOddsNhl = async () => {
             );
             const awayTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : {};
             const homeTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : {};
             // getSpread
             const getSpread = await getOdds("Puck Line", item?.odds?.type);
@@ -4298,13 +4396,13 @@ const createAndUpdateOddsNhl = async () => {
             );
             const awayTeamMoneyline = getMoneyLine?.bookmaker?.odd
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : {};
             const homeTeamMoneyline = getMoneyLine?.bookmaker?.odd
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : {};
             // getSpread
             const getSpread = await getOdds("Puck Line", item?.odds?.type);
@@ -4362,13 +4460,13 @@ const createAndUpdateOddsNhl = async () => {
           );
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "2"
-            )
+                (item: any) => item?.name === "2"
+              )
             : {};
           const homeTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "1"
-            )
+                (item: any) => item?.name === "1"
+              )
             : {};
           // getSpread
           const getSpread = await getOdds("Puck Line", matchData?.odds?.type);
@@ -4412,13 +4510,13 @@ const createAndUpdateOddsNhl = async () => {
           );
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "2"
-            )
+                (item: any) => item?.name === "2"
+              )
             : {};
           const homeTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "1"
-            )
+                (item: any) => item?.name === "1"
+              )
             : {};
           // getSpread
           const getSpread = await getOdds("Puck Line", matchData?.odds?.type);
@@ -4593,17 +4691,19 @@ const updateNhlMatch = async () => {
               : [],
           };
 
-          const teamIdAway: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
-          });
+          const teamIdAway: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
+            });
 
           data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
             ? teamIdAway.goalServeTeamId
             : 1;
 
-          const teamIdHome: ITeamNHLModel | null | undefined = await TeamNHL.findOne({
-            goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
-          });
+          const teamIdHome: ITeamNHLModel | null | undefined =
+            await TeamNHL.findOne({
+              goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
+            });
 
           data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
             ? teamIdHome.goalServeTeamId
@@ -4822,7 +4922,7 @@ const getUpcommingMatchNhl = async () => {
       getUpcomingMatch,
     });
     return getUpcomingMatch;
-  } catch (error: any) { }
+  } catch (error: any) {}
 };
 
 const getFinalMatchNhl = async () => {
@@ -5053,7 +5153,7 @@ const getFinalMatchNhl = async () => {
       getFinalMatch,
     });
     return getFinalMatch;
-  } catch (error: any) { }
+  } catch (error: any) {}
 };
 
 const liveBoxscore = async (params: { date1: string }) => {

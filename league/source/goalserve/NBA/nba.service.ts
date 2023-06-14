@@ -890,7 +890,6 @@ async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
 }
 
 const addNbaInjuredPlayer = async () => {
-  // await NbaInjury.deleteMany({});
   const team = await TeamNBA.find();
   await Promise.all(
     team.map(async (item) => {
@@ -2799,6 +2798,17 @@ const nbaGetTeam = async (goalServeTeamId: string) => {
                   as: "item",
                   in: {
                     $toDouble: "$$item.game.fouls_per_game", // Convert the string to an integer
+                  },
+                },
+              },
+            },
+            assists_per_game:{
+              $sum: {
+                $map: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  in: {
+                    $toDouble: "$$item.game.assists_per_game", // Convert the string to an integer
                   },
                 },
               },
