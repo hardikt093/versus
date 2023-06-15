@@ -3901,6 +3901,7 @@ const updatePlayerStats = async () => {
           allStatPlayers.map((item: any) => [item["id"], item])
         ).values(),
       ];
+      
       uniqueValues.forEach((item: any) => {
         let rosterData = allRosterPlayers.filter(
           (player: any) => player.id == item.id
