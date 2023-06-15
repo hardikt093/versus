@@ -1,17 +1,15 @@
 import express from "express";
-import goalserveController from "../goalserve/goalserve.controller";
+import nhlController from "../goalserve/NHL/nhl.controller";
 
 const router = express.Router();
-router.post("/team", goalserveController.createTeamNHL);
-router.post("/team-image", goalserveController.createTeamImageNHL);
-router.post("/addMatchData", goalserveController.addNhlMatch);
-router.post("/addMatchDataFutureForNhl", goalserveController.addMatchDataFutureForNhl);
-router.get("/get-standings", goalserveController.getNhlStandings);
-router.get("/single-game-boxscore-final", goalserveController.nhlSingleGameBoxScore);
-router.get("/get-team", goalserveController.nhlGetTeam);
-router.get("/scoreWithDate", goalserveController.nhlScoreWithDate)
-router.get("/scoreWithCurrentDate", goalserveController.nhlScoreWithCurrentDate)
-router.get("/single-game-boxscore-upcomming", goalserveController.nhlSingleGameBoxScoreUpcomming)
-router.get("/single-game-boxscore-live", goalserveController.nhlSingleGameBoxScoreLive)
+router.post("/addMatchData", nhlController.addNhlMatch);
+router.post("/addMatchDataFutureForNhl", nhlController.addMatchDataFutureForNhl);
+router.get("/standings", nhlController.getNhlStandings);
+router.get("/single-game-boxscore-final", nhlController.nhlSingleGameBoxScore);
+router.get("/get-team", nhlController.nhlGetTeam);
+router.get("/scoreWithDate", nhlController.nhlScoreWithDate)
+router.get("/scoreWithCurrentDate", nhlController.nhlScoreWithCurrentDate)
+router.get("/single-game-boxscore-upcomming", nhlController.nhlSingleGameBoxScoreUpcomming)
+router.get("/single-game-boxscore-live", nhlController.nhlSingleGameBoxScoreLive)
 
 export = router;

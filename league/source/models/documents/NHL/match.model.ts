@@ -267,8 +267,6 @@ var matchSchema = new Schema(
             "shots_against": String,
             "time_on_ice": String
         }]
-
-
     },
     {
         timestamps: true,

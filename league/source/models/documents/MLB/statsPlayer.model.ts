@@ -1,6 +1,4 @@
 import { model, Schema } from "mongoose";
-import IInjuryModel from "../interfaces/injury.interface";
-
 var statsPlayerSchema = new Schema(
   {
     earned_run_average: String,
@@ -28,6 +26,6 @@ var statsPlayerSchema = new Schema(
     timestamps: true,
   }
 );
-const StatsPlayer = model<IInjuryModel>("statsPlayer", statsPlayerSchema);
+const StatsPlayer = model("statsPlayer", statsPlayerSchema);
 
 export default StatsPlayer;

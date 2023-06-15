@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IMatchModel from "../interfaces/match.interface";
+import IMatchModel from "../../interfaces/match.interface";
 var matchSchema = new Schema(
     {
         leagueId: { type: Schema.Types.ObjectId, required: false, ref: "league" },

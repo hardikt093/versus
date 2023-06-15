@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IStandingModel from "../interfaces/standing.interface";
+import IStandingModel from "../../interfaces/standing.interface";
 var standingSchema = new Schema(
   {
     leagueId: { type: Schema.Types.ObjectId, required: false, ref: "league" },

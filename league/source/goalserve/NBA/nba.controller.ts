@@ -1,26 +1,7 @@
 import httpStatus from "http-status";
 import { Request, Response } from "express";
 import createResponse from "../../utils/response";
-import goalserveService from "./goalserve.service";
-import { string } from "joi";
-
-const createTeamNBA = async (req: Request, res: Response) => {
-  try {
-    const createdTeamData = await goalserveService.createTeamNBA(req.body);
-    createResponse(res, httpStatus.OK, "", createdTeamData);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
-const createTeamImageNBA = async (req: Request, res: Response) => {
-  try {
-    const createTeamImageNBA = await goalserveService.addNBATeamImage(req.body);
-    createResponse(res, httpStatus.OK, "", createTeamImageNBA);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
+import goalserveService from "./nba.service";
 
 const addNbaMatch = async (req: Request, res: Response) => {
   try {
@@ -78,7 +59,7 @@ const getNbaStandings = async (req: Request, res: Response) => {
 
 const nbaScoreWithDate = async (req: Request, res: Response) => {
   try {
-    const data = await goalserveService.nbaScoreWithDate(req.query, "")
+    const data = await goalserveService.nbaScoreWithDate(req.query.date1 as string, "")
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -87,7 +68,7 @@ const nbaScoreWithDate = async (req: Request, res: Response) => {
 
 const nbaScoreWithCurrentDate = async (req: Request, res: Response) => {
   try {
-    const data = await goalserveService.nbaScoreWithCurrentDate(req.query)
+    const data = await goalserveService.nbaScoreWithCurrentDate(req.query.date1 as string)
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -95,7 +76,7 @@ const nbaScoreWithCurrentDate = async (req: Request, res: Response) => {
 }
 const nbaGetTeam = async (req: Request, res: Response) => {
   try {
-    const nbaGetTeam = await goalserveService.nbaGetTeam(req.query)
+    const nbaGetTeam = await goalserveService.nbaGetTeam(req.query.goalServeTeamId as string)
     createResponse(res, httpStatus.OK, "", nbaGetTeam);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -104,7 +85,7 @@ const nbaGetTeam = async (req: Request, res: Response) => {
 
 const nbaSingleGameBoxScore = async (req: Request, res: Response) => {
   try {
-    const data = await goalserveService.nbaSingleGameBoxScore(req.query);
+    const data = await goalserveService.nbaSingleGameBoxScore(req.query.goalServeMatchId as string);
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -112,7 +93,7 @@ const nbaSingleGameBoxScore = async (req: Request, res: Response) => {
 }
 const nbaSingleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
   try {
-    const data = await goalserveService.nbaSingleGameBoxScoreUpcomming(req.query);
+    const data = await goalserveService.nbaSingleGameBoxScoreUpcomming( req.query.goalServeMatchId as string);
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -120,15 +101,14 @@ const nbaSingleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
 }
 const nbaSingleGameBoxScoreLive = async (req: Request, res: Response) => {
   try {
-    const data = await goalserveService.nbaSingleGameScoreLive(req.query);
+    const data = await goalserveService.nbaSingleGameScoreLive(req.query.goalServeMatchId as string);
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
 export default {
-  createTeamNBA,
-  createTeamImageNBA,
+  
   addNbaMatch,
   addMatchDataFutureForNba,
   addNbaPlayer,

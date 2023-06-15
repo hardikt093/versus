@@ -1,11 +1,11 @@
 import { Document } from "mongoose";
 export interface ITeamNHLModel extends Document {
-    goalServeTeamId: Number,
-    name: String,
-    leagueId: String,
-    goalServeLeagueId: Number,
-    division: String,
-    leagueType: String,
-    abbreviation:String,
+    goalServeTeamId: number,
+    name: string,
+    leagueId: string,
+    goalServeLeagueId: number,
+    division: string,
+    leagueType: string,
+    abbreviation: string,
 }
 export default ITeamNHLModel;

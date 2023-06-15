@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IOddModel from "../interfaces/odd.interface";
+import IOddModel from "../../interfaces/odd.interface";
 var oddSchema = new Schema(
   {
     goalServerLeagueId: { type: Number, required: true },
@@ -10,6 +10,7 @@ var oddSchema = new Schema(
     homeTeamTotal: { type: String },
     awayTeamSpread: { type: String, },
     awayTeamTotal: { type: String },
+    status: { type: String },
     awayTeamMoneyline:
     {
       dp3: { type: String },

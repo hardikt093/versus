@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import ITeamModel from "../interfaces/team.interface";
+import ITeamModel from "../../interfaces/team.interface";
 var teamSchema = new Schema(
   {
     goalServeTeamId: { type: Number, required: true },
