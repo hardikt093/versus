@@ -1274,8 +1274,8 @@ const createPlayer = async () => {
   );
 };
 
-const getFinalMatchDataFromDB = async (params: any) => {
-  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
+const getFinalMatchDataFromDB = async (date1: string) => {
+  const date2 = moment(date1).add(24, "hours").utc().toISOString();
   return await Match.aggregate([
     {
       $addFields: {
@@ -1301,7 +1301,7 @@ const getFinalMatchDataFromDB = async (params: any) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
         status: "Final",
@@ -1473,12 +1473,12 @@ const getFinalMatchDataFromDB = async (params: any) => {
     },
   ]);
 };
-const getUpcomingDataFromMongodb = async (params: any) => {
+const getUpcomingDataFromMongodb = async (date1: string) => {
   let day = moment().format("D");
   let month = moment().format("MM");
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
-  const date2 = moment(params.date1).add(24, "hours").utc().toISOString();
+  const date2 = moment(date1).add(24, "hours").utc().toISOString();
   return await Match.aggregate([
     {
       $addFields: {
@@ -1504,7 +1504,7 @@ const getUpcomingDataFromMongodb = async (params: any) => {
     {
       $match: {
         dateInString: {
-          $gte: params.date1,
+          $gte: date1,
           $lte: date2,
         },
         status: "Not Started",
