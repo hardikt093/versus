@@ -1168,6 +1168,7 @@ const createPlayer = async () => {
       roasterApi?.data?.team.position.map((item: any) => {
         if (item.player.length) {
           item.player.map((player: any) => {
+            player.positionType = item.name;
             allRosterPlayers.push(player);
           });
         }
@@ -1266,6 +1267,7 @@ const createPlayer = async () => {
           pitching: eVal?.pitching,
           batting: eVal?.batting,
           fielding: eVal?.fielding,
+          positionType: eVal?.positionType,
         };
         const playerData = new Player(data);
         await playerData.save();
@@ -2891,11 +2893,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           {
             $match: {
               $expr: {
-              
-                  
-                    $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
-                
-               
+                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
               },
             },
           },
@@ -3198,7 +3196,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                     playerName: "$$player.name",
                     goalServePlayerId: "$$player.goalServePlayerId",
                     goalServeTeamId: "$$player.goalServeTeamId",
-                 
+
                     at_bats: "$$player.batting.at_bats",
                     hits: "$$player.batting.hits",
                     runs: "$$player.batting.runs",
@@ -3227,7 +3225,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                   {
                     playerName: "$$player.name",
                     goalServePlayerId: "$$player.goalServePlayerId",
-                    goalServeTeamId: "$$player.goalServeTeamId",    
+                    goalServeTeamId: "$$player.goalServeTeamId",
                     at_bats: "$$player.batting.at_bats",
                     hits: "$$player.batting.hits",
                     runs: "$$player.batting.runs",
@@ -3852,6 +3850,7 @@ const updatePlayerStats = async () => {
       roasterApi?.data?.team.position.map((item: any) => {
         if (item.player.length) {
           item.player.map((player: any) => {
+            player.positionType = item.name;
             allRosterPlayers.push(player);
           });
         }
@@ -3951,6 +3950,7 @@ const updatePlayerStats = async () => {
           pitching: eVal?.pitching,
           batting: eVal?.batting,
           fielding: eVal?.fielding,
+          positionType: eVal?.positionType,
         };
         await Player.findOneAndUpdate(
           { goalServePlayerId: eVal.id },
@@ -4013,7 +4013,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               games_back: true,
               away_record: true,
               home_record: true,
-              current_streak:true,
+              current_streak: true,
               teamImage: { $arrayElemAt: ["$teamImage.image", 0] },
             },
           },
@@ -4040,12 +4040,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
           {
             $match: {
               $expr: {
-            
-                  
-                    $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
-                  
-              
-                
+                $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
               },
             },
           },
@@ -4172,6 +4167,21 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
           },
         ],
         as: "teamLeaders",
+      },
+    },
+    {
+      $lookup: {
+        from: "players",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "teamPlayers",
+      },
+    },
+    {
+      $addFields: {
+        positions: {
+          $setUnion: "$teamPlayers.positionType",
+        },
       },
     },
     {
@@ -4358,7 +4368,150 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
         goalServeTeamId: true,
         teamImage: "$images.image",
         name: true,
-        teamDetails:{
+        playerStatistics: {
+          playerBattingStats: {
+            $map: {
+              input: {
+                $filter: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  cond: {
+                    $and: [
+                      { $ne: ["$$item.batting", null] },
+                      { $ne: [{ $type: "$$item.batting" }, "missing"] },
+                    ],
+                  },
+                },
+              },
+              as: "item",
+              in: {
+                playerName:"$$item.name",
+                games_played: "$$item.batting.games_played",
+                batting_avg: "$$item.batting.batting_avg",
+                at_bats: "$$item.batting.at_bats",
+                walks: "$$item.batting.walks",
+                hits: "$$item.batting.hits",
+                runs: "$$item.batting.runs",
+                triples: "$$item.batting.triples",
+                doubles: "$$item.batting.doubles",
+                home_runs: "$$item.batting.home_runs",
+                runs_batted_in: "$$item.batting.runs_batted_in",
+                total_bases: "$$item.batting.total_bases",
+                stolen_bases: "$$item.batting.stolen_bases",
+                strikeouts: "$$item.batting.strikeouts",
+                on_base_percentage: "$$item.batting.on_base_percentage",
+                goalServePlayerId: "$$item.goalServePlayerId",
+              },
+            },
+          },
+          playerPitchingStats: {
+            $map: {
+              input: {
+                $filter: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  cond: {
+                    $and: [
+                      { $ne: ["$$item.pitching", null] },
+                      { $ne: [{ $type: "$$item.pitching" }, "missing"] },
+                    ],
+                  },
+                },
+              },
+              as: "item",
+              in: {
+                playerName:"$$item.name",
+                goalServePlayerId: "$$item.goalServePlayerId",
+                games_played: "$$item.pitching.games_played",
+                games_started: "$$item.pitching.games_started",
+                quality_starts: "$$item.pitching.quality_starts",
+                wins: "$$item.pitching.wins",
+                losses: "$$item.pitching.losses",
+                saves: "$$item.pitching.saves",
+                holds: "$$item.pitching.holds",
+                innings_pitched: "$$item.pitching.innings_pitched",
+                hits: "$$item.pitching.hits",
+                earned_runs: "$$item.pitching.earned_runs",
+                home_runs: "$$item.pitching.home_runs",
+                walks: "$$item.pitching.walks",
+                strikeouts: "$$item.pitching.strikeouts",
+                strikeouts_per_9_innings:
+                  "$$item.pitching.strikeouts_per_9_innings",
+                pitches_per_start: "$$item.pitching.pitches_per_start",
+                walk_hits_per_inning_pitched:
+                  "$$item.pitching.walk_hits_per_inning_pitched",
+              },
+            },
+          },
+          playerFieldingStats: {
+            $map: {
+              input: {
+                $filter: {
+                  input: "$teamPlayers",
+                  as: "item",
+                  cond: {
+                    $and: [
+                      { $ne: ["$$item.fielding", null] },
+                      { $ne: [{ $type: "$$item.fielding" }, "missing"] },
+                    ],
+                  },
+                },
+              },
+              as: "item",
+              in: {
+                playerName:"$$item.name",
+                goalServePlayerId: "$$item.goalServePlayerId",
+                games_played: "$$item.fielding.games_played",
+                games_started: "$$item.fielding.games_started",
+                full_innings: "$$item.fielding.full_innings",
+                total_chances: "$$item.fielding.total_chances",
+                fielding_percentage: "$$item.fielding.fielding_percentage",
+                putouts: "$$item.fielding.putouts",
+                assists: "$$item.fielding.assists",
+                range_factor: "$$item.fielding.range_factor",
+                errors: "$$item.fielding.errors",
+                double_plays: "$$item.fielding.double_plays",
+              },
+            },
+          },
+        },
+        roaster: {
+          $map: {
+            input: "$positions",
+            as: "pos",
+            in: {
+              position: "$$pos",
+              players: {
+                $map: {
+                  input: {
+                    $filter: {
+                      input: "$teamPlayers",
+                      as: "player",
+                      cond: {
+                        $eq: ["$$player.positionType", "$$pos"],
+                      },
+                    },
+                  },
+                  as: "player",
+                  in: {
+                    name: "$$player.name",
+                    height: "$$player.height",
+                    weight: "$$player.weight",
+                    birthplace: "$$player.birth_place",
+                    salary: "$$player.salarycap",
+                    age: "$$player.age",
+                    bats: "$$player.bats",
+                    throws: "$$player.throws",
+                    position: "$$player.position",
+                    goalServePlayerId: "$$player.goalServePlayerId",
+                    number: "$$player.number",
+                  },
+                },
+              },
+            },
+          },
+        },
+        teamDetails: {
           divisionStandings: "$divisionStandings",
           teamLeaders: "$teamLeaders",
           teamInjuredPlayers: {
@@ -4375,7 +4528,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               },
             },
           },
-          
+
           matches: {
             $map: {
               input: "$schedule",
@@ -4412,6 +4565,24 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                     },
                   },
                 },
+                pitcher: {
+                  $cond: {
+                    if: {
+                      $eq: ["$goalServeTeamId", "$$item.goalServeAwayTeamId"],
+                    },
+                    then: "$$item.startingPitchers.awayteam.player.name",
+                    else: "$$item.startingPitchers.hometeam.player.name",
+                  },
+                },
+                oppositePitcher: {
+                  $cond: {
+                    if: {
+                      $eq: ["$goalServeTeamId", "$$item.goalServeAwayTeamId"],
+                    },
+                    then: "$$item.startingPitchers.hometeam.player.name",
+                    else: "$$item.startingPitchers.awayteam.player.name",
+                  },
+                },
                 opposingTeam: {
                   $arrayElemAt: ["$$item.opposingTeam", 0],
                 },
@@ -4426,11 +4597,13 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               },
             },
           },
-        }
+        },
       },
     },
   ]);
-  return { getTeam: getTeam[0] };
+  let standingData = await getStandingData();
+  getTeam[0].teamStandings = standingData;
+  return getTeam[0];
 };
 export default {
   mlbGetTeam,
