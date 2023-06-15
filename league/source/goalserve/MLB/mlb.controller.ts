@@ -107,14 +107,7 @@ const singleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-const addInjuredPlayers = async (req: Request, res: Response) => {
-  try {
-    const addInjuredPlayers = await goalserveService.addInjuryReport();
-    createResponse(res, httpStatus.OK, "", addInjuredPlayers);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
+
 const statsPlayerPitching = async (req: Request, res: Response) => {
   try {
     const statsPlayerPitching = await goalserveService.statsPlayerPitching();
@@ -132,6 +125,16 @@ const statsTeam = async (req: Request, res: Response) => {
   }
 };
 
+
+const mlbGetTeam = async (req: Request, res: Response) => {
+  try {
+    const nbaGetTeam = await goalserveService.mlbGetTeam(req.query.goalServeTeamId as string)
+    createResponse(res, httpStatus.OK, "", nbaGetTeam);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -144,7 +147,7 @@ export default {
   singleGameBoxScore,
   getBseballStandings,
   singleGameBoxScoreUpcomming,
-  addInjuredPlayers,
   statsPlayerPitching,
   statsTeam,
+  mlbGetTeam
 };

@@ -10,7 +10,7 @@ import NbaInjury from "../../models/documents/NBA/injury.model";
 import NbaStandings from "../../models/documents/NBA/standings.model";
 import socket from "../../services/socket.service";
 import NbaOdds from "../../models/documents/NBA/odds.model";
-import NbaScoreSummary from "../../models/documents/NBA/scoreSummary.model";
+import NbaScoreSummary from "../../models/documents/NBA/scoresummary.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import INbaMatchModel from "../../models/interfaces/nbaMatch.interface";
 import { INbaPlayerhModel } from "../../models/interfaces/nbaPlayer.interface";
@@ -4285,6 +4285,7 @@ const nbaSingleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
         },
       },
     },
+    
     {
       $project: {
         id: 1,
