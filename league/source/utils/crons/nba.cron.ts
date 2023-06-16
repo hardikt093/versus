@@ -2,70 +2,81 @@ import cron from "node-cron";
 import moment from "moment";
 import goalserveNbaService from "../../goalserve/NBA/nba.service";
 
-const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
-  console.info("inside score cron updateCurruntDateRecordNba");
-  await goalserveNbaService.updateCurruntDateRecordNba();
+let isgetLiveMatchNBARunning: boolean = false;
+const getLiveMatchNba = cron.schedule("*/10 * * * * *", async () => {
+  if (isgetLiveMatchNBARunning) {
+    console.log("getLiveMatchNBA Skip");
+    return;
+  }
+  isgetLiveMatchNBARunning = true;
+  try {
+    console.info("inside score cron getLiveMatchNBA");
+    await goalserveNbaService.getLiveDataOfNba(
+      moment().startOf("day").utc().toISOString() as string
+    );
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isgetLiveMatchNBARunning = false;
+  }
 });
 
-const createAndUpdateOddsNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron createAndUpdateOddsNba");
-  await goalserveNbaService.createAndUpdateMatchOdds();
+let isgetUpcommingMatchNbaRunning: boolean = false;
+const getUpcommingMatchNba = cron.schedule("*/10 * * * * *", async () => {
+  if (isgetUpcommingMatchNbaRunning) {
+    console.log("getUpcommingMatchNba Skip");
+    return;
+  }
+  isgetUpcommingMatchNbaRunning = true;
+  try {
+    console.info("inside score cron getUpcommingMatchNba");
+    await goalserveNbaService.getUpcommingMatchNba();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isgetUpcommingMatchNbaRunning = false;
+  }
 });
 
-const updateNbaMatch = cron.schedule("*/60 * * * * *", async () => {
-  console.info("inside score cron updateNbaMatch");
-  await goalserveNbaService.updateNbaMatch();
-})
-
-const updateStandingNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron updateStandingNba");
-  await goalserveNbaService.addNbaStandings();
+let isgetFinalMatchNbaRunning: boolean = false;
+const getFinalMatchNba = cron.schedule("*/10 * * * * *", async () => {
+  if (isgetFinalMatchNbaRunning) {
+    console.log("getFinalMatchNba Skip");
+    return;
+  }
+  isgetFinalMatchNbaRunning = true;
+  try {
+    console.info("inside score cron getFinalMatchNba");
+    await goalserveNbaService.getFinalMatchNba();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isgetFinalMatchNbaRunning = false;
+  }
 });
 
-const updatePlayersNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron updatePlayersNba");
-  await goalserveNbaService.addNbaPlayer();
+let isupdateNhlMatchNbaRunning: boolean = false;
+const liveBoxscoreNba = cron.schedule("*/10 * * * * *", async () => {
+  if (isupdateNhlMatchNbaRunning) {
+    console.log("updateNhlMatchNba Skip");
+    return;
+  }
+  isupdateNhlMatchNbaRunning = true;
+  try {
+    console.info("inside score cron updateNhlMatchNba");
+    await goalserveNbaService.liveBoxscoreNBA(
+      moment().startOf("day").utc().toISOString() as string
+    );
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateNhlMatchNbaRunning = false;
+  }
 });
 
-const updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
-  console.info("inside score cron updateInjuredPlayerNBA");
-  await goalserveNbaService.addNbaInjuredPlayer();
-});
-
-const getLiveMatchNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron getLiveMatchNBA");
-  await goalserveNbaService.getLiveDataOfNba(moment().startOf("day").utc().toISOString() as string);
-});
-
-const getUpcommingMatchNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron getUpcommingMatchNba");
-  await goalserveNbaService.getUpcommingMatchNba();
-});
-
-const getFinalMatchNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron getFinalMatchNba");
-  await goalserveNbaService.getFinalMatchNba();
-});
-
-const liveBoxscoreNba = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron updateNhlMatchNba");
-  await goalserveNbaService.liveBoxscoreNBA(moment().startOf("day").utc().toISOString() as string);
-})
-
-const updateScoreSummary = cron.schedule("*/5 * * * * *", async () => {
-  console.info("inside score cron updateScoreSummary");
-  await goalserveNbaService.updateScoreSummary();
-})
 export default {
-  updateCurruntDateRecordNba,
-  createAndUpdateOddsNba,
-  updateNbaMatch,
-  updateStandingNba,
-  updatePlayersNba,
-  updateInjuredPlayerNBA,
   getFinalMatchNba,
   getUpcommingMatchNba,
   getLiveMatchNba,
   liveBoxscoreNba,
-  updateScoreSummary
 };

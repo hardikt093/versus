@@ -3,63 +3,81 @@ import cron from "node-cron";
 import goalserveService from "../../goalserve/NHL/nhl.service";
 import moment from "moment";
 
-var updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
-    console.info("inside score cron updateCurruntDateRecordNhl");
-    await goalserveService.updateCurruntDateRecordNhl();
-});
-
-var updateStandingNhl = cron.schedule("*/5 * * * * *", async () => {
-    console.info("inside score cron updateStandingNhl");
-    await goalserveService.updateStandingNhl();
-});
-
-var updatePlayersNhl = cron.schedule("*/5 * * * * *", async () => {
-    console.info("inside score cron updatePlayersNhl");
-    await goalserveService.updatePlayersNhl();
-});
-
-var updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
-    console.info("inside score cron updateInjuredPlayerNHL");
-    await goalserveService.updateInjuredPlayerNHL();
-});
-var createAndUpdateOddsNhl = cron.schedule("*/5 * * * * *", async () => {
-    console.info("inside score cron createAndUpdateOddsNhl");
-    await goalserveService.createAndUpdateOddsNhl();
-});
-var getLiveMatchNhl = cron.schedule("*/5 * * * * *", async () => {
+let isgetLiveMatchNHLRunning: boolean = false;
+const getLiveMatchNhl = cron.schedule("*/10 * * * * *", async () => {
+  if (isgetLiveMatchNHLRunning) {
+    console.log("getLiveMatchNHL Skip");
+    return;
+  }
+  isgetLiveMatchNHLRunning = true;
+  try {
     console.info("inside score cron getLiveMatchNHL");
-    await goalserveService.getLiveDataOfNhl(moment().startOf("day").utc().toISOString());
+    await goalserveService.getLiveDataOfNhl(
+      moment().startOf("day").utc().toISOString()
+    );
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isgetLiveMatchNHLRunning = false;
+  }
 });
 
-var getUpcommingMatchNhl = cron.schedule("*/5 * * * * *", async () => {
+let isgetUpcommingMatchNhlRunning: boolean = false;
+const getUpcommingMatchNhl = cron.schedule("*/10 * * * * *", async () => {
+  if (isgetUpcommingMatchNhlRunning) {
+    console.log("getUpcommingMatchNhl Skip");
+    return;
+  }
+  isgetUpcommingMatchNhlRunning = true;
+  try {
     console.info("inside score cron getUpcommingMatchNhl");
     await goalserveService.getUpcommingMatchNhl();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isgetUpcommingMatchNhlRunning = false;
+  }
 });
 
-var getFinalMatchNhl = cron.schedule("*/5 * * * * *", async () => {
+let isgetFinalMatchNhlRunning: boolean = false;
+const getFinalMatchNhl = cron.schedule("*/10 * * * * *", async () => {
+  if (isgetFinalMatchNhlRunning) {
+    console.log("getUpcommingMatchNhl Skip");
+    return;
+  }
+  isgetFinalMatchNhlRunning = true;
+  try {
     console.info("inside score cron getFinalMatchNhl");
     await goalserveService.getFinalMatchNhl();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isgetFinalMatchNhlRunning = false;
+  }
 });
 
-var updateNhlMatch = cron.schedule("*/60 * * * * *", async () => {
-    console.info("inside score cron updateNhlMatch");
-    await goalserveService.updateNhlMatch();
-})
-
-var liveBoxscore = cron.schedule("*/5 * * * * *", async () => {
-    console.info("inside score cron updateNhlMatch");
-    await goalserveService.liveBoxscore({ date1: moment().startOf("day").utc().toISOString() });
-})
+let isliveBoxscoreNhlRunning: boolean = false;
+const liveBoxscore = cron.schedule("*/10 * * * * *", async () => {
+  if (isliveBoxscoreNhlRunning) {
+    console.log("liveBoxscoreNhl Skip");
+    return;
+  }
+  isliveBoxscoreNhlRunning = true;
+  try {
+    console.info("inside score cron liveBoxscoreNhl");
+    await goalserveService.liveBoxscore({
+      date1: moment().startOf("day").utc().toISOString(),
+    });
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isliveBoxscoreNhlRunning = false;
+  }
+});
 
 export default {
-    updateCurruntDateRecordNhl,
-    updateStandingNhl,
-    updatePlayersNhl,
-    updateInjuredPlayerNHL,
-    createAndUpdateOddsNhl,
-    getLiveMatchNhl,
-    updateNhlMatch,
-    getUpcommingMatchNhl,
-    getFinalMatchNhl,
-    liveBoxscore
+  getLiveMatchNhl,
+  getUpcommingMatchNhl,
+  getFinalMatchNhl,
+  liveBoxscore,
 };
