@@ -55,22 +55,22 @@ const getFinalMatchNba = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 
-let isupdateNhlMatchNbaRunning: boolean = false;
+let isliveBoxscoreNBARunning: boolean = false;
 const liveBoxscoreNba = cron.schedule("*/10 * * * * *", async () => {
-  if (isupdateNhlMatchNbaRunning) {
-    console.log("updateNhlMatchNba Skip");
+  if (isliveBoxscoreNBARunning) {
+    console.log("liveBoxscoreNBA Skip");
     return;
   }
-  isupdateNhlMatchNbaRunning = true;
+  isliveBoxscoreNBARunning = true;
   try {
-    console.info("inside score cron updateNhlMatchNba");
+    console.info("inside score cron liveBoxscoreNBA");
     await goalserveNbaService.liveBoxscoreNBA(
       moment().startOf("day").utc().toISOString() as string
     );
   } catch (error) {
     console.log(error);
   } finally {
-    isupdateNhlMatchNbaRunning = false;
+    isliveBoxscoreNBARunning = false;
   }
 });
 
