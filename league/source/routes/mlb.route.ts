@@ -107,6 +107,10 @@ router.get(
   mlbController.singleGameBoxScoreUpcomming
 );
 
+router.get(
+  "/single-game-boxscore-live",
+  mlbController.mlbSingleGameBoxScoreLive
+);
 
 
 router.get("/get-team", mlbController.mlbGetTeam);
