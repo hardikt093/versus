@@ -4498,7 +4498,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 strikeouts: "$$item.batting.strikeouts",
                 on_base_percentage: "$$item.batting.on_base_percentage",
                 goalServePlayerId: "$$item.goalServePlayerId",
-                slugging_percentage:"$$item.batting.slugging_percentage",
+                slugging_percentage: "$$item.batting.slugging_percentage",
                 on_base_plus_slugging: {
                   $sum: [
                     {
@@ -5050,6 +5050,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
         id: 1,
         attendance: 1,
         venueName: 1,
+        status:1,
         timer: "$timer",
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
@@ -5329,6 +5330,18 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 },
               },
             },
+          },
+        },
+        scoring: {
+          awayTeam: {
+            hit: "$awayTeamHit",
+            runs: "$awayTeamTotalScore",
+            error: "$awayTeamError",
+          },
+          homeTeam: {
+            hit: "$homeTeamHit",
+            runs: "$homeTeamTotalScore",
+            error: "$homeTeamError",
           },
         },
       },
