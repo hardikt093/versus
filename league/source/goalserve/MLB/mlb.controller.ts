@@ -108,14 +108,7 @@ const singleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
   }
 };
 
-const statsPlayerPitching = async (req: Request, res: Response) => {
-  try {
-    const statsPlayerPitching = await goalserveService.statsPlayerPitching();
-    createResponse(res, httpStatus.OK, "", statsPlayerPitching);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
+ 
 const statsTeam = async (req: Request, res: Response) => {
   try {
     const teamStats = await goalserveService.teamStats();
@@ -154,7 +147,6 @@ export default {
   singleGameBoxScore,
   getBseballStandings,
   singleGameBoxScoreUpcomming,
-  statsPlayerPitching,
   statsTeam,
   mlbGetTeam,
   mlbSingleGameBoxScoreLive

@@ -96,7 +96,6 @@ router.get(
 router.post("/addMatchData", mlbController.addMatchData);
 router.post("/addMatchDataFuture", mlbController.addMatchDataFuture);
 router.get("/addstandings", mlbController.addStanding);
-router.post("/addPlayerStats", mlbController.statsPlayerPitching);
 router.post("/addTeamStats", mlbController.statsTeam);
 router.get(
   "/single-game-boxscore-final",
@@ -106,12 +105,9 @@ router.get(
   "/single-game-boxscore-upcomming",
   mlbController.singleGameBoxScoreUpcomming
 );
-
 router.get(
   "/single-game-boxscore-live",
   mlbController.mlbSingleGameBoxScoreLive
 );
-
-
 router.get("/get-team", mlbController.mlbGetTeam);
 export default router;

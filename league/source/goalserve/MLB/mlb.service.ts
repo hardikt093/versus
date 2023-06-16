@@ -14,7 +14,6 @@ import Bet from "../../models/documents/bet.model";
 import Standings from "../../models/documents/MLB/standing.model";
 import Injury from "../../models/documents/MLB/injuy.model";
 import Odd from "../../models/documents/MLB/odd.model";
-import StatsPlayer from "../../models/documents/MLB/statsPlayer.model";
 import StatsTeam from "../../models/documents/MLB/teamStats.model";
 import ITeamModel from "../../models/interfaces/team.interface";
 import IMatchModel from "../../models/interfaces/match.interface";
@@ -3654,35 +3653,6 @@ const updateCurruntDateRecord = async () => {
   }
 };
 
-const statsPlayerPitching = async () => {
-  const team = await Team.find({ isDeleted: false });
-
-  await Promise.all(
-    team.map(async (item: any) => {
-      let data = {
-        json: true,
-      };
-
-      const statsApi = await goalserveApi(
-        "https://www.goalserve.com/getfeed",
-        data,
-        `baseball/${item.goalServeTeamId}_stats`
-      );
-
-      const pitchingPlayer = statsApi.data.statistic.category.filter(
-        (val: any) => val.name === "Pitching"
-      )[0];
-
-      pitchingPlayer?.team?.player.map(async (player: any) => {
-        let data = player;
-        data.goalServePlayerId = player.id;
-        const stat = new StatsPlayer(data);
-        await stat.save();
-      });
-    })
-  );
-};
-
 const teamStats = async () => {
   let data = {
     json: true,
@@ -4500,13 +4470,18 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 goalServePlayerId: "$$item.goalServePlayerId",
                 slugging_percentage: "$$item.batting.slugging_percentage",
                 on_base_plus_slugging: {
-                  $sum: [
+                  $round: [
                     {
-                      $toDouble: "$$item.batting.on_base_percentage",
+                      $sum: [
+                        {
+                          $toDouble: "$$item.batting.on_base_percentage",
+                        },
+                        {
+                          $toDouble: "$$item.batting.slugging_percentage",
+                        },
+                      ],
                     },
-                    {
-                      $toDouble: "$$item.batting.slugging_percentage",
-                    },
+                    3,
                   ],
                 },
               },
@@ -5140,23 +5115,28 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               $arrayElemAt: ["$statsTeams.homeTeam.slugging_percentage", 0],
             },
             on_base_plus_slugging: {
-              $sum: [
+              $round: [
                 {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.homeTeam.on_base_percentage",
-                      0,
-                    ],
-                  },
+                  $sum: [
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.homeTeam.on_base_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.homeTeam.slugging_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                  ],
                 },
-                {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.homeTeam.slugging_percentage",
-                      0,
-                    ],
-                  },
-                },
+                3,
               ],
             },
             runs_batted_in: {
@@ -5176,23 +5156,28 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               $arrayElemAt: ["$statsTeams.awayTeam.slugging_percentage", 0],
             },
             on_base_plus_slugging: {
-              $sum: [
+              $round: [
                 {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.awayTeam.on_base_percentage",
-                      0,
-                    ],
-                  },
+                  $sum: [
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.awayTeam.on_base_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.awayTeam.slugging_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                  ],
                 },
-                {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.awayTeam.slugging_percentage",
-                      0,
-                    ],
-                  },
-                },
+                3,
               ],
             },
             runs_batted_in: {
@@ -5202,23 +5187,20 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
         },
         startingPitcher: {
           awayTeam: {
-            wins:{
+            wins: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.awayTeam.pitching.wins",
                 0,
               ],
             },
-            losses:{
+            losses: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.awayTeam.pitching.losses",
                 0,
               ],
             },
-            playerName:{
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.name",
-                0,
-              ],
+            playerName: {
+              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
             },
             earned_run_average: {
               $arrayElemAt: [
@@ -5264,23 +5246,20 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             },
           },
           homeTeam: {
-            wins:{
+            wins: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.homeTeam.pitching.wins",
                 0,
               ],
             },
-            losses:{
+            losses: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.homeTeam.pitching.losses",
                 0,
               ],
             },
-            playerName:{
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.name",
-                0,
-              ],
+            playerName: {
+              $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
             },
             earned_run_average: {
               $arrayElemAt: [
@@ -5332,6 +5311,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               input: "$awayTeamHitters",
               as: "item",
               in: {
+                home_runs: "$$item.home_runs",
                 average: "$$item.average",
                 runs: "$$item.runs",
                 goalServePlayerId: "$$item.id",
@@ -5340,13 +5320,18 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
                 on_base_plus_slugging: {
-                  $sum: [
+                  $round: [
                     {
-                      $toDouble: "$$item.on_base_percentage",
+                      $sum: [
+                        {
+                          $toDouble: "$$item.on_base_percentage",
+                        },
+                        {
+                          $toDouble: "$$item.slugging_percentage",
+                        },
+                      ],
                     },
-                    {
-                      $toDouble: "$$item.slugging_percentage",
-                    },
+                    3,
                   ],
                 },
               },
@@ -5357,6 +5342,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               input: "$homeTeamHitters",
               as: "item",
               in: {
+                home_runs: "$$item.home_runs",
                 average: "$$item.average",
                 runs: "$$item.runs",
                 goalServePlayerId: "$$item.id",
@@ -5365,13 +5351,18 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
                 on_base_plus_slugging: {
-                  $sum: [
+                  $round: [
                     {
-                      $toDouble: "$$item.on_base_percentage",
+                      $sum: [
+                        {
+                          $toDouble: "$$item.on_base_percentage",
+                        },
+                        {
+                          $toDouble: "$$item.slugging_percentage",
+                        },
+                      ],
                     },
-                    {
-                      $toDouble: "$$item.slugging_percentage",
-                    },
+                    3,
                   ],
                 },
               },
@@ -5878,23 +5869,28 @@ const liveBoxscoreMlb = async (date1: string) => {
               $arrayElemAt: ["$statsTeams.homeTeam.slugging_percentage", 0],
             },
             on_base_plus_slugging: {
-              $sum: [
+              $round: [
                 {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.homeTeam.on_base_percentage",
-                      0,
-                    ],
-                  },
+                  $sum: [
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.homeTeam.on_base_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.homeTeam.slugging_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                  ],
                 },
-                {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.homeTeam.slugging_percentage",
-                      0,
-                    ],
-                  },
-                },
+                3,
               ],
             },
             runs_batted_in: {
@@ -5902,23 +5898,20 @@ const liveBoxscoreMlb = async (date1: string) => {
             },
           },
           awayTeam: {
-            wins:{
+            wins: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.awayTeam.pitching.wins",
                 0,
               ],
             },
-            losses:{
+            losses: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.awayTeam.pitching.losses",
                 0,
               ],
             },
-            playerName:{
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.name",
-                0,
-              ],
+            playerName: {
+              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
             },
             batting_avg: {
               $arrayElemAt: ["$statsTeams.awayTeam.batting_avg", 0],
@@ -5932,23 +5925,28 @@ const liveBoxscoreMlb = async (date1: string) => {
               $arrayElemAt: ["$statsTeams.awayTeam.slugging_percentage", 0],
             },
             on_base_plus_slugging: {
-              $sum: [
+              $round: [
                 {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.awayTeam.on_base_percentage",
-                      0,
-                    ],
-                  },
+                  $sum: [
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.awayTeam.on_base_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                    {
+                      $toDouble: {
+                        $arrayElemAt: [
+                          "$statsTeams.awayTeam.slugging_percentage",
+                          0,
+                        ],
+                      },
+                    },
+                  ],
                 },
-                {
-                  $toDouble: {
-                    $arrayElemAt: [
-                      "$statsTeams.awayTeam.slugging_percentage",
-                      0,
-                    ],
-                  },
-                },
+                3,
               ],
             },
             runs_batted_in: {
@@ -5957,23 +5955,17 @@ const liveBoxscoreMlb = async (date1: string) => {
           },
         },
         startingPitcher: {
-          wins:{
-            $arrayElemAt: [
-              "$startingPitchersPlayer.homeTeam.pitching.wins",
-              0,
-            ],
+          wins: {
+            $arrayElemAt: ["$startingPitchersPlayer.homeTeam.pitching.wins", 0],
           },
-          losses:{
+          losses: {
             $arrayElemAt: [
               "$startingPitchersPlayer.homeTeam.pitching.losses",
               0,
             ],
           },
-          playerName:{
-            $arrayElemAt: [
-              "$startingPitchersPlayer.homeTeam.name",
-              0,
-            ],
+          playerName: {
+            $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
           },
           awayTeam: {
             earned_run_average: {
@@ -6070,6 +6062,7 @@ const liveBoxscoreMlb = async (date1: string) => {
               input: "$awayTeamHitters",
               as: "item",
               in: {
+                home_runs: "$$item.home_runs",
                 average: "$$item.average",
                 runs: "$$item.runs",
                 goalServePlayerId: "$$item.id",
@@ -6078,13 +6071,18 @@ const liveBoxscoreMlb = async (date1: string) => {
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
                 on_base_plus_slugging: {
-                  $sum: [
+                  $round: [
                     {
-                      $toDouble: "$$item.on_base_percentage",
+                      $sum: [
+                        {
+                          $toDouble: "$$item.on_base_percentage",
+                        },
+                        {
+                          $toDouble: "$$item.slugging_percentage",
+                        },
+                      ],
                     },
-                    {
-                      $toDouble: "$$item.slugging_percentage",
-                    },
+                    3,
                   ],
                 },
               },
@@ -6095,6 +6093,7 @@ const liveBoxscoreMlb = async (date1: string) => {
               input: "$homeTeamHitters",
               as: "item",
               in: {
+                home_runs: "$$item.home_runs",
                 average: "$$item.average",
                 runs: "$$item.runs",
                 goalServePlayerId: "$$item.id",
@@ -6103,13 +6102,18 @@ const liveBoxscoreMlb = async (date1: string) => {
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
                 on_base_plus_slugging: {
-                  $sum: [
+                  $round: [
                     {
-                      $toDouble: "$$item.on_base_percentage",
+                      $sum: [
+                        {
+                          $toDouble: "$$item.on_base_percentage",
+                        },
+                        {
+                          $toDouble: "$$item.slugging_percentage",
+                        },
+                      ],
                     },
-                    {
-                      $toDouble: "$$item.slugging_percentage",
-                    },
+                    3,
                   ],
                 },
               },
@@ -6159,7 +6163,6 @@ export default {
   singleGameBoxScoreUpcomming,
   createAndUpdateOdds,
   updateCurruntDateRecord,
-  statsPlayerPitching,
   teamStats,
   updateInjuryRecored,
   updateStandingRecord,
