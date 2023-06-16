@@ -73,55 +73,53 @@ const updateStandingNba = cron.schedule("*/5 * * * * *", async () => {
 
 let isupdatePlayersNbaRunning: boolean = false;
 const updatePlayersNba = cron.schedule("*/5 * * * * *", async () => {
-    if (isupdatePlayersNbaRunning) {
-        console.log("updatePlayersNba Skip");
-        return;
-      }
-      isupdatePlayersNbaRunning = true;
-      try {
-          console.info("inside score cron updatePlayersNba");
-          await goalserveNbaService.addNbaPlayer();
-      } catch (error) {
-        console.log(error);
-      } finally {
-        isupdatePlayersNbaRunning = false;
-      }
+  if (isupdatePlayersNbaRunning) {
+    console.log("updatePlayersNba Skip");
+    return;
+  }
+  isupdatePlayersNbaRunning = true;
+  try {
+    console.info("inside score cron updatePlayersNba");
+    await goalserveNbaService.addNbaPlayer();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdatePlayersNbaRunning = false;
+  }
 });
 
 let isupdateInjuredPlayerNBARunning: boolean = false;
 const updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
-    if (isupdateInjuredPlayerNBARunning) {
-        console.log("updateInjuredPlayerNBA Skip");
-        return;
-      }
-      isupdateInjuredPlayerNBARunning = true;
-      try {
-        console.info("inside score cron updateInjuredPlayerNBA");
-        await goalserveNbaService.addNbaInjuredPlayer();
-      } catch (error) {
-        console.log(error);
-      } finally {
-        isupdateInjuredPlayerNBARunning = false;
-      }
-  
+  if (isupdateInjuredPlayerNBARunning) {
+    console.log("updateInjuredPlayerNBA Skip");
+    return;
+  }
+  isupdateInjuredPlayerNBARunning = true;
+  try {
+    console.info("inside score cron updateInjuredPlayerNBA");
+    await goalserveNbaService.addNbaInjuredPlayer();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateInjuredPlayerNBARunning = false;
+  }
 });
 
 let isupdateScoreSummaryRunning: boolean = false;
 const updateScoreSummary = cron.schedule("*/5 * * * * *", async () => {
-    if (isupdateScoreSummaryRunning) {
-        console.log("updateScoreSummary Skip");
-        return;
-      }
-      isupdateScoreSummaryRunning = true;
-      try {
-        console.info("inside score cron updateScoreSummary");
-  await goalserveNbaService.updateScoreSummary();
-      } catch (error) {
-        console.log(error);
-      } finally {
-        isupdateScoreSummaryRunning = false;
-      }
-  
+  if (isupdateScoreSummaryRunning) {
+    console.log("updateScoreSummary Skip");
+    return;
+  }
+  isupdateScoreSummaryRunning = true;
+  try {
+    console.info("inside score cron updateScoreSummary");
+    await goalserveNbaService.updateScoreSummary();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateScoreSummaryRunning = false;
+  }
 });
 
 export default {
