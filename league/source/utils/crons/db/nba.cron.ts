@@ -1,5 +1,4 @@
 import cron from "node-cron";
-import moment from "moment";
 import GoalserveNbaService from "../../../goalserve/NBA/db.cron.service";
 const goalserveNbaService = new GoalserveNbaService();
 
