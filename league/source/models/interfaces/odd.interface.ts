@@ -7,17 +7,19 @@ import { Document } from "mongoose";
       value: string,
     }
 export interface IOddModel extends Document {
-    goalServerLeagueId: string,
-  goalServeMatchId: string,
-  status: string,
-    goalServerHomeTeamId: string,
-    goalServeAwayTeamId: string,
-    homeTeamSpread: string,
-    homeTeamRunLine: string,
-    awayTeamSpread: string,
-    awayTeamRunLine: string,
-    homeTeamMoneyline : moneyLine
-    awayTeamMoneyline : moneyLine
+  goalServerLeagueId?: string | number,
+  goalServeMatchId?: string | number,
+  status?: string,
+  goalServeHomeTeamId?: string | number,
+  goalServeAwayTeamId: string | number,
+  homeTeamSpread: string | number,
+  homeTeamRunLine?: string | number,
+  awayTeamSpread?: string | number,
+  awayTeamRunLine?: string | number,
+  homeTeamTotal?: string | number,
+  awayTeamTotal?: string | number,
+  homeTeamMoneyline: moneyLine
+  awayTeamMoneyline: moneyLine
 
 }
 export default IOddModel;
