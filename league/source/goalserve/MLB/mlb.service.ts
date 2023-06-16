@@ -19,6 +19,7 @@ import StatsTeam from "../../models/documents/MLB/teamStats.model";
 import ITeamModel from "../../models/interfaces/team.interface";
 import IMatchModel from "../../models/interfaces/match.interface";
 import ILeagueModel from "../../models/interfaces/league.interface";
+import IOddModel from "../../models/interfaces/odd.interface";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -3294,7 +3295,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
   return { getMatch: getMatch[0] };
 };
 
-const createAndUpdateOdds = async () => {
+const createOdds = async () => {
   let day = moment().format("D");
   let month = moment().format("MM");
   let year = moment().format("YYYY");
@@ -3974,6 +3975,147 @@ const updatePlayerStats = async () => {
     })
   );
 };
+
+const createOrUpdateOdds = async () => {
+  let subDate = moment()
+    .startOf("day")
+    .subtract(12, "hours")
+    .utc()
+    .toISOString();
+  let addDate = moment().add(24, "hours").utc().toISOString();
+  let day1 = moment(subDate).format("D");
+  let month1 = moment(subDate).format("MM");
+  let year1 = moment(subDate).format("YYYY");
+  let date1 = `${day1}.${month1}.${year1}`;
+
+  let day2 = moment(addDate).format("D");
+  let month2 = moment(addDate).format("MM");
+  let year2 = moment(addDate).format("YYYY");
+  let date2 = `${day2}.${month2}.${year2}`;
+
+  try {
+    let data = {
+      json: true,
+      date1: date1,
+      date2: date2,
+      showodds: "1",
+      bm: "451,",
+    };
+    const getScore = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      "baseball/mlb_shedule"
+    );
+    var matchData = getScore?.data?.fixtures?.category?.matches;
+    if (matchData?.length > 0) {
+      let data: Partial<IOddModel>
+      for (let i = 0; i < matchData?.length; i++) {
+        for (let j = 0; j < matchData[i]?.match?.length; j++) {
+          const findOdd = await Odd.find({
+            goalServeMatchId: matchData[i]?.match[j].id,
+          });
+          const findMatch = await Match.findOne({ goalServeMatchId: matchData[i]?.match[j].id })
+          const league: ILeagueModel | undefined | null = await League.findOne({
+            goalServeLeagueId: getScore?.data.fixtures?.category?.id,
+          });
+          const getMoneyLine: any = await getOdds(
+            "Home/Away",
+            matchData[i]?.match[j]?.odds?.type
+          );
+          const awayTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+              (item: any) => item?.name === "2"
+            )
+            : undefined;
+          const homeTeamMoneyline = getMoneyLine
+            ? getMoneyLine?.bookmaker?.odd?.find(
+              (item: any) => item?.name === "1"
+            )
+            : undefined;
+          // getSpread
+          const getSpread = await getOdds(
+            "Run Line",
+            matchData[i]?.match[j]?.odds?.type
+          );
+          const getAwayTeamRunLine = await getRunLine(
+            matchData[i]?.match[j]?.awayteam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const getHomeTeamRunLine = await getRunLine(
+            matchData[i]?.match[j]?.hometeam?.name,
+            getSpread?.bookmaker?.odd
+          );
+          const awayTeamSpread = getAwayTeamRunLine
+            ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
+
+          const homeTeamSpread = getHomeTeamRunLine
+            ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
+            : "";
+          const total = await getTotal(
+            "Over/Under",
+            matchData[i]?.match[j]?.odds?.type
+          );
+          const totalValues = await getTotalValues(total);
+          data = {
+            goalServerLeagueId: league?.goalServeLeagueId,
+            goalServeMatchId: matchData[i]?.match[j]?.id,
+            goalServeHomeTeamId: matchData[i]?.match[j]?.hometeam?.id,
+            goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
+            // homeTeamSpread: homeTeamSpread,
+            ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
+            // homeTeamTotal: totalValues,
+            ...(totalValues && { homeTeamTotal: totalValues }),
+            // awayTeamSpread: awayTeamSpread,
+            ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
+            // awayTeamTotal: totalValues,
+            ...(totalValues && { awayTeamTotal: totalValues }),
+            ...(awayTeamMoneyline && { awayTeamMoneyline: awayTeamMoneyline }),
+            ...(homeTeamMoneyline && { homeTeamMoneyline: homeTeamMoneyline }),
+          };
+          if (findOdd?.length > 0) {
+            if (findMatch?.status == "Not Started") {
+              data.status = findMatch?.status
+              await Odd.findOneAndUpdate(
+                { goalServeMatchId: matchData[i]?.match[j].id },
+                { $set: data },
+                { new: true }
+              );
+            }
+            else if (findMatch?.status != "Not Started" &&
+              findMatch?.status != "Final" && findMatch?.status != "Postponed" &&
+              findMatch?.status != "Canceled" &&
+              findMatch?.status != "Suspended") {
+              data.status = findMatch?.status
+              await Odd.updateOne(
+                { goalServeMatchId: matchData[i]?.match[j].id, status: findMatch?.status },
+                { $set: data },
+                { upsert: true }
+              );
+            }
+            else {
+              const findOddWithStatus = await Odd.find({ goalServeMatchId: matchData[i]?.match[j].id, status: findMatch?.status })
+              if (findOddWithStatus.length > 0) {
+                return
+              }
+              else {
+                data.status = findMatch?.status
+                await Odd.findOneAndUpdate(
+                  { goalServeMatchId: matchData[i]?.match[j].id },
+                  { $set: data },
+                  { new: true }
+                );
+              }
+
+            }
+          }
+        }
+      }
+    }
+  } catch (error: any) {
+    console.log("error", error)
+  }
+}
 export default {
   getMLBStandings,
   getUpcomingMatch,
@@ -3994,7 +4136,7 @@ export default {
   addMatchWithNewModel,
   singleGameBoxScoreUpcomming,
   addInjuryReport,
-  createAndUpdateOdds,
+  createOdds,
   updateCurruntDateRecord,
   statsPlayerPitching,
   teamStats,
@@ -4002,4 +4144,5 @@ export default {
   updateStandingRecord,
   updateTeamStats,
   updatePlayerStats,
+  createOrUpdateOdds
 };

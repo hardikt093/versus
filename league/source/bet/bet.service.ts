@@ -85,14 +85,14 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     favourite: 0,
     underdog: 0,
   };
-  if (parseInt(oddData.homeTeamMoneyline.us) > 0) {
+  if (parseInt(oddData?.homeTeamMoneyline?.us) > 0) {
     fairOddCalRes = fairOddCalculation(
-      parseInt(oddData.awayTeamMoneyline.us),
+      parseInt(oddData?.awayTeamMoneyline?.us),
       parseInt(oddData.homeTeamMoneyline.us)
     );
   } else {
     fairOddCalRes = fairOddCalculation(
-      parseInt(oddData.homeTeamMoneyline.us),
+      parseInt(oddData?.homeTeamMoneyline?.us),
       parseInt(oddData.awayTeamMoneyline.us)
     );
   }
@@ -107,30 +107,30 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeRequestUserTeamId: matchData.goalServeHomeTeamId,
     goalServeOpponentUserTeamId: matchData.goalServeHomeTeamId,
     requestUserFairOdds:
-      parseInt(oddData.homeTeamMoneyline.us) > 0
+      parseInt(oddData?.homeTeamMoneyline?.us) > 0
         ? fairOddCalRes.underdog
         : fairOddCalRes.favourite,
-    requestUserMoneylineOdds: oddData.homeTeamMoneyline.us,
+    requestUserMoneylineOdds: oddData?.homeTeamMoneyline?.us,
     opponentUserFairOdds:
-      parseInt(oddData.homeTeamMoneyline.us) > 0
+      parseInt(oddData?.homeTeamMoneyline?.us) > 0
         ? fairOddCalRes.underdog
         : fairOddCalRes.favourite,
-    opponentUserMoneylineOdds: oddData.homeTeamMoneyline.us,
+    opponentUserMoneylineOdds: oddData?.homeTeamMoneyline?.us,
   };
   if (matchData.goalServeHomeTeamId === data.requestUserTeamId) {
     preparedBetObject.goalServeOpponentUserTeamId =
       matchData.goalServeAwayTeamId;
-    preparedBetObject.opponentUserMoneylineOdds = oddData.awayTeamMoneyline.us;
+    preparedBetObject.opponentUserMoneylineOdds = oddData?.awayTeamMoneyline?.us;
     preparedBetObject.opponentUserFairOdds =
-      parseInt(oddData.awayTeamMoneyline.us) > 0
+      parseInt(oddData?.awayTeamMoneyline?.us) > 0
         ? fairOddCalRes.underdog
         : fairOddCalRes.favourite;
   } else {
     preparedBetObject.goalServeRequestUserTeamId =
       matchData.goalServeAwayTeamId;
-    preparedBetObject.requestUserMoneylineOdds = oddData.awayTeamMoneyline.us;
+    preparedBetObject.requestUserMoneylineOdds = oddData?.awayTeamMoneyline?.us;
     preparedBetObject.requestUserFairOdds =
-      parseInt(oddData.awayTeamMoneyline.us) > 0
+      parseInt(oddData?.awayTeamMoneyline?.us) > 0
         ? fairOddCalRes.underdog
         : fairOddCalRes.favourite;
   }

@@ -16,9 +16,9 @@ var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
     await mlbService.getLiveMatch();
 });
 
-var createAndUpdateOdds = cron.schedule("*/50 * * * * *", async () => {
+var createOdds = cron.schedule("*/50 * * * * *", async () => {
     console.info("inside score cron createAndUpdateOdds");
-    await mlbService.createAndUpdateOdds();
+    await mlbService.createOdds();
 });
 
 var updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
@@ -42,10 +42,15 @@ var updatePlayerStats = cron.schedule("* * * * *", async () => {
     await mlbService.updatePlayerStats();
 });
 
+var createOrUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
+    console.info("inside score cron createOrUpdateOdds");
+    await mlbService.createOrUpdateOdds();
+});
+
 
 
 export default {
-    createAndUpdateOdds,
+    createOdds,
     getLiveMatch,
     getUpcomingMatch,
     getFinalMatch,
@@ -53,5 +58,6 @@ export default {
     updateStandingRecord,
     updateTeamStats,
     updateInjuryRecored,
-    updatePlayerStats
+    updatePlayerStats,
+    createOrUpdateOdds
 }; 
