@@ -21,7 +21,7 @@ const updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateStandingNhlRunning: boolean = false;
-const updateStandingNhl = cron.schedule("*/5 * * * * *", async () => {
+const updateStandingNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateStandingNhlRunning) {
     console.log("updateStandingNhl Skip");
     return;
@@ -38,7 +38,7 @@ const updateStandingNhl = cron.schedule("*/5 * * * * *", async () => {
 });
 
 let isupdatePlayersNhlRunning: boolean = false;
-const updatePlayersNhl = cron.schedule("*/5 * * * * *", async () => {
+const updatePlayersNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isupdatePlayersNhlRunning) {
     console.log("updatePlayersNhl Skip");
     return;
@@ -72,7 +72,7 @@ const updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
 });
 
 let iscreateAndUpdateOddsNhlRunning: boolean = false;
-const createAndUpdateOddsNhl = cron.schedule("*/5 * * * * *", async () => {
+const createAndUpdateOddsNhl = cron.schedule("*/10 * * * * *", async () => {
   if (iscreateAndUpdateOddsNhlRunning) {
     console.log("createAndUpdateOddsNhl Skip");
     return;
@@ -89,7 +89,7 @@ const createAndUpdateOddsNhl = cron.schedule("*/5 * * * * *", async () => {
 });
 
 let isupdateNhlMatchRunning: boolean = false;
-const updateNhlMatch = cron.schedule("*/60 * * * * *", async () => {
+const updateNhlMatch = cron.schedule("0 */12 * * *", async () => {
   if (isupdateNhlMatchRunning) {
     console.log("updateNhlMatch Skip");
     return;

@@ -3,7 +3,7 @@ import GoalserveNbaService from "../../../goalserve/NBA/db.cron.service";
 const goalserveNbaService = new GoalserveNbaService();
 
 let createAndUpdateMatchOddsRunning: boolean = false;
-const createAndUpdateOddsNba = cron.schedule("*/5 * * * * *", async () => {
+const createAndUpdateOddsNba = cron.schedule("*/10 * * * * *", async () => {
   if (createAndUpdateMatchOddsRunning) {
     console.log("createAndUpdateMatchOdds Skip");
     return;
@@ -37,7 +37,7 @@ const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateNbaMatchRunning: boolean = false;
-const updateNbaMatch = cron.schedule("*/60 * * * * *", async () => {
+const updateNbaMatch = cron.schedule("0 */12 * * *", async () => {
   if (isupdateNbaMatchRunning) {
     console.log("updateNbaMatch Skip");
     return;
@@ -54,7 +54,7 @@ const updateNbaMatch = cron.schedule("*/60 * * * * *", async () => {
 });
 
 let isupdateStandingNbaRunning: boolean = false;
-const updateStandingNba = cron.schedule("*/5 * * * * *", async () => {
+const updateStandingNba = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateStandingNbaRunning) {
     console.log("updateStandingNba Skip");
     return;
@@ -71,7 +71,7 @@ const updateStandingNba = cron.schedule("*/5 * * * * *", async () => {
 });
 
 let isupdatePlayersNbaRunning: boolean = false;
-const updatePlayersNba = cron.schedule("*/5 * * * * *", async () => {
+const updatePlayersNba = cron.schedule("*/10 * * * * *", async () => {
   if (isupdatePlayersNbaRunning) {
     console.log("updatePlayersNba Skip");
     return;
@@ -105,7 +105,7 @@ const updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateScoreSummaryRunning: boolean = false;
-const updateScoreSummary = cron.schedule("*/5 * * * * *", async () => {
+const updateScoreSummary = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateScoreSummaryRunning) {
     console.log("updateScoreSummary Skip");
     return;
