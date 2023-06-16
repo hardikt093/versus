@@ -224,8 +224,9 @@ const getUpcomingMatch = async () => {
       },
       {
         $sort: {
-          formattedDate: 1,
-          time: 1,
+          // formattedDate: 1,
+          // time: 1,
+          dateTimeUtc: -1
         },
       },
       {
@@ -239,7 +240,8 @@ const getUpcomingMatch = async () => {
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
-            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+            goalServeAwayTeamId:
+              "$awayTeam.goalServeTeamId",
             awayTeamRun: "$awayTeamTotalScore",
             awayTeamHit: "$awayTeamHit",
             awayTeamErrors: "$awayTeamError",
@@ -248,8 +250,21 @@ const getUpcomingMatch = async () => {
             teamImage: "$awayTeamImage.image",
             moneyline: {
               $cond: [
-                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
-                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                {
+                  $gte: [
+                    {
+                      $toDouble:
+                        { $arrayElemAt: ["$odds.awayTeamMoneyline.us", 0] },
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $concat: [
+                    "+",
+                    { $arrayElemAt: ["$odds.awayTeamMoneyline.us", 0] },
+                  ],
+                },
                 "$odds.awayTeamMoneyline.us",
               ],
             },
@@ -263,18 +278,31 @@ const getUpcomingMatch = async () => {
           homeTeam: {
             homeTeamName: "$homeTeam.name",
             homeTeamId: "$homeTeam._id",
-            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+            goalServeHomeTeamId:
+              "$homeTeam.goalServeTeamId",
             homeTeamRun: "$homeTeamTotalScore",
             homeTeamHit: "$homeTeamHit",
             homeTeamErrors: "$homeTeamError",
             won: "$homeTeamStandings.won",
             lose: "$homeTeamStandings.lost",
-
             teamImage: "$homeTeamImage.image",
             moneyline: {
               $cond: [
-                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
-                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                {
+                  $gte: [
+                    {
+                      $toDouble:
+                        { $arrayElemAt: ["$odds.homeTeamMoneyline.us", 0] },
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $concat: [
+                    "+",
+                    { $arrayElemAt: ["$odds.homeTeamMoneyline.us", 0] },
+                  ],
+                },
                 "$odds.homeTeamMoneyline.us",
               ],
             },
@@ -292,6 +320,7 @@ const getUpcomingMatch = async () => {
       getUpcomingMatch,
     });
   } catch (error: any) {
+    console.log("error", error)
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
 };
@@ -907,8 +936,9 @@ const mlbScoreWithDate = async (date1: string) => {
     },
     {
       $sort: {
-        formattedDate: 1,
-        time: 1,
+        // formattedDate: 1,
+        // time: 1,
+        dateTimeUtc: -1,
       },
     },
     {
@@ -1092,8 +1122,9 @@ const mlbScoreWithDate = async (date1: string) => {
     },
     {
       $sort: {
-        formattedDate: 1,
-        time: 1,
+        // formattedDate: 1,
+        // time: 1,
+        dateTimeUtc: -1,
       },
     },
     {
