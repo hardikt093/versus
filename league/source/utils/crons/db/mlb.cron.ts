@@ -3,20 +3,20 @@ import cron from "node-cron";
 import MlbService from "../../../goalserve/MLB/db.cron.service";
 const mlbService = new MlbService();
 
-let iscreateAndUpdateOddsRunning: boolean = false;
-const createAndUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
-  if (iscreateAndUpdateOddsRunning) {
-    console.log("createAndUpdateOdds Skip");
+let iscreateOddsRunning: boolean = false;
+const createOdds = cron.schedule("*/10 * * * * *", async () => {
+  if (iscreateOddsRunning) {
+    console.log("createOdds Skip");
     return;
   }
-  iscreateAndUpdateOddsRunning = true;
+  iscreateOddsRunning = true;
   try {
-    console.info("inside score cron createAndUpdateOdds");
-    await mlbService.createAndUpdateOdds();
+    console.info("inside score cron createOdds");
+    await mlbService.createOdds();
   } catch (error) {
     console.log(error);
   } finally {
-    iscreateAndUpdateOddsRunning = false;
+    iscreateOddsRunning = false;
   }
 });
 
@@ -105,11 +105,29 @@ const updatePlayerStats = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 
+let iscreateOrUpdateOddsRunning: boolean = false;
+const createOrUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
+  if (iscreateOrUpdateOddsRunning) {
+    console.log("createOrUpdateOdds Skip");
+    return;
+  }
+  iscreateOrUpdateOddsRunning = true;
+  try {
+    console.info("inside score cron createOrUpdateOdds");
+    await mlbService.createOrUpdateOdds();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    iscreateOrUpdateOddsRunning = false;
+  }
+});
+
 export default {
-  createAndUpdateOdds,
+  createOdds,
   updateCurruntDateRecord,
   updateStandingRecord,
   updateTeamStats,
   updateInjuryRecored,
   updatePlayerStats,
+  createOrUpdateOdds
 };
