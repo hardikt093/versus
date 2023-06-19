@@ -1498,6 +1498,13 @@ const getFinalMatchDataFromDB = async (date1: string) => {
       },
     },
     {
+      $sort: {
+        // formattedDate: 1,
+        // time: 1,
+        dateTimeUtc: 1
+      },
+    },
+    {
       $project: {
         id: true,
         date: true,
@@ -1692,8 +1699,9 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
     },
     {
       $sort: {
-        formattedDate: 1,
-        time: 1,
+        // formattedDate: 1,
+        // time: 1,
+        dateTimeUtc: 1
       },
     },
     {
