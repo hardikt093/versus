@@ -4706,7 +4706,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               },
               as: "item",
               in: {
-                playerName: "$$item.name",
+                name: "$$item.name",
                 games_played: "$$item.batting.games_played",
                 batting_avg: "$$item.batting.batting_avg",
                 at_bats: "$$item.batting.at_bats",
@@ -4757,7 +4757,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               },
               as: "item",
               in: {
-                playerName: "$$item.name",
+                name: "$$item.name",
                 goalServePlayerId: "$$item.goalServePlayerId",
                 games_played: "$$item.pitching.games_played",
                 games_started: "$$item.pitching.games_started",
@@ -4796,7 +4796,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               },
               as: "item",
               in: {
-                playerName: "$$item.name",
+                name: "$$item.name",
                 goalServePlayerId: "$$item.goalServePlayerId",
                 games_played: "$$item.fielding.games_played",
                 games_started: "$$item.fielding.games_started",
