@@ -52,7 +52,7 @@ const signIn = async (req: Request, res: Response) => {
               JWTpayload.jwt.email.indexOf("@")
             ),
             socialLogin: true,
-            birthDate: new Date(countAge?.birthday),
+            birthDate: countAge?.birthday ? new Date(countAge?.birthday) : new Date(),
             phone: "",
             profileImage: JWTpayload.jwt.picture ? JWTpayload.jwt.picture : "",
             googleAccessToken:
