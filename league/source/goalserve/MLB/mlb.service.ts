@@ -937,7 +937,7 @@ const mlbScoreWithDate = async (date1: string) => {
       $sort: {
         // formattedDate: 1,
         // time: 1,
-        dateTimeUtc: -1,
+        dateTimeUtc: 1,
       },
     },
     {
@@ -1123,7 +1123,7 @@ const mlbScoreWithDate = async (date1: string) => {
       $sort: {
         // formattedDate: 1,
         // time: 1,
-        dateTimeUtc: -1,
+        dateTimeUtc: 1,
       },
     },
     {
