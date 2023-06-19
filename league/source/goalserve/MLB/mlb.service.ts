@@ -1128,37 +1128,86 @@ const mlbScoreWithDate = async (date1: string) => {
       },
     },
     {
-      $project: {
-        id: true,
-        date: true,
-        status: true,
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        awayTeam: {
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
+      '$lookup': {
+        'from': 'odds',
+        'localField': 'goalServeMatchId',
+        'foreignField': 'goalServeMatchId',
+        'as': 'odds'
+      }
+    }, {
+      '$addFields': {
+        'odds': {
+          '$arrayElemAt': [
+            '$odds', 0
+          ]
+        }
+      }
+    }, {
+      '$project': {
+        'id': true,
+        'date': true,
+        'status': true,
+        'datetime_utc': '$dateTimeUtc',
+        'time': true,
+        'goalServeMatchId': true,
+        'awayTeam': {
+          'awayTeamName': '$awayTeam.name',
+          'awayTeamId': '$awayTeam._id',
+          'goalServeAwayTeamId': '$awayTeam.goalServeTeamId',
+          'awayTeamRun': '$awayTeamTotalScore',
+          'awayTeamHit': '$awayTeamHit',
+          'awayTeamErrors': '$awayTeamError',
+          'won': '$awayTeamStandings.won',
+          'lose': '$awayTeamStandings.lost',
+          'teamImage': '$awayTeamImage.image',
+          'spread': '$odds.awayTeamSpread',
+          'moneyline': {
+            '$cond': [
+              {
+                '$gte': [
+                  {
+                    '$toDouble': '$odds.awayTeamMoneyline.us'
+                  }, 0
+                ]
+              }, {
+                '$concat': [
+                  '+', '$odds.awayTeamMoneyline.us'
+                ]
+              }, '$odds.awayTeamMoneyline.us'
+            ]
+          },
+          'total': '$odds.awayTeamTotal'
         },
-        homeTeam: {
-          homeTeamName: "$homeTeam.name",
-          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-        },
-      },
-    },
+        'homeTeam': {
+          'homeTeamName': '$homeTeam.name',
+          'goalServeHomeTeamId': '$homeTeam.goalServeTeamId',
+          'homeTeamId': '$homeTeam._id',
+          'homeTeamRun': '$homeTeamTotalScore',
+          'homeTeamHit': '$homeTeamHit',
+          'homeTeamErrors': '$homeTeamError',
+          'won': '$homeTeamStandings.won',
+          'lose': '$homeTeamStandings.lost',
+          'teamImage': '$homeTeamImage.image',
+          'moneyline': {
+            '$cond': [
+              {
+                '$gte': [
+                  {
+                    '$toDouble': '$odds.homeTeamMoneyline.us'
+                  }, 0
+                ]
+              }, {
+                '$concat': [
+                  '+', '$odds.homeTeamMoneyline.us'
+                ]
+              }, '$odds.homeTeamMoneyline.us'
+            ]
+          },
+          'spread': '$odds.homeTeamSpread',
+          'total': '$odds.homeTeamTotal'
+        }
+      }
+    }
   ]);
   return { getFinalMatch, getUpcomingMatch };
 };
@@ -1842,40 +1891,86 @@ const getLiveDataFromMongodb = async () => {
       },
     },
     {
-      $project: {
-        id: true,
-        date: true,
-        status: true,
-        inningNo: {
-          $last: "$inningNo",
+      '$lookup': {
+        'from': 'odds',
+        'localField': 'goalServeMatchId',
+        'foreignField': 'goalServeMatchId',
+        'as': 'odds'
+      }
+    }, {
+      '$addFields': {
+        'odds': {
+          '$arrayElemAt': [
+            '$odds', 0
+          ]
+        }
+      }
+    }, {
+      '$project': {
+        'id': true,
+        'date': true,
+        'status': true,
+        'datetime_utc': '$dateTimeUtc',
+        'time': true,
+        'goalServeMatchId': true,
+        'awayTeam': {
+          'awayTeamName': '$awayTeam.name',
+          'awayTeamId': '$awayTeam._id',
+          'goalServeAwayTeamId': '$awayTeam.goalServeTeamId',
+          'awayTeamRun': '$awayTeamTotalScore',
+          'awayTeamHit': '$awayTeamHit',
+          'awayTeamErrors': '$awayTeamError',
+          'won': '$awayTeamStandings.won',
+          'lose': '$awayTeamStandings.lost',
+          'teamImage': '$awayTeamImage.image',
+          'spread': '$odds.awayTeamSpread',
+          'moneyline': {
+            '$cond': [
+              {
+                '$gte': [
+                  {
+                    '$toDouble': '$odds.awayTeamMoneyline.us'
+                  }, 0
+                ]
+              }, {
+                '$concat': [
+                  '+', '$odds.awayTeamMoneyline.us'
+                ]
+              }, '$odds.awayTeamMoneyline.us'
+            ]
+          },
+          'total': '$odds.awayTeamTotal'
         },
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        awayTeam: {
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          awayTeamRun: "$awayTeamTotalScore",
-          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
-        },
-        homeTeam: {
-          homeTeamName: "$homeTeam.name",
-          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-        },
-      },
-    },
+        'homeTeam': {
+          'homeTeamName': '$homeTeam.name',
+          'goalServeHomeTeamId': '$homeTeam.goalServeTeamId',
+          'homeTeamId': '$homeTeam._id',
+          'homeTeamRun': '$homeTeamTotalScore',
+          'homeTeamHit': '$homeTeamHit',
+          'homeTeamErrors': '$homeTeamError',
+          'won': '$homeTeamStandings.won',
+          'lose': '$homeTeamStandings.lost',
+          'teamImage': '$homeTeamImage.image',
+          'moneyline': {
+            '$cond': [
+              {
+                '$gte': [
+                  {
+                    '$toDouble': '$odds.homeTeamMoneyline.us'
+                  }, 0
+                ]
+              }, {
+                '$concat': [
+                  '+', '$odds.homeTeamMoneyline.us'
+                ]
+              }, '$odds.homeTeamMoneyline.us'
+            ]
+          },
+          'spread': '$odds.homeTeamSpread',
+          'total': '$odds.homeTeamTotal'
+        }
+      }
+    }
   ]);
 };
 const scoreWithCurrentDate = async (date1: string) => {
