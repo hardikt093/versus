@@ -1,5 +1,5 @@
 import cron from "node-cron";
-
+import moment from "moment";
 import mlbService from "../../goalserve/MLB/mlb.service";
 var getUpcomingMatch = cron.schedule("*/5 * * * * *", async () => {
     console.info("inside score cron getUpcomingMatch");
@@ -18,7 +18,7 @@ var getLiveMatch = cron.schedule("*/5 * * * * *", async () => {
 
 var createAndUpdateOdds = cron.schedule("*/50 * * * * *", async () => {
     console.info("inside score cron createAndUpdateOdds");
-    await mlbService.createAndUpdateOdds();
+    await mlbService.createOrUpdateOdds();
 });
 
 var updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
@@ -42,7 +42,10 @@ var updatePlayerStats = cron.schedule("* * * * *", async () => {
     await mlbService.updatePlayerStats();
 });
 
-
+const liveBoxscoreMlb = cron.schedule("*/5 * * * * *", async () => {
+    console.info("inside score cron updateNhlMatchNba");
+    await mlbService.liveBoxscoreMlb(moment().startOf("day").utc().toISOString() as string);
+  })
 
 export default {
     createAndUpdateOdds,
@@ -53,5 +56,6 @@ export default {
     updateStandingRecord,
     updateTeamStats,
     updateInjuryRecored,
-    updatePlayerStats
+    updatePlayerStats,
+    liveBoxscoreMlb
 }; 

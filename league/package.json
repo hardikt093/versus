@@ -6,6 +6,7 @@
   "scripts": {
     "start": "ts-node source/server.ts",
     "dev": "nodemon -x ts-node source/server.ts",
+    "dbCron": "nodemon -x ts-node source/utils/crons/db/index.ts",
     "migration": "npx prisma migrate dev --name init",
     "build": "npx tsc"
   },
