@@ -56,7 +56,7 @@ const getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
 let isliveBoxscoreMlbRunning: boolean = false;
 const liveBoxscoreMlb = cron.schedule("*/10 * * * * *", async () => {
     if (isliveBoxscoreMlbRunning) {
-        console.log("getLiveMatch Skip");
+        console.log("liveBoxscoreMlb Skip");
         return;
     }
     isliveBoxscoreMlbRunning = true;
