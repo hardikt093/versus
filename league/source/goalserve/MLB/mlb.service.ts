@@ -225,7 +225,7 @@ const getUpcomingMatch = async () => {
         $sort: {
           // formattedDate: 1,
           // time: 1,
-          dateTimeUtc: -1
+          dateTimeUtc: -1,
         },
       },
       {
@@ -239,8 +239,7 @@ const getUpcomingMatch = async () => {
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
-            goalServeAwayTeamId:
-              "$awayTeam.goalServeTeamId",
+            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
             awayTeamRun: "$awayTeamTotalScore",
             awayTeamHit: "$awayTeamHit",
             awayTeamErrors: "$awayTeamError",
@@ -252,8 +251,9 @@ const getUpcomingMatch = async () => {
                 {
                   $gte: [
                     {
-                      $toDouble:
-                        { $arrayElemAt: ["$odds.awayTeamMoneyline.us", 0] },
+                      $toDouble: {
+                        $arrayElemAt: ["$odds.awayTeamMoneyline.us", 0],
+                      },
                     },
                     0,
                   ],
@@ -277,8 +277,7 @@ const getUpcomingMatch = async () => {
           homeTeam: {
             homeTeamName: "$homeTeam.name",
             homeTeamId: "$homeTeam._id",
-            goalServeHomeTeamId:
-              "$homeTeam.goalServeTeamId",
+            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
             homeTeamRun: "$homeTeamTotalScore",
             homeTeamHit: "$homeTeamHit",
             homeTeamErrors: "$homeTeamError",
@@ -290,8 +289,9 @@ const getUpcomingMatch = async () => {
                 {
                   $gte: [
                     {
-                      $toDouble:
-                        { $arrayElemAt: ["$odds.homeTeamMoneyline.us", 0] },
+                      $toDouble: {
+                        $arrayElemAt: ["$odds.homeTeamMoneyline.us", 0],
+                      },
                     },
                     0,
                   ],
@@ -319,7 +319,7 @@ const getUpcomingMatch = async () => {
       getUpcomingMatch,
     });
   } catch (error: any) {
-    console.log("error", error)
+    console.log("error", error);
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
   }
 };
@@ -1127,86 +1127,88 @@ const mlbScoreWithDate = async (date1: string) => {
       },
     },
     {
-      '$lookup': {
-        'from': 'odds',
-        'localField': 'goalServeMatchId',
-        'foreignField': 'goalServeMatchId',
-        'as': 'odds'
-      }
-    }, {
-      '$addFields': {
-        'odds': {
-          '$arrayElemAt': [
-            '$odds', 0
-          ]
-        }
-      }
-    }, {
-      '$project': {
-        'id': true,
-        'date': true,
-        'status': true,
-        'datetime_utc': '$dateTimeUtc',
-        'time': true,
-        'goalServeMatchId': true,
-        'awayTeam': {
-          'awayTeamName': '$awayTeam.name',
-          'awayTeamId': '$awayTeam._id',
-          'goalServeAwayTeamId': '$awayTeam.goalServeTeamId',
-          'awayTeamRun': '$awayTeamTotalScore',
-          'awayTeamHit': '$awayTeamHit',
-          'awayTeamErrors': '$awayTeamError',
-          'won': '$awayTeamStandings.won',
-          'lose': '$awayTeamStandings.lost',
-          'teamImage': '$awayTeamImage.image',
-          'spread': '$odds.awayTeamSpread',
-          'moneyline': {
-            '$cond': [
-              {
-                '$gte': [
-                  {
-                    '$toDouble': '$odds.awayTeamMoneyline.us'
-                  }, 0
-                ]
-              }, {
-                '$concat': [
-                  '+', '$odds.awayTeamMoneyline.us'
-                ]
-              }, '$odds.awayTeamMoneyline.us'
-            ]
-          },
-          'total': '$odds.awayTeamTotal'
+      $lookup: {
+        from: "odds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
+    },
+    {
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
         },
-        'homeTeam': {
-          'homeTeamName': '$homeTeam.name',
-          'goalServeHomeTeamId': '$homeTeam.goalServeTeamId',
-          'homeTeamId': '$homeTeam._id',
-          'homeTeamRun': '$homeTeamTotalScore',
-          'homeTeamHit': '$homeTeamHit',
-          'homeTeamErrors': '$homeTeamError',
-          'won': '$homeTeamStandings.won',
-          'lose': '$homeTeamStandings.lost',
-          'teamImage': '$homeTeamImage.image',
-          'moneyline': {
-            '$cond': [
+      },
+    },
+    {
+      $project: {
+        id: true,
+        date: true,
+        status: true,
+        datetime_utc: "$dateTimeUtc",
+        time: true,
+        goalServeMatchId: true,
+        awayTeam: {
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+          awayTeamRun: "$awayTeamTotalScore",
+          awayTeamHit: "$awayTeamHit",
+          awayTeamErrors: "$awayTeamError",
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+          teamImage: "$awayTeamImage.image",
+          spread: "$odds.awayTeamSpread",
+          moneyline: {
+            $cond: [
               {
-                '$gte': [
+                $gte: [
                   {
-                    '$toDouble': '$odds.homeTeamMoneyline.us'
-                  }, 0
-                ]
-              }, {
-                '$concat': [
-                  '+', '$odds.homeTeamMoneyline.us'
-                ]
-              }, '$odds.homeTeamMoneyline.us'
-            ]
+                    $toDouble: "$odds.awayTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.awayTeamMoneyline.us"],
+              },
+              "$odds.awayTeamMoneyline.us",
+            ],
           },
-          'spread': '$odds.homeTeamSpread',
-          'total': '$odds.homeTeamTotal'
-        }
-      }
-    }
+          total: "$odds.awayTeamTotal",
+        },
+        homeTeam: {
+          homeTeamName: "$homeTeam.name",
+          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+          homeTeamId: "$homeTeam._id",
+          homeTeamRun: "$homeTeamTotalScore",
+          homeTeamHit: "$homeTeamHit",
+          homeTeamErrors: "$homeTeamError",
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+          teamImage: "$homeTeamImage.image",
+          moneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.homeTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.homeTeamMoneyline.us"],
+              },
+              "$odds.homeTeamMoneyline.us",
+            ],
+          },
+          spread: "$odds.homeTeamSpread",
+          total: "$odds.homeTeamTotal",
+        },
+      },
+    },
   ]);
   return { getFinalMatch, getUpcomingMatch };
 };
@@ -1501,7 +1503,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
       $sort: {
         // formattedDate: 1,
         // time: 1,
-        dateTimeUtc: 1
+        dateTimeUtc: 1,
       },
     },
     {
@@ -1701,7 +1703,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
       $sort: {
         // formattedDate: 1,
         // time: 1,
-        dateTimeUtc: 1
+        dateTimeUtc: 1,
       },
     },
     {
@@ -1900,86 +1902,88 @@ const getLiveDataFromMongodb = async () => {
       },
     },
     {
-      '$lookup': {
-        'from': 'odds',
-        'localField': 'goalServeMatchId',
-        'foreignField': 'goalServeMatchId',
-        'as': 'odds'
-      }
-    }, {
-      '$addFields': {
-        'odds': {
-          '$arrayElemAt': [
-            '$odds', 0
-          ]
-        }
-      }
-    }, {
-      '$project': {
-        'id': true,
-        'date': true,
-        'status': true,
-        'datetime_utc': '$dateTimeUtc',
-        'time': true,
-        'goalServeMatchId': true,
-        'awayTeam': {
-          'awayTeamName': '$awayTeam.name',
-          'awayTeamId': '$awayTeam._id',
-          'goalServeAwayTeamId': '$awayTeam.goalServeTeamId',
-          'awayTeamRun': '$awayTeamTotalScore',
-          'awayTeamHit': '$awayTeamHit',
-          'awayTeamErrors': '$awayTeamError',
-          'won': '$awayTeamStandings.won',
-          'lose': '$awayTeamStandings.lost',
-          'teamImage': '$awayTeamImage.image',
-          'spread': '$odds.awayTeamSpread',
-          'moneyline': {
-            '$cond': [
-              {
-                '$gte': [
-                  {
-                    '$toDouble': '$odds.awayTeamMoneyline.us'
-                  }, 0
-                ]
-              }, {
-                '$concat': [
-                  '+', '$odds.awayTeamMoneyline.us'
-                ]
-              }, '$odds.awayTeamMoneyline.us'
-            ]
-          },
-          'total': '$odds.awayTeamTotal'
+      $lookup: {
+        from: "odds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
+    },
+    {
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
         },
-        'homeTeam': {
-          'homeTeamName': '$homeTeam.name',
-          'goalServeHomeTeamId': '$homeTeam.goalServeTeamId',
-          'homeTeamId': '$homeTeam._id',
-          'homeTeamRun': '$homeTeamTotalScore',
-          'homeTeamHit': '$homeTeamHit',
-          'homeTeamErrors': '$homeTeamError',
-          'won': '$homeTeamStandings.won',
-          'lose': '$homeTeamStandings.lost',
-          'teamImage': '$homeTeamImage.image',
-          'moneyline': {
-            '$cond': [
+      },
+    },
+    {
+      $project: {
+        id: true,
+        date: true,
+        status: true,
+        datetime_utc: "$dateTimeUtc",
+        time: true,
+        goalServeMatchId: true,
+        awayTeam: {
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+          awayTeamRun: "$awayTeamTotalScore",
+          awayTeamHit: "$awayTeamHit",
+          awayTeamErrors: "$awayTeamError",
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+          teamImage: "$awayTeamImage.image",
+          spread: "$odds.awayTeamSpread",
+          moneyline: {
+            $cond: [
               {
-                '$gte': [
+                $gte: [
                   {
-                    '$toDouble': '$odds.homeTeamMoneyline.us'
-                  }, 0
-                ]
-              }, {
-                '$concat': [
-                  '+', '$odds.homeTeamMoneyline.us'
-                ]
-              }, '$odds.homeTeamMoneyline.us'
-            ]
+                    $toDouble: "$odds.awayTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.awayTeamMoneyline.us"],
+              },
+              "$odds.awayTeamMoneyline.us",
+            ],
           },
-          'spread': '$odds.homeTeamSpread',
-          'total': '$odds.homeTeamTotal'
-        }
-      }
-    }
+          total: "$odds.awayTeamTotal",
+        },
+        homeTeam: {
+          homeTeamName: "$homeTeam.name",
+          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+          homeTeamId: "$homeTeam._id",
+          homeTeamRun: "$homeTeamTotalScore",
+          homeTeamHit: "$homeTeamHit",
+          homeTeamErrors: "$homeTeamError",
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+          teamImage: "$homeTeamImage.image",
+          moneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.homeTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.homeTeamMoneyline.us"],
+              },
+              "$odds.homeTeamMoneyline.us",
+            ],
+          },
+          spread: "$odds.homeTeamSpread",
+          total: "$odds.homeTeamTotal",
+        },
+      },
+    },
   ]);
 };
 const scoreWithCurrentDate = async (date1: string) => {
@@ -3972,7 +3976,7 @@ const updateStandingRecord = async () => {
         await Standings.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
-          { new: true }
+          { new: true, upsert: true }
         );
       });
     });
@@ -3998,7 +4002,7 @@ const updateTeamStats = async () => {
       await StatsTeam.findOneAndUpdate(
         { goalServeTeamId: data.goalServeTeamId },
         { $set: data },
-        { new: true }
+        { new: true, upsert: true }
       );
     })
   );
@@ -4019,7 +4023,7 @@ const updateTeamStats = async () => {
       await StatsTeam.findOneAndUpdate(
         { goalServeTeamId: data.goalServeTeamId },
         { $set: data },
-        { new: true }
+        { new: true, upsert: true }
       );
     })
   );
@@ -4157,7 +4161,7 @@ const updatePlayerStats = async () => {
         await Player.findOneAndUpdate(
           { goalServePlayerId: eVal.id },
           { $set: data },
-          { new: true }
+          { new: true, upsert: true }
         );
       });
     })
@@ -4263,6 +4267,21 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               on_base_percentage: {
                 $toDouble: "$batting.on_base_percentage",
               },
+              wins: {
+                $toDouble: "$pitching.wins",
+              },
+              earned_run_average: {
+                $toDouble: "$pitching.earned_run_average",
+              },
+              strikeouts: {
+                $toDouble: "$pitching.strikeouts",
+              },
+              saves: {
+                $toDouble: "$pitching.saves",
+              },
+              holds: {
+                $toDouble: "$pitching.holds",
+              },
             },
           },
           {
@@ -4317,6 +4336,56 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                   $limit: 1,
                 },
               ],
+              maxHolds: [
+                {
+                  $sort: {
+                    holds: -1,
+                  },
+                },
+                {
+                  $limit: 1,
+                },
+              ],
+              maxSaves: [
+                {
+                  $sort: {
+                    saves: -1,
+                  },
+                },
+                {
+                  $limit: 1,
+                },
+              ],
+              maxStrikeouts: [
+                {
+                  $sort: {
+                    strikeouts: -1,
+                  },
+                },
+                {
+                  $limit: 1,
+                },
+              ],
+              maxEarnedRunAverage: [
+                {
+                  $sort: {
+                    earned_run_average: -1,
+                  },
+                },
+                {
+                  $limit: 1,
+                },
+              ],
+              maxWins: [
+                {
+                  $sort: {
+                    wins: -1,
+                  },
+                },
+                {
+                  $limit: 1,
+                },
+              ],
             },
           },
           {
@@ -4335,6 +4404,22 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               },
               maxOnBasePercentage: {
                 $arrayElemAt: ["$maxOnBasePercentage", 0],
+              },
+              maxHolds: {
+                $arrayElemAt: ["$maxHolds", 0],
+              },
+              maxSaves: {
+                $arrayElemAt: ["$maxSaves", 0],
+              },
+              maxStrikeouts: {
+                $arrayElemAt: ["$maxStrikeouts", 0],
+              },
+              maxEarnedRunAverage: {
+                $arrayElemAt: ["$maxEarnedRunAverage", 0],
+              },
+
+              maxWins: {
+                $arrayElemAt: ["$maxWins", 0],
               },
             },
           },
@@ -4364,6 +4449,32 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 on_base_percentage: "$maxOnBasePercentage.on_base_percentage",
                 name: "$maxOnBasePercentage.name",
                 number: "$maxOnBasePercentage.number",
+              },
+              maxHolds: {
+                holds: "$maxHolds.holds",
+                name: "$maxHolds.name",
+                number: "$maxHolds.number",
+              },
+              maxEarnedRunAverage: {
+                earned_run_average: "$maxEarnedRunAverage.earned_run_average",
+                name: "$maxEarnedRunAverage.name",
+                number: "$maxEarnedRunAverage.number",
+              },
+              maxSaves: {
+                saves: "$maxSaves.saves",
+                name: "$maxSaves.name",
+                number: "$maxSaves.number",
+              },
+              maxStrikeouts: {
+                strikeouts: "$maxStrikeouts.strikeouts",
+                name: "$maxStrikeouts.name",
+                number: "$maxStrikeouts.number",
+              },
+
+              maxWins: {
+                wins: "$maxWins.wins",
+                name: "$maxWins.name",
+                number: "$maxWins.number",
               },
             },
           },
@@ -4573,11 +4684,11 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
         goalServeTeamId: true,
         teamImage: "$images.image",
         name: true,
-        streak:"$current_streak",
-        division:true,
-        position:true,
-        won:true,
-        lost:true,
+        streak: "$current_streak",
+        division: true,
+        position: true,
+        won: true,
+        lost: true,
         playerStatistics: {
           playerBattingStats: {
             $map: {
@@ -4701,6 +4812,22 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
             },
           },
         },
+        teamLeaders: {
+          teamLeaderBatting: {
+            maxBattingAvg: "$teamLeaders.maxBattingAvg",
+            maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
+            maxHits: "$teamLeaders.maxHits",
+            maxOnBasePercentage: "$teamLeaders.maxOnBasePercentage",
+            maxHomeRun: "$teamLeaders.maxHomeRun",
+          },
+          teamLeadersPitching: {
+            maxWins: "$teamLeaders.maxWins",
+            maxStrikeouts: "$teamLeaders.maxStrikeouts",
+            maxSaves: "$teamLeaders.maxSaves",
+            maxEarnedRunAverage: "$teamLeaders.maxEarnedRunAverage",
+            maxHolds: "$teamLeaders.maxHolds",
+          },
+        },
         roaster: {
           $map: {
             input: "$positions",
@@ -4739,7 +4866,11 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
         },
         teamDetails: {
           divisionStandings: "$divisionStandings",
-          teamLeaders: "$teamLeaders",
+          teamLeaders: {
+            maxBattingAvg: "$teamLeaders.maxBattingAvg",
+            maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
+            maxHits: "$teamLeaders.maxHits",
+          },
           teamInjuredPlayers: {
             $map: {
               input: "$teamInjuredPlayers",
@@ -6316,13 +6447,15 @@ const createOrUpdateOdds = async () => {
     );
     var matchData = getScore?.data?.fixtures?.category?.matches;
     if (matchData?.length > 0) {
-      let data: Partial<IOddModel>
+      let data: Partial<IOddModel>;
       for (let i = 0; i < matchData?.length; i++) {
         for (let j = 0; j < matchData[i]?.match?.length; j++) {
           const findOdd = await Odd.find({
             goalServeMatchId: matchData[i]?.match[j].id,
           });
-          const findMatch = await Match.findOne({ goalServeMatchId: matchData[i]?.match[j].id })
+          const findMatch = await Match.findOne({
+            goalServeMatchId: matchData[i]?.match[j].id,
+          });
           const league: ILeagueModel | undefined | null = await League.findOne({
             goalServeLeagueId: getScore?.data.fixtures?.category?.id,
           });
@@ -6332,13 +6465,13 @@ const createOrUpdateOdds = async () => {
           );
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "2"
-            )
+                (item: any) => item?.name === "2"
+              )
             : undefined;
           const homeTeamMoneyline = getMoneyLine
             ? getMoneyLine?.bookmaker?.odd?.find(
-              (item: any) => item?.name === "1"
-            )
+                (item: any) => item?.name === "1"
+              )
             : undefined;
           // getSpread
           const getSpread = await getOdds(
@@ -6383,47 +6516,52 @@ const createOrUpdateOdds = async () => {
           };
           if (findOdd?.length > 0) {
             if (findMatch?.status == "Not Started") {
-              data.status = findMatch?.status
+              data.status = findMatch?.status;
               await Odd.findOneAndUpdate(
                 { goalServeMatchId: matchData[i]?.match[j].id },
                 { $set: data },
                 { new: true }
               );
-            }
-            else if (findMatch?.status != "Not Started" &&
-              findMatch?.status != "Final" && findMatch?.status != "Postponed" &&
+            } else if (
+              findMatch?.status != "Not Started" &&
+              findMatch?.status != "Final" &&
+              findMatch?.status != "Postponed" &&
               findMatch?.status != "Canceled" &&
-              findMatch?.status != "Suspended") {
-              data.status = findMatch?.status
+              findMatch?.status != "Suspended"
+            ) {
+              data.status = findMatch?.status;
               await Odd.updateOne(
-                { goalServeMatchId: matchData[i]?.match[j].id, status: findMatch?.status },
+                {
+                  goalServeMatchId: matchData[i]?.match[j].id,
+                  status: findMatch?.status,
+                },
                 { $set: data },
                 { upsert: true }
               );
-            }
-            else {
-              const findOddWithStatus = await Odd.find({ goalServeMatchId: matchData[i]?.match[j].id, status: findMatch?.status })
+            } else {
+              const findOddWithStatus = await Odd.find({
+                goalServeMatchId: matchData[i]?.match[j].id,
+                status: findMatch?.status,
+              });
               if (findOddWithStatus.length > 0) {
-                return
-              }
-              else {
-                data.status = findMatch?.status
+                return;
+              } else {
+                data.status = findMatch?.status;
                 await Odd.findOneAndUpdate(
                   { goalServeMatchId: matchData[i]?.match[j].id },
                   { $set: data },
                   { new: true }
                 );
               }
-
             }
           }
         }
       }
     }
   } catch (error: any) {
-    console.log("error", error)
+    console.log("error", error);
   }
-}
+};
 export default {
   mlbGetTeam,
   getMLBStandings,
@@ -6452,5 +6590,5 @@ export default {
   updatePlayerStats,
   mlbSingleGameBoxScoreLive,
   liveBoxscoreMlb,
-  createOrUpdateOdds
+  createOrUpdateOdds,
 };

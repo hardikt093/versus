@@ -284,7 +284,7 @@ export default class MlbDbCronServiceClass {
             await Match.findOneAndUpdate(
               { goalServeMatchId: data.goalServeMatchId },
               { $set: data },
-              { new: true }
+              { new: true, upsert: true }
             );
           } else {
             const data: Partial<IMatchModel> = {
@@ -538,7 +538,7 @@ export default class MlbDbCronServiceClass {
           await Standings.findOneAndUpdate(
             { goalServeTeamId: data.goalServeTeamId },
             { $set: data },
-            { new: true }
+            { new: true, upsert: true }
           );
         });
       });
@@ -564,7 +564,7 @@ export default class MlbDbCronServiceClass {
         await StatsTeam.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
-          { new: true }
+          { new: true, upsert: true }
         );
       })
     );
@@ -585,7 +585,7 @@ export default class MlbDbCronServiceClass {
         await StatsTeam.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
-          { new: true }
+          { new: true, upsert: true }
         );
       })
     );
@@ -721,7 +721,7 @@ export default class MlbDbCronServiceClass {
           await Player.findOneAndUpdate(
             { goalServePlayerId: eVal.id },
             { $set: data },
-            { new: true }
+            { new: true, upsert: true }
           );
         });
       })
@@ -746,9 +746,10 @@ export default class MlbDbCronServiceClass {
             const findOdd = await Odd.find({
               goalServeMatchId: matchData[i]?.match[j].id,
             });
-            const league: ILeagueModel | undefined | null = await League.findOne({
-              goalServeLeagueId: getScore?.data.fixtures?.category?.id,
-            });
+            const league: ILeagueModel | undefined | null =
+              await League.findOne({
+                goalServeLeagueId: getScore?.data.fixtures?.category?.id,
+              });
             const getMoneyLine: any = await getOdds(
               "Home/Away",
               matchData[i]?.match[j]?.odds?.type
@@ -779,7 +780,7 @@ export default class MlbDbCronServiceClass {
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
-  
+
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
@@ -823,12 +824,12 @@ export default class MlbDbCronServiceClass {
     let month1 = moment(subDate).format("MM");
     let year1 = moment(subDate).format("YYYY");
     let date1 = `${day1}.${month1}.${year1}`;
-  
+
     let day2 = moment(addDate).format("D");
     let month2 = moment(addDate).format("MM");
     let year2 = moment(addDate).format("YYYY");
     let date2 = `${day2}.${month2}.${year2}`;
-  
+
     try {
       let data = {
         json: true,
@@ -844,29 +845,32 @@ export default class MlbDbCronServiceClass {
       );
       var matchData = getScore?.data?.fixtures?.category?.matches;
       if (matchData?.length > 0) {
-        let data: Partial<IOddModel>
+        let data: Partial<IOddModel>;
         for (let i = 0; i < matchData?.length; i++) {
           for (let j = 0; j < matchData[i]?.match?.length; j++) {
             const findOdd = await Odd.find({
               goalServeMatchId: matchData[i]?.match[j].id,
             });
-            const findMatch = await Match.findOne({ goalServeMatchId: matchData[i]?.match[j].id })
-            const league: ILeagueModel | undefined | null = await League.findOne({
-              goalServeLeagueId: getScore?.data.fixtures?.category?.id,
+            const findMatch = await Match.findOne({
+              goalServeMatchId: matchData[i]?.match[j].id,
             });
+            const league: ILeagueModel | undefined | null =
+              await League.findOne({
+                goalServeLeagueId: getScore?.data.fixtures?.category?.id,
+              });
             const getMoneyLine: any = await getOdds(
               "Home/Away",
               matchData[i]?.match[j]?.odds?.type
             );
             const awayTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+                  (item: any) => item?.name === "2"
+                )
               : undefined;
             const homeTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+                  (item: any) => item?.name === "1"
+                )
               : undefined;
             // getSpread
             const getSpread = await getOdds(
@@ -884,7 +888,7 @@ export default class MlbDbCronServiceClass {
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
-  
+
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
@@ -906,50 +910,59 @@ export default class MlbDbCronServiceClass {
               ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
               // awayTeamTotal: totalValues,
               ...(totalValues && { awayTeamTotal: totalValues }),
-              ...(awayTeamMoneyline && { awayTeamMoneyline: awayTeamMoneyline }),
-              ...(homeTeamMoneyline && { homeTeamMoneyline: homeTeamMoneyline }),
+              ...(awayTeamMoneyline && {
+                awayTeamMoneyline: awayTeamMoneyline,
+              }),
+              ...(homeTeamMoneyline && {
+                homeTeamMoneyline: homeTeamMoneyline,
+              }),
             };
             if (findOdd?.length > 0) {
               if (findMatch?.status == "Not Started") {
-                data.status = findMatch?.status
+                data.status = findMatch?.status;
                 await Odd.findOneAndUpdate(
                   { goalServeMatchId: matchData[i]?.match[j].id },
                   { $set: data },
                   { new: true }
                 );
-              }
-              else if (findMatch?.status != "Not Started" &&
-                findMatch?.status != "Final" && findMatch?.status != "Postponed" &&
+              } else if (
+                findMatch?.status != "Not Started" &&
+                findMatch?.status != "Final" &&
+                findMatch?.status != "Postponed" &&
                 findMatch?.status != "Canceled" &&
-                findMatch?.status != "Suspended") {
-                data.status = findMatch?.status
+                findMatch?.status != "Suspended"
+              ) {
+                data.status = findMatch?.status;
                 await Odd.updateOne(
-                  { goalServeMatchId: matchData[i]?.match[j].id, status: findMatch?.status },
+                  {
+                    goalServeMatchId: matchData[i]?.match[j].id,
+                    status: findMatch?.status,
+                  },
                   { $set: data },
                   { upsert: true }
                 );
-              }
-              else {
-                const findOddWithStatus = await Odd.find({ goalServeMatchId: matchData[i]?.match[j].id, status: findMatch?.status })
+              } else {
+                const findOddWithStatus = await Odd.find({
+                  goalServeMatchId: matchData[i]?.match[j].id,
+                  status: findMatch?.status,
+                });
                 if (findOddWithStatus.length > 0) {
-                  return
-                }
-                else {
-                  data.status = findMatch?.status
+                  return;
+                } else {
+                  data.status = findMatch?.status;
                   await Odd.findOneAndUpdate(
                     { goalServeMatchId: matchData[i]?.match[j].id },
                     { $set: data },
                     { new: true }
                   );
                 }
-  
               }
             }
           }
         }
       }
     } catch (error: any) {
-      console.log("error", error)
+      console.log("error", error);
     }
-  }
+  };
 }
