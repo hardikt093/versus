@@ -4207,7 +4207,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               games_back: true,
               away_record: true,
               home_record: true,
-              current_streak: true,
+              streak: "$current_streak",
               teamImage: { $arrayElemAt: ["$teamImage.image", 0] },
             },
           },
@@ -4362,6 +4362,9 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
         ],
         as: "teamLeaders",
       },
+    },
+    {
+      $unwind: "$teamLeaders",
     },
     {
       $lookup: {
@@ -4562,7 +4565,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
         goalServeTeamId: true,
         teamImage: "$images.image",
         name: true,
-        current_streak:true,
+        streak:"$current_streak",
         division:true,
         position:true,
         won:true,
