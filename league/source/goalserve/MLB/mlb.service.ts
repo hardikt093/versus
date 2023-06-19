@@ -4435,6 +4435,11 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
         goalServeTeamId: true,
         teamImage: "$images.image",
         name: true,
+        current_streak:true,
+        division:true,
+        position:true,
+        won:true,
+        lost:true,
         playerStatistics: {
           playerBattingStats: {
             $map: {
