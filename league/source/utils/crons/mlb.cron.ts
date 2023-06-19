@@ -52,6 +52,23 @@ const getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 
+// let isgetLiveMatchRunning: boolean = false;
+// const getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
+//     if (isgetLiveMatchRunning) {
+//         console.log("getLiveMatch Skip");
+//         return;
+//     }
+//     isgetLiveMatchRunning = true;
+//     try {
+//         console.info("inside score cron getLiveMatch");
+//         await mlbService.getLiveMatch();
+//     } catch (error) {
+//         console.log(error);
+//     } finally {
+//         isgetLiveMatchRunning = false;
+//     }
+// });
+
 export default {
   getLiveMatch,
   getUpcomingMatch,
