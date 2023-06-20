@@ -62,7 +62,9 @@ const liveBoxscoreMlb = cron.schedule("*/10 * * * * *", async () => {
     isliveBoxscoreMlbRunning = true;
     try {
         console.info("inside score cron liveBoxscoreMlb");
-        await mlbService.liveBoxscoreMlb(moment().startOf("day").utc().toISOString() as string);
+        await mlbService.liveBoxscoreMlb({
+          date1: moment().startOf("day").utc().toISOString(),
+        });
     } catch (error) {
         console.log(error);
     } finally {
