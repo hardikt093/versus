@@ -5728,8 +5728,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
   return { getMatch: getMatch[0] };
 };
 
-const liveBoxscoreMlb = async (params: { date1: string }) => {
-  const date2 = moment(params.date1).add(48, "hours").utc().toISOString();
+const liveBoxscoreMlb = async () => {
   const getMatch = await Match.aggregate([
     {
       $match: {
@@ -5760,35 +5759,6 @@ const liveBoxscoreMlb = async (params: { date1: string }) => {
             },
           },
         ],
-      },
-    },
-    {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateutc: {
-          $toDate: "$dateTimeUtc",
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
-    },
-    {
-      $match: {
-        dateInString: {
-          $gte: params.date1,
-          $lte: date2,
-        },
       },
     },
     {
