@@ -216,16 +216,29 @@ const getUpcomingMatch = async () => {
       {
         $lookup: {
           from: "odds",
-          localField: "goalServeMatchId",
-          foreignField: "goalServeMatchId",
-          as: "odds",
-        },
+          let: { matchId: "$goalServeMatchId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "Not Started"] }
+                  ]
+                }
+              }
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 }
+          ],
+          as: "odds"
+        }
       },
       {
-        $sort: {
-          // formattedDate: 1,
-          // time: 1,
-          dateTimeUtc: -1,
+        $addFields: {
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
         },
       },
       {
@@ -648,91 +661,173 @@ const getLiveMatch = async () => {
       {
         $lookup: {
           from: "teams",
-          localField: "goalServeAwayTeamId",
-          foreignField: "goalServeTeamId",
-          as: "awayTeam",
-        },
-      },
-      {
-        $lookup: {
-          from: "teams",
-          localField: "goalServeHomeTeamId",
-          foreignField: "goalServeTeamId",
-          as: "homeTeam",
-        },
-      },
-      {
-        $unwind: {
-          path: "$awayTeam",
-          includeArrayIndex: "string",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$homeTeam",
-          includeArrayIndex: "string",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "standings",
-          localField: "goalServeAwayTeamId",
-          foreignField: "goalServeTeamId",
-          as: "awayTeamStandings",
-        },
-      },
-      {
-        $unwind: {
-          path: "$awayTeamStandings",
-          includeArrayIndex: "string",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "standings",
-          localField: "goalServeHomeTeamId",
-          foreignField: "goalServeTeamId",
-          as: "homeTeamStandings",
-        },
-      },
-      {
-        $unwind: {
-          path: "$homeTeamStandings",
-          includeArrayIndex: "string",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "teamImages",
-          localField: "goalServeAwayTeamId",
-          foreignField: "goalServeTeamId",
-          as: "awayTeamImage",
-        },
-      },
-      {
-        $unwind: {
-          path: "$awayTeamImage",
-          includeArrayIndex: "string",
-          preserveNullAndEmptyArrays: true,
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teams",
         },
       },
       {
         $lookup: {
           from: "teamImages",
-          localField: "goalServeHomeTeamId",
-          foreignField: "goalServeTeamId",
-          as: "homeTeamImage",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teamImages",
         },
       },
       {
-        $unwind: {
-          path: "$homeTeamImage",
-          includeArrayIndex: "string",
-          preserveNullAndEmptyArrays: true,
+        $lookup: {
+          from: "standings",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "standings",
         },
       },
       {
@@ -760,26 +855,28 @@ const getLiveMatch = async () => {
           goalServeMatchId: true,
           out: "$outs",
           awayTeam: {
-            awayTeamName: "$awayTeam.name",
-            awayTeamId: "$awayTeam._id",
-            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+            awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            goalServeAwayTeamId: {
+              $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
+            },
             awayTeamRun: "$awayTeamTotalScore",
             awayTeamHit: "$awayTeamHit",
             awayTeamErrors: "$awayTeamError",
-            won: "$awayTeamStandings.won",
-            lose: "$awayTeamStandings.lost",
-            teamImage: "$awayTeamImage.image",
+            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
           },
           homeTeam: {
-            homeTeamName: "$homeTeam.name",
-            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-            homeTeamId: "$homeTeam._id",
+            homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            goalServeHomeTeamId: {
+              $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+            },
             homeTeamRun: "$homeTeamTotalScore",
             homeTeamHit: "$homeTeamHit",
             homeTeamErrors: "$homeTeamError",
-            won: "$homeTeamStandings.won",
-            lose: "$homeTeamStandings.lost",
-            teamImage: "$homeTeamImage.image",
+            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           },
         },
       },
@@ -1130,10 +1227,23 @@ const mlbScoreWithDate = async (date1: string) => {
     {
       $lookup: {
         from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
-      },
+        let: { matchId: "$goalServeMatchId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "Not Started"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "odds"
+      }
     },
     {
       $addFields: {
@@ -1142,6 +1252,7 @@ const mlbScoreWithDate = async (date1: string) => {
         },
       },
     },
+
     {
       $project: {
         id: true,
@@ -1149,6 +1260,7 @@ const mlbScoreWithDate = async (date1: string) => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
+        matchedOdds:1,
         goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
@@ -1695,23 +1807,29 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
     {
       $lookup: {
         from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
-      },
+        let: { matchId: "$goalServeMatchId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "Not Started"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "odds"
+      }
     },
     {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
-      },
-    },
-    {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
       },
     },
     {
@@ -2290,16 +2408,54 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
-      },
+        let: { matchId: "$goalServeMatchId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "Not Started"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "odds"
+      }
     },
     {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      $lookup: {
+        from: "odds",
+        let: { matchId: "$goalServeMatchId", matchStatus: "$status"},
+        
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "$$matchStatus"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "outcomes"
+      }
+    },
+    {
+      $addFields: {
+        outcomes:{
+          $arrayElemAt: ["$outcomes", 0],
+        },
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
       },
     },
     {
@@ -2601,7 +2757,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
             },
           },
         },
-        closingOddsAndOutcome: {
+        closingOdds: {
           awayTeamMoneyLine: {
             $cond: [
               { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
@@ -2620,6 +2776,42 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           awayTeamSpread: "$odds.awayTeamSpread",
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
+          awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
+          homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
+          scoreDifference: {
+            $abs: {
+              $subtract: [
+                "$awayTeamTotalScoreInNumber",
+                "$homeTeamTotalScoreInNumber",
+              ],
+            },
+          },
+          totalGameScore: {
+            $add: [
+              "$awayTeamTotalScoreInNumber",
+              "$homeTeamTotalScoreInNumber",
+            ],
+          },
+        },
+        outcomes: {
+          awayTeamMoneyLine: {
+            $cond: [
+              { $gte: [{ $toDouble: "$outcomes.awayTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$outcomes.awayTeamMoneyline.us"] },
+              "$outcomes.awayTeamMoneyline.us",
+            ],
+          },
+          homeTeamMoneyLine: {
+            $cond: [
+              { $gte: [{ $toDouble: "$outcomes.homeTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$outcomes.homeTeamMoneyline.us"] },
+              "$outcomes.homeTeamMoneyline.us",
+            ],
+          },
+          homeTeamSpread: "$outcomes.homeTeamSpread",
+          awayTeamSpread: "$outcomes.awayTeamSpread",
+          homeTeamTotal: "$outcomes.homeTeamTotal",
+          awayTeamTotal: "$outcomes.awayTeamTotal",
           awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
           homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
           scoreDifference: {
@@ -3209,29 +3401,28 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
-      },
+        let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
+
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "$$matchStatus"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "odds"
+      }
     },
     {
       $unwind: {
         path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "closingOdds",
-      },
-    },
-    {
-      $unwind: {
-        path: "$closingOdds",
         includeArrayIndex: "string",
         preserveNullAndEmptyArrays: true,
       },
@@ -3474,25 +3665,25 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
             },
           },
         },
-        closingOddsAndOutcome: {
+        closingOdds: {
           awayTeamMoneyLine: {
             $cond: [
-              { $gte: [{ $toDouble: "$closingOdds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$closingOdds.awayTeamMoneyline.us"] },
-              "$closingOdds.awayTeamMoneyline.us",
+              { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+              "$odds.awayTeamMoneyline.us",
             ],
           },
           homeTeamMoneyLine: {
             $cond: [
-              { $gte: [{ $toDouble: "$closingOdds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$closingOdds.homeTeamMoneyline.us"] },
-              "$closingOdds.homeTeamMoneyline.us",
+              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+              "$odds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$closingOdds.homeTeamSpread",
-          awayTeamSpread: "$closingOdds.awayTeamSpread",
-          homeTeamTotal: "$closingOdds.homeTeamTotal",
-          awayTeamTotal: "$closingOdds.awayTeamTotal",
+          homeTeamSpread: "$odds.homeTeamSpread",
+          awayTeamSpread: "$odds.awayTeamSpread",
+          homeTeamTotal: "$odds.homeTeamTotal",
+          awayTeamTotal: "$odds.awayTeamTotal",
           awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
           homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
           scoreDifference: {
@@ -5320,13 +5511,51 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
-      },
+        let: { matchId: "$goalServeMatchId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "Not Started"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "odds"
+      }
+    },
+    {
+      $lookup: {
+        from: "odds",
+        let: { matchId: "$goalServeMatchId", matchStatus: "$status"},
+        
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "$$matchStatus"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "liveOdds"
+      }
     },
     {
       $addFields: {
+        liveOdds:{
+          $arrayElemAt: ["$liveOdds", 0],
+        },
         odds: {
           $arrayElemAt: ["$odds", 0],
         },
@@ -5686,7 +5915,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             error: "$homeTeamError",
           },
         },
-        closingOddsAndOutcome: {
+        closingOdds: {
           awayTeamMoneyLine: {
             $cond: [
               { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
@@ -5705,6 +5934,42 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
           awayTeamSpread: "$odds.awayTeamSpread.handicap",
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
+          awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
+          homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
+          scoreDifference: {
+            $abs: {
+              $subtract: [
+                "$awayTeamTotalScoreInNumber",
+                "$homeTeamTotalScoreInNumber",
+              ],
+            },
+          },
+          totalGameScore: {
+            $add: [
+              "$awayTeamTotalScoreInNumber",
+              "$homeTeamTotalScoreInNumber",
+            ],
+          },
+        },
+        liveOdds: {
+          awayTeamMoneyLine: {
+            $cond: [
+              { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
+              "$odds.awayTeamMoneyline.us",
+            ],
+          },
+          homeTeamMoneyLine: {
+            $cond: [
+              { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
+              "$odds.homeTeamMoneyline.us",
+            ],
+          },
+          homeTeamSpread: "$liveOdds.homeTeamSpread.handicap",
+          awayTeamSpread: "$liveOdds.awayTeamSpread.handicap",
+          homeTeamTotal: "$liveOdds.homeTeamTotal",
+          awayTeamTotal: "$liveOdds.awayTeamTotal",
           awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
           homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
           scoreDifference: {
@@ -6117,13 +6382,51 @@ const liveBoxscoreMlb = async () => {
     {
       $lookup: {
         from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
-      },
+        let: { matchId: "$goalServeMatchId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "Not Started"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "odds"
+      }
+    },
+    {
+      $lookup: {
+        from: "odds",
+        let: { matchId: "$goalServeMatchId", matchStatus: "$status"},
+        
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "$$matchStatus"] }
+                ]
+              }
+            }
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 }
+        ],
+        as: "liveOdds"
+      }
     },
     {
       $addFields: {
+        liveOdds:{
+          $arrayElemAt: ["$liveOdds", 0],
+        },
         odds: {
           $arrayElemAt: ["$odds", 0],
         },
@@ -6481,7 +6784,7 @@ const liveBoxscoreMlb = async () => {
             error: "$homeTeamError",
           },
         },
-        closingOddsAndOutcome: {
+        closingOdds: {
           awayTeamMoneyLine: {
             $cond: [
               { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
@@ -6500,6 +6803,42 @@ const liveBoxscoreMlb = async () => {
           awayTeamSpread: "$odds.awayTeamSpread.handicap",
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
+          awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
+          homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
+          scoreDifference: {
+            $abs: {
+              $subtract: [
+                "$awayTeamTotalScoreInNumber",
+                "$homeTeamTotalScoreInNumber",
+              ],
+            },
+          },
+          totalGameScore: {
+            $add: [
+              "$awayTeamTotalScoreInNumber",
+              "$homeTeamTotalScoreInNumber",
+            ],
+          },
+        },
+        liveOdds: {
+          awayTeamMoneyLine: {
+            $cond: [
+              { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
+              "$odds.awayTeamMoneyline.us",
+            ],
+          },
+          homeTeamMoneyLine: {
+            $cond: [
+              { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
+              "$odds.homeTeamMoneyline.us",
+            ],
+          },
+          homeTeamSpread: "$liveOdds.homeTeamSpread.handicap",
+          awayTeamSpread: "$liveOdds.awayTeamSpread.handicap",
+          homeTeamTotal: "$liveOdds.homeTeamTotal",
+          awayTeamTotal: "$liveOdds.awayTeamTotal",
           awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
           homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
           scoreDifference: {
