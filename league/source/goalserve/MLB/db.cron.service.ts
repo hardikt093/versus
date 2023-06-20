@@ -112,92 +112,6 @@ const transformLeague = async (getResponse: any, data: any) => {
   });
 };
 export default class MlbDbCronServiceClass {
-  public createAndUpdateOdds = async () => {
-    let day = moment().format("D");
-    let month = moment().format("MM");
-    let year = moment().format("YYYY");
-    let date = `${day}.${month}.${year}`;
-    try {
-      let data = { json: true, showodds: "1", bm: "451," };
-      const getScore = await goalserveApi(
-        "https://www.goalserve.com/getfeed",
-        data,
-        "baseball/mlb_shedule"
-      );
-      var matchData = getScore?.data?.fixtures?.category?.matches;
-      if (matchData?.length > 0) {
-        for (let i = 0; i < matchData?.length; i++) {
-          for (let j = 0; j < matchData[i]?.match?.length; j++) {
-            const findOdd = await Odd.find({
-              goalServeMatchId: matchData[i]?.match[j].id,
-            });
-            const league: ILeagueModel | undefined | null =
-              await League.findOne({
-                goalServeLeagueId: getScore?.data.fixtures?.category?.id,
-              });
-            const getMoneyLine: any = await getOdds(
-              "Home/Away",
-              matchData[i]?.match[j]?.odds?.type
-            );
-            const awayTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
-                  (item: any) => item?.name === "2"
-                )
-              : {};
-            const homeTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
-                  (item: any) => item?.name === "1"
-                )
-              : {};
-            // getSpread
-            const getSpread = await getOdds(
-              "Run Line",
-              matchData[i]?.match[j]?.odds?.type
-            );
-            const getAwayTeamRunLine = await getRunLine(
-              matchData[i]?.match[j]?.awayteam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const getHomeTeamRunLine = await getRunLine(
-              matchData[i]?.match[j]?.hometeam?.name,
-              getSpread?.bookmaker?.odd
-            );
-            const awayTeamSpread = getAwayTeamRunLine
-              ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
-
-            const homeTeamSpread = getHomeTeamRunLine
-              ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
-            const total = await getTotal(
-              "Over/Under",
-              matchData[i]?.match[j]?.odds?.type
-            );
-            const totalValues = await getTotalValues(total);
-            let data = {
-              goalServerLeagueId: league?.goalServeLeagueId,
-              goalServeMatchId: matchData[i]?.match[j]?.id,
-              goalServeHomeTeamId: matchData[i]?.match[j]?.hometeam?.id,
-              goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
-              homeTeamSpread: homeTeamSpread,
-              homeTeamTotal: totalValues,
-              awayTeamSpread: awayTeamSpread,
-              awayTeamTotal: totalValues,
-              awayTeamMoneyline: awayTeamMoneyline,
-              homeTeamMoneyline: homeTeamMoneyline,
-              status: matchData[i]?.match[j]?.status,
-            };
-            if (findOdd?.length == 0) {
-              const oddsData = new Odd(data);
-              const savedOddsData = await oddsData.save();
-            }
-          }
-        }
-      }
-    } catch (error: any) {
-      console.log("error", error);
-    }
-  };
 
   public updateCurruntDateRecord = async () => {
     try {
@@ -950,11 +864,8 @@ export default class MlbDbCronServiceClass {
                   return;
                 } else {
                   data.status = findMatch?.status;
-                  await Odd.findOneAndUpdate(
-                    { goalServeMatchId: matchData[i]?.match[j].id },
-                    { $set: data },
-                    { new: true }
-                  );
+                  const oddsData = new Odd(data);
+                  const savedOddsData = await oddsData.save();
                 }
               }
             }

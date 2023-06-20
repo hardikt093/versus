@@ -758,6 +758,7 @@ const getLiveMatch = async () => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
+          out: "$outs",
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
@@ -1924,6 +1925,7 @@ const getLiveDataFromMongodb = async () => {
         datetime_utc: "$dateTimeUtc",
         time: true,
         goalServeMatchId: true,
+        out: "$outs",
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
