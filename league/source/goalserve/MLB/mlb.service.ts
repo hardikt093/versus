@@ -1260,7 +1260,6 @@ const mlbScoreWithDate = async (date1: string) => {
         status: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
-        matchedOdds:1,
         goalServeMatchId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
