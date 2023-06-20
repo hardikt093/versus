@@ -6138,6 +6138,7 @@ const liveBoxscoreMlb = async () => {
         inningNo: {
           $last: "$inningNo",
         },
+        goalServeMatchId:1,
         timer: "$timer",
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
