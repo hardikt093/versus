@@ -15,6 +15,7 @@ var playerSchema = new Schema(
     },
     height: { type: String },
     number: { type: String },
+    positionType:String,
     position: {
       type: String,
 

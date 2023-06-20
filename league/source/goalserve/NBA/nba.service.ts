@@ -3435,7 +3435,7 @@ const nbaSingleGameBoxScore = async (goalServeMatchId: string) => {
           homeTeam: "$topPlayerHomeTeam",
           awayTeam: "$topPlayerAwayTeam",
         },
-        playersStatistic: {
+        playerStatistics: {
           homeTeam: "$mergePlayersHomeTeam",
           awayTeam: "$mergePlayersAwayTeam",
         },
@@ -4285,6 +4285,7 @@ const nbaSingleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
         },
       },
     },
+    
     {
       $project: {
         id: 1,

@@ -86,32 +86,28 @@ router.get("/standings", mlbController.getBseballStandings);
 router.post(
   "/league",
   validate(mlbValidation.createLeague),
-  // auth,
   mlbController.createLeague
 );
-
 router.post("/player", mlbController.createPlayer);
-
-
 router.get(
   "/scoreWithCurrentDate",
-
   mlbController.scoreWithCurrentDate
 );
 router.post("/addMatchData", mlbController.addMatchData);
-router.post("/addInjuredPlayers", mlbController.addInjuredPlayers);
 router.post("/addMatchDataFuture", mlbController.addMatchDataFuture);
 router.get("/addstandings", mlbController.addStanding);
-router.post("/addPlayerStats", mlbController.statsPlayerPitching);
 router.post("/addTeamStats", mlbController.statsTeam);
 router.get(
   "/single-game-boxscore-final",
-
   mlbController.singleGameBoxScore
 );
 router.get(
   "/single-game-boxscore-upcomming",
-
   mlbController.singleGameBoxScoreUpcomming
 );
+router.get(
+  "/single-game-boxscore-live",
+  mlbController.mlbSingleGameBoxScoreLive
+);
+router.get("/get-team", mlbController.mlbGetTeam);
 export default router;

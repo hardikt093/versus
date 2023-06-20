@@ -107,22 +107,8 @@ const singleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-const addInjuredPlayers = async (req: Request, res: Response) => {
-  try {
-    const addInjuredPlayers = await goalserveService.addInjuryReport();
-    createResponse(res, httpStatus.OK, "", addInjuredPlayers);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-const statsPlayerPitching = async (req: Request, res: Response) => {
-  try {
-    const statsPlayerPitching = await goalserveService.statsPlayerPitching();
-    createResponse(res, httpStatus.OK, "", statsPlayerPitching);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
+
+ 
 const statsTeam = async (req: Request, res: Response) => {
   try {
     const teamStats = await goalserveService.teamStats();
@@ -132,6 +118,23 @@ const statsTeam = async (req: Request, res: Response) => {
   }
 };
 
+
+const mlbGetTeam = async (req: Request, res: Response) => {
+  try {
+    const mlbGetTeam = await goalserveService.mlbGetTeam(req.query.goalServeTeamId as string)
+    createResponse(res, httpStatus.OK, "", mlbGetTeam);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+const mlbSingleGameBoxScoreLive = async (req: Request, res: Response) => {
+  try {
+    const mlbSingleGanbaGetTeammeBoxScoreLive = await goalserveService.mlbSingleGameBoxScoreLive(req.query.goalServeMatchId as string)
+    createResponse(res, httpStatus.OK, "", mlbSingleGanbaGetTeammeBoxScoreLive);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -144,7 +147,7 @@ export default {
   singleGameBoxScore,
   getBseballStandings,
   singleGameBoxScoreUpcomming,
-  addInjuredPlayers,
-  statsPlayerPitching,
   statsTeam,
+  mlbGetTeam,
+  mlbSingleGameBoxScoreLive
 };

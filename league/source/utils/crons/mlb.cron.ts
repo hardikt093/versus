@@ -1,4 +1,5 @@
 import cron from "node-cron";
+import moment from "moment";
 import mlbService from "../../goalserve/MLB/mlb.service";
 
 let isgetUpcomingMatchRunning: boolean = false;
@@ -52,25 +53,26 @@ const getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 
-// let isgetLiveMatchRunning: boolean = false;
-// const getLiveMatch = cron.schedule("*/10 * * * * *", async () => {
-//     if (isgetLiveMatchRunning) {
-//         console.log("getLiveMatch Skip");
-//         return;
-//     }
-//     isgetLiveMatchRunning = true;
-//     try {
-//         console.info("inside score cron getLiveMatch");
-//         await mlbService.getLiveMatch();
-//     } catch (error) {
-//         console.log(error);
-//     } finally {
-//         isgetLiveMatchRunning = false;
-//     }
-// });
+let isliveBoxscoreMlbRunning: boolean = false;
+const liveBoxscoreMlb = cron.schedule("*/10 * * * * *", async () => {
+    if (isliveBoxscoreMlbRunning) {
+        console.log("liveBoxscoreMlb Skip");
+        return;
+    }
+    isliveBoxscoreMlbRunning = true;
+    try {
+        console.info("inside score cron liveBoxscoreMlb");
+        await mlbService.liveBoxscoreMlb();
+    } catch (error) {
+        console.log(error);
+    } finally {
+        isliveBoxscoreMlbRunning = false;
+    }
+});
 
 export default {
   getLiveMatch,
   getUpcomingMatch,
   getFinalMatch,
+  liveBoxscoreMlb
 };

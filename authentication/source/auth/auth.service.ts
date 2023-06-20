@@ -156,7 +156,7 @@ const signUp = async (data: ICreateUser) => {
           phone: data.phone,
           userName: data.userName,
           socialLogin: data.socialLogin,
-          birthDate: data.birthDate,
+          birthDate: data?.birthDate ? data?.birthDate : new Date(),
           profileImage: data.profileImage ? data.profileImage : "",
           googleAccessToken: data.googleAccessToken
             ? data.googleAccessToken
