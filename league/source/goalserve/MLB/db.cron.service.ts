@@ -415,7 +415,7 @@ export default class MlbDbCronServiceClass {
       data,
       "baseball/mlb_standings"
     );
-
+  
     const league: ILeagueModel | undefined | null = await League.findOne({
       goalServeLeagueId: getstanding?.data?.standings?.category?.id,
     });
@@ -431,13 +431,13 @@ export default class MlbDbCronServiceClass {
             goalServeLeagueId: getstanding?.data?.standings?.category?.id,
             division: div?.name,
             away_record: team?.away_record,
-            current_streak: team?.away_record,
-            games_back: team?.away_record,
+            current_streak: team?.current_streak,
+            games_back: team?.games_back,
             home_record: team.home_record,
             teamId: teamId?.id,
             goalServeTeamId: teamId?.goalServeTeamId,
             pct: +(
-              (Number(team.won) * 100) /
+              Number(team.won) /
               (Number(team.won) + Number(team.lost))
             ).toFixed(3),
             lost: team.lost,
@@ -448,7 +448,7 @@ export default class MlbDbCronServiceClass {
             runs_scored: team.runs_scored,
             won: team.won,
           };
-
+  
           await Standings.findOneAndUpdate(
             { goalServeTeamId: data.goalServeTeamId },
             { $set: data },

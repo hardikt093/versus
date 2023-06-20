@@ -3963,7 +3963,7 @@ const updateStandingRecord = async () => {
           teamId: teamId?.id,
           goalServeTeamId: teamId?.goalServeTeamId,
           pct: +(
-            (Number(team.won) * 100) /
+            Number(team.won) /
             (Number(team.won) + Number(team.lost))
           ).toFixed(3),
           lost: team.lost,
@@ -6023,16 +6023,16 @@ const liveBoxscoreMlb = async () => {
             $cond: [
               { $eq: ["$startingPitchers.awayteam.player.id", ""] },
               null,
-              { $toInt: "$startingPitchers.awayteam.player.id" }
-            ]
+              { $toInt: "$startingPitchers.awayteam.player.id" },
+            ],
           },
           homeTeamStartingPictcherId: {
             $cond: [
               { $eq: ["$startingPitchers.hometeam.player.id", ""] },
               null,
-              { $toInt: "$startingPitchers.hometeam.player.id" }
-            ]
-          }
+              { $toInt: "$startingPitchers.hometeam.player.id" },
+            ],
+          },
         },
         pipeline: [
           {
@@ -6138,7 +6138,7 @@ const liveBoxscoreMlb = async () => {
         inningNo: {
           $last: "$inningNo",
         },
-        goalServeMatchId:1,
+        goalServeMatchId: 1,
         timer: "$timer",
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
