@@ -235,13 +235,6 @@ const getUpcomingMatch = async () => {
         },
       },
       {
-        $addFields: {
-          odds: {
-            $arrayElemAt: ["$odds", 0],
-          },
-        },
-      },
-      {
         $project: {
           id: true,
           date: true,
@@ -4612,6 +4605,51 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
             },
           },
           {
+            $lookup: {
+              from: "matches",
+              let: {
+                goalServeTeamId: "$goalServeTeamId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $or: [
+                            {
+                              $eq: [
+                                "$goalServeAwayTeamId",
+                                "$$goalServeTeamId",
+                              ],
+                            },
+                            {
+                              $eq: [
+                                "$goalServeHomeTeamId",
+                                "$$goalServeTeamId",
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          $eq: ["$status", "Final"],
+                        },
+                      ],
+                    },
+                  },
+                },
+                {
+                  $sort: { dateUtc: -1 },
+                },
+                {
+                  $limit: 10,
+                },
+              ],
+              as: "lastMatches",
+            },
+          },
+
+          {
             $project: {
               name: true,
               won: true,
@@ -4619,6 +4657,8 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               games_back: true,
               away_record: true,
               home_record: true,
+              goalServeTeamId: true,
+              lastMatches: true,
               streak: "$current_streak",
               teamImage: { $arrayElemAt: ["$teamImage.image", 0] },
             },
@@ -5359,6 +5399,36 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
     },
   ]);
   let standingData = await getStandingData();
+  getTeam[0].teamDetails.divisionStandings.map((item: any) => {
+    let wins = 0;
+    let losses = 0;
+    for (const match of item.lastMatches) {
+      if (match.goalServeAwayTeamId === Number(item.goalServeTeamId)) {
+        if (
+          Number(match.awayTeamTotalScore) > Number(match.homeTeamTotalScore)
+        ) {
+          wins++;
+        } else if (
+          Number(match.awayTeamTotalScore) < Number(match.homeTeamTotalScore)
+        ) {
+          losses++;
+        }
+      } else if (match.goalServeHomeTeamId === Number(item.goalServeTeamId)) {
+        if (
+          Number(match.homeTeamTotalScore) > Number(match.awayTeamTotalScore)
+        ) {
+          wins++;
+        } else if (
+          Number(match.homeTeamTotalScore) < Number(match.awayTeamTotalScore)
+        ) {
+          losses++;
+        }
+      }
+    }
+    item.lastTen = `${wins}-${losses}`;
+
+    delete item.lastMatches;
+  });
   getTeam[0].teamStandings = standingData;
   return getTeam[0];
 };
