@@ -864,6 +864,7 @@ const getLiveMatch = async () => {
           },
           awayTeam: {
             awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            abbreviation: { $arrayElemAt: ["$teams.awayTeam.abbreviation", 0] },
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
             },
@@ -876,6 +877,7 @@ const getLiveMatch = async () => {
           },
           homeTeam: {
             homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            abbreviation: { $arrayElemAt: ["$teams.homeTeam.abbreviation", 0] },
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
             },
@@ -1055,6 +1057,7 @@ const mlbScoreWithDate = async (date1: string) => {
         time: true,
         goalServeMatchId: true,
         awayTeam: {
+          abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
@@ -1078,6 +1081,7 @@ const mlbScoreWithDate = async (date1: string) => {
           },
         },
         homeTeam: {
+          abbreviation: "$homeTeam.abbreviation",
           homeTeamName: "$homeTeam.name",
           goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamId: "$homeTeam._id",
@@ -1270,6 +1274,7 @@ const mlbScoreWithDate = async (date1: string) => {
         time: true,
         goalServeMatchId: true,
         awayTeam: {
+          abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
@@ -1299,6 +1304,7 @@ const mlbScoreWithDate = async (date1: string) => {
           total: "$odds.awayTeamTotal",
         },
         homeTeam: {
+          abbreviation: "$homeTeam.abbreviation",
           homeTeamName: "$homeTeam.name",
           goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamId: "$homeTeam._id",
@@ -1637,6 +1643,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
+          abbreviation: "$awayTeam.abbreviation",
           goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
           awayTeamRun: "$awayTeamTotalScore",
           awayTeamHit: "$awayTeamHit",
@@ -1663,6 +1670,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
           homeTeamId: "$homeTeam._id",
           homeTeamRun: "$homeTeamTotalScore",
           homeTeamHit: "$homeTeamHit",
+          abbreviation: "$homeTeam.abbreviation",
           homeTeamErrors: "$homeTeamError",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
@@ -1848,6 +1856,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
         time: true,
         goalServeMatchId: true,
         awayTeam: {
+          abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           awayTeamRun: "$awayTeamTotalScore",
@@ -1868,6 +1877,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
           total: "$odds.awayTeamTotal",
         },
         homeTeam: {
+          abbreviation: "$homeTeam.abbreviation",
           homeTeamName: "$homeTeam.name",
           goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamId: "$homeTeam._id",
@@ -2065,6 +2075,7 @@ const getLiveDataFromMongodb = async () => {
           goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
           awayTeamRun: "$awayTeamTotalScore",
           awayTeamHit: "$awayTeamHit",
+          abbreviation: "$awayTeam.abbreviation",
           awayTeamErrors: "$awayTeamError",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
@@ -2094,6 +2105,7 @@ const getLiveDataFromMongodb = async () => {
           homeTeamId: "$homeTeam._id",
           homeTeamRun: "$homeTeamTotalScore",
           homeTeamHit: "$homeTeamHit",
+          abbreviation: "$homeTeam.abbreviation",
           homeTeamErrors: "$homeTeamError",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
@@ -2530,6 +2542,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
         },
         awayTeam: {
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+          abbreviation: { $arrayElemAt: ["$teams.awayTeam.abbreviation", 0] },
           awayTeamId: "$awayTeam._id",
           awayTeamRun: "$awayTeamTotalScore",
           awayTeamHit: "$awayTeamHit",
@@ -2554,6 +2567,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           },
         },
         homeTeam: {
+          abbreviation: { $arrayElemAt: ["$teams.homeTeam.abbreviation", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           homeTeamId: "$homeTeam._id",
           homeTeamRun: "$homeTeamTotalScore",
