@@ -708,14 +708,23 @@ export default class MlbDbCronServiceClass {
               goalServeMatchId: matchData[i]?.match[j]?.id,
               goalServeHomeTeamId: matchData[i]?.match[j]?.hometeam?.id,
               goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
-              homeTeamSpread: homeTeamSpread,
-              homeTeamTotal: totalValues,
-              awayTeamSpread: awayTeamSpread,
-              awayTeamTotal: totalValues,
-              awayTeamMoneyline: awayTeamMoneyline,
-              homeTeamMoneyline: homeTeamMoneyline,
-              status: matchData[i]?.match[j]?.status,
-            };
+              // homeTeamSpread: homeTeamSpread,
+              ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
+              ...(getHomeTeamRunLine?.us && { homeTeamSpreadUs: getHomeTeamRunLine?.us }),
+              // homeTeamTotal: totalValues,
+              ...(totalValues && { homeTeamTotal: totalValues }),
+              // awayTeamSpread: awayTeamSpread,
+              ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
+              ...(getAwayTeamRunLine?.us && { awayTeamSpreadUs: getAwayTeamRunLine?.us }),
+              // awayTeamTotal: totalValues,
+              ...(totalValues && { awayTeamTotal: totalValues }),
+              ...(awayTeamMoneyline && {
+                awayTeamMoneyline: awayTeamMoneyline,
+              }),
+              ...(homeTeamMoneyline && {
+                homeTeamMoneyline: homeTeamMoneyline,
+              }),
+            };;
             if (findOdd?.length == 0) {
               const oddsData = new Odd(data);
               const savedOddsData = await oddsData.save();
@@ -818,10 +827,12 @@ export default class MlbDbCronServiceClass {
               goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
               // homeTeamSpread: homeTeamSpread,
               ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
+              ...(getHomeTeamRunLine?.us && { homeTeamSpreadUs: getHomeTeamRunLine?.us }),
               // homeTeamTotal: totalValues,
               ...(totalValues && { homeTeamTotal: totalValues }),
               // awayTeamSpread: awayTeamSpread,
               ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
+              ...(getAwayTeamRunLine?.us && { awayTeamSpreadUs: getAwayTeamRunLine?.us }),
               // awayTeamTotal: totalValues,
               ...(totalValues && { awayTeamTotal: totalValues }),
               ...(awayTeamMoneyline && {
