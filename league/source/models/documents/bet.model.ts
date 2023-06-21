@@ -77,6 +77,15 @@ var betSchema = new Schema(
     isOpponentUserResultSatisfied: {
       type: Boolean,
     },
+    leagueType: {
+      type: String,
+      enum: [
+        "NHL",
+        "MLB",
+        "NBA",
+      ],
+      required : true
+    },
     status: {
       type: String,
       enum: [

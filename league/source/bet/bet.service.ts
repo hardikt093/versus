@@ -3,7 +3,13 @@ import Bet from "../models/documents/bet.model";
 import Match from "../models/documents/MLB/match.model";
 import Odd from "../models/documents/MLB/odd.model";
 import AppError from "../utils/AppError";
-import { ICreateBetRequest, IresponseBetRequest } from "./bet.interface";
+import {
+  ICreateBetRequest,
+  IlistBetCondition,
+  IlistBetRequestData,
+  IlistBetTypes,
+  IresponseBetRequest,
+} from "./bet.interface";
 import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
 
@@ -43,7 +49,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       { requestUserId: loggedInUserId },
       { opponentUserId: loggedInUserId },
     ],
-    goalServeMatchId: data.matchId,
+    goalServeMatchId: data.goalServeMatchId,
   }).lean();
 
   if (betFound) {
@@ -60,7 +66,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
   const matchData = await Match.findOne({
-    goalServeMatchId: data.matchId,
+    goalServeMatchId: data.goalServeMatchId,
   }).lean();
 
   if (!matchData) {
@@ -68,13 +74,13 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   }
 
   if (
-    matchData.goalServeHomeTeamId != data.requestUserTeamId &&
-    matchData.goalServeAwayTeamId != data.requestUserTeamId
+    matchData.goalServeHomeTeamId != data.requestUserGoalServeTeamId &&
+    matchData.goalServeAwayTeamId != data.requestUserGoalServeTeamId
   ) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.TEAM_NOT_FOUND_IN_MATCH);
   }
   const oddData = await Odd.findOne({
-    goalServeMatchId: data.matchId,
+    goalServeMatchId: data.goalServeMatchId,
   }).lean();
 
   if (!oddData) {
@@ -98,8 +104,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   }
 
   let preparedBetObject = {
-    goalServeMatchId: data.matchId,
+    goalServeMatchId: data.goalServeMatchId,
     requestUserId: loggedInUserId,
+    leagueType: data.leagueType,
     opponentUserId: data.opponentUserId,
     isRequestUserConfirmedBet: true,
     betAmount: data.amount,
@@ -117,10 +124,11 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
         : fairOddCalRes.favourite,
     opponentUserMoneylineOdds: oddData?.homeTeamMoneyline?.us,
   };
-  if (matchData.goalServeHomeTeamId === data.requestUserTeamId) {
+  if (matchData.goalServeHomeTeamId === data.requestUserGoalServeTeamId) {
     preparedBetObject.goalServeOpponentUserTeamId =
       matchData.goalServeAwayTeamId;
-    preparedBetObject.opponentUserMoneylineOdds = oddData?.awayTeamMoneyline?.us;
+    preparedBetObject.opponentUserMoneylineOdds =
+      oddData?.awayTeamMoneyline?.us;
     preparedBetObject.opponentUserFairOdds =
       parseInt(oddData?.awayTeamMoneyline?.us) > 0
         ? fairOddCalRes.underdog
@@ -546,6 +554,61 @@ const listBetsByStatus = async (loggedInUserId: number, status: string) => {
   }
   return data;
 };
+
+const listBetsByType = async (
+  loggedInUserId: number,
+  body: IlistBetRequestData
+) => {
+  let page = 1;
+  let limit = body.size ?? 10;
+  if (body.page) {
+    page = body.page;
+  }
+  let skip = limit * (page - 1);
+
+  let condition: IlistBetCondition = {
+    $or: [
+      { requestUserId: loggedInUserId },
+      { opponentUserId: loggedInUserId },
+    ],
+    isDeleted: false,
+  };
+  if (body.type === "OPEN") {
+    condition.status = "PENDING";
+  }
+  if (body.type === "ACTIVE") {
+    condition.status = "CONFIRMED";
+  }
+  if (body.type === "SETTLED") {
+    condition.status = "RESULT_DECLARED";
+  }
+  if (body.type === "WON") {
+    condition.status = "RESULT_DECLARED";
+  }
+  if (body.type === "LOST") {
+    condition.status = "RESULT_DECLARED";
+  }
+  const data = await Bet.aggregate([
+    {
+      $match: condition,
+    },
+    {
+      $sort: {
+        updatedAt: -1,
+      },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+  ]);
+  if (data && data.length == 0) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
+  }
+  return data;
+};
 export default {
   listBetsByStatus,
   resultBetVerified,
@@ -556,4 +619,5 @@ export default {
   createBet,
   updateBetRequest,
   declareResultMatch,
+  listBetsByType,
 };
