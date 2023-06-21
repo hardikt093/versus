@@ -853,7 +853,15 @@ const getLiveMatch = async () => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
-          out: "$outs",
+          outs: {
+            $cond: {
+              if: { $eq: ["$outs", ""] },
+              then: { $concat: ["0", " Out"] },
+              else: {
+                $concat: ["$outs", " Out"],
+              },
+            },
+          },
           awayTeam: {
             awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
             goalServeAwayTeamId: {
@@ -2042,7 +2050,15 @@ const getLiveDataFromMongodb = async () => {
         datetime_utc: "$dateTimeUtc",
         time: true,
         goalServeMatchId: true,
-        out: "$outs",
+        outs: {
+          $cond: {
+            if: { $ne: ["$outs", ""] },
+            then:  {$concat: ["$outs", " Out"]},
+            else: {
+              $concat: ["0", " Out"] 
+            },
+          },
+        },
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -2428,7 +2444,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
+        let: { matchId: "$goalServeMatchId" },
 
         pipeline: [
           {
@@ -2436,7 +2452,10 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               $expr: {
                 $and: [
                   { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "$$matchStatus"] },
+                  { $ne: ["$status", "Not Started"] },
+                  { $ne: ["$status", "Postponed"] },
+                  { $ne: ["$status", "Canceled"] },
+                  { $ne: ["$status", "Suspended"] },
                 ],
               },
             },
@@ -2771,8 +2790,8 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$odds.homeTeamSpread",
-          awayTeamSpread: "$odds.awayTeamSpread",
+          homeTeamSpreadObj: {homeTeamSpread:"$odds.homeTeamSpread",homeTeamSpreadUs:"$odds.homeTeamSpreadUs"},
+          awayTeamSpreadObj:{ awayTeamSpread:"$odds.awayTeamSpread",awayTeamSpreadUs:"$odds.awayTeamSpreadUs"},
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
         },
@@ -2791,8 +2810,8 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               "$outcome.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$outcome.homeTeamSpread",
-          awayTeamSpread: "$outcome.awayTeamSpread",
+          homeTeamSpreadObj: {homeTeamSpread:"$outcome.homeTeamSpread",homeTeamSpreadUs:"$outcome.homeTeamSpreadUs"},
+          awayTeamSpreadObj:{ awayTeamSpread:"$outcome.awayTeamSpread",awayTeamSpreadUs:"$outcome.awayTeamSpreadUs"},
           homeTeamTotal: "$outcome.homeTeamTotal",
           awayTeamTotal: "$outcome.awayTeamTotal",
           awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
@@ -3663,8 +3682,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$odds.homeTeamSpread",
-          awayTeamSpread: "$odds.awayTeamSpread",
+          homeTeamSpreadObj: {homeTeamSpread:"$odds.homeTeamSpread",homeTeamSpreadUs:"$odds.homeTeamSpreadUs"},
+          awayTeamSpreadObj:{ awayTeamSpread:"$odds.awayTeamSpread",awayTeamSpreadUs:"$odds.awayTeamSpreadUs"},
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
         },
@@ -5507,7 +5526,11 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               $expr: {
                 $and: [
                   { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "$$matchStatus"] },
+                  { $ne: ["$status", "Not Started"] },
+                  { $ne: ["$status", "Final"] },
+                  { $ne: ["$status", "Postponed"] },
+                  { $ne: ["$status", "Canceled"] },
+                  { $ne: ["$status", "Suspended"] },
                 ],
               },
             },
@@ -5897,8 +5920,8 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$odds.homeTeamSpread",
-          awayTeamSpread: "$odds.awayTeamSpread",
+          homeTeamSpreadObj: {homeTeamSpread:"$odds.homeTeamSpread",homeTeamSpreadUs:"$odds.homeTeamSpreadUs"},
+          awayTeamSpreadObj:{ awayTeamSpread:"$odds.awayTeamSpread",awayTeamSpreadUs:"$odds.awayTeamSpreadUs"},
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
         },
@@ -5907,18 +5930,18 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             $cond: [
               { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
               { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
-              "$odds.awayTeamMoneyline.us",
+              "$liveOdds.awayTeamMoneyline.us",
             ],
           },
           homeTeamMoneyLine: {
             $cond: [
               { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
               { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
-              "$odds.homeTeamMoneyline.us",
+              "$liveOdds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$liveOdds.homeTeamSpread",
-          awayTeamSpread: "$liveOdds.awayTeamSpread",
+          homeTeamSpreadObj: {homeTeamSpread:"$liveOdds.homeTeamSpread",homeTeamSpreadUs:"$liveOdds.homeTeamSpreadUs"},
+          awayTeamSpreadObj:{ awayTeamSpread:"$liveOdds.awayTeamSpread",awayTeamSpreadUs:"$liveOdds.awayTeamSpreadUs"},
           homeTeamTotal: "$liveOdds.homeTeamTotal",
           awayTeamTotal: "$liveOdds.awayTeamTotal",
         },
@@ -6338,7 +6361,7 @@ const liveBoxscoreMlb = async () => {
     {
       $lookup: {
         from: "odds",
-        let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
+        let: { matchId: "$goalServeMatchId" },
 
         pipeline: [
           {
@@ -6346,7 +6369,11 @@ const liveBoxscoreMlb = async () => {
               $expr: {
                 $and: [
                   { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "$$matchStatus"] },
+                  { $ne: ["$status", "Not Started"] },
+                  { $ne: ["$status", "Final"] },
+                  { $ne: ["$status", "Postponed"] },
+                  { $ne: ["$status", "Canceled"] },
+                  { $ne: ["$status", "Suspended"] },
                 ],
               },
             },
@@ -6729,13 +6756,13 @@ const liveBoxscoreMlb = async () => {
           },
           homeTeamMoneyLine: {
             $cond: [
-              { $gte: [{ $toDouble:"$odds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+","$odds.homeTeamMoneyline.us"] },
+              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$odds.homeTeamSpread",
-          awayTeamSpread: "$odds.awayTeamSpread",
+          homeTeamSpreadObj: {homeTeamSpread:"$odds.homeTeamSpread",homeTeamSpreadUs:"$odds.homeTeamSpreadUs"},
+          awayTeamSpreadObj:{ awayTeamSpread:"$odds.awayTeamSpread",awayTeamSpreadUs:"$odds.awayTeamSpreadUs"},
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
         },
@@ -6743,20 +6770,20 @@ const liveBoxscoreMlb = async () => {
         liveOdds: {
           awayTeamMoneyLine: {
             $cond: [
-              { $gte: [{ $toDouble:"$liveOdds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+","$liveOdds.awayTeamMoneyline.us"] },
+              { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
               "$liveOdds.awayTeamMoneyline.us",
             ],
           },
           homeTeamMoneyLine: {
             $cond: [
-              { $gte: [{ $toDouble:"$liveOdds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+","$liveOdds.homeTeamMoneyline.us"] },
+              { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
+              { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
               "$liveOdds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpread: "$liveOdds.homeTeamSpread",
-          awayTeamSpread: "$liveOdds.awayTeamSpread",
+          homeTeamSpreadObj: {homeTeamSpread:"$liveOdds.homeTeamSpread",homeTeamSpreadUs:"$liveOdds.homeTeamSpreadUs"},
+          awayTeamSpreadObj:{ awayTeamSpread:"$liveOdds.awayTeamSpread",awayTeamSpreadUs:"$liveOdds.awayTeamSpreadUs"},
           homeTeamTotal: "$liveOdds.homeTeamTotal",
           awayTeamTotal: "$liveOdds.awayTeamTotal",
         },
