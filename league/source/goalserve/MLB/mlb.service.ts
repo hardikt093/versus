@@ -3448,12 +3448,201 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
       },
     },
     {
+      $lookup: {
+        from: "players",
+        let: {
+          awayTeamStartingPictcherId: {
+            $toInt: "$startingPitchers.awayteam.player.id",
+          },
+          homeTeamStartingPictcherId: {
+            $toInt: "$startingPitchers.hometeam.player.id",
+          },
+        },
+        pipeline: [
+          {
+            $facet: {
+              awayTeam: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: [
+                        "$goalServePlayerId",
+                        "$$awayTeamStartingPictcherId",
+                      ],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    name: 1,
+                    goalServePlayerId: 1,
+                    pitching: 1,
+                  },
+                },
+              ],
+              homeTeam: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: [
+                        "$goalServePlayerId",
+                        "$$homeTeamStartingPictcherId",
+                      ],
+                    },
+                  },
+                },
+                {
+                  $project: {
+                    _id: 0,
+                    name: 1,
+                    goalServePlayerId: 1,
+                    pitching: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $project: {
+              awayTeam: {
+                $arrayElemAt: ["$awayTeam", 0],
+              },
+              homeTeam: {
+                $arrayElemAt: ["$homeTeam", 0],
+              },
+            },
+          },
+        ],
+        as: "startingPitchersPlayer",
+      },
+    },
+    {
       $project: {
         id: true,
         attendance: true,
         status: true,
         venueName: true,
-
+        startingPitcher: {
+          awayTeam: {
+            wins: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.wins",
+                0,
+              ],
+            },
+            losses: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.losses",
+                0,
+              ],
+            },
+            playerName: {
+              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
+            },
+            earned_run_average: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
+                0,
+              ],
+            },
+            walk_hits_per_inning_pitched: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.walk_hits_per_inning_pitched",
+                0,
+              ],
+            },
+            innings_pitched: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.innings_pitched",
+                0,
+              ],
+            },
+            hits: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.hits",
+                0,
+              ],
+            },
+            strikeouts: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.strikeouts",
+                0,
+              ],
+            },
+            walks: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.walks",
+                0,
+              ],
+            },
+            home_runs: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.home_runs",
+                0,
+              ],
+            },
+          },
+          homeTeam: {
+            wins: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.wins",
+                0,
+              ],
+            },
+            losses: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.losses",
+                0,
+              ],
+            },
+            playerName: {
+              $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
+            },
+            earned_run_average: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
+                0,
+              ],
+            },
+            walk_hits_per_inning_pitched: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.walk_hits_per_inning_pitched",
+                0,
+              ],
+            },
+            innings_pitched: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.innings_pitched",
+                0,
+              ],
+            },
+            hits: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.hits",
+                0,
+              ],
+            },
+            strikeouts: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.strikeouts",
+                0,
+              ],
+            },
+            walks: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.walks",
+                0,
+              ],
+            },
+            home_runs: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.home_runs",
+                0,
+              ],
+            },
+          },
+        },
         datetime_utc: "$dateTimeUtc",
         awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
         homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
