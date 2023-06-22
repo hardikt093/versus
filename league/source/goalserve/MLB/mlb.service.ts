@@ -5536,14 +5536,14 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
   ]);
   let standingData = await getStandingData();
 
-  getTeam[0].lastTen = findWinLoss(
+  getTeam[0].last_ten = findWinLoss(
     getTeam[0].lastMatches,
     goalServeTeamId
   );
 
   delete getTeam[0].lastMatches;
   getTeam[0].teamDetails.divisionStandings.map((item: any) => {
-    item.lastTen = findWinLoss(item.lastMatches, item.goalServeTeamId);
+    item.last_ten = findWinLoss(item.lastMatches, item.goalServeTeamId);
 
     delete item.lastMatches;
   });
@@ -5893,6 +5893,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
         inningNo: {
           $split: ["$status", " "],
         },
+        
         awayTeamTotalScoreInNumber: {
           $convert: {
             input: "$awayTeamTotalScore",
@@ -5972,7 +5973,6 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
         attendance: 1,
         venueName: 1,
         goalServeMatchId: 1,
-        status: { $concat: [{ $arrayElemAt: ["$inningNo", 1] }, " Inning"] },
         event: true,
         outs: {
           $cond: {
@@ -5983,9 +5983,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             },
           },
         },
-        inningNo: {
-          $last: "$inningNo",
-        },
+        inningNo: { $arrayElemAt: ["$inningNo", 1] },
         timer: "$timer",
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
@@ -6381,6 +6379,9 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
       },
     },
   ]);
+  const string =getMatch[0]?.inningNo;
+const number = parseInt(string?.replace(/\D/g, ""));
+getMatch[0].status=`Inning ${number}`
   return { getMatch: getMatch[0] };
 };
 
@@ -6831,7 +6832,6 @@ const liveBoxscoreMlb = async () => {
         attendance: 1,
         goalServeMatchId: 1,
         venueName: 1,
-        status: { $concat: [{ $arrayElemAt: ["$inningNo", 1] }, " Inning"] },
         event: true,
         outs: {
           $cond: {
@@ -6842,9 +6842,7 @@ const liveBoxscoreMlb = async () => {
             },
           },
         },
-        inningNo: {
-          $last: "$inningNo",
-        },
+        inningNo: { $arrayElemAt: ["$inningNo", 1] },
         timer: "$timer",
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
@@ -7240,6 +7238,9 @@ const liveBoxscoreMlb = async () => {
       },
     },
   ]);
+  const string =getMatch[0]?.inningNo;
+  const number = parseInt(string?.replace(/\D/g, ""));
+  getMatch[0].status=`Inning ${number}`
   await socket("mlbLiveBoxscore", {
     getMatch,
   });
