@@ -29,28 +29,37 @@ function camelize(str: string) {
 const getOdds = (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
-      return myArray[i];
+      if (isArray(myArray[i]?.bookmaker) == true) {
+        return myArray[i].bookmaker[0]
+      } else {
+        return myArray[i].bookmaker;
+      }
+
     }
   }
 };
 const getTotal = (nameKey: any, myArray: any) => {
   if (myArray?.length > 0) {
     for (let i = 0; i < myArray?.length; i++) {
-      if (myArray[i].value == nameKey) {
-        return myArray[i];
+      if (myArray[i]?.value == nameKey) {
+        if (isArray(myArray[i]?.bookmaker) == true) {
+          return myArray[i]?.bookmaker[0]
+        } else {
+          return myArray[i]?.bookmaker;
+        }
       }
     }
   }
 };
 
 const getTotalValues = async (total: any) => {
-  if (total?.bookmaker) {
-    if (isArray(total?.bookmaker?.total)) {
-      return total?.bookmaker?.total[0]?.name
-        ? total?.bookmaker?.total[0]?.name
+  if (total) {
+    if (isArray(total?.total)) {
+      return total?.total[0]?.name
+        ? total?.total[0]?.name
         : "";
     } else {
-      return total?.bookmaker?.total?.name ? total?.bookmaker?.total?.name : "";
+      return total?.total?.name ? total?.total?.name : "";
     }
   } else {
     return "";
@@ -692,7 +701,7 @@ export default class MlbDbCronServiceClass {
     let year = moment().format("YYYY");
     let date = `${day}.${month}.${year}`;
     try {
-      let data = { json: true, showodds: "1", bm: "451," };
+      let data = { json: true, showodds: "1", bm: "451,455," };
       const getScore = await goalserveApi(
         "https://www.goalserve.com/getfeed",
         data,
@@ -714,12 +723,12 @@ export default class MlbDbCronServiceClass {
               matchData[i]?.match[j]?.odds?.type
             );
             const awayTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
+              ? getMoneyLine?.odd?.find(
                   (item: any) => item?.name === "2"
                 )
               : {};
             const homeTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
+              ? getMoneyLine?.odd?.find(
                   (item: any) => item?.name === "1"
                 )
               : {};
@@ -730,11 +739,11 @@ export default class MlbDbCronServiceClass {
             );
             const getAwayTeamRunLine = await getRunLine(
               matchData[i]?.match[j]?.awayteam?.name,
-              getSpread?.bookmaker?.odd
+              getSpread?.odd
             );
             const getHomeTeamRunLine = await getRunLine(
               matchData[i]?.match[j]?.hometeam?.name,
-              getSpread?.bookmaker?.odd
+              getSpread?.odd
             );
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
@@ -769,7 +778,7 @@ export default class MlbDbCronServiceClass {
               ...(homeTeamMoneyline && {
                 homeTeamMoneyline: homeTeamMoneyline,
               }),
-            };;
+            };
             if (findOdd?.length == 0) {
               const oddsData = new Odd(data);
               const savedOddsData = await oddsData.save();
@@ -787,7 +796,7 @@ export default class MlbDbCronServiceClass {
       .subtract(12, "hours")
       .utc()
       .toISOString();
-    let addDate = moment().add(24, "hours").utc().toISOString();
+    let addDate = moment().add(48, "hours").utc().toISOString();
     let day1 = moment(subDate).format("D");
     let month1 = moment(subDate).format("MM");
     let year1 = moment(subDate).format("YYYY");
@@ -801,10 +810,10 @@ export default class MlbDbCronServiceClass {
     try {
       let data = {
         json: true,
-        date1: date1,
-        date2: date2,
+        // date1: date1,
+        // date2: date2,
         showodds: "1",
-        bm: "451,",
+        bm: "455,451",
       };
       const getScore = await goalserveApi(
         "https://www.goalserve.com/getfeed",
@@ -831,12 +840,12 @@ export default class MlbDbCronServiceClass {
               matchData[i]?.match[j]?.odds?.type
             );
             const awayTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
+              ? getMoneyLine?.odd?.find(
                   (item: any) => item?.name === "2"
                 )
               : undefined;
             const homeTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.bookmaker?.odd?.find(
+              ? getMoneyLine?.odd?.find(
                   (item: any) => item?.name === "1"
                 )
               : undefined;
@@ -847,11 +856,11 @@ export default class MlbDbCronServiceClass {
             );
             const getAwayTeamRunLine = await getRunLine(
               matchData[i]?.match[j]?.awayteam?.name,
-              getSpread?.bookmaker?.odd
+              getSpread?.odd
             );
             const getHomeTeamRunLine = await getRunLine(
               matchData[i]?.match[j]?.hometeam?.name,
-              getSpread?.bookmaker?.odd
+              getSpread?.odd
             );
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
