@@ -2380,11 +2380,9 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               hits: "$$item.hits",
               holds: "$$item.holds",
               home_runs: "$$item.home_runs",
-
               innings_pitched: "$$item.innings_pitched",
               loss: "$$item.loss",
               name: "$$item.name",
-
               runs: "$$item.runs",
               saves: "$$item.saves",
               strikeouts: "$$item.strikeouts",
@@ -2394,10 +2392,6 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
             },
           },
         },
-      },
-    },
-    {
-      $addFields: {
         homeTeamPitchers: {
           $map: {
             input: "$homeTeamPitchers",
@@ -2423,8 +2417,226 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
             },
           },
         },
+        pitchingResult: {
+          win: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: {
+                        $ne: ["$$pitcher.win", ""],
+                      },
+                    },
+                  },
+
+                  [],
+                ],
+              },
+              then: {
+                team: "awayteam",
+                win: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$awayTeamPitchers",
+                        as: "pitcher",
+                        cond: {
+                          $ne: ["$$pitcher.win", ""],
+                        },
+                      },
+                    },
+
+                    0,
+                  ],
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $ne: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: {
+                            $ne: ["$$pitcher.win", ""],
+                          },
+                        },
+                      },
+                      [],
+                    ],
+                  },
+                  then: {
+                    team: "hometeam",
+                    win: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$homeTeamPitchers",
+                            as: "pitcher",
+                            cond: {
+                              $ne: ["$$pitcher.win", ""],
+                            },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  else: null,
+                },
+              },
+            },
+          },
+          loss: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: {
+                        $ne: ["$$pitcher.loss", ""],
+                      },
+                    },
+                  },
+                  [],
+                ],
+              },
+              then: {
+                team: "awayteam",
+                loss: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$awayTeamPitchers",
+                        as: "pitcher",
+                        cond: {
+                          $ne: ["$$pitcher.loss", ""],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $ne: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: {
+                            $ne: ["$$pitcher.loss", ""],
+                          },
+                        },
+                      },
+                      [],
+                    ],
+                  },
+                  then: {
+                    team: "hometeam",
+                    loss: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$homeTeamPitchers",
+                            as: "pitcher",
+                            cond: {
+                              $ne: ["$$pitcher.loss", ""],
+                            },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  else: null,
+                },
+              },
+            },
+          },
+          saves: {
+            $cond: {
+              if: {
+                $ne: [
+                  {
+                    $filter: {
+                      input: "$awayTeamPitchers",
+                      as: "pitcher",
+                      cond: {
+                        $ne: ["$$pitcher.saves", ""],
+                      },
+                    },
+                  },
+                  [],
+                ],
+              },
+              then: {
+                team: "awayteam",
+                saves: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$awayTeamPitchers",
+                        as: "pitcher",
+                        cond: {
+                          $ne: ["$$pitcher.saves", ""],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $ne: [
+                      {
+                        $filter: {
+                          input: "$homeTeamPitchers",
+                          as: "pitcher",
+                          cond: {
+                            $ne: ["$$pitcher.saves", ""],
+                          },
+                        },
+                      },
+                      [],
+                    ],
+                  },
+                  then: {
+                    team: "hometeam",
+                    saves: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$homeTeamPitchers",
+                            as: "pitcher",
+                            cond: {
+                              $ne: ["$$pitcher.saves", ""],
+                            },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                  else: null,
+                },
+              },
+            },
+          },
+        },
       },
     },
+
     {
       $lookup: {
         from: "odds",
@@ -2534,6 +2746,45 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           awayTeam: "$awayTeamPitchers",
           homeTeam: "$homeTeamPitchers",
         },
+
+        battingPlayerStatistics: {
+          awayTeam: {
+            $map: {
+              input: "$awayTeamHitters",
+              as: "item",
+              in: {
+                home_runs: "$$item.home_runs",
+                average: "$$item.average",
+                runs: "$$item.runs",
+                goalServePlayerId: "$$item.id",
+                playerName: "$$item.name",
+                hits: "$$item.hits",
+                strikeouts: "$$item.strikeouts",
+                walks: "$$item.walks",
+                at_bats: "$$item.at_bats",
+                runs_batted_in: "$$item.runs_batted_in",
+              },
+            },
+          },
+          homeTeam: {
+            $map: {
+              input: "$homeTeamHitters",
+              as: "item",
+              in: {
+                home_runs: "$$item.home_runs",
+                average: "$$item.average",
+                runs: "$$item.runs",
+                goalServePlayerId: "$$item.id",
+                playerName: "$$item.name",
+                hits: "$$item.hits",
+                strikeouts: "$$item.strikeouts",
+                walks: "$$item.walks",
+                at_bats: "$$item.at_bats",
+                runs_batted_in: "$$item.runs_batted_in",
+              },
+            },
+          },
+        },
         awayTeam: {
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           abbreviation: { $arrayElemAt: ["$teams.awayTeam.abbreviation", 0] },
@@ -2586,203 +2837,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
             },
           },
         },
-        pitchingResult: {
-          win: {
-            $cond: {
-              if: {
-                $ne: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.win", ""],
-                      },
-                    },
-                  },
-                  [],
-                ],
-              },
-              then: {
-                $arrayElemAt: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.win", ""],
-                      },
-                    },
-                  },
-                  0,
-                ],
-              },
-              else: {
-                $cond: {
-                  if: {
-                    $ne: [
-                      {
-                        $filter: {
-                          input: "$homeTeamPitchers",
-                          as: "pitcher",
-                          cond: {
-                            $ne: ["$$pitcher.win", ""],
-                          },
-                        },
-                      },
-                      [],
-                    ],
-                  },
-                  then: {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: "$homeTeamPitchers",
-                          as: "pitcher",
-                          cond: {
-                            $ne: ["$$pitcher.win", ""],
-                          },
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                  else: null,
-                },
-              },
-            },
-          },
-          loss: {
-            $cond: {
-              if: {
-                $ne: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.loss", ""],
-                      },
-                    },
-                  },
-                  [],
-                ],
-              },
-              then: {
-                $arrayElemAt: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.loss", ""],
-                      },
-                    },
-                  },
-                  0,
-                ],
-              },
-              else: {
-                $cond: {
-                  if: {
-                    $ne: [
-                      {
-                        $filter: {
-                          input: "$homeTeamPitchers",
-                          as: "pitcher",
-                          cond: {
-                            $ne: ["$$pitcher.loss", ""],
-                          },
-                        },
-                      },
-                      [],
-                    ],
-                  },
-                  then: {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: "$homeTeamPitchers",
-                          as: "pitcher",
-                          cond: {
-                            $ne: ["$$pitcher.loss", ""],
-                          },
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                  else: null,
-                },
-              },
-            },
-          },
-          saves: {
-            $cond: {
-              if: {
-                $ne: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.saves", ""],
-                      },
-                    },
-                  },
-                  [],
-                ],
-              },
-              then: {
-                $arrayElemAt: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.saves", ""],
-                      },
-                    },
-                  },
-                  0,
-                ],
-              },
-              else: {
-                $cond: {
-                  if: {
-                    $ne: [
-                      {
-                        $filter: {
-                          input: "$homeTeamPitchers",
-                          as: "pitcher",
-                          cond: {
-                            $ne: ["$$pitcher.saves", ""],
-                          },
-                        },
-                      },
-                      [],
-                    ],
-                  },
-                  then: {
-                    $arrayElemAt: [
-                      {
-                        $filter: {
-                          input: "$homeTeamPitchers",
-                          as: "pitcher",
-                          cond: {
-                            $ne: ["$$pitcher.saves", ""],
-                          },
-                        },
-                      },
-                      0,
-                    ],
-                  },
-                  else: null,
-                },
-              },
-            },
-          },
-        },
+        pitchingResult: 1,
         scoring: {
           awayTeam: {
             hit: "$awayTeamHit",
@@ -3435,7 +3490,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        let: { matchId: "$goalServeMatchId" , matchStatus:"$status"},
+        let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
 
         pipeline: [
           {
@@ -3827,7 +3882,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           },
         ],
 
-        playerStatistics: {
+        battingPlayerStatistics: {
           awayTeam: {
             $map: {
               input: {
@@ -3853,6 +3908,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                     runs: "$$player.batting.runs",
                     runs_batted_in: "$$player.batting.runs_batted_in",
                     walks: "$$player.batting.walks",
+                    home_runs: "$$player.batting.home_runs",
+                    batting_avg: "$$player.batting.batting_avg",
                   },
                 ],
               },
@@ -3882,6 +3939,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                     runs: "$$player.batting.runs",
                     runs_batted_in: "$$player.batting.runs_batted_in",
                     walks: "$$player.batting.walks",
+                    home_runs: "$$player.batting.home_runs",
+                    batting_avg: "$$player.batting.batting_avg",
                   },
                 ],
               },
@@ -4574,6 +4633,31 @@ const updatePlayerStats = async () => {
   );
 };
 
+function findWinLoss(arr: any, goalServeTeamId: string) {
+  let teamWins = 0;
+  let teamLost = 0;
+  for (const match of arr) {
+    if (match.goalServeAwayTeamId === Number(goalServeTeamId)) {
+      if (Number(match.awayTeamTotalScore) > Number(match.homeTeamTotalScore)) {
+        teamWins++;
+      } else if (
+        Number(match.awayTeamTotalScore) < Number(match.homeTeamTotalScore)
+      ) {
+        teamLost++;
+      }
+    } else if (match.goalServeHomeTeamId === Number(goalServeTeamId)) {
+      if (Number(match.homeTeamTotalScore) > Number(match.awayTeamTotalScore)) {
+        teamWins++;
+      } else if (
+        Number(match.homeTeamTotalScore) < Number(match.awayTeamTotalScore)
+      ) {
+        teamLost++;
+      }
+    }
+  }
+
+  return `${teamWins}-${teamLost}`;
+}
 const mlbGetTeam = async (goalServeTeamId: string) => {
   const getTeam = await Standings.aggregate([
     {
@@ -4593,6 +4677,44 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
       $unwind: {
         path: "$images",
         preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "matches",
+        let: {
+          goalServeTeamId: "$goalServeTeamId",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $or: [
+                      {
+                        $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"],
+                      },
+                      {
+                        $eq: ["$goalServeHomeTeamId", "$$goalServeTeamId"],
+                      },
+                    ],
+                  },
+                  {
+                    $eq: ["$status", "Final"],
+                  },
+                ],
+              },
+            },
+          },
+          {
+            $sort: { dateUtc: -1 },
+          },
+          {
+            $limit: 10,
+          },
+        ],
+        as: "lastMatches",
       },
     },
     {
@@ -5137,6 +5259,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
         goalServeTeamId: true,
         teamImage: "$images.image",
         name: true,
+        lastMatches: true,
         streak: "$current_streak",
         division: true,
         position: true,
@@ -5412,33 +5535,15 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
     },
   ]);
   let standingData = await getStandingData();
+
+  getTeam[0].lastTen = findWinLoss(
+    getTeam[0].lastMatches,
+    goalServeTeamId
+  );
+
+  delete getTeam[0].lastMatches;
   getTeam[0].teamDetails.divisionStandings.map((item: any) => {
-    let wins = 0;
-    let losses = 0;
-    for (const match of item.lastMatches) {
-      if (match.goalServeAwayTeamId === Number(item.goalServeTeamId)) {
-        if (
-          Number(match.awayTeamTotalScore) > Number(match.homeTeamTotalScore)
-        ) {
-          wins++;
-        } else if (
-          Number(match.awayTeamTotalScore) < Number(match.homeTeamTotalScore)
-        ) {
-          losses++;
-        }
-      } else if (match.goalServeHomeTeamId === Number(item.goalServeTeamId)) {
-        if (
-          Number(match.homeTeamTotalScore) > Number(match.awayTeamTotalScore)
-        ) {
-          wins++;
-        } else if (
-          Number(match.homeTeamTotalScore) < Number(match.awayTeamTotalScore)
-        ) {
-          losses++;
-        }
-      }
-    }
-    item.lastTen = `${wins}-${losses}`;
+    item.lastTen = findWinLoss(item.lastMatches, item.goalServeTeamId);
 
     delete item.lastMatches;
   });
