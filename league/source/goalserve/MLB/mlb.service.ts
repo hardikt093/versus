@@ -2499,6 +2499,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
         },
       },
     },
+    
     {
       $project: {
         id: true,
@@ -2780,6 +2781,18 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                 },
               },
             },
+          },
+        },
+        scoring: {
+          awayTeam: {
+            hit: "$awayTeamHit",
+            runs: "$awayTeamTotalScore",
+            error: "$awayTeamError",
+          },
+          homeTeam: {
+            hit: "$homeTeamHit",
+            runs: "$homeTeamTotalScore",
+            error: "$homeTeamError",
           },
         },
         closingOddsAndOutcome: {
@@ -5649,6 +5662,8 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 {
                   $project: {
                     _id: 0,
+                    walks:1,
+                    strikeouts:1,
                     home_runs: 1,
                     runs_batted_in: 1,
                     slugging_percentage: 1,
@@ -5670,10 +5685,14 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 {
                   $project: {
                     _id: 0,
+                    walks:1,
+                    strikeouts:1,
                     home_runs: 1,
                     runs_batted_in: 1,
-
-                    steals: 1,
+                    slugging_percentage: 1,
+                    on_base_percentage: 1,
+                    runs: 1,
+                    batting_avg: 1,
                     hits: 1,
                   },
                 },
@@ -5874,6 +5893,10 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
         },
         homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
         awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+        innings: {
+          awayTeam: "$awayTeamInnings",
+          homeTeam: "$homeTeamInnings",
+        },
         awayTeam: {
           awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
 
@@ -5927,6 +5950,12 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
         },
         teamStatistic: {
           homeTeam: {
+            walks: {
+              $arrayElemAt: ["$statsTeams.homeTeam.walks", 0],
+            },
+            strikeouts: {
+              $arrayElemAt: ["$statsTeams.homeTeam.strikeouts", 0],
+            },
             batting_avg: {
               $arrayElemAt: ["$statsTeams.homeTeam.batting_avg", 0],
             },
@@ -5968,6 +5997,12 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             },
           },
           awayTeam: {
+            walks: {
+              $arrayElemAt: ["$statsTeams.awayTeam.walks", 0],
+            },
+            strikeouts: {
+              $arrayElemAt: ["$statsTeams.awayTeam.strikeouts", 0],
+            },
             batting_avg: {
               $arrayElemAt: ["$statsTeams.awayTeam.batting_avg", 0],
             },
@@ -6505,6 +6540,8 @@ const liveBoxscoreMlb = async () => {
                 {
                   $project: {
                     _id: 0,
+                    walks:1,
+                    strikeouts:1,
                     home_runs: 1,
                     runs_batted_in: 1,
                     slugging_percentage: 1,
@@ -6526,10 +6563,14 @@ const liveBoxscoreMlb = async () => {
                 {
                   $project: {
                     _id: 0,
+                    walks:1,
+                    strikeouts:1,
                     home_runs: 1,
                     runs_batted_in: 1,
-
-                    steals: 1,
+                    slugging_percentage: 1,
+                    on_base_percentage: 1,
+                    runs: 1,
+                    batting_avg: 1,
                     hits: 1,
                   },
                 },
@@ -6734,6 +6775,10 @@ const liveBoxscoreMlb = async () => {
         awayTeamAbbreviation: {
           $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
         },
+        innings: {
+          awayTeam: "$awayTeamInnings",
+          homeTeam: "$homeTeamInnings",
+        },
         homeTeamAbbreviation: {
           $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
         },
@@ -6792,6 +6837,12 @@ const liveBoxscoreMlb = async () => {
         },
         teamStatistic: {
           homeTeam: {
+            walks: {
+              $arrayElemAt: ["$statsTeams.homeTeam.walks", 0],
+            },
+            strikeouts: {
+              $arrayElemAt: ["$statsTeams.homeTeam.strikeouts", 0],
+            },
             batting_avg: {
               $arrayElemAt: ["$statsTeams.homeTeam.batting_avg", 0],
             },
@@ -6833,20 +6884,11 @@ const liveBoxscoreMlb = async () => {
             },
           },
           awayTeam: {
-            wins: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.wins",
-                0,
-              ],
+            walks: {
+              $arrayElemAt: ["$statsTeams.awayTeam.walks", 0],
             },
-            losses: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.losses",
-                0,
-              ],
-            },
-            playerName: {
-              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
+            strikeouts: {
+              $arrayElemAt: ["$statsTeams.awayTeam.strikeouts", 0],
             },
             batting_avg: {
               $arrayElemAt: ["$statsTeams.awayTeam.batting_avg", 0],

@@ -475,6 +475,7 @@ export default class MlbDbCronServiceClass {
         data.category = teamStatsNl.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
+        data.battingRank=teamStatsNl?.data.statistic.category.rank;
         await StatsTeam.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
@@ -496,6 +497,50 @@ export default class MlbDbCronServiceClass {
         data.category = teamStatsAL.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
+        data.battingRank=teamStatsAL?.data.statistic.category.rank;
+        await StatsTeam.findOneAndUpdate(
+          { goalServeTeamId: data.goalServeTeamId },
+          { $set: data },
+          { new: true, upsert: true }
+        );
+      })
+    );
+    const teamStatsNlPitching = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      "baseball/nl_team_pitching"
+    );
+
+    await Promise.all(
+      teamStatsNlPitching.data.statistic.category.team.map(async (item: any) => {
+        const team = await Team.findOne({ name: item.name });
+        let data = item;
+        data.category = teamStatsNlPitching.data.statistic.category.name;
+        data.teamId = team?.id;
+        data.goalServeTeamId = team?.goalServeTeamId;
+        data.pitchingRank=teamStatsNlPitching?.data.statistic.category.rank;
+        await StatsTeam.findOneAndUpdate(
+          { goalServeTeamId: data.goalServeTeamId },
+          { $set: data },
+          { new: true, upsert: true }
+        );
+      })
+    );
+
+    const teamStatsALPitching = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      "baseball/al_team_pitching"
+    );
+
+    await Promise.all(
+      teamStatsALPitching.data.statistic.category.team.map(async (item: any) => {
+        const team = await Team.findOne({ name: item.name });
+        let data = item;
+        data.category = teamStatsALPitching.data.statistic.category.name;
+        data.teamId = team?.id;
+        data.goalServeTeamId = team?.goalServeTeamId;
+        data.pitchingRank=teamStatsALPitching?.data.statistic.category.rank;
         await StatsTeam.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
