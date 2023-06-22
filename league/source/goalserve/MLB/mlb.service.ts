@@ -3435,7 +3435,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        let: { matchId: "$goalServeMatchId" },
+        let: { matchId: "$goalServeMatchId" , matchStatus:"$status"},
 
         pipeline: [
           {
@@ -6171,7 +6171,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             },
           },
         },
-        hittingStatistics: {
+        battingPlayerStatistics: {
           awayTeam: {
             $map: {
               input: "$awayTeamHitters",
@@ -6185,21 +6185,8 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 hits: "$$item.hits",
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
-                on_base_plus_slugging: {
-                  $round: [
-                    {
-                      $sum: [
-                        {
-                          $toDouble: "$$item.on_base_percentage",
-                        },
-                        {
-                          $toDouble: "$$item.slugging_percentage",
-                        },
-                      ],
-                    },
-                    3,
-                  ],
-                },
+                at_bats: "$$item.at_bats",
+                runs_batted_in: "$$item.runs_batted_in",
               },
             },
           },
@@ -6216,21 +6203,8 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 hits: "$$item.hits",
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
-                on_base_plus_slugging: {
-                  $round: [
-                    {
-                      $sum: [
-                        {
-                          $toDouble: "$$item.on_base_percentage",
-                        },
-                        {
-                          $toDouble: "$$item.slugging_percentage",
-                        },
-                      ],
-                    },
-                    3,
-                  ],
-                },
+                at_bats: "$$item.at_bats",
+                runs_batted_in: "$$item.runs_batted_in",
               },
             },
           },
@@ -7056,7 +7030,7 @@ const liveBoxscoreMlb = async () => {
             },
           },
         },
-        hittingStatistics: {
+        battingPlayerStatistics: {
           awayTeam: {
             $map: {
               input: "$awayTeamHitters",
@@ -7070,21 +7044,8 @@ const liveBoxscoreMlb = async () => {
                 hits: "$$item.hits",
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
-                on_base_plus_slugging: {
-                  $round: [
-                    {
-                      $sum: [
-                        {
-                          $toDouble: "$$item.on_base_percentage",
-                        },
-                        {
-                          $toDouble: "$$item.slugging_percentage",
-                        },
-                      ],
-                    },
-                    3,
-                  ],
-                },
+                at_bats: "$$item.at_bats",
+                runs_batted_in: "$$item.runs_batted_in",
               },
             },
           },
@@ -7101,21 +7062,8 @@ const liveBoxscoreMlb = async () => {
                 hits: "$$item.hits",
                 strikeouts: "$$item.strikeouts",
                 walks: "$$item.walks",
-                on_base_plus_slugging: {
-                  $round: [
-                    {
-                      $sum: [
-                        {
-                          $toDouble: "$$item.on_base_percentage",
-                        },
-                        {
-                          $toDouble: "$$item.slugging_percentage",
-                        },
-                      ],
-                    },
-                    3,
-                  ],
-                },
+                at_bats: "$$item.at_bats",
+                runs_batted_in: "$$item.runs_batted_in",
               },
             },
           },
