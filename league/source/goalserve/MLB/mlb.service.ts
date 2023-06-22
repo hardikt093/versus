@@ -6944,19 +6944,22 @@ const liveBoxscoreMlb = async () => {
           },
         },
         startingPitcher: {
-          wins: {
-            $arrayElemAt: ["$startingPitchersPlayer.homeTeam.pitching.wins", 0],
-          },
-          losses: {
-            $arrayElemAt: [
-              "$startingPitchersPlayer.homeTeam.pitching.losses",
-              0,
-            ],
-          },
-          playerName: {
-            $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
-          },
           awayTeam: {
+            wins: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.wins",
+                0,
+              ],
+            },
+            losses: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.awayTeam.pitching.losses",
+                0,
+              ],
+            },
+            playerName: {
+              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
+            },
             earned_run_average: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
@@ -7001,6 +7004,21 @@ const liveBoxscoreMlb = async () => {
             },
           },
           homeTeam: {
+            wins: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.wins",
+                0,
+              ],
+            },
+            losses: {
+              $arrayElemAt: [
+                "$startingPitchersPlayer.homeTeam.pitching.losses",
+                0,
+              ],
+            },
+            playerName: {
+              $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
+            },
             earned_run_average: {
               $arrayElemAt: [
                 "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
