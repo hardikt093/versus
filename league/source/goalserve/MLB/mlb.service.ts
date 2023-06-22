@@ -2499,7 +2499,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
         },
       },
     },
-    
+
     {
       $project: {
         id: true,
@@ -3435,7 +3435,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
+        let: { matchId: "$goalServeMatchId" },
 
         pipeline: [
           {
@@ -5662,8 +5662,8 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 {
                   $project: {
                     _id: 0,
-                    walks:1,
-                    strikeouts:1,
+                    walks: 1,
+                    strikeouts: 1,
                     home_runs: 1,
                     runs_batted_in: 1,
                     slugging_percentage: 1,
@@ -5685,8 +5685,8 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                 {
                   $project: {
                     _id: 0,
-                    walks:1,
-                    strikeouts:1,
+                    walks: 1,
+                    strikeouts: 1,
                     home_runs: 1,
                     runs_batted_in: 1,
                     slugging_percentage: 1,
@@ -5828,7 +5828,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
     {
       $lookup: {
         from: "odds",
-        let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
+        let: { matchId: "$goalServeMatchId" },
 
         pipeline: [
           {
@@ -5866,6 +5866,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
         id: 1,
         attendance: 1,
         venueName: 1,
+        goalServeMatchId: 1,
         status: { $concat: [{ $arrayElemAt: ["$inningNo", 1] }, " Inning"] },
         event: true,
         outs: {
@@ -6546,8 +6547,8 @@ const liveBoxscoreMlb = async () => {
                 {
                   $project: {
                     _id: 0,
-                    walks:1,
-                    strikeouts:1,
+                    walks: 1,
+                    strikeouts: 1,
                     home_runs: 1,
                     runs_batted_in: 1,
                     slugging_percentage: 1,
@@ -6569,8 +6570,8 @@ const liveBoxscoreMlb = async () => {
                 {
                   $project: {
                     _id: 0,
-                    walks:1,
-                    strikeouts:1,
+                    walks: 1,
+                    strikeouts: 1,
                     home_runs: 1,
                     runs_batted_in: 1,
                     slugging_percentage: 1,
@@ -6602,18 +6603,10 @@ const liveBoxscoreMlb = async () => {
         from: "players",
         let: {
           awayTeamStartingPictcherId: {
-            $cond: [
-              { $eq: ["$startingPitchers.awayteam.player.id", ""] },
-              null,
-              { $toInt: "$startingPitchers.awayteam.player.id" },
-            ],
+            $toInt: "$startingPitchers.awayteam.player.id",
           },
           homeTeamStartingPictcherId: {
-            $cond: [
-              { $eq: ["$startingPitchers.hometeam.player.id", ""] },
-              null,
-              { $toInt: "$startingPitchers.hometeam.player.id" },
-            ],
+            $toInt: "$startingPitchers.hometeam.player.id",
           },
         },
         pipeline: [
@@ -6757,12 +6750,10 @@ const liveBoxscoreMlb = async () => {
       $project: {
         id: 1,
         attendance: 1,
+        goalServeMatchId: 1,
         venueName: 1,
-        event: true,
         status: { $concat: [{ $arrayElemAt: ["$inningNo", 1] }, " Inning"] },
-        inningNo: {
-          $last: "$inningNo",
-        },
+        event: true,
         outs: {
           $cond: {
             if: { $ne: ["$outs", ""] },
@@ -6772,7 +6763,9 @@ const liveBoxscoreMlb = async () => {
             },
           },
         },
-        goalServeMatchId: 1,
+        inningNo: {
+          $last: "$inningNo",
+        },
         timer: "$timer",
         datetime_utc: "$dateTimeUtc",
         homeTeamTotalScore: "$homeTeamTotalScore",
@@ -6782,15 +6775,15 @@ const liveBoxscoreMlb = async () => {
         awayTeamAbbreviation: {
           $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
         },
-        innings: {
-          awayTeam: "$awayTeamInnings",
-          homeTeam: "$homeTeamInnings",
-        },
         homeTeamAbbreviation: {
           $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
         },
         homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
         awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+        innings: {
+          awayTeam: "$awayTeamInnings",
+          homeTeam: "$homeTeamInnings",
+        },
         awayTeam: {
           awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           awayTeamRun: "$awayTeamTotalScore",
@@ -6805,12 +6798,12 @@ const liveBoxscoreMlb = async () => {
         },
         homeTeam: {
           homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
           goalServeHomeTeamId: {
             $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
           },
+          homeTeamRun: "$homeTeamTotalScore",
+          homeTeamHit: "$homeTeamHit",
+          homeTeamErrors: "$homeTeamError",
           won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
           lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
           teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
@@ -7165,7 +7158,6 @@ const liveBoxscoreMlb = async () => {
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
         },
-
         liveOdds: {
           awayTeamMoneyLine: {
             $cond: [
