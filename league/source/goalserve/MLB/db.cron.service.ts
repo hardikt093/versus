@@ -583,13 +583,14 @@ export default class MlbDbCronServiceClass {
         let allStatPlayers: any = [];
         let finalArr: any = [];
 
-        roasterApi?.data?.team.position.map((item: any) => {
-          if (item.player.length) {
-            item.player.map((player: any) => {
-              allRosterPlayers.push(player);
-            });
-          }
-        });
+         roasterApi?.data?.team.position.map((item: any) => {
+        if (item.player.length) {
+          item.player.map((player: any) => {
+            player.positionType = item.name;
+            allRosterPlayers.push(player);
+          });
+        }
+      });
 
         statsApi?.data?.statistic.category.forEach((cat: any) => {
           if (cat.team && cat.team.player.length) {
@@ -685,6 +686,7 @@ export default class MlbDbCronServiceClass {
             pitching: eVal?.pitching,
             batting: eVal?.batting,
             fielding: eVal?.fielding,
+            positionType: eVal?.positionType,
           };
           await Player.findOneAndUpdate(
             { goalServePlayerId: eVal.id },

@@ -234,13 +234,13 @@ const getUpcomingMatch = async () => {
           as: "odds",
         },
       },
-      // {
-      //   $addFields: {
-      //     odds: {
-      //       $arrayElemAt: ["$odds", 0],
-      //     },
-      //   },
-      // },
+      {
+        $addFields: {
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
+        },
+      },
       {
         $project: {
           id: true,
@@ -259,33 +259,24 @@ const getUpcomingMatch = async () => {
             won: "$awayTeamStandings.won",
             lose: "$awayTeamStandings.lost",
             teamImage: "$awayTeamImage.image",
+            spread: "$odds.awayTeamSpread",
             moneyline: {
               $cond: [
                 {
                   $gte: [
                     {
-                      $toDouble: {
-                        $arrayElemAt: ["$odds.awayTeamMoneyline.us", 0],
-                      },
+                      $toDouble: "$odds.awayTeamMoneyline.us",
                     },
                     0,
                   ],
                 },
                 {
-                  $concat: [
-                    "+",
-                    { $arrayElemAt: ["$odds.awayTeamMoneyline.us", 0] },
-                  ],
+                  $concat: ["+", "$odds.awayTeamMoneyline.us"],
                 },
                 "$odds.awayTeamMoneyline.us",
               ],
             },
-            spread: {
-              $arrayElemAt: ["$odds.awayTeamSpread", 0],
-            },
-            total: {
-              $arrayElemAt: ["$odds.awayTeamTotal", 0],
-            },
+            total: "$odds.awayTeamTotal",
           },
           homeTeam: {
             homeTeamName: "$homeTeam.name",
@@ -302,28 +293,19 @@ const getUpcomingMatch = async () => {
                 {
                   $gte: [
                     {
-                      $toDouble: {
-                        $arrayElemAt: ["$odds.homeTeamMoneyline.us", 0],
-                      },
+                      $toDouble: "$odds.homeTeamMoneyline.us",
                     },
                     0,
                   ],
                 },
                 {
-                  $concat: [
-                    "+",
-                    { $arrayElemAt: ["$odds.homeTeamMoneyline.us", 0] },
-                  ],
+                  $concat: ["+", "$odds.homeTeamMoneyline.us"],
                 },
                 "$odds.homeTeamMoneyline.us",
               ],
             },
-            spread: {
-              $arrayElemAt: ["$odds.homeTeamSpread", 0],
-            },
-            total: {
-              $arrayElemAt: ["$odds.homeTeamTotal", 0],
-            },
+            spread: "$odds.homeTeamSpread",
+            total: "$odds.homeTeamTotal",
           },
         },
       },
@@ -901,442 +883,445 @@ const getLiveMatch = async () => {
 
 const mlbScoreWithDate = async (date1: string) => {
   const date2 = moment(date1).add(24, "hours").utc().toISOString();
-
-  const getFinalMatch = await Match.aggregate([
-    {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateutc: {
-          $toDate: "$dateTimeUtc",
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
-    },
-    {
-      $match: {
-        dateInString: {
-          $gte: date1,
-          $lte: date2,
-        },
-        status: "Final",
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeam",
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeam",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $addFields: {
-        awayTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$awayTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
-          },
-        },
-        homeTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$homeTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+  try {
+    const getFinalMatch = await Match.aggregate([
+      {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
           },
         },
       },
-    },
-    {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
       },
-    },
-    {
-      $project: {
-        id: true,
-        date: true,
-        status: true,
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        awayTeam: {
-          abbreviation: "$awayTeam.abbreviation",
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$awayTeamTotalScoreInNumber",
-                  "$homeTeamTotalScoreInNumber",
-                ],
-              },
-              then: true,
-              else: false,
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $match: {
+          dateInString: {
+            $gte: date1,
+            $lte: date2,
+          },
+          status: "Final",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeam",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeam",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          awayTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
             },
           },
-        },
-        homeTeam: {
-          abbreviation: "$homeTeam.abbreviation",
-          homeTeamName: "$homeTeam.name",
-          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$homeTeamTotalScoreInNumber",
-                  "$awayTeamTotalScoreInNumber",
-                ],
-              },
-              then: true,
-              else: false,
+          homeTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
             },
           },
         },
       },
-    },
-  ]);
-
-  const getUpcomingMatch = await Match.aggregate([
-    {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
+      {
+        $sort: {
+          // formattedDate: 1,
+          // time: 1,
+          dateTimeUtc: 1,
         },
       },
-    },
-    {
-      $addFields: {
-        dateutc: {
-          $toDate: "$dateTimeUtc",
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
-    },
-    {
-      $match: {
-        dateInString: {
-          $gte: date1,
-          $lte: date2,
-        },
-        status: "Not Started",
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeam",
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeam",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
-      },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "Not Started"] },
-                ],
+      {
+        $project: {
+          id: true,
+          date: true,
+          status: true,
+          datetime_utc: "$dateTimeUtc",
+          time: true,
+          goalServeMatchId: true,
+          awayTeam: {
+            abbreviation: "$awayTeam.abbreviation",
+            awayTeamName: "$awayTeam.name",
+            awayTeamId: "$awayTeam._id",
+            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            won: "$awayTeamStandings.won",
+            lose: "$awayTeamStandings.lost",
+            teamImage: "$awayTeamImage.image",
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$awayTeamTotalScoreInNumber",
+                    "$homeTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
               },
             },
           },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "odds",
-      },
-    },
-    {
-      $addFields: {
-        odds: {
-          $arrayElemAt: ["$odds", 0],
+          homeTeam: {
+            abbreviation: "$homeTeam.abbreviation",
+            homeTeamName: "$homeTeam.name",
+            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+            homeTeamId: "$homeTeam._id",
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            won: "$homeTeamStandings.won",
+            lose: "$homeTeamStandings.lost",
+            teamImage: "$homeTeamImage.image",
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$homeTeamTotalScoreInNumber",
+                    "$awayTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
+              },
+            },
+          },
         },
       },
-    },
+    ]);
 
-    {
-      $project: {
-        id: true,
-        date: true,
-        status: true,
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        awayTeam: {
-          abbreviation: "$awayTeam.abbreviation",
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
-          spread: "$odds.awayTeamSpread",
-          moneyline: {
-            $cond: [
-              {
-                $gte: [
-                  {
-                    $toDouble: "$odds.awayTeamMoneyline.us",
-                  },
-                  0,
-                ],
-              },
-              {
-                $concat: ["+", "$odds.awayTeamMoneyline.us"],
-              },
-              "$odds.awayTeamMoneyline.us",
-            ],
+    const getUpcomingMatch = await Match.aggregate([
+      {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
           },
-          total: "$odds.awayTeamTotal",
-        },
-        homeTeam: {
-          abbreviation: "$homeTeam.abbreviation",
-          homeTeamName: "$homeTeam.name",
-          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-          moneyline: {
-            $cond: [
-              {
-                $gte: [
-                  {
-                    $toDouble: "$odds.homeTeamMoneyline.us",
-                  },
-                  0,
-                ],
-              },
-              {
-                $concat: ["+", "$odds.homeTeamMoneyline.us"],
-              },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          spread: "$odds.homeTeamSpread",
-          total: "$odds.homeTeamTotal",
         },
       },
-    },
-  ]);
-  return { getFinalMatch, getUpcomingMatch };
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $match: {
+          dateInString: {
+            $gte: date1,
+            $lte: date2,
+          },
+          status: "Not Started",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeam",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeam",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: {
+          // formattedDate: 1,
+          // time: 1,
+          dateTimeUtc: 1,
+        },
+      },
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "Not Started"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
+        },
+      },
+      {
+        $addFields: {
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
+        },
+      },
+
+      {
+        $project: {
+          id: true,
+          date: true,
+          status: true,
+          datetime_utc: "$dateTimeUtc",
+          time: true,
+          goalServeMatchId: true,
+          awayTeam: {
+            abbreviation: "$awayTeam.abbreviation",
+            awayTeamName: "$awayTeam.name",
+            awayTeamId: "$awayTeam._id",
+            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            won: "$awayTeamStandings.won",
+            lose: "$awayTeamStandings.lost",
+            teamImage: "$awayTeamImage.image",
+            spread: "$odds.awayTeamSpread",
+            moneyline: {
+              $cond: [
+                {
+                  $gte: [
+                    {
+                      $toDouble: "$odds.awayTeamMoneyline.us",
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $concat: ["+", "$odds.awayTeamMoneyline.us"],
+                },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            total: "$odds.awayTeamTotal",
+          },
+          homeTeam: {
+            abbreviation: "$homeTeam.abbreviation",
+            homeTeamName: "$homeTeam.name",
+            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+            homeTeamId: "$homeTeam._id",
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            won: "$homeTeamStandings.won",
+            lose: "$homeTeamStandings.lost",
+            teamImage: "$homeTeamImage.image",
+            moneyline: {
+              $cond: [
+                {
+                  $gte: [
+                    {
+                      $toDouble: "$odds.homeTeamMoneyline.us",
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $concat: ["+", "$odds.homeTeamMoneyline.us"],
+                },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            spread: "$odds.homeTeamSpread",
+            total: "$odds.homeTeamTotal",
+          },
+        },
+      },
+    ]);
+    return { getFinalMatch, getUpcomingMatch };
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 
 const createLeague = async (body: any) => {
@@ -1486,211 +1471,215 @@ const createPlayer = async () => {
 
 const getFinalMatchDataFromDB = async (date1: string) => {
   const date2 = moment(date1).add(24, "hours").utc().toISOString();
-  return await Match.aggregate([
-    {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateutc: {
-          $toDate: "$dateTimeUtc",
-        },
-      },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
-    },
-    {
-      $match: {
-        dateInString: {
-          $gte: date1,
-          $lte: date2,
-        },
-        status: "Final",
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeam",
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeam",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $addFields: {
-        awayTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$awayTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
-          },
-        },
-        homeTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$homeTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+  try {
+    return await Match.aggregate([
+      {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
           },
         },
       },
-    },
-    {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
       },
-    },
-    {
-      $project: {
-        id: true,
-        date: true,
-        status: true,
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        awayTeam: {
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          abbreviation: "$awayTeam.abbreviation",
-          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$awayTeamTotalScoreInNumber",
-                  "$homeTeamTotalScoreInNumber",
-                ],
-              },
-              then: true,
-              else: false,
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $match: {
+          dateInString: {
+            $gte: date1,
+            $lte: date2,
+          },
+          status: "Final",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeam",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeam",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          awayTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
             },
           },
-        },
-        homeTeam: {
-          homeTeamName: "$homeTeam.name",
-          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          abbreviation: "$homeTeam.abbreviation",
-          homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$homeTeamTotalScoreInNumber",
-                  "$awayTeamTotalScoreInNumber",
-                ],
-              },
-              then: true,
-              else: false,
+          homeTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
             },
           },
         },
       },
-    },
-  ]);
+      {
+        $sort: {
+          // formattedDate: 1,
+          // time: 1,
+          dateTimeUtc: 1,
+        },
+      },
+      {
+        $project: {
+          id: true,
+          date: true,
+          status: true,
+          datetime_utc: "$dateTimeUtc",
+          time: true,
+          goalServeMatchId: true,
+          awayTeam: {
+            awayTeamName: "$awayTeam.name",
+            awayTeamId: "$awayTeam._id",
+            abbreviation: "$awayTeam.abbreviation",
+            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            won: "$awayTeamStandings.won",
+            lose: "$awayTeamStandings.lost",
+            teamImage: "$awayTeamImage.image",
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$awayTeamTotalScoreInNumber",
+                    "$homeTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
+              },
+            },
+          },
+          homeTeam: {
+            homeTeamName: "$homeTeam.name",
+            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+            homeTeamId: "$homeTeam._id",
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            abbreviation: "$homeTeam.abbreviation",
+            homeTeamErrors: "$homeTeamError",
+            won: "$homeTeamStandings.won",
+            lose: "$homeTeamStandings.lost",
+            teamImage: "$homeTeamImage.image",
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$homeTeamTotalScoreInNumber",
+                    "$awayTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
+              },
+            },
+          },
+        },
+      },
+    ]);
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 const getUpcomingDataFromMongodb = async (date1: string) => {
   let day = moment().format("D");
@@ -1698,440 +1687,448 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
   let year = moment().format("YYYY");
   let date = `${day}.${month}.${year}`;
   const date2 = moment(date1).add(24, "hours").utc().toISOString();
-  return await Match.aggregate([
-    {
-      $addFields: {
-        spliteTime: {
-          $split: ["$dateTimeUtc", " "],
+  try {
+    return await Match.aggregate([
+      {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
+          },
         },
       },
-    },
-    {
-      $addFields: {
-        dateutc: {
-          $toDate: "$dateTimeUtc",
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
         },
       },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
         },
       },
-    },
-    {
-      $match: {
-        dateInString: {
-          $gte: date1,
-          $lte: date2,
+      {
+        $match: {
+          dateInString: {
+            $gte: date1,
+            $lte: date2,
+          },
+          status: "Not Started",
         },
-        status: "Not Started",
       },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeam",
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeam",
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeam",
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeam",
+        },
       },
-    },
-    {
-      $unwind: {
-        path: "$awayTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      {
+        $unwind: {
+          path: "$awayTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    },
-    {
-      $unwind: {
-        path: "$homeTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      {
+        $unwind: {
+          path: "$homeTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamStandings",
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamStandings",
+        },
       },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      {
+        $unwind: {
+          path: "$awayTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamStandings",
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamStandings",
+        },
       },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      {
+        $unwind: {
+          path: "$homeTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamImage",
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamImage",
+        },
       },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      {
+        $unwind: {
+          path: "$awayTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamImage",
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamImage",
+        },
       },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
+      {
+        $unwind: {
+          path: "$homeTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "Not Started"] },
-                ],
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "Not Started"] },
+                  ],
+                },
               },
             },
-          },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "odds",
-      },
-    },
-    {
-      $addFields: {
-        odds: {
-          $arrayElemAt: ["$odds", 0],
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
         },
       },
-    },
-    {
-      $project: {
-        id: true,
-        date: true,
-        status: true,
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        awayTeam: {
-          abbreviation: "$awayTeam.abbreviation",
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          awayTeamRun: "$awayTeamTotalScore",
-          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
-          moneyline: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
-              "$odds.awayTeamMoneyline.us",
-            ],
+      {
+        $addFields: {
+          odds: {
+            $arrayElemAt: ["$odds", 0],
           },
-          spread: "$odds.awayTeamSpread",
-          total: "$odds.awayTeamTotal",
-        },
-        homeTeam: {
-          abbreviation: "$homeTeam.abbreviation",
-          homeTeamName: "$homeTeam.name",
-          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-          moneyline: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          spread: "$odds.homeTeamSpread",
-          total: "$odds.homeTeamTotal",
         },
       },
-    },
-  ]);
+      {
+        $project: {
+          id: true,
+          date: true,
+          status: true,
+          datetime_utc: "$dateTimeUtc",
+          time: true,
+          goalServeMatchId: true,
+          awayTeam: {
+            abbreviation: "$awayTeam.abbreviation",
+            awayTeamName: "$awayTeam.name",
+            awayTeamId: "$awayTeam._id",
+            awayTeamRun: "$awayTeamTotalScore",
+            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            won: "$awayTeamStandings.won",
+            lose: "$awayTeamStandings.lost",
+            teamImage: "$awayTeamImage.image",
+            moneyline: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            spread: "$odds.awayTeamSpread",
+            total: "$odds.awayTeamTotal",
+          },
+          homeTeam: {
+            abbreviation: "$homeTeam.abbreviation",
+            homeTeamName: "$homeTeam.name",
+            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+            homeTeamId: "$homeTeam._id",
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            won: "$homeTeamStandings.won",
+            lose: "$homeTeamStandings.lost",
+            teamImage: "$homeTeamImage.image",
+            moneyline: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            spread: "$odds.homeTeamSpread",
+            total: "$odds.homeTeamTotal",
+          },
+        },
+      },
+    ]);
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 const getLiveDataFromMongodb = async () => {
-  return await Match.aggregate([
-    {
-      $match: {
-        $and: [
-          {
-            status: {
-              $ne: "Not Started",
-            },
-          },
-          {
-            status: {
-              $ne: "Final",
-            },
-          },
-          {
-            status: {
-              $ne: "Postponed",
-            },
-          },
-          {
-            status: {
-              $ne: "Canceled",
-            },
-          },
-          {
-            status: {
-              $ne: "Suspended",
-            },
-          },
-        ],
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeam",
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeam",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeam",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamStandings",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamStandings",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$awayTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamImage",
-      },
-    },
-    {
-      $unwind: {
-        path: "$homeTeamImage",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $sort: {
-        datetime_utc: 1,
-        // time: 1,
-      },
-    },
-    {
-      $addFields: {
-        inningNo: {
-          $split: ["$status", " "],
-        },
-      },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        localField: "goalServeMatchId",
-        foreignField: "goalServeMatchId",
-        as: "odds",
-      },
-    },
-    {
-      $addFields: {
-        odds: {
-          $arrayElemAt: ["$odds", 0],
-        },
-      },
-    },
-    {
-      $project: {
-        id: true,
-        date: true,
-        status: { $concat: [{ $arrayElemAt: ["$inningNo", 1] }, " Inning"] },
-        datetime_utc: "$dateTimeUtc",
-        time: true,
-        goalServeMatchId: true,
-        outs: {
-          $cond: {
-            if: { $ne: ["$outs", ""] },
-            then: { $concat: ["$outs", " Out"] },
-            else: {
-              $concat: ["0", " Out"],
-            },
-          },
-        },
-        awayTeam: {
-          awayTeamName: "$awayTeam.name",
-          awayTeamId: "$awayTeam._id",
-          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          abbreviation: "$awayTeam.abbreviation",
-          awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
-          teamImage: "$awayTeamImage.image",
-          spread: "$odds.awayTeamSpread",
-          moneyline: {
-            $cond: [
-              {
-                $gte: [
-                  {
-                    $toDouble: "$odds.awayTeamMoneyline.us",
-                  },
-                  0,
-                ],
+  try {
+    return await Match.aggregate([
+      {
+        $match: {
+          $and: [
+            {
+              status: {
+                $ne: "Not Started",
               },
-              {
-                $concat: ["+", "$odds.awayTeamMoneyline.us"],
+            },
+            {
+              status: {
+                $ne: "Final",
               },
-              "$odds.awayTeamMoneyline.us",
-            ],
-          },
-          total: "$odds.awayTeamTotal",
-        },
-        homeTeam: {
-          homeTeamName: "$homeTeam.name",
-          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          abbreviation: "$homeTeam.abbreviation",
-          homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
-          teamImage: "$homeTeamImage.image",
-          moneyline: {
-            $cond: [
-              {
-                $gte: [
-                  {
-                    $toDouble: "$odds.homeTeamMoneyline.us",
-                  },
-                  0,
-                ],
+            },
+            {
+              status: {
+                $ne: "Postponed",
               },
-              {
-                $concat: ["+", "$odds.homeTeamMoneyline.us"],
+            },
+            {
+              status: {
+                $ne: "Canceled",
               },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          spread: "$odds.homeTeamSpread",
-          total: "$odds.homeTeamTotal",
+            },
+            {
+              status: {
+                $ne: "Suspended",
+              },
+            },
+          ],
         },
       },
-    },
-  ]);
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeam",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeam",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamImage",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamImage",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $sort: {
+          datetime_utc: 1,
+          // time: 1,
+        },
+      },
+      {
+        $addFields: {
+          inningNo: {
+            $split: ["$status", " "],
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "odds",
+          localField: "goalServeMatchId",
+          foreignField: "goalServeMatchId",
+          as: "odds",
+        },
+      },
+      {
+        $addFields: {
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
+        },
+      },
+      {
+        $project: {
+          id: true,
+          date: true,
+          status: { $concat: [{ $arrayElemAt: ["$inningNo", 1] }, " Inning"] },
+          datetime_utc: "$dateTimeUtc",
+          time: true,
+          goalServeMatchId: true,
+          outs: {
+            $cond: {
+              if: { $ne: ["$outs", ""] },
+              then: { $concat: ["$outs", " Out"] },
+              else: {
+                $concat: ["0", " Out"],
+              },
+            },
+          },
+          awayTeam: {
+            awayTeamName: "$awayTeam.name",
+            awayTeamId: "$awayTeam._id",
+            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            abbreviation: "$awayTeam.abbreviation",
+            awayTeamErrors: "$awayTeamError",
+            won: "$awayTeamStandings.won",
+            lose: "$awayTeamStandings.lost",
+            teamImage: "$awayTeamImage.image",
+            spread: "$odds.awayTeamSpread",
+            moneyline: {
+              $cond: [
+                {
+                  $gte: [
+                    {
+                      $toDouble: "$odds.awayTeamMoneyline.us",
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $concat: ["+", "$odds.awayTeamMoneyline.us"],
+                },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            total: "$odds.awayTeamTotal",
+          },
+          homeTeam: {
+            homeTeamName: "$homeTeam.name",
+            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+            homeTeamId: "$homeTeam._id",
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            abbreviation: "$homeTeam.abbreviation",
+            homeTeamErrors: "$homeTeamError",
+            won: "$homeTeamStandings.won",
+            lose: "$homeTeamStandings.lost",
+            teamImage: "$homeTeamImage.image",
+            moneyline: {
+              $cond: [
+                {
+                  $gte: [
+                    {
+                      $toDouble: "$odds.homeTeamMoneyline.us",
+                    },
+                    0,
+                  ],
+                },
+                {
+                  $concat: ["+", "$odds.homeTeamMoneyline.us"],
+                },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            spread: "$odds.homeTeamSpread",
+            total: "$odds.homeTeamTotal",
+          },
+        },
+      },
+    ]);
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 const scoreWithCurrentDate = async (date1: string) => {
   return {
@@ -2191,261 +2188,245 @@ const addStanding = async () => {
 };
 
 const singleGameBoxScore = async (goalServeMatchId: string) => {
-  const getMatch = await Match.aggregate([
-    {
-      $match: {
-        goalServeMatchId: Number(goalServeMatchId),
+  try {
+    const getMatch = await Match.aggregate([
+      {
+        $match: {
+          goalServeMatchId: Number(goalServeMatchId),
+        },
       },
-    },
 
-    {
-      $lookup: {
-        from: "teams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-            },
+      {
+        $lookup: {
+          from: "teams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
           },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "teams",
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "teamImages",
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
-                    goals_against: 1,
-                    goals_for: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
-                    goals_against: 1,
-                    goals_for: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "standings",
-      },
-    },
-    {
-      $addFields: {
-        awayTeamPitchers: {
-          $map: {
-            input: "$awayTeamPitchers",
-            as: "item",
-            in: {
-              earned_runs: "$$item.earned_runs",
-              earned_runs_average: "$$item.earned_runs_average",
-              hbp: "$$item.hbp",
-              hits: "$$item.hits",
-              holds: "$$item.holds",
-              home_runs: "$$item.home_runs",
-              innings_pitched: "$$item.innings_pitched",
-              loss: "$$item.loss",
-              name: "$$item.name",
-              runs: "$$item.runs",
-              saves: "$$item.saves",
-              strikeouts: "$$item.strikeouts",
-              walks: "$$item.walks",
-              win: "$$item.win",
-              pc_st: "$$item.pc-st",
-            },
-          },
-        },
-        homeTeamPitchers: {
-          $map: {
-            input: "$homeTeamPitchers",
-            as: "item",
-            in: {
-              earned_runs: "$$item.earned_runs",
-              earned_runs_average: "$$item.earned_runs_average",
-              hbp: "$$item.hbp",
-              hits: "$$item.hits",
-              holds: "$$item.holds",
-              home_runs: "$$item.home_runs",
-
-              innings_pitched: "$$item.innings_pitched",
-              loss: "$$item.loss",
-              name: "$$item.name",
-
-              runs: "$$item.runs",
-              saves: "$$item.saves",
-              strikeouts: "$$item.strikeouts",
-              walks: "$$item.walks",
-              win: "$$item.win",
-              pc_st: "$$item.pc-st",
-            },
-          },
-        },
-        pitchingResult: {
-          win: {
-            $cond: {
-              if: {
-                $ne: [
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
                   {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.win", ""],
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
                       },
                     },
                   },
-
-                  [],
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
                 ],
               },
-              then: {
-                team: "awayteam",
-                win: {
-                  $arrayElemAt: [
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teams",
+        },
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teamImages",
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                      goals_against: 1,
+                      goals_for: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                      goals_against: 1,
+                      goals_for: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "standings",
+        },
+      },
+      {
+        $addFields: {
+          awayTeamPitchers: {
+            $map: {
+              input: "$awayTeamPitchers",
+              as: "item",
+              in: {
+                earned_runs: "$$item.earned_runs",
+                earned_runs_average: "$$item.earned_runs_average",
+                hbp: "$$item.hbp",
+                hits: "$$item.hits",
+                holds: "$$item.holds",
+                home_runs: "$$item.home_runs",
+                innings_pitched: "$$item.innings_pitched",
+                loss: "$$item.loss",
+                name: "$$item.name",
+                runs: "$$item.runs",
+                saves: "$$item.saves",
+                strikeouts: "$$item.strikeouts",
+                walks: "$$item.walks",
+                win: "$$item.win",
+                pc_st: "$$item.pc-st",
+              },
+            },
+          },
+          homeTeamPitchers: {
+            $map: {
+              input: "$homeTeamPitchers",
+              as: "item",
+              in: {
+                earned_runs: "$$item.earned_runs",
+                earned_runs_average: "$$item.earned_runs_average",
+                hbp: "$$item.hbp",
+                hits: "$$item.hits",
+                holds: "$$item.holds",
+                home_runs: "$$item.home_runs",
+
+                innings_pitched: "$$item.innings_pitched",
+                loss: "$$item.loss",
+                name: "$$item.name",
+
+                runs: "$$item.runs",
+                saves: "$$item.saves",
+                strikeouts: "$$item.strikeouts",
+                walks: "$$item.walks",
+                win: "$$item.win",
+                pc_st: "$$item.pc-st",
+              },
+            },
+          },
+          pitchingResult: {
+            win: {
+              $cond: {
+                if: {
+                  $ne: [
                     {
                       $filter: {
                         input: "$awayTeamPitchers",
@@ -2456,30 +2437,31 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                       },
                     },
 
-                    0,
+                    [],
                   ],
                 },
-              },
-              else: {
-                $cond: {
-                  if: {
-                    $ne: [
+                then: {
+                  team: "awayteam",
+                  win: {
+                    $arrayElemAt: [
                       {
                         $filter: {
-                          input: "$homeTeamPitchers",
+                          input: "$awayTeamPitchers",
                           as: "pitcher",
                           cond: {
                             $ne: ["$$pitcher.win", ""],
                           },
                         },
                       },
-                      [],
+
+                      0,
                     ],
                   },
-                  then: {
-                    team: "hometeam",
-                    win: {
-                      $arrayElemAt: [
+                },
+                else: {
+                  $cond: {
+                    if: {
+                      $ne: [
                         {
                           $filter: {
                             input: "$homeTeamPitchers",
@@ -2489,35 +2471,35 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                             },
                           },
                         },
-                        0,
+                        [],
                       ],
                     },
+                    then: {
+                      team: "hometeam",
+                      win: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: "$homeTeamPitchers",
+                              as: "pitcher",
+                              cond: {
+                                $ne: ["$$pitcher.win", ""],
+                              },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    else: null,
                   },
-                  else: null,
                 },
               },
             },
-          },
-          loss: {
-            $cond: {
-              if: {
-                $ne: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.loss", ""],
-                      },
-                    },
-                  },
-                  [],
-                ],
-              },
-              then: {
-                team: "awayteam",
-                loss: {
-                  $arrayElemAt: [
+            loss: {
+              $cond: {
+                if: {
+                  $ne: [
                     {
                       $filter: {
                         input: "$awayTeamPitchers",
@@ -2527,30 +2509,30 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                         },
                       },
                     },
-                    0,
+                    [],
                   ],
                 },
-              },
-              else: {
-                $cond: {
-                  if: {
-                    $ne: [
+                then: {
+                  team: "awayteam",
+                  loss: {
+                    $arrayElemAt: [
                       {
                         $filter: {
-                          input: "$homeTeamPitchers",
+                          input: "$awayTeamPitchers",
                           as: "pitcher",
                           cond: {
                             $ne: ["$$pitcher.loss", ""],
                           },
                         },
                       },
-                      [],
+                      0,
                     ],
                   },
-                  then: {
-                    team: "hometeam",
-                    loss: {
-                      $arrayElemAt: [
+                },
+                else: {
+                  $cond: {
+                    if: {
+                      $ne: [
                         {
                           $filter: {
                             input: "$homeTeamPitchers",
@@ -2560,35 +2542,35 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                             },
                           },
                         },
-                        0,
+                        [],
                       ],
                     },
+                    then: {
+                      team: "hometeam",
+                      loss: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: "$homeTeamPitchers",
+                              as: "pitcher",
+                              cond: {
+                                $ne: ["$$pitcher.loss", ""],
+                              },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    else: null,
                   },
-                  else: null,
                 },
               },
             },
-          },
-          saves: {
-            $cond: {
-              if: {
-                $ne: [
-                  {
-                    $filter: {
-                      input: "$awayTeamPitchers",
-                      as: "pitcher",
-                      cond: {
-                        $ne: ["$$pitcher.saves", ""],
-                      },
-                    },
-                  },
-                  [],
-                ],
-              },
-              then: {
-                team: "awayteam",
-                saves: {
-                  $arrayElemAt: [
+            saves: {
+              $cond: {
+                if: {
+                  $ne: [
                     {
                       $filter: {
                         input: "$awayTeamPitchers",
@@ -2598,30 +2580,30 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                         },
                       },
                     },
-                    0,
+                    [],
                   ],
                 },
-              },
-              else: {
-                $cond: {
-                  if: {
-                    $ne: [
+                then: {
+                  team: "awayteam",
+                  saves: {
+                    $arrayElemAt: [
                       {
                         $filter: {
-                          input: "$homeTeamPitchers",
+                          input: "$awayTeamPitchers",
                           as: "pitcher",
                           cond: {
                             $ne: ["$$pitcher.saves", ""],
                           },
                         },
                       },
-                      [],
+                      0,
                     ],
                   },
-                  then: {
-                    team: "hometeam",
-                    saves: {
-                      $arrayElemAt: [
+                },
+                else: {
+                  $cond: {
+                    if: {
+                      $ne: [
                         {
                           $filter: {
                             input: "$homeTeamPitchers",
@@ -2631,328 +2613,347 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                             },
                           },
                         },
-                        0,
+                        [],
                       ],
                     },
+                    then: {
+                      team: "hometeam",
+                      saves: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: "$homeTeamPitchers",
+                              as: "pitcher",
+                              cond: {
+                                $ne: ["$$pitcher.saves", ""],
+                              },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
+                    else: null,
                   },
-                  else: null,
                 },
               },
             },
           },
         },
       },
-    },
 
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "Not Started"] },
-                ],
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "Not Started"] },
+                  ],
+                },
               },
             },
-          },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "odds",
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
 
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $ne: ["$status", "Not Started"] },
-                  { $ne: ["$status", "Postponed"] },
-                  { $ne: ["$status", "Canceled"] },
-                  { $ne: ["$status", "Suspended"] },
-                ],
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $ne: ["$status", "Not Started"] },
+                    { $ne: ["$status", "Postponed"] },
+                    { $ne: ["$status", "Canceled"] },
+                    { $ne: ["$status", "Suspended"] },
+                  ],
+                },
               },
             },
-          },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "outcome",
-      },
-    },
-    {
-      $addFields: {
-        outcome: {
-          $arrayElemAt: ["$outcome", 0],
-        },
-        odds: {
-          $arrayElemAt: ["$odds", 0],
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "outcome",
         },
       },
-    },
-    {
-      $addFields: {
-        awayTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$awayTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+      {
+        $addFields: {
+          outcome: {
+            $arrayElemAt: ["$outcome", 0],
           },
-        },
-        homeTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$homeTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+          odds: {
+            $arrayElemAt: ["$odds", 0],
           },
         },
       },
-    },
-
-    {
-      $project: {
-        id: true,
-        attendance: true,
-        status: true,
-        venueName: true,
-        datetime_utc: "$dateTimeUtc",
-        goalServeMatchId: true,
-        awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-        homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-        awayTeamAbbreviation: {
-          $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
-        },
-        homeTeamAbbreviation: {
-          $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
-        },
-        homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-        awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-        homeTeamTotalScore: true,
-        awayTeamTotalScore: true,
-        event: true,
-        innings: {
-          awayTeam: "$awayTeamInnings",
-          homeTeam: "$homeTeamInnings",
-        },
-
-        hittingStatistics: {
-          homeTeam: "$homeTeamHitters",
-          awayTeam: "$awayTeamHitters",
-        },
-        pitchingStatistics: {
-          awayTeam: "$awayTeamPitchers",
-          homeTeam: "$homeTeamPitchers",
-        },
-
-        battingPlayerStatistics: {
-          awayTeam: {
-            $map: {
-              input: "$awayTeamHitters",
-              as: "item",
-              in: {
-                home_runs: "$$item.home_runs",
-                average: "$$item.average",
-                runs: "$$item.runs",
-                goalServePlayerId: "$$item.id",
-                playerName: "$$item.name",
-                hits: "$$item.hits",
-                strikeouts: "$$item.strikeouts",
-                walks: "$$item.walks",
-                at_bats: "$$item.at_bats",
-                runs_batted_in: "$$item.runs_batted_in",
-              },
+      {
+        $addFields: {
+          awayTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
             },
           },
-          homeTeam: {
-            $map: {
-              input: "$homeTeamHitters",
-              as: "item",
-              in: {
-                home_runs: "$$item.home_runs",
-                average: "$$item.average",
-                runs: "$$item.runs",
-                goalServePlayerId: "$$item.id",
-                playerName: "$$item.name",
-                hits: "$$item.hits",
-                strikeouts: "$$item.strikeouts",
-                walks: "$$item.walks",
-                at_bats: "$$item.at_bats",
-                runs_batted_in: "$$item.runs_batted_in",
-              },
+          homeTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
             },
           },
         },
-        awayTeam: {
+      },
+
+      {
+        $project: {
+          id: true,
+          attendance: true,
+          status: true,
+          venueName: true,
+          datetime_utc: "$dateTimeUtc",
+          goalServeMatchId: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-          abbreviation: { $arrayElemAt: ["$teams.awayTeam.abbreviation", 0] },
-          awayTeamId: "$awayTeam._id",
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-          goalServeAwayTeamId: {
-            $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
-          },
-          won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$awayTeamTotalScoreInNumber",
-                  "$homeTeamTotalScoreInNumber",
-                ],
-              },
-              then: true,
-              else: false,
-            },
-          },
-        },
-        homeTeam: {
-          abbreviation: { $arrayElemAt: ["$teams.homeTeam.abbreviation", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-          homeTeamId: "$homeTeam._id",
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-          goalServeHomeTeamId: {
-            $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+          awayTeamAbbreviation: {
+            $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
           },
-          won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
-          isWinner: {
-            $cond: {
-              if: {
-                $gte: [
-                  "$homeTeamTotalScoreInNumber",
-                  "$awayTeamTotalScoreInNumber",
-                ],
+          homeTeamAbbreviation: {
+            $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
+          },
+          homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+          awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+          homeTeamTotalScore: true,
+          awayTeamTotalScore: true,
+          event: true,
+          innings: {
+            awayTeam: "$awayTeamInnings",
+            homeTeam: "$homeTeamInnings",
+          },
+
+          hittingStatistics: {
+            homeTeam: "$homeTeamHitters",
+            awayTeam: "$awayTeamHitters",
+          },
+          pitchingStatistics: {
+            awayTeam: "$awayTeamPitchers",
+            homeTeam: "$homeTeamPitchers",
+          },
+
+          battingPlayerStatistics: {
+            awayTeam: {
+              $map: {
+                input: "$awayTeamHitters",
+                as: "item",
+                in: {
+                  home_runs: "$$item.home_runs",
+                  average: "$$item.average",
+                  runs: "$$item.runs",
+                  goalServePlayerId: "$$item.id",
+                  playerName: "$$item.name",
+                  hits: "$$item.hits",
+                  strikeouts: "$$item.strikeouts",
+                  walks: "$$item.walks",
+                  at_bats: "$$item.at_bats",
+                  runs_batted_in: "$$item.runs_batted_in",
+                },
               },
-              then: true,
-              else: false,
+            },
+            homeTeam: {
+              $map: {
+                input: "$homeTeamHitters",
+                as: "item",
+                in: {
+                  home_runs: "$$item.home_runs",
+                  average: "$$item.average",
+                  runs: "$$item.runs",
+                  goalServePlayerId: "$$item.id",
+                  playerName: "$$item.name",
+                  hits: "$$item.hits",
+                  strikeouts: "$$item.strikeouts",
+                  walks: "$$item.walks",
+                  at_bats: "$$item.at_bats",
+                  runs_batted_in: "$$item.runs_batted_in",
+                },
+              },
             },
           },
-        },
-        pitchingResult: 1,
-        scoring: {
           awayTeam: {
-            hit: "$awayTeamHit",
-            runs: "$awayTeamTotalScore",
-            error: "$awayTeamError",
+            awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            abbreviation: { $arrayElemAt: ["$teams.awayTeam.abbreviation", 0] },
+            awayTeamId: "$awayTeam._id",
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+            goalServeAwayTeamId: {
+              $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
+            },
+            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$awayTeamTotalScoreInNumber",
+                    "$homeTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
+              },
+            },
           },
           homeTeam: {
-            hit: "$homeTeamHit",
-            runs: "$homeTeamTotalScore",
-            error: "$homeTeamError",
-          },
-        },
-        closingOddsAndOutcome: {
-          awayTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
-              "$odds.awayTeamMoneyline.us",
-            ],
-          },
-          homeTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          homeTeamSpreadObj: {
-            homeTeamSpread: "$odds.homeTeamSpread",
-            homeTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.homeTeamSpreadUs"] },
-                "$odds.homeTeamSpreadUs",
-              ],
+            abbreviation: { $arrayElemAt: ["$teams.homeTeam.abbreviation", 0] },
+            homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            homeTeamId: "$homeTeam._id",
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+            goalServeHomeTeamId: {
+              $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+            },
+            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$homeTeamTotalScoreInNumber",
+                    "$awayTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
+              },
             },
           },
-          awayTeamSpreadObj: {
-            awayTeamSpread: "$odds.awayTeamSpread",
-            awayTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.awayTeamSpreadUs"] },
-                "$odds.awayTeamSpreadUs",
-              ],
+          pitchingResult: 1,
+          scoring: {
+            awayTeam: {
+              hit: "$awayTeamHit",
+              runs: "$awayTeamTotalScore",
+              error: "$awayTeamError",
+            },
+            homeTeam: {
+              hit: "$homeTeamHit",
+              runs: "$homeTeamTotalScore",
+              error: "$homeTeamError",
             },
           },
-          homeTeamTotal: "$odds.homeTeamTotal",
-          awayTeamTotal: "$odds.awayTeamTotal",
-        },
-        outcome: {
-          awayTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$outcome.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$outcome.awayTeamMoneyline.us"] },
-              "$outcome.awayTeamMoneyline.us",
-            ],
-          },
-          homeTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$outcome.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$outcome.homeTeamMoneyline.us"] },
-              "$outcome.homeTeamMoneyline.us",
-            ],
-          },
-          homeTeamSpreadObj: {
-            homeTeamSpread: "$outcome.homeTeamSpread",
-            homeTeamSpreadUs: {
+          closingOddsAndOutcome: {
+            awayTeamMoneyLine: {
               $cond: [
-                { $gte: [{ $toDouble: "$outcome.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$outcome.homeTeamSpreadUs"] },
-                "$outcome.homeTeamSpreadUs",
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
               ],
             },
-          },
-          awayTeamSpreadObj: {
-            awayTeamSpread: "$outcome.awayTeamSpread",
-            awayTeamSpreadUs: {
+            homeTeamMoneyLine: {
               $cond: [
-                { $gte: [{ $toDouble: "$outcome.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$outcome.awayTeamSpreadUs"] },
-                "$outcome.awayTeamSpreadUs",
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
               ],
             },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$odds.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpreadUs"] },
+                  "$odds.homeTeamSpreadUs",
+                ],
+              },
+            },
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$odds.awayTeamSpread",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpreadUs"] },
+                  "$odds.awayTeamSpreadUs",
+                ],
+              },
+            },
+            homeTeamTotal: "$odds.homeTeamTotal",
+            awayTeamTotal: "$odds.awayTeamTotal",
           },
-          homeTeamTotal: "$outcome.homeTeamTotal",
-          awayTeamTotal: "$outcome.awayTeamTotal",
-          awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
-          homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
-          scoreDifference: {
-            $abs: {
-              $subtract: [
+          outcome: {
+            awayTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$outcome.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$outcome.awayTeamMoneyline.us"] },
+                "$outcome.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$outcome.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$outcome.homeTeamMoneyline.us"] },
+                "$outcome.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$outcome.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$outcome.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$outcome.homeTeamSpreadUs"] },
+                  "$outcome.homeTeamSpreadUs",
+                ],
+              },
+            },
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$outcome.awayTeamSpread",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$outcome.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$outcome.awayTeamSpreadUs"] },
+                  "$outcome.awayTeamSpreadUs",
+                ],
+              },
+            },
+            homeTeamTotal: "$outcome.homeTeamTotal",
+            awayTeamTotal: "$outcome.awayTeamTotal",
+            awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
+            homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
+            scoreDifference: {
+              $abs: {
+                $subtract: [
+                  "$awayTeamTotalScoreInNumber",
+                  "$homeTeamTotalScoreInNumber",
+                ],
+              },
+            },
+            totalGameScore: {
+              $add: [
                 "$awayTeamTotalScoreInNumber",
                 "$homeTeamTotalScoreInNumber",
               ],
             },
           },
-          totalGameScore: {
-            $add: [
-              "$awayTeamTotalScoreInNumber",
-              "$homeTeamTotalScoreInNumber",
-            ],
-          },
         },
       },
-    },
-  ]);
-  return { getMatch: getMatch[0] };
+    ]);
+    return { getMatch: getMatch[0] };
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 
 const addMatchDataFuture = async (data: any) => {
@@ -3058,84 +3059,88 @@ const addMatchDataFuture = async (data: any) => {
 };
 
 const getStandingData = async () => {
-  const getStandingData = await Standings.aggregate([
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "images",
-      },
-    },
-    {
-      $unwind: {
-        path: "$images",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $group: {
-        _id: { leagueType: "$leagueType", division: "$division" },
-        teams: {
-          $push: {
-            away_record: "$away_record",
-            current_streak: "$current_streak",
-            games_back: "$games_back",
-            home_record: "$home_record",
-            id: { $toString: "$goalServeTeamId" },
-            lost: "$lost",
-            name: "$name",
-            position: "$position",
-            runs_allowed: "$runs_allowed",
-            runs_diff: "$runs_diff",
-            runs_scored: "$runs_scored",
-            won: "$won",
-            teamImage: "$images",
-            pct: "$pct",
-          },
+  try {
+    const getStandingData = await Standings.aggregate([
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "images",
         },
       },
-    },
-
-    {
-      $group: {
-        _id: "$_id.leagueType",
-        divisions: {
-          $push: {
-            name: "$_id.division",
-            teams: "$teams",
-          },
+      {
+        $unwind: {
+          path: "$images",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
         },
       },
-    },
-    {
-      $group: {
-        _id: null,
-        data: {
-          $push: {
-            k: {
-              $cond: [
-                { $eq: ["$_id", "National League"] },
-                "nationalLeague",
-                "americanLeague",
-              ],
+      {
+        $group: {
+          _id: { leagueType: "$leagueType", division: "$division" },
+          teams: {
+            $push: {
+              away_record: "$away_record",
+              current_streak: "$current_streak",
+              games_back: "$games_back",
+              home_record: "$home_record",
+              id: { $toString: "$goalServeTeamId" },
+              lost: "$lost",
+              name: "$name",
+              position: "$position",
+              runs_allowed: "$runs_allowed",
+              runs_diff: "$runs_diff",
+              runs_scored: "$runs_scored",
+              won: "$won",
+              teamImage: "$images",
+              pct: "$pct",
             },
-            v: "$divisions",
           },
         },
       },
-    },
-    {
-      $replaceRoot: {
-        newRoot: {
-          $arrayToObject: "$data",
+
+      {
+        $group: {
+          _id: "$_id.leagueType",
+          divisions: {
+            $push: {
+              name: "$_id.division",
+              teams: "$teams",
+            },
+          },
         },
       },
-    },
-  ]);
+      {
+        $group: {
+          _id: null,
+          data: {
+            $push: {
+              k: {
+                $cond: [
+                  { $eq: ["$_id", "National League"] },
+                  "nationalLeague",
+                  "americanLeague",
+                ],
+              },
+              v: "$divisions",
+            },
+          },
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: {
+            $arrayToObject: "$data",
+          },
+        },
+      },
+    ]);
 
-  return getStandingData[0];
+    return getStandingData[0];
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 const addMatchWithNewModel = async () => {
   var getDaysArray = function (start: any, end: any) {
@@ -3233,793 +3238,797 @@ const addMatchWithNewModel = async () => {
   }
 };
 const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
-  const getMatch = await Match.aggregate([
-    {
-      $match: {
-        goalServeMatchId: Number(goalServeMatchId),
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+  try {
+    const getMatch = await Match.aggregate([
+      {
+        $match: {
+          goalServeMatchId: Number(goalServeMatchId),
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "teams",
       },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+      {
+        $lookup: {
+          from: "teams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teams",
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
-                    goals_against: 1,
-                    goals_for: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
-                    goals_against: 1,
-                    goals_for: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "standings",
       },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+      {
+        $lookup: {
+          from: "standings",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                      goals_against: 1,
+                      goals_for: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                      goals_against: 1,
+                      goals_for: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "standings",
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
+      },
+      {
+        $lookup: {
+          from: "teamImages",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
                     },
                   },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
                     },
                   },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
                   },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
                 },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
               },
             },
-          },
-        ],
-        as: "teamImages",
-      },
-    },
-    {
-      $lookup: {
-        from: "injuries",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "injuries",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "players",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+          ],
+          as: "teamImages",
         },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+      },
+      {
+        $lookup: {
+          from: "injuries",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamInjuredPlayers",
+        },
+      },
+      {
+        $lookup: {
+          from: "injuries",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamInjuredPlayers",
+        },
+      },
+      {
+        $lookup: {
+          from: "players",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+                },
               },
             },
-          },
-        ],
-        as: "players",
+          ],
+          as: "players",
+        },
       },
-    },
 
-    {
-      $lookup: {
-        from: "statsteams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+      {
+        $lookup: {
+          from: "statsteams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      home_runs: 1,
+                      runs_batted_in: 1,
+                      slugging_percentage: 1,
+                      on_base_percentage: 1,
+                      runs: 1,
+                      batting_avg: 1,
+                      hits: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      home_runs: 1,
+                      runs_batted_in: 1,
+
+                      steals: 1,
+                      hits: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "statsTeams",
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    home_runs: 1,
-                    runs_batted_in: 1,
-                    slugging_percentage: 1,
-                    on_base_percentage: 1,
-                    runs: 1,
-                    batting_avg: 1,
-                    hits: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    home_runs: 1,
-                    runs_batted_in: 1,
-
-                    steals: 1,
-                    hits: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "statsTeams",
       },
-    },
 
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
 
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "$$matchStatus"] },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "$$matchStatus"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
+        },
+      },
+      {
+        $unwind: {
+          path: "$odds",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $addFields: {
+          awayTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
+          },
+          homeTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "players",
+          let: {
+            awayTeamStartingPictcherId: {
+              $toInt: "$startingPitchers.awayteam.player.id",
+            },
+            homeTeamStartingPictcherId: {
+              $toInt: "$startingPitchers.hometeam.player.id",
+            },
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: [
+                          "$goalServePlayerId",
+                          "$$awayTeamStartingPictcherId",
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      name: 1,
+                      goalServePlayerId: 1,
+                      pitching: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: [
+                          "$goalServePlayerId",
+                          "$$homeTeamStartingPictcherId",
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      name: 1,
+                      goalServePlayerId: 1,
+                      pitching: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "startingPitchersPlayer",
+        },
+      },
+      {
+        $project: {
+          id: true,
+          attendance: true,
+          status: true,
+          venueName: true,
+          startingPitcher: {
+            awayTeam: {
+              wins: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.wins",
+                  0,
+                ],
+              },
+              losses: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.losses",
+                  0,
+                ],
+              },
+              playerName: {
+                $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
+              },
+              earned_run_average: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
+                  0,
+                ],
+              },
+              walk_hits_per_inning_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.walk_hits_per_inning_pitched",
+                  0,
+                ],
+              },
+              innings_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.innings_pitched",
+                  0,
+                ],
+              },
+              hits: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.hits",
+                  0,
+                ],
+              },
+              strikeouts: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.strikeouts",
+                  0,
+                ],
+              },
+              walks: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.walks",
+                  0,
+                ],
+              },
+              home_runs: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.home_runs",
+                  0,
+                ],
+              },
+            },
+            homeTeam: {
+              wins: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.wins",
+                  0,
+                ],
+              },
+              losses: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.losses",
+                  0,
+                ],
+              },
+              playerName: {
+                $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
+              },
+              earned_run_average: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
+                  0,
+                ],
+              },
+              walk_hits_per_inning_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.walk_hits_per_inning_pitched",
+                  0,
+                ],
+              },
+              innings_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.innings_pitched",
+                  0,
+                ],
+              },
+              hits: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.hits",
+                  0,
+                ],
+              },
+              strikeouts: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.strikeouts",
+                  0,
+                ],
+              },
+              walks: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.walks",
+                  0,
+                ],
+              },
+              home_runs: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.home_runs",
+                  0,
                 ],
               },
             },
           },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "odds",
-      },
-    },
-    {
-      $unwind: {
-        path: "$odds",
-        includeArrayIndex: "string",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $addFields: {
-        awayTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$awayTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+          datetime_utc: "$dateTimeUtc",
+          awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+          homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+          awayTeamAbbreviation: {
+            $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
           },
-        },
-        homeTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$homeTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+          homeTeamAbbreviation: {
+            $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
           },
-        },
-      },
-    },
-    {
-      $lookup: {
-        from: "players",
-        let: {
-          awayTeamStartingPictcherId: {
-            $toInt: "$startingPitchers.awayteam.player.id",
-          },
-          homeTeamStartingPictcherId: {
-            $toInt: "$startingPitchers.hometeam.player.id",
-          },
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: [
-                        "$goalServePlayerId",
-                        "$$awayTeamStartingPictcherId",
-                      ],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                    goalServePlayerId: 1,
-                    pitching: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: [
-                        "$goalServePlayerId",
-                        "$$homeTeamStartingPictcherId",
-                      ],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                    goalServePlayerId: 1,
-                    pitching: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "startingPitchersPlayer",
-      },
-    },
-    {
-      $project: {
-        id: true,
-        attendance: true,
-        status: true,
-        venueName: true,
-        startingPitcher: {
+          homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+          awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
           awayTeam: {
-            wins: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.wins",
-                0,
+            awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            goalServeAwayTeamId: {
+              $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
+            },
+            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            moneyline: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
               ],
             },
-            losses: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.losses",
-                0,
-              ],
-            },
-            playerName: {
-              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
-            },
-            earned_run_average: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
-                0,
-              ],
-            },
-            walk_hits_per_inning_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.walk_hits_per_inning_pitched",
-                0,
-              ],
-            },
-            innings_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.innings_pitched",
-                0,
-              ],
-            },
-            hits: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.hits",
-                0,
-              ],
-            },
-            strikeouts: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.strikeouts",
-                0,
-              ],
-            },
-            walks: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.walks",
-                0,
-              ],
-            },
-            home_runs: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.home_runs",
-                0,
-              ],
-            },
+            spread: "$odds.awayTeamSpread",
+
+            total: "$odds.awayTeamTotal",
           },
           homeTeam: {
-            wins: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.wins",
-                0,
+            homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            goalServeHomeTeamId: {
+              $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+            },
+            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            moneyline: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
               ],
             },
-            losses: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.losses",
-                0,
-              ],
-            },
-            playerName: {
-              $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
-            },
-            earned_run_average: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
-                0,
-              ],
-            },
-            walk_hits_per_inning_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.walk_hits_per_inning_pitched",
-                0,
-              ],
-            },
-            innings_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.innings_pitched",
-                0,
-              ],
-            },
-            hits: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.hits",
-                0,
-              ],
-            },
-            strikeouts: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.strikeouts",
-                0,
-              ],
-            },
-            walks: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.walks",
-                0,
-              ],
-            },
-            home_runs: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.home_runs",
-                0,
-              ],
-            },
-          },
-        },
-        datetime_utc: "$dateTimeUtc",
-        awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-        homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-        awayTeamAbbreviation: {
-          $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
-        },
-        homeTeamAbbreviation: {
-          $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
-        },
-        homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-        awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-        awayTeam: {
-          awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-          goalServeAwayTeamId: {
-            $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
-          },
-          won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          moneyline: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
-              "$odds.awayTeamMoneyline.us",
-            ],
-          },
-          spread: "$odds.awayTeamSpread",
+            spread: "$odds.homeTeamSpread",
 
-          total: "$odds.awayTeamTotal",
-        },
-        homeTeam: {
-          homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-          goalServeHomeTeamId: {
-            $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+            total: "$odds.homeTeamTotal",
           },
-          won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          moneyline: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          spread: "$odds.homeTeamSpread",
-
-          total: "$odds.homeTeamTotal",
-        },
-        injuredPlayers: {
-          homeTeam: {
-            $map: {
-              input: "$homeTeamInjuredPlayers",
-              as: "item",
-              in: {
-                date: "$$item.date",
-                description: "$$item.description",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                playerName: "$$item.playerName",
-                status: "$$item.status",
-                teamId: "$$item.teamId",
-                goalServeTeamId: "$$item.goalServeTeamId",
-              },
-            },
-          },
-          awayTeam: {
-            $map: {
-              input: "$awayTeamInjuredPlayers",
-              as: "item",
-              in: {
-                date: "$$item.date",
-                description: "$$item.description",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                playerName: "$$item.playerName",
-                status: "$$item.status",
-                teamId: "$$item.teamId",
-                goalServeTeamId: "$$item.goalServeTeamId",
-              },
-            },
-          },
-        },
-
-        teamStatistics: [
-          {
-            title: "Hits",
-            homeTeam: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
-            awayTeam: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
-            total: {
-              $add: [
-                {
-                  $toInt: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
-                },
-                {
-                  $toInt: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
-                },
-              ],
-            },
-          },
-          {
-            title: "RBI",
+          injuredPlayers: {
             homeTeam: {
-              $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
+              $map: {
+                input: "$homeTeamInjuredPlayers",
+                as: "item",
+                in: {
+                  date: "$$item.date",
+                  description: "$$item.description",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  playerName: "$$item.playerName",
+                  status: "$$item.status",
+                  teamId: "$$item.teamId",
+                  goalServeTeamId: "$$item.goalServeTeamId",
+                },
+              },
             },
             awayTeam: {
-              $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
-            },
-            total: {
-              $add: [
-                {
-                  $toInt: {
-                    $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
-                  },
+              $map: {
+                input: "$awayTeamInjuredPlayers",
+                as: "item",
+                in: {
+                  date: "$$item.date",
+                  description: "$$item.description",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  playerName: "$$item.playerName",
+                  status: "$$item.status",
+                  teamId: "$$item.teamId",
+                  goalServeTeamId: "$$item.goalServeTeamId",
                 },
-                {
-                  $toInt: {
-                    $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
-                  },
-                },
-              ],
+              },
             },
           },
-          {
-            title: "Home Runs",
-            homeTeam: {
-              $arrayElemAt: ["$statsTeams.homeTeam.home_runs", 0],
+
+          teamStatistics: [
+            {
+              title: "Hits",
+              homeTeam: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
+              awayTeam: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
+              total: {
+                $add: [
+                  {
+                    $toInt: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
+                  },
+                  {
+                    $toInt: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
+                  },
+                ],
+              },
             },
+            {
+              title: "RBI",
+              homeTeam: {
+                $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
+              },
+              awayTeam: {
+                $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
+              },
+              total: {
+                $add: [
+                  {
+                    $toInt: {
+                      $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
+                    },
+                  },
+                  {
+                    $toInt: {
+                      $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              title: "Home Runs",
+              homeTeam: {
+                $arrayElemAt: ["$statsTeams.homeTeam.home_runs", 0],
+              },
+              awayTeam: {
+                $arrayElemAt: ["$statsTeams.awayTeam.home_runs", 0],
+              },
+              total: {
+                $add: [
+                  {
+                    $toInt: {
+                      $arrayElemAt: ["$statsTeams.awayTeam.home_runs", 0],
+                    },
+                  },
+                  {
+                    $toInt: {
+                      $arrayElemAt: ["$statsTeams.homeTeam.home_runs", 0],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+
+          battingPlayerStatistics: {
             awayTeam: {
-              $arrayElemAt: ["$statsTeams.awayTeam.home_runs", 0],
-            },
-            total: {
-              $add: [
-                {
-                  $toInt: {
-                    $arrayElemAt: ["$statsTeams.awayTeam.home_runs", 0],
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$players",
+                    cond: {
+                      $eq: ["$$this.goalServeTeamId", "$goalServeAwayTeamId"],
+                    },
                   },
                 },
-                {
-                  $toInt: {
-                    $arrayElemAt: ["$statsTeams.homeTeam.home_runs", 0],
-                  },
-                },
-              ],
-            },
-          },
-        ],
+                as: "player",
+                in: {
+                  $cond: [
+                    { $eq: ["$$player", []] },
+                    [],
+                    {
+                      playerName: "$$player.name",
+                      goalServePlayerId: "$$player.goalServePlayerId",
+                      goalServeTeamId: "$$player.goalServeTeamId",
 
-        battingPlayerStatistics: {
-          awayTeam: {
-            $map: {
-              input: {
-                $filter: {
-                  input: "$players",
-                  cond: {
-                    $eq: ["$$this.goalServeTeamId", "$goalServeAwayTeamId"],
-                  },
+                      at_bats: "$$player.batting.at_bats",
+                      hits: "$$player.batting.hits",
+                      runs: "$$player.batting.runs",
+                      runs_batted_in: "$$player.batting.runs_batted_in",
+                      walks: "$$player.batting.walks",
+                      home_runs: "$$player.batting.home_runs",
+                      batting_avg: "$$player.batting.batting_avg",
+                    },
+                  ],
                 },
               },
-              as: "player",
-              in: {
-                $cond: [
-                  { $eq: ["$$player", []] },
-                  [],
-                  {
-                    playerName: "$$player.name",
-                    goalServePlayerId: "$$player.goalServePlayerId",
-                    goalServeTeamId: "$$player.goalServeTeamId",
-
-                    at_bats: "$$player.batting.at_bats",
-                    hits: "$$player.batting.hits",
-                    runs: "$$player.batting.runs",
-                    runs_batted_in: "$$player.batting.runs_batted_in",
-                    walks: "$$player.batting.walks",
-                    home_runs: "$$player.batting.home_runs",
-                    batting_avg: "$$player.batting.batting_avg",
+            },
+            homeTeam: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$players",
+                    cond: {
+                      $eq: ["$$this.goalServeTeamId", "$goalServeHomeTeamId"],
+                    },
                   },
+                },
+                as: "player",
+                in: {
+                  $cond: [
+                    { $eq: ["$$player", []] },
+                    [],
+                    {
+                      playerName: "$$player.name",
+                      goalServePlayerId: "$$player.goalServePlayerId",
+                      goalServeTeamId: "$$player.goalServeTeamId",
+                      at_bats: "$$player.batting.at_bats",
+                      hits: "$$player.batting.hits",
+                      runs: "$$player.batting.runs",
+                      runs_batted_in: "$$player.batting.runs_batted_in",
+                      walks: "$$player.batting.walks",
+                      home_runs: "$$player.batting.home_runs",
+                      batting_avg: "$$player.batting.batting_avg",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          closingOddsAndOutcome: {
+            awayTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$odds.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpreadUs"] },
+                  "$odds.homeTeamSpreadUs",
                 ],
               },
             },
-          },
-          homeTeam: {
-            $map: {
-              input: {
-                $filter: {
-                  input: "$players",
-                  cond: {
-                    $eq: ["$$this.goalServeTeamId", "$goalServeHomeTeamId"],
-                  },
-                },
-              },
-              as: "player",
-              in: {
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$odds.awayTeamSpread",
+              awayTeamSpreadUs: {
                 $cond: [
-                  { $eq: ["$$player", []] },
-                  [],
-                  {
-                    playerName: "$$player.name",
-                    goalServePlayerId: "$$player.goalServePlayerId",
-                    goalServeTeamId: "$$player.goalServeTeamId",
-                    at_bats: "$$player.batting.at_bats",
-                    hits: "$$player.batting.hits",
-                    runs: "$$player.batting.runs",
-                    runs_batted_in: "$$player.batting.runs_batted_in",
-                    walks: "$$player.batting.walks",
-                    home_runs: "$$player.batting.home_runs",
-                    batting_avg: "$$player.batting.batting_avg",
-                  },
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpreadUs"] },
+                  "$odds.awayTeamSpreadUs",
                 ],
               },
             },
+            homeTeamTotal: "$odds.homeTeamTotal",
+            awayTeamTotal: "$odds.awayTeamTotal",
           },
-        },
-        closingOddsAndOutcome: {
-          awayTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
-              "$odds.awayTeamMoneyline.us",
-            ],
-          },
-          homeTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          homeTeamSpreadObj: {
-            homeTeamSpread: "$odds.homeTeamSpread",
-            homeTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.homeTeamSpreadUs"] },
-                "$odds.homeTeamSpreadUs",
-              ],
-            },
-          },
-          awayTeamSpreadObj: {
-            awayTeamSpread: "$odds.awayTeamSpread",
-            awayTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.awayTeamSpreadUs"] },
-                "$odds.awayTeamSpreadUs",
-              ],
-            },
-          },
-          homeTeamTotal: "$odds.homeTeamTotal",
-          awayTeamTotal: "$odds.awayTeamTotal",
         },
       },
-    },
-  ]);
-  return { getMatch: getMatch[0] };
+    ]);
+    return { getMatch: getMatch[0] };
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 
 const createOdds = async () => {
@@ -4537,143 +4546,147 @@ const updateTeamStats = async () => {
   );
 };
 const updatePlayerStats = async () => {
-  const team = await Team.find({ isDeleted: false });
+  try {
+    const team = await Team.find({ isDeleted: false });
 
-  let data = {
-    json: true,
-  };
+    let data = {
+      json: true,
+    };
 
-  await Promise.all(
-    team.map(async (item) => {
-      const roasterApi = await goalserveApi(
-        "https://www.goalserve.com/getfeed",
-        data,
-        `baseball/${item.goalServeTeamId}_rosters`
-      );
-
-      const statsApi = await goalserveApi(
-        "https://www.goalserve.com/getfeed",
-        data,
-        `baseball/${item.goalServeTeamId}_stats`
-      );
-
-      let allRosterPlayers: any = [];
-      let allStatPlayers: any = [];
-      let finalArr: any = [];
-
-      roasterApi?.data?.team.position.map((item: any) => {
-        if (item.player.length) {
-          item.player.map((player: any) => {
-            player.positionType = item.name;
-            allRosterPlayers.push(player);
-          });
-        }
-      });
-
-      statsApi?.data?.statistic.category.forEach((cat: any) => {
-        if (cat.team && cat.team.player.length) {
-          cat.team.player.forEach((player: any) => {
-            if (cat.name == "Batting") {
-              player.type = "batting";
-              allStatPlayers.push(player);
-            }
-            if (cat.name == "Pitching") {
-              player.type = "pitching";
-              allStatPlayers.push(player);
-            }
-          });
-        } else if (cat.position.length && cat.name == "Fielding") {
-          cat.position.forEach((item: any) => {
-            if (item.player.length) {
-              item.player.forEach((player: any) => {
-                player.type = "fielding";
-                allStatPlayers.push(player);
-              });
-            } else {
-              item.player.type = "fielding";
-              allStatPlayers.push(item.player);
-            }
-          });
-        }
-      });
-      let uniqueValues = [
-        ...new Map(
-          allStatPlayers.map((item: any) => [item["id"], item])
-        ).values(),
-      ];
-
-      uniqueValues.forEach((item: any) => {
-        let rosterData = allRosterPlayers.filter(
-          (player: any) => player.id == item.id
+    await Promise.all(
+      team.map(async (item) => {
+        const roasterApi = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          data,
+          `baseball/${item.goalServeTeamId}_rosters`
         );
-        if (rosterData.length) {
-          let statData = allStatPlayers.filter(
-            (player: any) => player.id == rosterData[0].id
-          );
-          if (statData.length) {
-            statData.map((info: any) => {
-              if (info.type == "batting") {
-                rosterData[0].batting = info;
+
+        const statsApi = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          data,
+          `baseball/${item.goalServeTeamId}_stats`
+        );
+
+        let allRosterPlayers: any = [];
+        let allStatPlayers: any = [];
+        let finalArr: any = [];
+
+        roasterApi?.data?.team.position.map((item: any) => {
+          if (item.player.length) {
+            item.player.map((player: any) => {
+              player.positionType = item.name;
+              allRosterPlayers.push(player);
+            });
+          }
+        });
+
+        statsApi?.data?.statistic.category.forEach((cat: any) => {
+          if (cat.team && cat.team.player.length) {
+            cat.team.player.forEach((player: any) => {
+              if (cat.name == "Batting") {
+                player.type = "batting";
+                allStatPlayers.push(player);
               }
-              if (info.type == "pitching") {
-                rosterData[0].pitching = info;
-              }
-              if (info.type == "fielding") {
-                rosterData[0].fielding = info;
+              if (cat.name == "Pitching") {
+                player.type = "pitching";
+                allStatPlayers.push(player);
               }
             });
-            finalArr.push(rosterData[0]);
+          } else if (cat.position.length && cat.name == "Fielding") {
+            cat.position.forEach((item: any) => {
+              if (item.player.length) {
+                item.player.forEach((player: any) => {
+                  player.type = "fielding";
+                  allStatPlayers.push(player);
+                });
+              } else {
+                item.player.type = "fielding";
+                allStatPlayers.push(item.player);
+              }
+            });
           }
-        } else {
-          let statData = allStatPlayers.filter(
+        });
+        let uniqueValues = [
+          ...new Map(
+            allStatPlayers.map((item: any) => [item["id"], item])
+          ).values(),
+        ];
+
+        uniqueValues.forEach((item: any) => {
+          let rosterData = allRosterPlayers.filter(
             (player: any) => player.id == item.id
           );
-          let data: any = {};
-          statData.map((info: any) => {
-            data = {
-              name: statData[0].name,
-              id: statData[0].id,
-            };
-            if (info.type == "batting") {
-              data.batting = info;
+          if (rosterData.length) {
+            let statData = allStatPlayers.filter(
+              (player: any) => player.id == rosterData[0].id
+            );
+            if (statData.length) {
+              statData.map((info: any) => {
+                if (info.type == "batting") {
+                  rosterData[0].batting = info;
+                }
+                if (info.type == "pitching") {
+                  rosterData[0].pitching = info;
+                }
+                if (info.type == "fielding") {
+                  rosterData[0].fielding = info;
+                }
+              });
+              finalArr.push(rosterData[0]);
             }
-            if (info.type == "pitching") {
-              data.pitching = info;
-            }
-            if (info.type == "fielding") {
-              data.fielding = info;
-            }
-          });
-          finalArr.push(data);
-        }
-      });
+          } else {
+            let statData = allStatPlayers.filter(
+              (player: any) => player.id == item.id
+            );
+            let data: any = {};
+            statData.map((info: any) => {
+              data = {
+                name: statData[0].name,
+                id: statData[0].id,
+              };
+              if (info.type == "batting") {
+                data.batting = info;
+              }
+              if (info.type == "pitching") {
+                data.pitching = info;
+              }
+              if (info.type == "fielding") {
+                data.fielding = info;
+              }
+            });
+            finalArr.push(data);
+          }
+        });
 
-      finalArr.map(async (eVal: any) => {
-        let data = {
-          goalServeTeamId: item.goalServeTeamId,
-          age: eVal.age,
-          bats: eVal.bats,
-          height: eVal.height,
-          goalServePlayerId: eVal.id,
-          name: eVal.name,
-          number: eVal.number,
-          position: eVal.position,
-          salary: eVal.salary,
-          throws: eVal.throws,
-          weight: eVal.weight,
-          pitching: eVal?.pitching,
-          batting: eVal?.batting,
-          fielding: eVal?.fielding,
-          positionType: eVal?.positionType,
-        };
-        await Player.findOneAndUpdate(
-          { goalServePlayerId: eVal.id },
-          { $set: data },
-          { new: true, upsert: true }
-        );
-      });
-    })
-  );
+        finalArr.map(async (eVal: any) => {
+          let data = {
+            goalServeTeamId: item.goalServeTeamId,
+            age: eVal.age,
+            bats: eVal.bats,
+            height: eVal.height,
+            goalServePlayerId: eVal.id,
+            name: eVal.name,
+            number: eVal.number,
+            position: eVal.position,
+            salary: eVal.salary,
+            throws: eVal.throws,
+            weight: eVal.weight,
+            pitching: eVal?.pitching,
+            batting: eVal?.batting,
+            fielding: eVal?.fielding,
+            positionType: eVal?.positionType,
+          };
+          await Player.findOneAndUpdate(
+            { goalServePlayerId: eVal.id },
+            { $set: data },
+            { new: true, upsert: true }
+          );
+        });
+      })
+    );
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 
 function findWinLoss(arr: any, goalServeTeamId: string) {
@@ -4702,2638 +4715,2650 @@ function findWinLoss(arr: any, goalServeTeamId: string) {
   return `${teamWins}-${teamLost}`;
 }
 const mlbGetTeam = async (goalServeTeamId: string) => {
-  const getTeam = await Standings.aggregate([
-    {
-      $match: {
-        goalServeTeamId: Number(goalServeTeamId),
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        localField: "goalServeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "images",
-      },
-    },
-    {
-      $unwind: {
-        path: "$images",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $lookup: {
-        from: "matches",
-        let: {
-          goalServeTeamId: "$goalServeTeamId",
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  {
-                    $or: [
-                      {
-                        $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"],
-                      },
-                      {
-                        $eq: ["$goalServeHomeTeamId", "$$goalServeTeamId"],
-                      },
-                    ],
-                  },
-                  {
-                    $eq: ["$status", "Final"],
-                  },
-                ],
-              },
-            },
-          },
-          {
-            $sort: { dateUtc: -1 },
-          },
-          {
-            $limit: 10,
-          },
-        ],
-        as: "lastMatches",
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        let: {
-          parentDivision: "$division",
-        },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ["$division", "$$parentDivision"],
-              },
-            },
-          },
-          {
-            $lookup: {
-              from: "teamImages",
-              localField: "goalServeTeamId",
-              foreignField: "goalServeTeamId",
-              as: "teamImage",
-            },
-          },
-          {
-            $lookup: {
-              from: "matches",
-              let: {
-                goalServeTeamId: "$goalServeTeamId",
-              },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $and: [
-                        {
-                          $or: [
-                            {
-                              $eq: [
-                                "$goalServeAwayTeamId",
-                                "$$goalServeTeamId",
-                              ],
-                            },
-                            {
-                              $eq: [
-                                "$goalServeHomeTeamId",
-                                "$$goalServeTeamId",
-                              ],
-                            },
-                          ],
-                        },
-                        {
-                          $eq: ["$status", "Final"],
-                        },
-                      ],
-                    },
-                  },
-                },
-                {
-                  $sort: { dateUtc: -1 },
-                },
-                {
-                  $limit: 10,
-                },
-              ],
-              as: "lastMatches",
-            },
-          },
-
-          {
-            $project: {
-              name: true,
-              won: true,
-              lost: true,
-              games_back: true,
-              away_record: true,
-              home_record: true,
-              goalServeTeamId: true,
-              lastMatches: true,
-              streak: "$current_streak",
-              teamImage: { $arrayElemAt: ["$teamImage.image", 0] },
-            },
-          },
-        ],
-        as: "divisionStandings",
-      },
-    },
-    {
-      $lookup: {
-        from: "injuries",
-        localField: "goalServeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "teamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "players",
-        let: {
-          goalServeTeamId: "$goalServeTeamId",
-        },
-
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
-              },
-            },
-          },
-          {
-            $addFields: {
-              hits: {
-                $toDouble: "$batting.hits",
-              },
-              home_runs: {
-                $toDouble: "$batting.home_runs",
-              },
-              batting_avg: {
-                $toDouble: "$batting.batting_avg",
-              },
-              runs_batted_in: {
-                $toDouble: "$batting.runs_batted_in",
-              },
-              on_base_percentage: {
-                $toDouble: "$batting.on_base_percentage",
-              },
-              wins: {
-                $toDouble: "$pitching.wins",
-              },
-              earned_run_average: {
-                $toDouble: "$pitching.earned_run_average",
-              },
-              strikeouts: {
-                $toDouble: "$pitching.strikeouts",
-              },
-              saves: {
-                $toDouble: "$pitching.saves",
-              },
-              holds: {
-                $toDouble: "$pitching.holds",
-              },
-            },
-          },
-          {
-            $facet: {
-              maxHits: [
-                {
-                  $sort: {
-                    hits: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxHomeRun: [
-                {
-                  $sort: {
-                    home_runs: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxOnBasePercentage: [
-                {
-                  $sort: {
-                    on_base_percentage: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxRunsBattedIn: [
-                {
-                  $sort: {
-                    runs_batted_in: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxBattingAvg: [
-                {
-                  $sort: {
-                    batting_avg: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxHolds: [
-                {
-                  $sort: {
-                    holds: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxSaves: [
-                {
-                  $sort: {
-                    saves: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxStrikeouts: [
-                {
-                  $sort: {
-                    strikeouts: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxEarnedRunAverage: [
-                {
-                  $sort: {
-                    earned_run_average: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-              maxWins: [
-                {
-                  $sort: {
-                    wins: -1,
-                  },
-                },
-                {
-                  $limit: 1,
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              maxHits: {
-                $arrayElemAt: ["$maxHits", 0],
-              },
-              maxHomeRun: {
-                $arrayElemAt: ["$maxHomeRun", 0],
-              },
-              maxBattingAvg: {
-                $arrayElemAt: ["$maxBattingAvg", 0],
-              },
-              maxRunsBattedIn: {
-                $arrayElemAt: ["$maxRunsBattedIn", 0],
-              },
-              maxOnBasePercentage: {
-                $arrayElemAt: ["$maxOnBasePercentage", 0],
-              },
-              maxHolds: {
-                $arrayElemAt: ["$maxHolds", 0],
-              },
-              maxSaves: {
-                $arrayElemAt: ["$maxSaves", 0],
-              },
-              maxStrikeouts: {
-                $arrayElemAt: ["$maxStrikeouts", 0],
-              },
-              maxEarnedRunAverage: {
-                $arrayElemAt: ["$maxEarnedRunAverage", 0],
-              },
-
-              maxWins: {
-                $arrayElemAt: ["$maxWins", 0],
-              },
-            },
-          },
-          {
-            $project: {
-              maxHomeRun: {
-                home_runs: "$maxHomeRun.home_runs",
-                name: "$maxHomeRun.name",
-                number: "$maxHomeRun.number",
-              },
-              maxHits: {
-                hits: "$maxHits.hits",
-                name: "$maxHits.name",
-                number: "$maxHits.number",
-              },
-              maxBattingAvg: {
-                batting_avg: "$maxBattingAvg.batting_avg",
-                name: "$maxBattingAvg.name",
-                number: "$maxBattingAvg.number",
-              },
-              maxRunsBattedIn: {
-                runs_batted_in: "$maxRunsBattedIn.runs_batted_in",
-                name: "$maxRunsBattedIn.name",
-                number: "$maxRunsBattedIn.number",
-              },
-              maxOnBasePercentage: {
-                on_base_percentage: "$maxOnBasePercentage.on_base_percentage",
-                name: "$maxOnBasePercentage.name",
-                number: "$maxOnBasePercentage.number",
-              },
-              maxHolds: {
-                holds: "$maxHolds.holds",
-                name: "$maxHolds.name",
-                number: "$maxHolds.number",
-              },
-              maxEarnedRunAverage: {
-                earned_run_average: "$maxEarnedRunAverage.earned_run_average",
-                name: "$maxEarnedRunAverage.name",
-                number: "$maxEarnedRunAverage.number",
-              },
-              maxSaves: {
-                saves: "$maxSaves.saves",
-                name: "$maxSaves.name",
-                number: "$maxSaves.number",
-              },
-              maxStrikeouts: {
-                strikeouts: "$maxStrikeouts.strikeouts",
-                name: "$maxStrikeouts.name",
-                number: "$maxStrikeouts.number",
-              },
-
-              maxWins: {
-                wins: "$maxWins.wins",
-                name: "$maxWins.name",
-                number: "$maxWins.number",
-              },
-            },
-          },
-        ],
-        as: "teamLeaders",
-      },
-    },
-    {
-      $unwind: "$teamLeaders",
-    },
-    {
-      $lookup: {
-        from: "players",
-        localField: "goalServeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "teamPlayers",
-      },
-    },
-    {
-      $addFields: {
-        positions: {
-          $setUnion: "$teamPlayers.positionType",
+  try {
+    const getTeam = await Standings.aggregate([
+      {
+        $match: {
+          goalServeTeamId: Number(goalServeTeamId),
         },
       },
-    },
-    {
-      $lookup: {
-        from: "matches",
-        let: {
-          goalServeTeamId: "$goalServeTeamId",
+      {
+        $lookup: {
+          from: "teamImages",
+          localField: "goalServeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "images",
         },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  {
-                    $or: [
-                      {
-                        $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"],
-                      },
-                      {
-                        $eq: ["$goalServeHomeTeamId", "$$goalServeTeamId"],
-                      },
-                    ],
-                  },
-                  {
-                    $eq: ["$status", "Final"],
-                  },
-                ],
-              },
-            },
-          },
-          {
-            $addFields: {
-              opposingTeamId: {
-                $cond: {
-                  if: {
-                    $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"],
-                  },
-                  then: "$goalServeHomeTeamId",
-                  else: "$goalServeAwayTeamId",
-                },
-              },
-            },
-          },
-          {
-            $addFields: {
-              dateUtc: {
-                $dateFromString: {
-                  dateString: "$dateTimeUtc",
-                  timezone: "UTC",
-                },
-              },
-              awayTeamTotalScoreInNumber: {
-                $convert: {
-                  input: "$awayTeamTotalScore",
-                  to: "int",
-                  onError: 0, // Default value when conversion fails
-                },
-              },
-
-              homeTeamTotalScoreInNumber: {
-                $convert: {
-                  input: "$homeTeamTotalScore",
-                  to: "int",
-                  onError: 0, // Default value when conversion fails
-                },
-              },
-            },
-          },
-          {
-            $sort: {
-              dateUtc: -1,
-            },
-          },
-          {
-            $limit: 5,
-          },
-          {
-            $lookup: {
-              from: "teams",
-              let: {
-                opposingTeamId: "$opposingTeamId",
-              },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$opposingTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-                {
-                  $lookup: {
-                    from: "teamImages",
-                    let: {
-                      opposingTeamId: "$$opposingTeamId",
-                    },
-                    pipeline: [
-                      {
-                        $match: {
-                          $expr: {
-                            $eq: ["$goalServeTeamId", "$$opposingTeamId"],
-                          },
-                        },
-                      },
-                      {
-                        $project: {
-                          _id: 0,
-                          image: 1,
-                        },
-                      },
-                    ],
-                    as: "opposingTeamImage",
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    goalServeTeamId: 1,
-                    name: 1,
-                    abbreviation: 1,
-                    opposingTeamImage: {
-                      $arrayElemAt: ["$opposingTeamImage.image", 0],
-                    },
-                  },
-                },
-              ],
-              as: "opposingTeam",
-            },
-          },
-          {
-            $lookup: {
-              from: "odds",
-              let: {
-                matchId: "$goalServeMatchId",
-              },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeMatchId", "$$matchId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    spread: {
-                      $cond: {
-                        if: {
-                          $eq: ["$goalServeHomeTeamId", "$goalServeTeamId"],
-                        },
-                        then: "$homeTeamSpread",
-                        else: "$awayTeamSpread",
-                      },
-                    },
-                    total: {
-                      $cond: {
-                        if: {
-                          $eq: ["$goalServeHomeTeamId", "$goalServeTeamId"],
-                        },
-                        then: "$homeTeamTotal",
-                        else: "$awayTeamTotal",
-                      },
-                    },
-                  },
-                },
-              ],
-              as: "odds",
-            },
-          },
-        ],
-        as: "schedule",
       },
-    },
-    {
-      $project: {
-        id: true,
-        goalServeTeamId: true,
-        teamImage: "$images.image",
-        name: true,
-        lastMatches: true,
-        streak: "$current_streak",
-        division: true,
-        position: true,
-        won: true,
-        lost: true,
-        playerStatistics: {
-          playerBattingStats: {
-            $map: {
-              input: {
-                $filter: {
-                  input: "$teamPlayers",
-                  as: "item",
-                  cond: {
-                    $and: [
-                      { $ne: ["$$item.batting", null] },
-                      { $ne: [{ $type: "$$item.batting" }, "missing"] },
-                    ],
-                  },
-                },
-              },
-              as: "item",
-              in: {
-                name: "$$item.name",
-                games_played: "$$item.batting.games_played",
-                batting_avg: "$$item.batting.batting_avg",
-                at_bats: "$$item.batting.at_bats",
-                walks: "$$item.batting.walks",
-                hits: "$$item.batting.hits",
-                runs: "$$item.batting.runs",
-                triples: "$$item.batting.triples",
-                doubles: "$$item.batting.doubles",
-                home_runs: "$$item.batting.home_runs",
-                runs_batted_in: "$$item.batting.runs_batted_in",
-                total_bases: "$$item.batting.total_bases",
-                stolen_bases: "$$item.batting.stolen_bases",
-                strikeouts: "$$item.batting.strikeouts",
-                on_base_percentage: "$$item.batting.on_base_percentage",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                slugging_percentage: "$$item.batting.slugging_percentage",
-                on_base_plus_slugging: {
-                  $round: [
+      {
+        $unwind: {
+          path: "$images",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "matches",
+          let: {
+            goalServeTeamId: "$goalServeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
                     {
-                      $sum: [
+                      $or: [
                         {
-                          $toDouble: "$$item.batting.on_base_percentage",
+                          $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"],
                         },
                         {
-                          $toDouble: "$$item.batting.slugging_percentage",
+                          $eq: ["$goalServeHomeTeamId", "$$goalServeTeamId"],
                         },
                       ],
                     },
-                    3,
+                    {
+                      $eq: ["$status", "Final"],
+                    },
                   ],
                 },
               },
             },
+            {
+              $sort: { dateUtc: -1 },
+            },
+            {
+              $limit: 10,
+            },
+          ],
+          as: "lastMatches",
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          let: {
+            parentDivision: "$division",
           },
-          playerPitchingStats: {
-            $map: {
-              input: {
-                $filter: {
-                  input: "$teamPlayers",
-                  as: "item",
-                  cond: {
-                    $and: [
-                      { $ne: ["$$item.pitching", null] },
-                      { $ne: [{ $type: "$$item.pitching" }, "missing"] },
-                    ],
-                  },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$division", "$$parentDivision"],
                 },
               },
-              as: "item",
-              in: {
-                name: "$$item.name",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                games_played: "$$item.pitching.games_played",
-                games_started: "$$item.pitching.games_started",
-                quality_starts: "$$item.pitching.quality_starts",
-                wins: "$$item.pitching.wins",
-                losses: "$$item.pitching.losses",
-                saves: "$$item.pitching.saves",
-                holds: "$$item.pitching.holds",
-                innings_pitched: "$$item.pitching.innings_pitched",
-                hits: "$$item.pitching.hits",
-                earned_runs: "$$item.pitching.earned_runs",
-                home_runs: "$$item.pitching.home_runs",
-                walks: "$$item.pitching.walks",
-                strikeouts: "$$item.pitching.strikeouts",
-                strikeouts_per_9_innings:
-                  "$$item.pitching.strikeouts_per_9_innings",
-                pitches_per_start: "$$item.pitching.pitches_per_start",
-                walk_hits_per_inning_pitched:
-                  "$$item.pitching.walk_hits_per_inning_pitched",
+            },
+            {
+              $lookup: {
+                from: "teamImages",
+                localField: "goalServeTeamId",
+                foreignField: "goalServeTeamId",
+                as: "teamImage",
               },
             },
-          },
-          playerFieldingStats: {
-            $map: {
-              input: {
-                $filter: {
-                  input: "$teamPlayers",
-                  as: "item",
-                  cond: {
-                    $and: [
-                      { $ne: ["$$item.fielding", null] },
-                      { $ne: [{ $type: "$$item.fielding" }, "missing"] },
-                    ],
-                  },
+            {
+              $lookup: {
+                from: "matches",
+                let: {
+                  goalServeTeamId: "$goalServeTeamId",
                 },
-              },
-              as: "item",
-              in: {
-                name: "$$item.name",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                games_played: "$$item.fielding.games_played",
-                games_started: "$$item.fielding.games_started",
-                full_innings: "$$item.fielding.full_innings",
-                total_chances: "$$item.fielding.total_chances",
-                fielding_percentage: "$$item.fielding.fielding_percentage",
-                putouts: "$$item.fielding.putouts",
-                assists: "$$item.fielding.assists",
-                range_factor: "$$item.fielding.range_factor",
-                errors: "$$item.fielding.errors",
-                double_plays: "$$item.fielding.double_plays",
-              },
-            },
-          },
-        },
-        teamLeaders: {
-          teamLeaderBatting: {
-            maxBattingAvg: "$teamLeaders.maxBattingAvg",
-            maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
-            maxHits: "$teamLeaders.maxHits",
-            maxOnBasePercentage: "$teamLeaders.maxOnBasePercentage",
-            maxHomeRun: "$teamLeaders.maxHomeRun",
-          },
-          teamLeadersPitching: {
-            maxWins: "$teamLeaders.maxWins",
-            maxStrikeouts: "$teamLeaders.maxStrikeouts",
-            maxSaves: "$teamLeaders.maxSaves",
-            maxEarnedRunAverage: "$teamLeaders.maxEarnedRunAverage",
-            maxHolds: "$teamLeaders.maxHolds",
-          },
-        },
-        roaster: {
-          $map: {
-            input: "$positions",
-            as: "pos",
-            in: {
-              position: "$$pos",
-              players: {
-                $map: {
-                  input: {
-                    $filter: {
-                      input: "$teamPlayers",
-                      as: "player",
-                      cond: {
-                        $eq: ["$$player.positionType", "$$pos"],
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          {
+                            $or: [
+                              {
+                                $eq: [
+                                  "$goalServeAwayTeamId",
+                                  "$$goalServeTeamId",
+                                ],
+                              },
+                              {
+                                $eq: [
+                                  "$goalServeHomeTeamId",
+                                  "$$goalServeTeamId",
+                                ],
+                              },
+                            ],
+                          },
+                          {
+                            $eq: ["$status", "Final"],
+                          },
+                        ],
                       },
                     },
                   },
-                  as: "player",
-                  in: {
-                    name: "$$player.name",
-                    height: "$$player.height",
-                    weight: "$$player.weight",
-                    birthplace: "$$player.birth_place",
-                    salary: "$$player.salarycap",
-                    age: "$$player.age",
-                    bats: "$$player.bats",
-                    throws: "$$player.throws",
-                    position: "$$player.position",
-                    goalServePlayerId: "$$player.goalServePlayerId",
-                    number: "$$player.number",
+                  {
+                    $sort: { dateUtc: -1 },
                   },
-                },
+                  {
+                    $limit: 10,
+                  },
+                ],
+                as: "lastMatches",
               },
             },
-          },
+
+            {
+              $project: {
+                name: true,
+                won: true,
+                lost: true,
+                games_back: true,
+                away_record: true,
+                home_record: true,
+                goalServeTeamId: true,
+                lastMatches: true,
+                streak: "$current_streak",
+                teamImage: { $arrayElemAt: ["$teamImage.image", 0] },
+              },
+            },
+          ],
+          as: "divisionStandings",
         },
-        teamDetails: {
-          divisionStandings: "$divisionStandings",
-          teamLeaders: {
-            maxBattingAvg: "$teamLeaders.maxBattingAvg",
-            maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
-            maxHits: "$teamLeaders.maxHits",
-          },
-          teamInjuredPlayers: {
-            $map: {
-              input: "$teamInjuredPlayers",
-              as: "item",
-              in: {
-                date: "$$item.date",
-                description: "$$item.description",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                playerName: "$$item.playerName",
-                status: "$$item.status",
-                goalServeTeamId: "$$item.goalServeTeamId",
-              },
-            },
+      },
+      {
+        $lookup: {
+          from: "injuries",
+          localField: "goalServeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "teamInjuredPlayers",
+        },
+      },
+      {
+        $lookup: {
+          from: "players",
+          let: {
+            goalServeTeamId: "$goalServeTeamId",
           },
 
-          matches: {
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
+                },
+              },
+            },
+            {
+              $addFields: {
+                hits: {
+                  $toDouble: "$batting.hits",
+                },
+                home_runs: {
+                  $toDouble: "$batting.home_runs",
+                },
+                batting_avg: {
+                  $toDouble: "$batting.batting_avg",
+                },
+                runs_batted_in: {
+                  $toDouble: "$batting.runs_batted_in",
+                },
+                on_base_percentage: {
+                  $toDouble: "$batting.on_base_percentage",
+                },
+                wins: {
+                  $toDouble: "$pitching.wins",
+                },
+                earned_run_average: {
+                  $toDouble: "$pitching.earned_run_average",
+                },
+                strikeouts: {
+                  $toDouble: "$pitching.strikeouts",
+                },
+                saves: {
+                  $toDouble: "$pitching.saves",
+                },
+                holds: {
+                  $toDouble: "$pitching.holds",
+                },
+              },
+            },
+            {
+              $facet: {
+                maxHits: [
+                  {
+                    $sort: {
+                      hits: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxHomeRun: [
+                  {
+                    $sort: {
+                      home_runs: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxOnBasePercentage: [
+                  {
+                    $sort: {
+                      on_base_percentage: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxRunsBattedIn: [
+                  {
+                    $sort: {
+                      runs_batted_in: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxBattingAvg: [
+                  {
+                    $sort: {
+                      batting_avg: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxHolds: [
+                  {
+                    $sort: {
+                      holds: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxSaves: [
+                  {
+                    $sort: {
+                      saves: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxStrikeouts: [
+                  {
+                    $sort: {
+                      strikeouts: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxEarnedRunAverage: [
+                  {
+                    $sort: {
+                      earned_run_average: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxWins: [
+                  {
+                    $sort: {
+                      wins: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                maxHits: {
+                  $arrayElemAt: ["$maxHits", 0],
+                },
+                maxHomeRun: {
+                  $arrayElemAt: ["$maxHomeRun", 0],
+                },
+                maxBattingAvg: {
+                  $arrayElemAt: ["$maxBattingAvg", 0],
+                },
+                maxRunsBattedIn: {
+                  $arrayElemAt: ["$maxRunsBattedIn", 0],
+                },
+                maxOnBasePercentage: {
+                  $arrayElemAt: ["$maxOnBasePercentage", 0],
+                },
+                maxHolds: {
+                  $arrayElemAt: ["$maxHolds", 0],
+                },
+                maxSaves: {
+                  $arrayElemAt: ["$maxSaves", 0],
+                },
+                maxStrikeouts: {
+                  $arrayElemAt: ["$maxStrikeouts", 0],
+                },
+                maxEarnedRunAverage: {
+                  $arrayElemAt: ["$maxEarnedRunAverage", 0],
+                },
+
+                maxWins: {
+                  $arrayElemAt: ["$maxWins", 0],
+                },
+              },
+            },
+            {
+              $project: {
+                maxHomeRun: {
+                  home_runs: "$maxHomeRun.home_runs",
+                  name: "$maxHomeRun.name",
+                  number: "$maxHomeRun.number",
+                },
+                maxHits: {
+                  hits: "$maxHits.hits",
+                  name: "$maxHits.name",
+                  number: "$maxHits.number",
+                },
+                maxBattingAvg: {
+                  batting_avg: "$maxBattingAvg.batting_avg",
+                  name: "$maxBattingAvg.name",
+                  number: "$maxBattingAvg.number",
+                },
+                maxRunsBattedIn: {
+                  runs_batted_in: "$maxRunsBattedIn.runs_batted_in",
+                  name: "$maxRunsBattedIn.name",
+                  number: "$maxRunsBattedIn.number",
+                },
+                maxOnBasePercentage: {
+                  on_base_percentage: "$maxOnBasePercentage.on_base_percentage",
+                  name: "$maxOnBasePercentage.name",
+                  number: "$maxOnBasePercentage.number",
+                },
+                maxHolds: {
+                  holds: "$maxHolds.holds",
+                  name: "$maxHolds.name",
+                  number: "$maxHolds.number",
+                },
+                maxEarnedRunAverage: {
+                  earned_run_average: "$maxEarnedRunAverage.earned_run_average",
+                  name: "$maxEarnedRunAverage.name",
+                  number: "$maxEarnedRunAverage.number",
+                },
+                maxSaves: {
+                  saves: "$maxSaves.saves",
+                  name: "$maxSaves.name",
+                  number: "$maxSaves.number",
+                },
+                maxStrikeouts: {
+                  strikeouts: "$maxStrikeouts.strikeouts",
+                  name: "$maxStrikeouts.name",
+                  number: "$maxStrikeouts.number",
+                },
+
+                maxWins: {
+                  wins: "$maxWins.wins",
+                  name: "$maxWins.name",
+                  number: "$maxWins.number",
+                },
+              },
+            },
+          ],
+          as: "teamLeaders",
+        },
+      },
+      {
+        $unwind: "$teamLeaders",
+      },
+      {
+        $lookup: {
+          from: "players",
+          localField: "goalServeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "teamPlayers",
+        },
+      },
+      {
+        $addFields: {
+          positions: {
+            $setUnion: "$teamPlayers.positionType",
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "matches",
+          let: {
+            goalServeTeamId: "$goalServeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $or: [
+                        {
+                          $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"],
+                        },
+                        {
+                          $eq: ["$goalServeHomeTeamId", "$$goalServeTeamId"],
+                        },
+                      ],
+                    },
+                    {
+                      $eq: ["$status", "Final"],
+                    },
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                opposingTeamId: {
+                  $cond: {
+                    if: {
+                      $eq: ["$goalServeAwayTeamId", "$$goalServeTeamId"],
+                    },
+                    then: "$goalServeHomeTeamId",
+                    else: "$goalServeAwayTeamId",
+                  },
+                },
+              },
+            },
+            {
+              $addFields: {
+                dateUtc: {
+                  $dateFromString: {
+                    dateString: "$dateTimeUtc",
+                    timezone: "UTC",
+                  },
+                },
+                awayTeamTotalScoreInNumber: {
+                  $convert: {
+                    input: "$awayTeamTotalScore",
+                    to: "int",
+                    onError: 0, // Default value when conversion fails
+                  },
+                },
+
+                homeTeamTotalScoreInNumber: {
+                  $convert: {
+                    input: "$homeTeamTotalScore",
+                    to: "int",
+                    onError: 0, // Default value when conversion fails
+                  },
+                },
+              },
+            },
+            {
+              $sort: {
+                dateUtc: -1,
+              },
+            },
+            {
+              $limit: 5,
+            },
+            {
+              $lookup: {
+                from: "teams",
+                let: {
+                  opposingTeamId: "$opposingTeamId",
+                },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$opposingTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                  {
+                    $lookup: {
+                      from: "teamImages",
+                      let: {
+                        opposingTeamId: "$$opposingTeamId",
+                      },
+                      pipeline: [
+                        {
+                          $match: {
+                            $expr: {
+                              $eq: ["$goalServeTeamId", "$$opposingTeamId"],
+                            },
+                          },
+                        },
+                        {
+                          $project: {
+                            _id: 0,
+                            image: 1,
+                          },
+                        },
+                      ],
+                      as: "opposingTeamImage",
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      goalServeTeamId: 1,
+                      name: 1,
+                      abbreviation: 1,
+                      opposingTeamImage: {
+                        $arrayElemAt: ["$opposingTeamImage.image", 0],
+                      },
+                    },
+                  },
+                ],
+                as: "opposingTeam",
+              },
+            },
+            {
+              $lookup: {
+                from: "odds",
+                let: {
+                  matchId: "$goalServeMatchId",
+                },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeMatchId", "$$matchId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      spread: {
+                        $cond: {
+                          if: {
+                            $eq: ["$goalServeHomeTeamId", "$goalServeTeamId"],
+                          },
+                          then: "$homeTeamSpread",
+                          else: "$awayTeamSpread",
+                        },
+                      },
+                      total: {
+                        $cond: {
+                          if: {
+                            $eq: ["$goalServeHomeTeamId", "$goalServeTeamId"],
+                          },
+                          then: "$homeTeamTotal",
+                          else: "$awayTeamTotal",
+                        },
+                      },
+                    },
+                  },
+                ],
+                as: "odds",
+              },
+            },
+          ],
+          as: "schedule",
+        },
+      },
+      {
+        $project: {
+          id: true,
+          goalServeTeamId: true,
+          teamImage: "$images.image",
+          name: true,
+          lastMatches: true,
+          streak: "$current_streak",
+          division: true,
+          position: true,
+          won: true,
+          lost: true,
+          playerStatistics: {
+            playerBattingStats: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$teamPlayers",
+                    as: "item",
+                    cond: {
+                      $and: [
+                        { $ne: ["$$item.batting", null] },
+                        { $ne: [{ $type: "$$item.batting" }, "missing"] },
+                      ],
+                    },
+                  },
+                },
+                as: "item",
+                in: {
+                  name: "$$item.name",
+                  games_played: "$$item.batting.games_played",
+                  batting_avg: "$$item.batting.batting_avg",
+                  at_bats: "$$item.batting.at_bats",
+                  walks: "$$item.batting.walks",
+                  hits: "$$item.batting.hits",
+                  runs: "$$item.batting.runs",
+                  triples: "$$item.batting.triples",
+                  doubles: "$$item.batting.doubles",
+                  home_runs: "$$item.batting.home_runs",
+                  runs_batted_in: "$$item.batting.runs_batted_in",
+                  total_bases: "$$item.batting.total_bases",
+                  stolen_bases: "$$item.batting.stolen_bases",
+                  strikeouts: "$$item.batting.strikeouts",
+                  on_base_percentage: "$$item.batting.on_base_percentage",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  slugging_percentage: "$$item.batting.slugging_percentage",
+                  on_base_plus_slugging: {
+                    $round: [
+                      {
+                        $sum: [
+                          {
+                            $toDouble: "$$item.batting.on_base_percentage",
+                          },
+                          {
+                            $toDouble: "$$item.batting.slugging_percentage",
+                          },
+                        ],
+                      },
+                      3,
+                    ],
+                  },
+                },
+              },
+            },
+            playerPitchingStats: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$teamPlayers",
+                    as: "item",
+                    cond: {
+                      $and: [
+                        { $ne: ["$$item.pitching", null] },
+                        { $ne: [{ $type: "$$item.pitching" }, "missing"] },
+                      ],
+                    },
+                  },
+                },
+                as: "item",
+                in: {
+                  name: "$$item.name",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  games_played: "$$item.pitching.games_played",
+                  games_started: "$$item.pitching.games_started",
+                  quality_starts: "$$item.pitching.quality_starts",
+                  wins: "$$item.pitching.wins",
+                  losses: "$$item.pitching.losses",
+                  saves: "$$item.pitching.saves",
+                  holds: "$$item.pitching.holds",
+                  innings_pitched: "$$item.pitching.innings_pitched",
+                  hits: "$$item.pitching.hits",
+                  earned_runs: "$$item.pitching.earned_runs",
+                  home_runs: "$$item.pitching.home_runs",
+                  walks: "$$item.pitching.walks",
+                  strikeouts: "$$item.pitching.strikeouts",
+                  strikeouts_per_9_innings:
+                    "$$item.pitching.strikeouts_per_9_innings",
+                  pitches_per_start: "$$item.pitching.pitches_per_start",
+                  walk_hits_per_inning_pitched:
+                    "$$item.pitching.walk_hits_per_inning_pitched",
+                },
+              },
+            },
+            playerFieldingStats: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$teamPlayers",
+                    as: "item",
+                    cond: {
+                      $and: [
+                        { $ne: ["$$item.fielding", null] },
+                        { $ne: [{ $type: "$$item.fielding" }, "missing"] },
+                      ],
+                    },
+                  },
+                },
+                as: "item",
+                in: {
+                  name: "$$item.name",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  games_played: "$$item.fielding.games_played",
+                  games_started: "$$item.fielding.games_started",
+                  full_innings: "$$item.fielding.full_innings",
+                  total_chances: "$$item.fielding.total_chances",
+                  fielding_percentage: "$$item.fielding.fielding_percentage",
+                  putouts: "$$item.fielding.putouts",
+                  assists: "$$item.fielding.assists",
+                  range_factor: "$$item.fielding.range_factor",
+                  errors: "$$item.fielding.errors",
+                  double_plays: "$$item.fielding.double_plays",
+                },
+              },
+            },
+          },
+          teamLeaders: {
+            teamLeaderBatting: {
+              maxBattingAvg: "$teamLeaders.maxBattingAvg",
+              maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
+              maxHits: "$teamLeaders.maxHits",
+              maxOnBasePercentage: "$teamLeaders.maxOnBasePercentage",
+              maxHomeRun: "$teamLeaders.maxHomeRun",
+            },
+            teamLeadersPitching: {
+              maxWins: "$teamLeaders.maxWins",
+              maxStrikeouts: "$teamLeaders.maxStrikeouts",
+              maxSaves: "$teamLeaders.maxSaves",
+              maxEarnedRunAverage: "$teamLeaders.maxEarnedRunAverage",
+              maxHolds: "$teamLeaders.maxHolds",
+            },
+          },
+          roaster: {
             $map: {
-              input: "$schedule",
-              as: "item",
+              input: "$positions",
+              as: "pos",
               in: {
-                isWinner: {
-                  $cond: {
-                    if: {
-                      $eq: ["$$item.goalServeAwayTeamId", "$goalServeTeamId"],
-                    },
-                    then: {
-                      $cond: {
-                        if: {
-                          $gte: [
-                            "$$item.homeTeamTotalScoreInNumber",
-                            "$$item.awayTeamTotalScoreInNumber",
-                          ],
+                position: "$$pos",
+                players: {
+                  $map: {
+                    input: {
+                      $filter: {
+                        input: "$teamPlayers",
+                        as: "player",
+                        cond: {
+                          $eq: ["$$player.positionType", "$$pos"],
                         },
-                        then: "L",
-                        else: "W",
                       },
                     },
-                    else: {
-                      $cond: {
-                        if: {
-                          $gte: [
-                            "$$item.homeTeamTotalScoreInNumber",
-                            "$$item.awayTeamTotalScoreInNumber",
-                          ],
+                    as: "player",
+                    in: {
+                      name: "$$player.name",
+                      height: "$$player.height",
+                      weight: "$$player.weight",
+                      birthplace: "$$player.birth_place",
+                      salary: "$$player.salarycap",
+                      age: "$$player.age",
+                      bats: "$$player.bats",
+                      throws: "$$player.throws",
+                      position: "$$player.position",
+                      goalServePlayerId: "$$player.goalServePlayerId",
+                      number: "$$player.number",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          teamDetails: {
+            divisionStandings: "$divisionStandings",
+            teamLeaders: {
+              maxBattingAvg: "$teamLeaders.maxBattingAvg",
+              maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
+              maxHits: "$teamLeaders.maxHits",
+            },
+            teamInjuredPlayers: {
+              $map: {
+                input: "$teamInjuredPlayers",
+                as: "item",
+                in: {
+                  date: "$$item.date",
+                  description: "$$item.description",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  playerName: "$$item.playerName",
+                  status: "$$item.status",
+                  goalServeTeamId: "$$item.goalServeTeamId",
+                },
+              },
+            },
+
+            matches: {
+              $map: {
+                input: "$schedule",
+                as: "item",
+                in: {
+                  isWinner: {
+                    $cond: {
+                      if: {
+                        $eq: ["$$item.goalServeAwayTeamId", "$goalServeTeamId"],
+                      },
+                      then: {
+                        $cond: {
+                          if: {
+                            $gte: [
+                              "$$item.homeTeamTotalScoreInNumber",
+                              "$$item.awayTeamTotalScoreInNumber",
+                            ],
+                          },
+                          then: "L",
+                          else: "W",
                         },
-                        then: "w",
-                        else: "L",
+                      },
+                      else: {
+                        $cond: {
+                          if: {
+                            $gte: [
+                              "$$item.homeTeamTotalScoreInNumber",
+                              "$$item.awayTeamTotalScoreInNumber",
+                            ],
+                          },
+                          then: "w",
+                          else: "L",
+                        },
                       },
                     },
                   },
-                },
-                pitcher: {
-                  $cond: {
-                    if: {
-                      $eq: ["$goalServeTeamId", "$$item.goalServeAwayTeamId"],
+                  pitcher: {
+                    $cond: {
+                      if: {
+                        $eq: ["$goalServeTeamId", "$$item.goalServeAwayTeamId"],
+                      },
+                      then: "$$item.startingPitchers.awayteam.player.name",
+                      else: "$$item.startingPitchers.hometeam.player.name",
                     },
-                    then: "$$item.startingPitchers.awayteam.player.name",
-                    else: "$$item.startingPitchers.hometeam.player.name",
                   },
-                },
-                oppositePitcher: {
-                  $cond: {
-                    if: {
-                      $eq: ["$goalServeTeamId", "$$item.goalServeAwayTeamId"],
+                  oppositePitcher: {
+                    $cond: {
+                      if: {
+                        $eq: ["$goalServeTeamId", "$$item.goalServeAwayTeamId"],
+                      },
+                      then: "$$item.startingPitchers.hometeam.player.name",
+                      else: "$$item.startingPitchers.awayteam.player.name",
                     },
-                    then: "$$item.startingPitchers.hometeam.player.name",
-                    else: "$$item.startingPitchers.awayteam.player.name",
                   },
+                  opposingTeam: {
+                    $arrayElemAt: ["$$item.opposingTeam", 0],
+                  },
+                  oppositeTeamId: "$$item.oppositeTeamId",
+                  odds: { $arrayElemAt: ["$$item.odds", 0] },
+                  goalServeMatchId: "$$item.goalServeMatchId",
+                  date: "$$item.date",
+                  awayTeamTotalScore: "$$item.awayTeamTotalScore",
+                  homeTeamTotalScore: "$$item.homeTeamTotalScore",
+                  goalServeHomeTeamId: "$$item.goalServeHomeTeamId",
+                  goalServeAwayTeamId: "$$item.goalServeAwayTeamId",
                 },
-                opposingTeam: {
-                  $arrayElemAt: ["$$item.opposingTeam", 0],
-                },
-                oppositeTeamId: "$$item.oppositeTeamId",
-                odds: { $arrayElemAt: ["$$item.odds", 0] },
-                goalServeMatchId: "$$item.goalServeMatchId",
-                date: "$$item.date",
-                awayTeamTotalScore: "$$item.awayTeamTotalScore",
-                homeTeamTotalScore: "$$item.homeTeamTotalScore",
-                goalServeHomeTeamId: "$$item.goalServeHomeTeamId",
-                goalServeAwayTeamId: "$$item.goalServeAwayTeamId",
               },
             },
           },
         },
       },
-    },
-  ]);
-  let standingData = await getStandingData();
+    ]);
+    let standingData = await getStandingData();
 
-  getTeam[0].last_ten = findWinLoss(getTeam[0].lastMatches, goalServeTeamId);
+    getTeam[0].last_ten = findWinLoss(getTeam[0].lastMatches, goalServeTeamId);
 
-  delete getTeam[0].lastMatches;
-  getTeam[0].teamDetails.divisionStandings.map((item: any) => {
-    item.last_ten = findWinLoss(item.lastMatches, item.goalServeTeamId);
+    delete getTeam[0].lastMatches;
+    getTeam[0].teamDetails.divisionStandings.map((item: any) => {
+      item.last_ten = findWinLoss(item.lastMatches, item.goalServeTeamId);
 
-    delete item.lastMatches;
-  });
-  getTeam[0].teamStandings = standingData;
-  return getTeam[0];
+      delete item.lastMatches;
+    });
+    getTeam[0].teamStandings = standingData;
+    return getTeam[0];
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 
 const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
-  const getMatchData = await Match.aggregate([
-    {
-      $match: {
-        goalServeMatchId: Number(goalServeMatchId),
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+  try {
+    const getMatchData = await Match.aggregate([
+      {
+        $match: {
+          goalServeMatchId: Number(goalServeMatchId),
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "teams",
       },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+      {
+        $lookup: {
+          from: "teams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teams",
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "teamImages",
       },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+      {
+        $lookup: {
+          from: "teamImages",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teamImages",
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
+      },
+      {
+        $lookup: {
+          from: "standings",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
                     },
                   },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
                     },
                   },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
                   },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
                 },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
               },
             },
-          },
-        ],
-        as: "standings",
-      },
-    },
-    {
-      $lookup: {
-        from: "injuries",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "injuries",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "statsteams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
+          ],
+          as: "standings",
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    walks: 1,
-                    strikeouts: 1,
-                    home_runs: 1,
-                    runs_batted_in: 1,
-                    slugging_percentage: 1,
-                    on_base_percentage: 1,
-                    runs: 1,
-                    batting_avg: 1,
-                    hits: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    walks: 1,
-                    strikeouts: 1,
-                    home_runs: 1,
-                    runs_batted_in: 1,
-                    slugging_percentage: 1,
-                    on_base_percentage: 1,
-                    runs: 1,
-                    batting_avg: 1,
-                    hits: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "statsTeams",
       },
-    },
-    {
-      $lookup: {
-        from: "players",
-        let: {
-          awayTeamStartingPictcherId: {
-            $toInt: "$startingPitchers.awayteam.player.id",
-          },
-          homeTeamStartingPictcherId: {
-            $toInt: "$startingPitchers.hometeam.player.id",
-          },
+      {
+        $lookup: {
+          from: "injuries",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamInjuredPlayers",
         },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: [
-                        "$goalServePlayerId",
-                        "$$awayTeamStartingPictcherId",
-                      ],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                    goalServePlayerId: 1,
-                    pitching: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: [
-                        "$goalServePlayerId",
-                        "$$homeTeamStartingPictcherId",
-                      ],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                    goalServePlayerId: 1,
-                    pitching: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
-              },
-            },
-          },
-        ],
-        as: "startingPitchersPlayer",
       },
-    },
-    {
-      $addFields: {
-        inningNo: {
-          $split: ["$status", " "],
+      {
+        $lookup: {
+          from: "injuries",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamInjuredPlayers",
         },
+      },
+      {
+        $lookup: {
+          from: "statsteams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      walks: 1,
+                      strikeouts: 1,
+                      home_runs: 1,
+                      runs_batted_in: 1,
+                      slugging_percentage: 1,
+                      on_base_percentage: 1,
+                      runs: 1,
+                      batting_avg: 1,
+                      hits: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      walks: 1,
+                      strikeouts: 1,
+                      home_runs: 1,
+                      runs_batted_in: 1,
+                      slugging_percentage: 1,
+                      on_base_percentage: 1,
+                      runs: 1,
+                      batting_avg: 1,
+                      hits: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "statsTeams",
+        },
+      },
+      {
+        $lookup: {
+          from: "players",
+          let: {
+            awayTeamStartingPictcherId: {
+              $toInt: "$startingPitchers.awayteam.player.id",
+            },
+            homeTeamStartingPictcherId: {
+              $toInt: "$startingPitchers.hometeam.player.id",
+            },
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: [
+                          "$goalServePlayerId",
+                          "$$awayTeamStartingPictcherId",
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      name: 1,
+                      goalServePlayerId: 1,
+                      pitching: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: [
+                          "$goalServePlayerId",
+                          "$$homeTeamStartingPictcherId",
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      name: 1,
+                      goalServePlayerId: 1,
+                      pitching: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "startingPitchersPlayer",
+        },
+      },
+      {
+        $addFields: {
+          inningNo: {
+            $split: ["$status", " "],
+          },
 
-        awayTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$awayTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+          awayTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
           },
-        },
-        homeTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$homeTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
+          homeTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
           },
         },
       },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "Not Started"] },
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "Not Started"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
+        },
+      },
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
+
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $ne: ["$status", "Not Started"] },
+                    { $ne: ["$status", "Final"] },
+                    { $ne: ["$status", "Postponed"] },
+                    { $ne: ["$status", "Canceled"] },
+                    { $ne: ["$status", "Suspended"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "liveOdds",
+        },
+      },
+      {
+        $addFields: {
+          liveOdds: {
+            $arrayElemAt: ["$liveOdds", 0],
+          },
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
+        },
+      },
+      {
+        $project: {
+          id: 1,
+          attendance: 1,
+          venueName: 1,
+          goalServeMatchId: 1,
+          event: true,
+          outs: {
+            $cond: {
+              if: { $ne: ["$outs", ""] },
+              then: { $concat: ["$outs", " Out"] },
+              else: {
+                $concat: ["0", " Out"],
+              },
+            },
+          },
+          inningNo: { $arrayElemAt: ["$inningNo", 1] },
+          timer: "$timer",
+          datetime_utc: "$dateTimeUtc",
+          homeTeamTotalScore: "$homeTeamTotalScore",
+          awayTeamTotalScore: "$awayTeamTotalScore",
+          awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+          homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+          awayTeamAbbreviation: {
+            $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
+          },
+          homeTeamAbbreviation: {
+            $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
+          },
+          homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+          awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+          innings: {
+            awayTeam: "$awayTeamInnings",
+            homeTeam: "$homeTeamInnings",
+          },
+          awayTeam: {
+            awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            goalServeAwayTeamId: {
+              $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
+            },
+            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+          },
+          homeTeam: {
+            homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            goalServeHomeTeamId: {
+              $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+            },
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+          },
+          injuredPlayers: {
+            homeTeam: {
+              $map: {
+                input: "$homeTeamInjuredPlayers",
+                as: "item",
+                in: {
+                  date: "$$item.date",
+                  description: "$$item.description",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  playerName: "$$item.playerName",
+                  status: "$$item.status",
+                  teamId: "$$item.teamId",
+                  goalServeTeamId: "$$item.goalServeTeamId",
+                },
+              },
+            },
+            awayTeam: {
+              $map: {
+                input: "$awayTeamInjuredPlayers",
+                as: "item",
+                in: {
+                  date: "$$item.date",
+                  description: "$$item.description",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  playerName: "$$item.playerName",
+                  status: "$$item.status",
+                  teamId: "$$item.teamId",
+                  goalServeTeamId: "$$item.goalServeTeamId",
+                },
+              },
+            },
+          },
+          teamStatistic: {
+            homeTeam: {
+              walks: {
+                $arrayElemAt: ["$statsTeams.homeTeam.walks", 0],
+              },
+              strikeouts: {
+                $arrayElemAt: ["$statsTeams.homeTeam.strikeouts", 0],
+              },
+              batting_avg: {
+                $arrayElemAt: ["$statsTeams.homeTeam.batting_avg", 0],
+              },
+              hits: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
+              runs: { $arrayElemAt: ["$statsTeams.homeTeam.runs", 0] },
+              on_base_percentage: {
+                $arrayElemAt: ["$statsTeams.homeTeam.on_base_percentage", 0],
+              },
+              slugging_percentage: {
+                $arrayElemAt: ["$statsTeams.homeTeam.slugging_percentage", 0],
+              },
+              on_base_plus_slugging: {
+                $round: [
+                  {
+                    $sum: [
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.homeTeam.on_base_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.homeTeam.slugging_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                  3,
+                ],
+              },
+              runs_batted_in: {
+                $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
+              },
+            },
+            awayTeam: {
+              walks: {
+                $arrayElemAt: ["$statsTeams.awayTeam.walks", 0],
+              },
+              strikeouts: {
+                $arrayElemAt: ["$statsTeams.awayTeam.strikeouts", 0],
+              },
+              batting_avg: {
+                $arrayElemAt: ["$statsTeams.awayTeam.batting_avg", 0],
+              },
+              hits: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
+              runs: { $arrayElemAt: ["$statsTeams.awayTeam.runs", 0] },
+              on_base_percentage: {
+                $arrayElemAt: ["$statsTeams.awayTeam.on_base_percentage", 0],
+              },
+              slugging_percentage: {
+                $arrayElemAt: ["$statsTeams.awayTeam.slugging_percentage", 0],
+              },
+              on_base_plus_slugging: {
+                $round: [
+                  {
+                    $sum: [
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.awayTeam.on_base_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.awayTeam.slugging_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                  3,
+                ],
+              },
+              runs_batted_in: {
+                $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
+              },
+            },
+          },
+          startingPitcher: {
+            awayTeam: {
+              wins: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.wins",
+                  0,
+                ],
+              },
+              losses: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.losses",
+                  0,
+                ],
+              },
+              playerName: {
+                $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
+              },
+              earned_run_average: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
+                  0,
+                ],
+              },
+              walk_hits_per_inning_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.walk_hits_per_inning_pitched",
+                  0,
+                ],
+              },
+              innings_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.innings_pitched",
+                  0,
+                ],
+              },
+              hits: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.hits",
+                  0,
+                ],
+              },
+              strikeouts: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.strikeouts",
+                  0,
+                ],
+              },
+              walks: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.walks",
+                  0,
+                ],
+              },
+              home_runs: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.home_runs",
+                  0,
+                ],
+              },
+            },
+            homeTeam: {
+              wins: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.wins",
+                  0,
+                ],
+              },
+              losses: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.losses",
+                  0,
+                ],
+              },
+              playerName: {
+                $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
+              },
+              earned_run_average: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
+                  0,
+                ],
+              },
+              walk_hits_per_inning_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.walk_hits_per_inning_pitched",
+                  0,
+                ],
+              },
+              innings_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.innings_pitched",
+                  0,
+                ],
+              },
+              hits: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.hits",
+                  0,
+                ],
+              },
+              strikeouts: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.strikeouts",
+                  0,
+                ],
+              },
+              walks: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.walks",
+                  0,
+                ],
+              },
+              home_runs: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.home_runs",
+                  0,
                 ],
               },
             },
           },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "odds",
-      },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
-
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $ne: ["$status", "Not Started"] },
-                  { $ne: ["$status", "Final"] },
-                  { $ne: ["$status", "Postponed"] },
-                  { $ne: ["$status", "Canceled"] },
-                  { $ne: ["$status", "Suspended"] },
+          battingPlayerStatistics: {
+            awayTeam: {
+              $map: {
+                input: "$awayTeamHitters",
+                as: "item",
+                in: {
+                  home_runs: "$$item.home_runs",
+                  average: "$$item.average",
+                  runs: "$$item.runs",
+                  goalServePlayerId: "$$item.id",
+                  playerName: "$$item.name",
+                  hits: "$$item.hits",
+                  strikeouts: "$$item.strikeouts",
+                  walks: "$$item.walks",
+                  at_bats: "$$item.at_bats",
+                  runs_batted_in: "$$item.runs_batted_in",
+                },
+              },
+            },
+            homeTeam: {
+              $map: {
+                input: "$homeTeamHitters",
+                as: "item",
+                in: {
+                  home_runs: "$$item.home_runs",
+                  average: "$$item.average",
+                  runs: "$$item.runs",
+                  goalServePlayerId: "$$item.id",
+                  playerName: "$$item.name",
+                  hits: "$$item.hits",
+                  strikeouts: "$$item.strikeouts",
+                  walks: "$$item.walks",
+                  at_bats: "$$item.at_bats",
+                  runs_batted_in: "$$item.runs_batted_in",
+                },
+              },
+            },
+          },
+          scoring: {
+            awayTeam: {
+              hit: "$awayTeamHit",
+              runs: "$awayTeamTotalScore",
+              error: "$awayTeamError",
+            },
+            homeTeam: {
+              hit: "$homeTeamHit",
+              runs: "$homeTeamTotalScore",
+              error: "$homeTeamError",
+            },
+          },
+          closingOddsAndOutcome: {
+            awayTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$odds.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpreadUs"] },
+                  "$odds.homeTeamSpreadUs",
                 ],
               },
             },
-          },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "liveOdds",
-      },
-    },
-    {
-      $addFields: {
-        liveOdds: {
-          $arrayElemAt: ["$liveOdds", 0],
-        },
-        odds: {
-          $arrayElemAt: ["$odds", 0],
-        },
-      },
-    },
-    {
-      $project: {
-        id: 1,
-        attendance: 1,
-        venueName: 1,
-        goalServeMatchId: 1,
-        event: true,
-        outs: {
-          $cond: {
-            if: { $ne: ["$outs", ""] },
-            then: { $concat: ["$outs", " Out"] },
-            else: {
-              $concat: ["0", " Out"],
-            },
-          },
-        },
-        inningNo: { $arrayElemAt: ["$inningNo", 1] },
-        timer: "$timer",
-        datetime_utc: "$dateTimeUtc",
-        homeTeamTotalScore: "$homeTeamTotalScore",
-        awayTeamTotalScore: "$awayTeamTotalScore",
-        awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-        homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-        awayTeamAbbreviation: {
-          $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
-        },
-        homeTeamAbbreviation: {
-          $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
-        },
-        homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-        awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-        innings: {
-          awayTeam: "$awayTeamInnings",
-          homeTeam: "$homeTeamInnings",
-        },
-        awayTeam: {
-          awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          goalServeAwayTeamId: {
-            $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
-          },
-          won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-        },
-        homeTeam: {
-          homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-          goalServeHomeTeamId: {
-            $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
-          },
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-        },
-        injuredPlayers: {
-          homeTeam: {
-            $map: {
-              input: "$homeTeamInjuredPlayers",
-              as: "item",
-              in: {
-                date: "$$item.date",
-                description: "$$item.description",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                playerName: "$$item.playerName",
-                status: "$$item.status",
-                teamId: "$$item.teamId",
-                goalServeTeamId: "$$item.goalServeTeamId",
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$odds.awayTeamSpread",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpreadUs"] },
+                  "$odds.awayTeamSpreadUs",
+                ],
               },
             },
+            homeTeamTotal: "$odds.homeTeamTotal",
+            awayTeamTotal: "$odds.awayTeamTotal",
           },
-          awayTeam: {
-            $map: {
-              input: "$awayTeamInjuredPlayers",
-              as: "item",
-              in: {
-                date: "$$item.date",
-                description: "$$item.description",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                playerName: "$$item.playerName",
-                status: "$$item.status",
-                teamId: "$$item.teamId",
-                goalServeTeamId: "$$item.goalServeTeamId",
+          liveOdds: {
+            awayTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
+                "$liveOdds.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
+                "$liveOdds.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$liveOdds.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$liveOdds.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$liveOdds.homeTeamSpreadUs"] },
+                  "$liveOdds.homeTeamSpreadUs",
+                ],
               },
             },
-          },
-        },
-        teamStatistic: {
-          homeTeam: {
-            walks: {
-              $arrayElemAt: ["$statsTeams.homeTeam.walks", 0],
-            },
-            strikeouts: {
-              $arrayElemAt: ["$statsTeams.homeTeam.strikeouts", 0],
-            },
-            batting_avg: {
-              $arrayElemAt: ["$statsTeams.homeTeam.batting_avg", 0],
-            },
-            hits: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
-            runs: { $arrayElemAt: ["$statsTeams.homeTeam.runs", 0] },
-            on_base_percentage: {
-              $arrayElemAt: ["$statsTeams.homeTeam.on_base_percentage", 0],
-            },
-            slugging_percentage: {
-              $arrayElemAt: ["$statsTeams.homeTeam.slugging_percentage", 0],
-            },
-            on_base_plus_slugging: {
-              $round: [
-                {
-                  $sum: [
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.homeTeam.on_base_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.homeTeam.slugging_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                  ],
-                },
-                3,
-              ],
-            },
-            runs_batted_in: {
-              $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
-            },
-          },
-          awayTeam: {
-            walks: {
-              $arrayElemAt: ["$statsTeams.awayTeam.walks", 0],
-            },
-            strikeouts: {
-              $arrayElemAt: ["$statsTeams.awayTeam.strikeouts", 0],
-            },
-            batting_avg: {
-              $arrayElemAt: ["$statsTeams.awayTeam.batting_avg", 0],
-            },
-            hits: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
-            runs: { $arrayElemAt: ["$statsTeams.awayTeam.runs", 0] },
-            on_base_percentage: {
-              $arrayElemAt: ["$statsTeams.awayTeam.on_base_percentage", 0],
-            },
-            slugging_percentage: {
-              $arrayElemAt: ["$statsTeams.awayTeam.slugging_percentage", 0],
-            },
-            on_base_plus_slugging: {
-              $round: [
-                {
-                  $sum: [
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.awayTeam.on_base_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.awayTeam.slugging_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                  ],
-                },
-                3,
-              ],
-            },
-            runs_batted_in: {
-              $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
-            },
-          },
-        },
-        startingPitcher: {
-          awayTeam: {
-            wins: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.wins",
-                0,
-              ],
-            },
-            losses: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.losses",
-                0,
-              ],
-            },
-            playerName: {
-              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
-            },
-            earned_run_average: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
-                0,
-              ],
-            },
-            walk_hits_per_inning_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.walk_hits_per_inning_pitched",
-                0,
-              ],
-            },
-            innings_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.innings_pitched",
-                0,
-              ],
-            },
-            hits: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.hits",
-                0,
-              ],
-            },
-            strikeouts: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.strikeouts",
-                0,
-              ],
-            },
-            walks: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.walks",
-                0,
-              ],
-            },
-            home_runs: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.home_runs",
-                0,
-              ],
-            },
-          },
-          homeTeam: {
-            wins: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.wins",
-                0,
-              ],
-            },
-            losses: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.losses",
-                0,
-              ],
-            },
-            playerName: {
-              $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
-            },
-            earned_run_average: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
-                0,
-              ],
-            },
-            walk_hits_per_inning_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.walk_hits_per_inning_pitched",
-                0,
-              ],
-            },
-            innings_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.innings_pitched",
-                0,
-              ],
-            },
-            hits: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.hits",
-                0,
-              ],
-            },
-            strikeouts: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.strikeouts",
-                0,
-              ],
-            },
-            walks: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.walks",
-                0,
-              ],
-            },
-            home_runs: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.home_runs",
-                0,
-              ],
-            },
-          },
-        },
-        battingPlayerStatistics: {
-          awayTeam: {
-            $map: {
-              input: "$awayTeamHitters",
-              as: "item",
-              in: {
-                home_runs: "$$item.home_runs",
-                average: "$$item.average",
-                runs: "$$item.runs",
-                goalServePlayerId: "$$item.id",
-                playerName: "$$item.name",
-                hits: "$$item.hits",
-                strikeouts: "$$item.strikeouts",
-                walks: "$$item.walks",
-                at_bats: "$$item.at_bats",
-                runs_batted_in: "$$item.runs_batted_in",
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$liveOdds.awayTeamSpread",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$liveOdds.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$liveOdds.awayTeamSpreadUs"] },
+                  "$liveOdds.awayTeamSpreadUs",
+                ],
               },
             },
+            homeTeamTotal: "$liveOdds.homeTeamTotal",
+            awayTeamTotal: "$liveOdds.awayTeamTotal",
           },
-          homeTeam: {
-            $map: {
-              input: "$homeTeamHitters",
-              as: "item",
-              in: {
-                home_runs: "$$item.home_runs",
-                average: "$$item.average",
-                runs: "$$item.runs",
-                goalServePlayerId: "$$item.id",
-                playerName: "$$item.name",
-                hits: "$$item.hits",
-                strikeouts: "$$item.strikeouts",
-                walks: "$$item.walks",
-                at_bats: "$$item.at_bats",
-                runs_batted_in: "$$item.runs_batted_in",
-              },
-            },
-          },
-        },
-        scoring: {
-          awayTeam: {
-            hit: "$awayTeamHit",
-            runs: "$awayTeamTotalScore",
-            error: "$awayTeamError",
-          },
-          homeTeam: {
-            hit: "$homeTeamHit",
-            runs: "$homeTeamTotalScore",
-            error: "$homeTeamError",
-          },
-        },
-        closingOddsAndOutcome: {
-          awayTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
-              "$odds.awayTeamMoneyline.us",
-            ],
-          },
-          homeTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          homeTeamSpreadObj: {
-            homeTeamSpread: "$odds.homeTeamSpread",
-            homeTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.homeTeamSpreadUs"] },
-                "$odds.homeTeamSpreadUs",
-              ],
-            },
-          },
-          awayTeamSpreadObj: {
-            awayTeamSpread: "$odds.awayTeamSpread",
-            awayTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.awayTeamSpreadUs"] },
-                "$odds.awayTeamSpreadUs",
-              ],
-            },
-          },
-          homeTeamTotal: "$odds.homeTeamTotal",
-          awayTeamTotal: "$odds.awayTeamTotal",
-        },
-        liveOdds: {
-          awayTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
-              "$liveOdds.awayTeamMoneyline.us",
-            ],
-          },
-          homeTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
-              "$liveOdds.homeTeamMoneyline.us",
-            ],
-          },
-          homeTeamSpreadObj: {
-            homeTeamSpread: "$liveOdds.homeTeamSpread",
-            homeTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$liveOdds.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$liveOdds.homeTeamSpreadUs"] },
-                "$liveOdds.homeTeamSpreadUs",
-              ],
-            },
-          },
-          awayTeamSpreadObj: {
-            awayTeamSpread: "$liveOdds.awayTeamSpread",
-            awayTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$liveOdds.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$liveOdds.awayTeamSpreadUs"] },
-                "$liveOdds.awayTeamSpreadUs",
-              ],
-            },
-          },
-          homeTeamTotal: "$liveOdds.homeTeamTotal",
-          awayTeamTotal: "$liveOdds.awayTeamTotal",
         },
       },
-    },
-  ]);
-  const string = getMatchData[0]?.inningNo;
-  const number = parseInt(string?.replace(/\D/g, ""));
-  let getMatch = getMatchData[0];
-  if (getMatch) getMatch.status = `Inning ${number}`;
-  return { getMatch };
+    ]);
+    const string = getMatchData[0]?.inningNo;
+    const number = parseInt(string?.replace(/\D/g, ""));
+    let getMatch = getMatchData[0];
+    if (getMatch) getMatch.status = `Inning ${number}`;
+    return { getMatch };
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 
 const liveBoxscoreMlb = async () => {
-  const getMatch = await Match.aggregate([
-    {
-      $match: {
-        $and: [
-          {
-            status: {
-              $ne: "Not Started",
-            },
-          },
-          {
-            status: {
-              $ne: "Final",
-            },
-          },
-          {
-            status: {
-              $ne: "Postponed",
-            },
-          },
-          {
-            status: {
-              $ne: "Canceled",
-            },
-          },
-          {
-            status: {
-              $ne: "Suspended",
-            },
-          },
-        ],
-      },
-    },
-    {
-      $lookup: {
-        from: "teams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    name: 1,
-                    abbreviation: 1,
-                    goalServeTeamId: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
+  try {
+    const getMatch = await Match.aggregate([
+      {
+        $match: {
+          $and: [
+            {
+              status: {
+                $ne: "Not Started",
               },
             },
-          },
-        ],
-        as: "teams",
-      },
-    },
-    {
-      $lookup: {
-        from: "teamImages",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    image: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
+            {
+              status: {
+                $ne: "Final",
               },
             },
-          },
-        ],
-        as: "teamImages",
-      },
-    },
-    {
-      $lookup: {
-        from: "standings",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    goalServeTeamId: 1,
-                    won: 1,
-                    lost: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
+            {
+              status: {
+                $ne: "Postponed",
               },
             },
-          },
-        ],
-        as: "standings",
-      },
-    },
-    {
-      $lookup: {
-        from: "injuries",
-        localField: "goalServeHomeTeamId",
-        foreignField: "goalServeTeamId",
-        as: "homeTeamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "injuries",
-        localField: "goalServeAwayTeamId",
-        foreignField: "goalServeTeamId",
-        as: "awayTeamInjuredPlayers",
-      },
-    },
-    {
-      $lookup: {
-        from: "statsteams",
-        let: {
-          awayTeamId: "$goalServeAwayTeamId",
-          homeTeamId: "$goalServeHomeTeamId",
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$awayTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    walks: 1,
-                    strikeouts: 1,
-                    home_runs: 1,
-                    runs_batted_in: 1,
-                    slugging_percentage: 1,
-                    on_base_percentage: 1,
-                    runs: 1,
-                    batting_avg: 1,
-                    hits: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: ["$goalServeTeamId", "$$homeTeamId"],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    walks: 1,
-                    strikeouts: 1,
-                    home_runs: 1,
-                    runs_batted_in: 1,
-                    slugging_percentage: 1,
-                    on_base_percentage: 1,
-                    runs: 1,
-                    batting_avg: 1,
-                    hits: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
+            {
+              status: {
+                $ne: "Canceled",
               },
             },
-          },
-        ],
-        as: "statsTeams",
-      },
-    },
-    {
-      $lookup: {
-        from: "players",
-        let: {
-          awayTeamStartingPictcherId: {
-            $toInt: "$startingPitchers.awayteam.player.id",
-          },
-          homeTeamStartingPictcherId: {
-            $toInt: "$startingPitchers.hometeam.player.id",
-          },
-        },
-        pipeline: [
-          {
-            $facet: {
-              awayTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: [
-                        "$goalServePlayerId",
-                        "$$awayTeamStartingPictcherId",
-                      ],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                    goalServePlayerId: 1,
-                    pitching: 1,
-                  },
-                },
-              ],
-              homeTeam: [
-                {
-                  $match: {
-                    $expr: {
-                      $eq: [
-                        "$goalServePlayerId",
-                        "$$homeTeamStartingPictcherId",
-                      ],
-                    },
-                  },
-                },
-                {
-                  $project: {
-                    _id: 0,
-                    name: 1,
-                    goalServePlayerId: 1,
-                    pitching: 1,
-                  },
-                },
-              ],
-            },
-          },
-          {
-            $project: {
-              awayTeam: {
-                $arrayElemAt: ["$awayTeam", 0],
-              },
-              homeTeam: {
-                $arrayElemAt: ["$homeTeam", 0],
+            {
+              status: {
+                $ne: "Suspended",
               },
             },
-          },
-        ],
-        as: "startingPitchersPlayer",
-      },
-    },
-    {
-      $addFields: {
-        inningNo: {
-          $split: ["$status", " "],
-        },
-        awayTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$awayTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
-          },
-        },
-        homeTeamTotalScoreInNumber: {
-          $convert: {
-            input: "$homeTeamTotalScore",
-            to: "int",
-            onError: 0, // Default value when conversion fails
-          },
+          ],
         },
       },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $eq: ["$status", "Not Started"] },
+      {
+        $lookup: {
+          from: "teams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
                 ],
               },
             },
-          },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "odds",
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teams",
+        },
       },
-    },
-    {
-      $lookup: {
-        from: "odds",
-        let: { matchId: "$goalServeMatchId" },
+      {
+        $lookup: {
+          from: "teamImages",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teamImages",
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "standings",
+        },
+      },
+      {
+        $lookup: {
+          from: "injuries",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamInjuredPlayers",
+        },
+      },
+      {
+        $lookup: {
+          from: "injuries",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamInjuredPlayers",
+        },
+      },
+      {
+        $lookup: {
+          from: "statsteams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      walks: 1,
+                      strikeouts: 1,
+                      home_runs: 1,
+                      runs_batted_in: 1,
+                      slugging_percentage: 1,
+                      on_base_percentage: 1,
+                      runs: 1,
+                      batting_avg: 1,
+                      hits: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      walks: 1,
+                      strikeouts: 1,
+                      home_runs: 1,
+                      runs_batted_in: 1,
+                      slugging_percentage: 1,
+                      on_base_percentage: 1,
+                      runs: 1,
+                      batting_avg: 1,
+                      hits: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "statsTeams",
+        },
+      },
+      {
+        $lookup: {
+          from: "players",
+          let: {
+            awayTeamStartingPictcherId: {
+              $toInt: "$startingPitchers.awayteam.player.id",
+            },
+            homeTeamStartingPictcherId: {
+              $toInt: "$startingPitchers.hometeam.player.id",
+            },
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: [
+                          "$goalServePlayerId",
+                          "$$awayTeamStartingPictcherId",
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      name: 1,
+                      goalServePlayerId: 1,
+                      pitching: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: [
+                          "$goalServePlayerId",
+                          "$$homeTeamStartingPictcherId",
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      name: 1,
+                      goalServePlayerId: 1,
+                      pitching: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "startingPitchersPlayer",
+        },
+      },
+      {
+        $addFields: {
+          inningNo: {
+            $split: ["$status", " "],
+          },
+          awayTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
+          },
+          homeTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "Not Started"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
+        },
+      },
+      {
+        $lookup: {
+          from: "odds",
+          let: { matchId: "$goalServeMatchId" },
 
-        pipeline: [
-          {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$$matchId", "$goalServeMatchId"] },
-                  { $ne: ["$status", "Not Started"] },
-                  { $ne: ["$status", "Final"] },
-                  { $ne: ["$status", "Postponed"] },
-                  { $ne: ["$status", "Canceled"] },
-                  { $ne: ["$status", "Suspended"] },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $ne: ["$status", "Not Started"] },
+                    { $ne: ["$status", "Final"] },
+                    { $ne: ["$status", "Postponed"] },
+                    { $ne: ["$status", "Canceled"] },
+                    { $ne: ["$status", "Suspended"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "liveOdds",
+        },
+      },
+      {
+        $addFields: {
+          liveOdds: {
+            $arrayElemAt: ["$liveOdds", 0],
+          },
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
+        },
+      },
+      {
+        $project: {
+          id: 1,
+          attendance: 1,
+          goalServeMatchId: 1,
+          venueName: 1,
+          event: true,
+          outs: {
+            $cond: {
+              if: { $ne: ["$outs", ""] },
+              then: { $concat: ["$outs", " Out"] },
+              else: {
+                $concat: ["0", " Out"],
+              },
+            },
+          },
+          inningNo: { $arrayElemAt: ["$inningNo", 1] },
+          timer: "$timer",
+          datetime_utc: "$dateTimeUtc",
+          homeTeamTotalScore: "$homeTeamTotalScore",
+          awayTeamTotalScore: "$awayTeamTotalScore",
+          awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+          homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+          awayTeamAbbreviation: {
+            $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
+          },
+          homeTeamAbbreviation: {
+            $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
+          },
+          homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+          awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+          innings: {
+            awayTeam: "$awayTeamInnings",
+            homeTeam: "$homeTeamInnings",
+          },
+          awayTeam: {
+            awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            awayTeamRun: "$awayTeamTotalScore",
+            awayTeamHit: "$awayTeamHit",
+            awayTeamErrors: "$awayTeamError",
+            goalServeAwayTeamId: {
+              $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
+            },
+            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+          },
+          homeTeam: {
+            homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            goalServeHomeTeamId: {
+              $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+            },
+            homeTeamRun: "$homeTeamTotalScore",
+            homeTeamHit: "$homeTeamHit",
+            homeTeamErrors: "$homeTeamError",
+            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+          },
+          injuredPlayers: {
+            homeTeam: {
+              $map: {
+                input: "$homeTeamInjuredPlayers",
+                as: "item",
+                in: {
+                  date: "$$item.date",
+                  description: "$$item.description",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  playerName: "$$item.playerName",
+                  status: "$$item.status",
+                  teamId: "$$item.teamId",
+                  goalServeTeamId: "$$item.goalServeTeamId",
+                },
+              },
+            },
+            awayTeam: {
+              $map: {
+                input: "$awayTeamInjuredPlayers",
+                as: "item",
+                in: {
+                  date: "$$item.date",
+                  description: "$$item.description",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  playerName: "$$item.playerName",
+                  status: "$$item.status",
+                  teamId: "$$item.teamId",
+                  goalServeTeamId: "$$item.goalServeTeamId",
+                },
+              },
+            },
+          },
+          teamStatistic: {
+            homeTeam: {
+              walks: {
+                $arrayElemAt: ["$statsTeams.homeTeam.walks", 0],
+              },
+              strikeouts: {
+                $arrayElemAt: ["$statsTeams.homeTeam.strikeouts", 0],
+              },
+              batting_avg: {
+                $arrayElemAt: ["$statsTeams.homeTeam.batting_avg", 0],
+              },
+              hits: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
+              runs: { $arrayElemAt: ["$statsTeams.homeTeam.runs", 0] },
+              on_base_percentage: {
+                $arrayElemAt: ["$statsTeams.homeTeam.on_base_percentage", 0],
+              },
+              slugging_percentage: {
+                $arrayElemAt: ["$statsTeams.homeTeam.slugging_percentage", 0],
+              },
+              on_base_plus_slugging: {
+                $round: [
+                  {
+                    $sum: [
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.homeTeam.on_base_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.homeTeam.slugging_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                  3,
+                ],
+              },
+              runs_batted_in: {
+                $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
+              },
+            },
+            awayTeam: {
+              walks: {
+                $arrayElemAt: ["$statsTeams.awayTeam.walks", 0],
+              },
+              strikeouts: {
+                $arrayElemAt: ["$statsTeams.awayTeam.strikeouts", 0],
+              },
+              batting_avg: {
+                $arrayElemAt: ["$statsTeams.awayTeam.batting_avg", 0],
+              },
+              hits: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
+              runs: { $arrayElemAt: ["$statsTeams.awayTeam.runs", 0] },
+              on_base_percentage: {
+                $arrayElemAt: ["$statsTeams.awayTeam.on_base_percentage", 0],
+              },
+              slugging_percentage: {
+                $arrayElemAt: ["$statsTeams.awayTeam.slugging_percentage", 0],
+              },
+              on_base_plus_slugging: {
+                $round: [
+                  {
+                    $sum: [
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.awayTeam.on_base_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                      {
+                        $toDouble: {
+                          $arrayElemAt: [
+                            "$statsTeams.awayTeam.slugging_percentage",
+                            0,
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                  3,
+                ],
+              },
+              runs_batted_in: {
+                $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
+              },
+            },
+          },
+          startingPitcher: {
+            awayTeam: {
+              wins: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.wins",
+                  0,
+                ],
+              },
+              losses: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.losses",
+                  0,
+                ],
+              },
+              playerName: {
+                $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
+              },
+              earned_run_average: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
+                  0,
+                ],
+              },
+              walk_hits_per_inning_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.walk_hits_per_inning_pitched",
+                  0,
+                ],
+              },
+              innings_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.innings_pitched",
+                  0,
+                ],
+              },
+              hits: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.hits",
+                  0,
+                ],
+              },
+              strikeouts: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.strikeouts",
+                  0,
+                ],
+              },
+              walks: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.walks",
+                  0,
+                ],
+              },
+              home_runs: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.awayTeam.pitching.home_runs",
+                  0,
+                ],
+              },
+            },
+            homeTeam: {
+              wins: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.wins",
+                  0,
+                ],
+              },
+              losses: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.losses",
+                  0,
+                ],
+              },
+              playerName: {
+                $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
+              },
+              earned_run_average: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
+                  0,
+                ],
+              },
+              walk_hits_per_inning_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.walk_hits_per_inning_pitched",
+                  0,
+                ],
+              },
+              innings_pitched: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.innings_pitched",
+                  0,
+                ],
+              },
+              hits: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.hits",
+                  0,
+                ],
+              },
+              strikeouts: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.strikeouts",
+                  0,
+                ],
+              },
+              walks: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.walks",
+                  0,
+                ],
+              },
+              home_runs: {
+                $arrayElemAt: [
+                  "$startingPitchersPlayer.homeTeam.pitching.home_runs",
+                  0,
                 ],
               },
             },
           },
-          { $sort: { updatedAt: -1 } },
-          { $limit: 1 },
-        ],
-        as: "liveOdds",
-      },
-    },
-    {
-      $addFields: {
-        liveOdds: {
-          $arrayElemAt: ["$liveOdds", 0],
-        },
-        odds: {
-          $arrayElemAt: ["$odds", 0],
-        },
-      },
-    },
-    {
-      $project: {
-        id: 1,
-        attendance: 1,
-        goalServeMatchId: 1,
-        venueName: 1,
-        event: true,
-        outs: {
-          $cond: {
-            if: { $ne: ["$outs", ""] },
-            then: { $concat: ["$outs", " Out"] },
-            else: {
-              $concat: ["0", " Out"],
-            },
-          },
-        },
-        inningNo: { $arrayElemAt: ["$inningNo", 1] },
-        timer: "$timer",
-        datetime_utc: "$dateTimeUtc",
-        homeTeamTotalScore: "$homeTeamTotalScore",
-        awayTeamTotalScore: "$awayTeamTotalScore",
-        awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-        homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-        awayTeamAbbreviation: {
-          $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
-        },
-        homeTeamAbbreviation: {
-          $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
-        },
-        homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-        awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-        innings: {
-          awayTeam: "$awayTeamInnings",
-          homeTeam: "$homeTeamInnings",
-        },
-        awayTeam: {
-          awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
-          awayTeamRun: "$awayTeamTotalScore",
-          awayTeamHit: "$awayTeamHit",
-          awayTeamErrors: "$awayTeamError",
-          goalServeAwayTeamId: {
-            $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
-          },
-          won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-        },
-        homeTeam: {
-          homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-          goalServeHomeTeamId: {
-            $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
-          },
-          homeTeamRun: "$homeTeamTotalScore",
-          homeTeamHit: "$homeTeamHit",
-          homeTeamErrors: "$homeTeamError",
-          won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-          lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
-          teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-        },
-        injuredPlayers: {
-          homeTeam: {
-            $map: {
-              input: "$homeTeamInjuredPlayers",
-              as: "item",
-              in: {
-                date: "$$item.date",
-                description: "$$item.description",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                playerName: "$$item.playerName",
-                status: "$$item.status",
-                teamId: "$$item.teamId",
-                goalServeTeamId: "$$item.goalServeTeamId",
-              },
-            },
-          },
-          awayTeam: {
-            $map: {
-              input: "$awayTeamInjuredPlayers",
-              as: "item",
-              in: {
-                date: "$$item.date",
-                description: "$$item.description",
-                goalServePlayerId: "$$item.goalServePlayerId",
-                playerName: "$$item.playerName",
-                status: "$$item.status",
-                teamId: "$$item.teamId",
-                goalServeTeamId: "$$item.goalServeTeamId",
-              },
-            },
-          },
-        },
-        teamStatistic: {
-          homeTeam: {
-            walks: {
-              $arrayElemAt: ["$statsTeams.homeTeam.walks", 0],
-            },
-            strikeouts: {
-              $arrayElemAt: ["$statsTeams.homeTeam.strikeouts", 0],
-            },
-            batting_avg: {
-              $arrayElemAt: ["$statsTeams.homeTeam.batting_avg", 0],
-            },
-            hits: { $arrayElemAt: ["$statsTeams.homeTeam.hits", 0] },
-            runs: { $arrayElemAt: ["$statsTeams.homeTeam.runs", 0] },
-            on_base_percentage: {
-              $arrayElemAt: ["$statsTeams.homeTeam.on_base_percentage", 0],
-            },
-            slugging_percentage: {
-              $arrayElemAt: ["$statsTeams.homeTeam.slugging_percentage", 0],
-            },
-            on_base_plus_slugging: {
-              $round: [
-                {
-                  $sum: [
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.homeTeam.on_base_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.homeTeam.slugging_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                  ],
+          battingPlayerStatistics: {
+            awayTeam: {
+              $map: {
+                input: "$awayTeamHitters",
+                as: "item",
+                in: {
+                  home_runs: "$$item.home_runs",
+                  average: "$$item.average",
+                  runs: "$$item.runs",
+                  goalServePlayerId: "$$item.id",
+                  playerName: "$$item.name",
+                  hits: "$$item.hits",
+                  strikeouts: "$$item.strikeouts",
+                  walks: "$$item.walks",
+                  at_bats: "$$item.at_bats",
+                  runs_batted_in: "$$item.runs_batted_in",
                 },
-                3,
-              ],
+              },
             },
-            runs_batted_in: {
-              $arrayElemAt: ["$statsTeams.homeTeam.runs_batted_in", 0],
-            },
-          },
-          awayTeam: {
-            walks: {
-              $arrayElemAt: ["$statsTeams.awayTeam.walks", 0],
-            },
-            strikeouts: {
-              $arrayElemAt: ["$statsTeams.awayTeam.strikeouts", 0],
-            },
-            batting_avg: {
-              $arrayElemAt: ["$statsTeams.awayTeam.batting_avg", 0],
-            },
-            hits: { $arrayElemAt: ["$statsTeams.awayTeam.hits", 0] },
-            runs: { $arrayElemAt: ["$statsTeams.awayTeam.runs", 0] },
-            on_base_percentage: {
-              $arrayElemAt: ["$statsTeams.awayTeam.on_base_percentage", 0],
-            },
-            slugging_percentage: {
-              $arrayElemAt: ["$statsTeams.awayTeam.slugging_percentage", 0],
-            },
-            on_base_plus_slugging: {
-              $round: [
-                {
-                  $sum: [
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.awayTeam.on_base_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                    {
-                      $toDouble: {
-                        $arrayElemAt: [
-                          "$statsTeams.awayTeam.slugging_percentage",
-                          0,
-                        ],
-                      },
-                    },
-                  ],
+            homeTeam: {
+              $map: {
+                input: "$homeTeamHitters",
+                as: "item",
+                in: {
+                  home_runs: "$$item.home_runs",
+                  average: "$$item.average",
+                  runs: "$$item.runs",
+                  goalServePlayerId: "$$item.id",
+                  playerName: "$$item.name",
+                  hits: "$$item.hits",
+                  strikeouts: "$$item.strikeouts",
+                  walks: "$$item.walks",
+                  at_bats: "$$item.at_bats",
+                  runs_batted_in: "$$item.runs_batted_in",
                 },
-                3,
-              ],
-            },
-            runs_batted_in: {
-              $arrayElemAt: ["$statsTeams.awayTeam.runs_batted_in", 0],
-            },
-          },
-        },
-        startingPitcher: {
-          awayTeam: {
-            wins: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.wins",
-                0,
-              ],
-            },
-            losses: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.losses",
-                0,
-              ],
-            },
-            playerName: {
-              $arrayElemAt: ["$startingPitchersPlayer.awayTeam.name", 0],
-            },
-            earned_run_average: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.earned_run_average",
-                0,
-              ],
-            },
-            walk_hits_per_inning_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.walk_hits_per_inning_pitched",
-                0,
-              ],
-            },
-            innings_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.innings_pitched",
-                0,
-              ],
-            },
-            hits: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.hits",
-                0,
-              ],
-            },
-            strikeouts: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.strikeouts",
-                0,
-              ],
-            },
-            walks: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.walks",
-                0,
-              ],
-            },
-            home_runs: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.awayTeam.pitching.home_runs",
-                0,
-              ],
-            },
-          },
-          homeTeam: {
-            wins: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.wins",
-                0,
-              ],
-            },
-            losses: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.losses",
-                0,
-              ],
-            },
-            playerName: {
-              $arrayElemAt: ["$startingPitchersPlayer.homeTeam.name", 0],
-            },
-            earned_run_average: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.earned_run_average",
-                0,
-              ],
-            },
-            walk_hits_per_inning_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.walk_hits_per_inning_pitched",
-                0,
-              ],
-            },
-            innings_pitched: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.innings_pitched",
-                0,
-              ],
-            },
-            hits: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.hits",
-                0,
-              ],
-            },
-            strikeouts: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.strikeouts",
-                0,
-              ],
-            },
-            walks: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.walks",
-                0,
-              ],
-            },
-            home_runs: {
-              $arrayElemAt: [
-                "$startingPitchersPlayer.homeTeam.pitching.home_runs",
-                0,
-              ],
-            },
-          },
-        },
-        battingPlayerStatistics: {
-          awayTeam: {
-            $map: {
-              input: "$awayTeamHitters",
-              as: "item",
-              in: {
-                home_runs: "$$item.home_runs",
-                average: "$$item.average",
-                runs: "$$item.runs",
-                goalServePlayerId: "$$item.id",
-                playerName: "$$item.name",
-                hits: "$$item.hits",
-                strikeouts: "$$item.strikeouts",
-                walks: "$$item.walks",
-                at_bats: "$$item.at_bats",
-                runs_batted_in: "$$item.runs_batted_in",
               },
             },
           },
-          homeTeam: {
-            $map: {
-              input: "$homeTeamHitters",
-              as: "item",
-              in: {
-                home_runs: "$$item.home_runs",
-                average: "$$item.average",
-                runs: "$$item.runs",
-                goalServePlayerId: "$$item.id",
-                playerName: "$$item.name",
-                hits: "$$item.hits",
-                strikeouts: "$$item.strikeouts",
-                walks: "$$item.walks",
-                at_bats: "$$item.at_bats",
-                runs_batted_in: "$$item.runs_batted_in",
+          scoring: {
+            awayTeam: {
+              hit: "$awayTeamHit",
+              runs: "$awayTeamTotalScore",
+              error: "$awayTeamError",
+            },
+            homeTeam: {
+              hit: "$homeTeamHit",
+              runs: "$homeTeamTotalScore",
+              error: "$homeTeamError",
+            },
+          },
+          closingOddsAndOutcome: {
+            awayTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$odds.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpreadUs"] },
+                  "$odds.homeTeamSpreadUs",
+                ],
               },
             },
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$odds.awayTeamSpread",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpreadUs"] },
+                  "$odds.awayTeamSpreadUs",
+                ],
+              },
+            },
+            homeTeamTotal: "$odds.homeTeamTotal",
+            awayTeamTotal: "$odds.awayTeamTotal",
           },
-        },
-        scoring: {
-          awayTeam: {
-            hit: "$awayTeamHit",
-            runs: "$awayTeamTotalScore",
-            error: "$awayTeamError",
-          },
-          homeTeam: {
-            hit: "$homeTeamHit",
-            runs: "$homeTeamTotalScore",
-            error: "$homeTeamError",
-          },
-        },
-        closingOddsAndOutcome: {
-          awayTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
-              "$odds.awayTeamMoneyline.us",
-            ],
-          },
-          homeTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
-              "$odds.homeTeamMoneyline.us",
-            ],
-          },
-          homeTeamSpreadObj: {
-            homeTeamSpread: "$odds.homeTeamSpread",
-            homeTeamSpreadUs: {
+          liveOdds: {
+            awayTeamMoneyLine: {
               $cond: [
-                { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.homeTeamSpreadUs"] },
-                "$odds.homeTeamSpreadUs",
+                { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
+                "$liveOdds.awayTeamMoneyline.us",
               ],
             },
-          },
-          awayTeamSpreadObj: {
-            awayTeamSpread: "$odds.awayTeamSpread",
-            awayTeamSpreadUs: {
+            homeTeamMoneyLine: {
               $cond: [
-                { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.awayTeamSpreadUs"] },
-                "$odds.awayTeamSpreadUs",
+                { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
+                "$liveOdds.homeTeamMoneyline.us",
               ],
             },
-          },
-          homeTeamTotal: "$odds.homeTeamTotal",
-          awayTeamTotal: "$odds.awayTeamTotal",
-        },
-        liveOdds: {
-          awayTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$liveOdds.awayTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$liveOdds.awayTeamMoneyline.us"] },
-              "$liveOdds.awayTeamMoneyline.us",
-            ],
-          },
-          homeTeamMoneyLine: {
-            $cond: [
-              { $gte: [{ $toDouble: "$liveOdds.homeTeamMoneyline.us" }, 0] },
-              { $concat: ["+", "$liveOdds.homeTeamMoneyline.us"] },
-              "$liveOdds.homeTeamMoneyline.us",
-            ],
-          },
-          homeTeamSpreadObj: {
-            homeTeamSpread: "$liveOdds.homeTeamSpread",
-            homeTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$liveOdds.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$liveOdds.homeTeamSpreadUs"] },
-                "$liveOdds.homeTeamSpreadUs",
-              ],
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$liveOdds.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$liveOdds.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$liveOdds.homeTeamSpreadUs"] },
+                  "$liveOdds.homeTeamSpreadUs",
+                ],
+              },
             },
-          },
-          awayTeamSpreadObj: {
-            awayTeamSpread: "$liveOdds.awayTeamSpread",
-            awayTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$liveOdds.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$liveOdds.awayTeamSpreadUs"] },
-                "$liveOdds.awayTeamSpreadUs",
-              ],
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$liveOdds.awayTeamSpread",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$liveOdds.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$liveOdds.awayTeamSpreadUs"] },
+                  "$liveOdds.awayTeamSpreadUs",
+                ],
+              },
             },
+            homeTeamTotal: "$liveOdds.homeTeamTotal",
+            awayTeamTotal: "$liveOdds.awayTeamTotal",
           },
-          homeTeamTotal: "$liveOdds.homeTeamTotal",
-          awayTeamTotal: "$liveOdds.awayTeamTotal",
         },
       },
-    },
-  ]);
-  const string = getMatch[0]?.inningNo;
-  const number = parseInt(string?.replace(/\D/g, ""));
-  if (getMatch[0]) getMatch[0].status = `Inning ${number}`;
-  await socket("mlbLiveBoxscore", {
-    getMatch,
-  });
-  return getMatch;
+    ]);
+    const string = getMatch[0]?.inningNo;
+    const number = parseInt(string?.replace(/\D/g, ""));
+    if (getMatch[0]) getMatch[0].status = `Inning ${number}`;
+    await socket("mlbLiveBoxscore", {
+      getMatch,
+    });
+    return getMatch;
+  } catch (error: any) {
+    console.log("error", error);
+  }
 };
 
 const createOrUpdateOdds = async () => {
