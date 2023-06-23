@@ -6464,7 +6464,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
     const string = getMatchData[0]?.inningNo;
     const number = parseInt(string?.replace(/\D/g, ""));
     let getMatch = getMatchData[0];
-    if (getMatch) getMatch.status = `Inning ${number}`;
+    if (getMatch) getMatch.status = number?`Inning ${number}`:"";
     return { getMatch };
   } catch (error: any) {
     console.log("error", error);
@@ -7351,7 +7351,7 @@ const liveBoxscoreMlb = async () => {
     ]);
     const string = getMatch[0]?.inningNo;
     const number = parseInt(string?.replace(/\D/g, ""));
-    if (getMatch[0]) getMatch[0].status = `Inning ${number}`;
+    if (getMatch[0]) getMatch[0].status =number?`Inning ${number}`:"";
     await socket("mlbLiveBoxscore", {
       getMatch,
     });

@@ -589,6 +589,10 @@ export default class MlbDbCronServiceClass {
             player.positionType = item.name;
             allRosterPlayers.push(player);
           });
+        }else{
+          let player=item.player
+          player.positionType=item.name
+          allRosterPlayers.push( player)
         }
       });
 
