@@ -1,7 +1,6 @@
 import httpStatus from "http-status";
 import Bet from "../models/documents/bet.model";
 import Match from "../models/documents/MLB/match.model";
-import Odd from "../models/documents/MLB/odd.model";
 import AppError from "../utils/AppError";
 import {
   ICreateBetRequest,
@@ -12,16 +11,14 @@ import {
 } from "./bet.interface";
 import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
+import NhlMatch from "../models/documents/NHL/match.model";
+import NbaMatch from "../models/documents/NBA/match.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
-    if (amount >= Math.abs(odd)) {
-      return amount + (amount + 100 - Math.abs(odd));
-    } else {
-      return amount + (amount * 100) / Math.abs(odd);
-    }
+    return amount / ((-1 * odd) / 100);
   } else {
-    return amount - 100 + Math.abs(odd) + amount;
+    return (amount * odd) / 100;
   }
 };
 const fairOddCalculation = function (favourite: number, underdog: number) {
@@ -32,8 +29,8 @@ const fairOddCalculation = function (favourite: number, underdog: number) {
   const fav = ((favFairOdd * 100) / underFairOdd) * -1;
   const under = 100 / underFairOdd - 100;
   return {
-    favourite: fav,
-    underdog: under,
+    favourite: Math.round(fav),
+    underdog: Math.round(under),
   };
 };
 
@@ -50,7 +47,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       { opponentUserId: loggedInUserId },
     ],
     goalServeMatchId: data.goalServeMatchId,
-  }).lean();
+    requestUserGoalServeOdd: data.requestUserGoalServeOdd
+    }).lean();
 
   if (betFound) {
     throw new AppError(
@@ -65,41 +63,45 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       Messages.BET_AMOUNT_MUST_BE_GREATER_THAN_EQUALS_1
     );
   }
-  const matchData = await Match.findOne({
-    goalServeMatchId: data.goalServeMatchId,
-  }).lean();
+  let matchData;
+  if (data.leagueType === "MLB") {
+    matchData = await Match.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+    }).lean();
+  } else if (data.leagueType === "NHL") {
+    matchData = await NhlMatch.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+    }).lean();
+  } else {
+    matchData = await NbaMatch.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+    }).lean();
+  }
 
   if (!matchData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.MATCH_DATA_NOT_FOUND);
   }
 
   if (
-    matchData.goalServeHomeTeamId != data.requestUserGoalServeTeamId &&
-    matchData.goalServeAwayTeamId != data.requestUserGoalServeTeamId
+    matchData.goalServeHomeTeamId != data.goalServeRequestUserTeamId &&
+    matchData.goalServeAwayTeamId != data.goalServeRequestUserTeamId
   ) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.TEAM_NOT_FOUND_IN_MATCH);
-  }
-  const oddData = await Odd.findOne({
-    goalServeMatchId: data.goalServeMatchId,
-  }).lean();
-
-  if (!oddData) {
-    throw new AppError(httpStatus.NOT_FOUND, Messages.MATCH_ODD_DATA_NOT_FOUND);
   }
 
   let fairOddCalRes = {
     favourite: 0,
     underdog: 0,
   };
-  if (parseInt(oddData?.homeTeamMoneyline?.us) > 0) {
+  if (data.requestUserGoalServeOdd > 0) {
     fairOddCalRes = fairOddCalculation(
-      parseInt(oddData?.awayTeamMoneyline?.us),
-      parseInt(oddData.homeTeamMoneyline.us)
+      data.opponentUserGoalServeOdd,
+      data.requestUserGoalServeOdd
     );
   } else {
     fairOddCalRes = fairOddCalculation(
-      parseInt(oddData?.homeTeamMoneyline?.us),
-      parseInt(oddData.awayTeamMoneyline.us)
+      data.requestUserGoalServeOdd,
+      data.opponentUserGoalServeOdd
     );
   }
 
@@ -110,38 +112,31 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     opponentUserId: data.opponentUserId,
     isRequestUserConfirmedBet: true,
     betAmount: data.amount,
-    goalServeLeagueId: matchData.goalServeLeagueId,
-    goalServeRequestUserTeamId: matchData.goalServeHomeTeamId,
-    goalServeOpponentUserTeamId: matchData.goalServeHomeTeamId,
+    goalServeLeagueId: data.goalServeLeagueId,
+    goalServeRequestUserTeamId: data.goalServeRequestUserTeamId,
+    goalServeOpponentUserTeamId: data.goalServeOpponentUserTeamId,
     requestUserFairOdds:
-      parseInt(oddData?.homeTeamMoneyline?.us) > 0
+      data.requestUserGoalServeOdd > 0
         ? fairOddCalRes.underdog
         : fairOddCalRes.favourite,
-    requestUserMoneylineOdds: oddData?.homeTeamMoneyline?.us,
+    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
     opponentUserFairOdds:
-      parseInt(oddData?.homeTeamMoneyline?.us) > 0
+      data.opponentUserGoalServeOdd > 0
         ? fairOddCalRes.underdog
         : fairOddCalRes.favourite,
-    opponentUserMoneylineOdds: oddData?.homeTeamMoneyline?.us,
+    opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
+    requestUserBetAmount: data.amount,
+    opponentUserBetAmount: 0,
+    betTotalAmount: 0,
   };
-  if (matchData.goalServeHomeTeamId === data.requestUserGoalServeTeamId) {
-    preparedBetObject.goalServeOpponentUserTeamId =
-      matchData.goalServeAwayTeamId;
-    preparedBetObject.opponentUserMoneylineOdds =
-      oddData?.awayTeamMoneyline?.us;
-    preparedBetObject.opponentUserFairOdds =
-      parseInt(oddData?.awayTeamMoneyline?.us) > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite;
-  } else {
-    preparedBetObject.goalServeRequestUserTeamId =
-      matchData.goalServeAwayTeamId;
-    preparedBetObject.requestUserMoneylineOdds = oddData?.awayTeamMoneyline?.us;
-    preparedBetObject.requestUserFairOdds =
-      parseInt(oddData?.awayTeamMoneyline?.us) > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite;
-  }
+  const winAmountRequestUser = winAmountCalculationUsingOdd(
+    preparedBetObject.requestUserBetAmount,
+    preparedBetObject.requestUserFairOdds
+  )
+  preparedBetObject.opponentUserBetAmount = winAmountRequestUser;
+  preparedBetObject.betTotalAmount =
+    preparedBetObject.requestUserBetAmount +
+    preparedBetObject.opponentUserBetAmount;
   const createBet = await Bet.create(preparedBetObject);
 
   const createdBet = await Bet.findOne({
@@ -162,8 +157,7 @@ const responseBet = async (
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
   if (
-    betData.opponentUserId !== loggedInUserId &&
-    betData.requestUserId !== loggedInUserId
+    betData.opponentUserId !== loggedInUserId
   ) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
@@ -177,64 +171,15 @@ const responseBet = async (
     );
   }
   let prepareObject = {
-    isRequestUserConfirmedBet: betData.isRequestUserConfirmedBet,
-    isOpponentUserConfirmedBet: betData.isOpponentUserConfirmedBet,
-    status: betData.status as betStatus,
-    responseAt: betData.responseAt,
+    status: isConfirmed ? betStatus.CONFIRMED : betStatus.REJECTED,
+    responseAt: new Date(),
   };
-  if (loggedInUserId === betData.requestUserId) {
-    if (betData.isRequestUserConfirmedBet) {
-      throw new AppError(
-        httpStatus.UNPROCESSABLE_ENTITY,
-        Messages.ALREADY_CONFIRMED_BET
-      );
-    }
-    if (isConfirmed) {
-      prepareObject.isRequestUserConfirmedBet = true;
-      prepareObject.status =
-        betData.isOpponentUserConfirmedBet && isConfirmed
-          ? betStatus.CONFIRMED
-          : betStatus.PENDING;
-      prepareObject.responseAt =
-        betData.isOpponentUserConfirmedBet && isConfirmed
-          ? new Date()
-          : betData.responseAt;
-    } else {
-      prepareObject.isRequestUserConfirmedBet = false;
-      prepareObject.status = betStatus.REJECTED;
-      prepareObject.responseAt = new Date();
-    }
-  } else {
-    if (betData.isOpponentUserConfirmedBet) {
-      throw new AppError(
-        httpStatus.UNPROCESSABLE_ENTITY,
-        Messages.ALREADY_CONFIRMED_BET
-      );
-    }
-    if (isConfirmed) {
-      prepareObject.isOpponentUserConfirmedBet = true;
-      prepareObject.status =
-        betData.isRequestUserConfirmedBet && isConfirmed
-          ? betStatus.CONFIRMED
-          : betStatus.PENDING;
-      prepareObject.responseAt =
-        betData.isRequestUserConfirmedBet && isConfirmed
-          ? new Date()
-          : betData.responseAt;
-    } else {
-      prepareObject.isOpponentUserConfirmedBet = false;
-      prepareObject.status = betStatus.REJECTED;
-      prepareObject.responseAt = new Date();
-    }
-  }
-
   await Bet.updateOne(
     {
       _id: id,
     },
     prepareObject
   );
-
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();

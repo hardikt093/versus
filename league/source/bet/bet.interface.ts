@@ -1,10 +1,14 @@
 export interface ICreateBetRequest {
     opponentUserId: number,
     amount: number,
-    requestUserGoalServeTeamId:  number,
+    goalServeRequestUserTeamId:  number,
+    goalServeOpponentUserTeamId:  number,
     goalServeLeagueId:  number,
     leagueType:  string,
-    goalServeMatchId: number
+    oddType:  string,
+    goalServeMatchId: number,
+    requestUserGoalServeOdd: number,
+    opponentUserGoalServeOdd : number,
 }
 
 export interface IresponseBetRequest {

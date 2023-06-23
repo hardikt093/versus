@@ -4,10 +4,14 @@ const createBet = {
   body: Joi.object().keys({
     opponentUserId: Joi.number().required(),
     amount: Joi.number().required().min(1),
-    requestUserGoalServeTeamId: Joi.number().required(),
+    goalServeRequestUserTeamId: Joi.number().required(),
+    goalServeOpponentUserTeamId: Joi.number().required(),
     goalServeMatchId: Joi.number().required(),
     goalServeLeagueId : Joi.number().required(),
     leagueType : Joi.string().required(),
+    oddType : Joi.string().required(),
+    requestUserGoalServeOdd : Joi.number().required(),
+    opponentUserGoalServeOdd : Joi.number().required()
   }),
 };
 const responseBet = {
