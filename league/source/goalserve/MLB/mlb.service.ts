@@ -5596,14 +5596,14 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
     ]);
     let standingData = await getStandingData();
 
-    // getTeam[0].last_ten = findWinLoss(getTeam[0].lastMatches, goalServeTeamId);
+    getTeam[0].last_ten = findWinLoss(getTeam[0].lastMatches, goalServeTeamId);
 
-    // delete getTeam[0].lastMatches;
-    // getTeam[0].teamDetails.divisionStandings.map((item: any) => {
-    //   item.last_ten = findWinLoss(item.lastMatches, item.goalServeTeamId);
+    delete getTeam[0].lastMatches;
+    getTeam[0].teamDetails.divisionStandings.map((item: any) => {
+      item.last_ten = findWinLoss(item.lastMatches, item.goalServeTeamId);
 
-    //   delete item.lastMatches;
-    // });
+      delete item.lastMatches;
+    });
     getTeam[0].teamStandings = standingData;
     return getTeam[0];
   } catch (error: any) {
