@@ -252,6 +252,7 @@ const getUpcomingMatch = async () => {
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
+            abbreviation: "$awayTeam.abbreviation",
             goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
             awayTeamRun: "$awayTeamTotalScore",
             awayTeamHit: "$awayTeamHit",
@@ -283,6 +284,7 @@ const getUpcomingMatch = async () => {
             homeTeamId: "$homeTeam._id",
             goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
             homeTeamRun: "$homeTeamTotalScore",
+            abbreviation: "$homeTeam.abbreviation",
             homeTeamHit: "$homeTeamHit",
             homeTeamErrors: "$homeTeamError",
             won: "$homeTeamStandings.won",
@@ -551,6 +553,7 @@ const getFinalMatch = async () => {
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
+            abbreviation: "$awayTeam.abbreviation",
             goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
             awayTeamRun: "$awayTeamTotalScore",
             awayTeamHit: "$awayTeamHit",
@@ -574,6 +577,7 @@ const getFinalMatch = async () => {
           homeTeam: {
             homeTeamName: "$homeTeam.name",
             homeTeamId: "$homeTeam._id",
+            abbreviation: "$homeTeam.abbreviation",
             goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
             homeTeamRun: "$homeTeamTotalScore",
             homeTeamHit: "$homeTeamHit",
@@ -4711,7 +4715,6 @@ function findWinLoss(arr: any, goalServeTeamId: string) {
       }
     }
   }
-
   return `${teamWins}-${teamLost}`;
 }
 const mlbGetTeam = async (goalServeTeamId: string) => {
@@ -5593,14 +5596,14 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
     ]);
     let standingData = await getStandingData();
 
-    getTeam[0].last_ten = findWinLoss(getTeam[0].lastMatches, goalServeTeamId);
+    // getTeam[0].last_ten = findWinLoss(getTeam[0].lastMatches, goalServeTeamId);
 
-    delete getTeam[0].lastMatches;
-    getTeam[0].teamDetails.divisionStandings.map((item: any) => {
-      item.last_ten = findWinLoss(item.lastMatches, item.goalServeTeamId);
+    // delete getTeam[0].lastMatches;
+    // getTeam[0].teamDetails.divisionStandings.map((item: any) => {
+    //   item.last_ten = findWinLoss(item.lastMatches, item.goalServeTeamId);
 
-      delete item.lastMatches;
-    });
+    //   delete item.lastMatches;
+    // });
     getTeam[0].teamStandings = standingData;
     return getTeam[0];
   } catch (error: any) {
