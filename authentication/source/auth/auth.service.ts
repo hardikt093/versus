@@ -12,6 +12,7 @@ import {
   ISignIn,
   IForgotPassword,
   IResetPassword,
+  IUser,
 } from "../interfaces/input";
 import googleService from "../services/google.service";
 import { sendMail } from "../services/nodemailer.service";
@@ -517,6 +518,36 @@ const metaLogin = async (data: any) => {
 
   }
 }
+
+const getContact = async (query: string, user: IUser) => {
+  const contacts = await prisma.contact.findMany({
+    where: {
+      userId: user.id,
+      OR: [
+        {
+          email: {
+            contains: query,
+            mode: 'insensitive'
+          },
+        },
+        {
+          name: {
+            contains: query,
+            mode: 'insensitive'
+          }
+        },
+      ],
+    },
+    select: {
+      email: true,
+      name: true,
+      userId: true
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  return contacts;
+};
+
 export default {
   signUp,
   signIn,
@@ -529,5 +560,6 @@ export default {
   sendInvite,
   checkInviteExpire,
   refreshAuthTokens,
-  metaLogin
+  metaLogin,
+  getContact
 };
