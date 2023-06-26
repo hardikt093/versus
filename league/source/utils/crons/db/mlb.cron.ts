@@ -4,7 +4,7 @@ import MlbService from "../../../goalserve/MLB/db.cron.service";
 const mlbService = new MlbService();
 
 let iscreateOddsRunning: boolean = false;
-const createOdds = cron.schedule("*/10 * * * * *", async () => {
+const createOdds = cron.schedule("*/5 * * * * *", async () => {
   if (iscreateOddsRunning) {
     console.log("createOdds Skip");
     return;
@@ -21,7 +21,7 @@ const createOdds = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateCurruntDateRecordRunning: boolean = false;
-const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
+const updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
   if (isupdateCurruntDateRecordRunning) {
     console.log("updateCurruntDateRecord Skip");
     return;
@@ -106,7 +106,7 @@ const updatePlayerStats = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let iscreateOrUpdateOddsRunning: boolean = false;
-const createOrUpdateOdds = cron.schedule("*/10 * * * * *", async () => {
+const createOrUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
   if (iscreateOrUpdateOddsRunning) {
     console.log("createOrUpdateOdds Skip");
     return;
