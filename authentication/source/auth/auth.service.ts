@@ -15,7 +15,6 @@ import {
 } from "../interfaces/input";
 import googleService from "../services/google.service";
 import { sendMail } from "../services/nodemailer.service";
-import { log } from "console";
 import { axiosGet } from "../services/axios.service";
 
 /**
@@ -459,6 +458,65 @@ const refreshAuthTokens = async (refreshToken: any) => {
     throw new AppError(httpStatus.UNAUTHORIZED, Messages.INVALIDTOKEN);
   }
 };
+
+const metaLogin = async (data: any) => {
+  const findUser = await prisma.user.findUnique({
+    where: {
+      email: data.email,
+    },
+  });
+  if (findUser) {
+    const tokens = await tokenService.generateAuthTokens(findUser.id);
+    const user = {
+      id: findUser.id,
+      userName: findUser.userName,
+      firstName: findUser.firstName,
+      lastName: findUser.lastName,
+      profileImage: findUser.profileImage,
+      birthDate: findUser.birthDate,
+      accessToken: tokens.access.token,
+      refreshToken: tokens.refresh.token,
+    };
+    return { user };
+  }
+  else {
+    const createUser = await prisma.user.create({
+      data: {
+        email: data.email,
+        password: data.password ? data.password : "",
+        firstName: data.firstName ? data.firstName : "",
+        lastName: data.lastName ? data.lastName : "",
+        phone: data.phone,
+        userName: data.email,
+        socialLogin: data.socialLogin,
+        birthDate: data?.birthDate ? data?.birthDate : new Date(),
+        profileImage: data.profileImage ? data.profileImage : "",
+        // googleAccessToken: data.googleAccessToken
+        //   ? data.googleAccessToken
+        //   : "",
+        // googleRefreshToken: data.googleRefreshToken
+        //   ? data.googleRefreshToken
+        //   : "",
+        // googleIdToken: data.googleRefreshToken ? data.googleRefreshToken : "",
+        isSignUp: "SUCCESS",
+        // isContactScope: data.isContactScope ?? null,
+      },
+    });
+    const tokens = await tokenService.generateAuthTokens(createUser.id);
+    const user = {
+      id: createUser.id,
+      userName: createUser.userName,
+      firstName: createUser.firstName,
+      lastName: createUser.lastName,
+      profileImage: createUser.profileImage,
+      birthDate: createUser.birthDate,
+      accessToken: tokens.access.token,
+      refreshToken: tokens.refresh.token,
+    };
+    return { user };
+
+  }
+}
 export default {
   signUp,
   signIn,
@@ -471,4 +529,5 @@ export default {
   sendInvite,
   checkInviteExpire,
   refreshAuthTokens,
+  metaLogin
 };

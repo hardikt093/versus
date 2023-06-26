@@ -134,6 +134,15 @@ const signIn = async (req: Request, res: Response) => {
           }
         }
       }
+      else if (req.body.provider == "meta") {
+        try {
+          const login = await authService.metaLogin(req.body)
+          createResponse(res, httpStatus.OK, "", login)
+        } catch (error: any) {
+          createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+        }
+
+      }
     }
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
