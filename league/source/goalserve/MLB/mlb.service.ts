@@ -589,7 +589,7 @@ const getUpcomingMatch = async () => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -608,7 +608,7 @@ const getUpcomingMatch = async () => {
           underdogOutcome: {
             $cond: {
               if: {
-                $eq: ["$favoriteOutcome", "away"],
+                $eq: ["$favoriteOutcome.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -2088,7 +2088,7 @@ const mlbScoreWithDate = async (date1: string) => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -3053,7 +3053,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -3635,7 +3635,7 @@ const getLiveDataFromMongodb = async () => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -4824,7 +4824,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -4843,7 +4843,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           underdogOutcome: {
             $cond: {
               if: {
-                $eq: ["$favoriteOutcome", "away"],
+                $eq: ["$favoriteOutcome.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -6317,7 +6317,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -9314,7 +9314,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -9333,7 +9333,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
           underdogLive: {
             $cond: {
               if: {
-                $eq: ["$favoriteLive", "away"],
+                $eq: ["$favoriteLive.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -10911,7 +10911,7 @@ const liveBoxscoreMlb = async () => {
           underdog: {
             $cond: {
               if: {
-                $eq: ["$favorite", "away"],
+                $eq: ["$favorite.favorite", "away"],
               },
               then: {
                 underdog: "home",
@@ -10930,7 +10930,7 @@ const liveBoxscoreMlb = async () => {
           underdogLive: {
             $cond: {
               if: {
-                $eq: ["$favoriteLive", "away"],
+                $eq: ["$favoriteLive.favorite", "away"],
               },
               then: {
                 underdog: "home",
