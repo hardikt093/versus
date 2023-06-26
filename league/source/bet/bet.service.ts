@@ -93,7 +93,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeMatchId: data.goalServeMatchId,
     requestUserId: loggedInUserId,
     leagueType: data.leagueType,
-    oddType : data.oddType,
+    oddType: data.oddType,
     opponentUserId: data.opponentUserId,
     goalServeLeagueId: data.goalServeLeagueId,
     goalServeRequestUserTeamId: data.goalServeRequestUserTeamId,
@@ -309,12 +309,16 @@ const resultBet = async (id: string, winTeamId: number) => {
   return updatedData;
 };
 
-const declareResultMatch = async (matchId: number, winTeamId: number, leagueType : string) => {
+const declareResultMatch = async (
+  matchId: number,
+  winTeamId: number,
+  leagueType: string
+) => {
   await Bet.updateMany(
     {
       goalServeMatchId: matchId,
       status: betStatus.ACTIVE,
-      leagueType : leagueType
+      leagueType: leagueType,
     },
     {
       status: betStatus.RESULT_DECLARED,
@@ -558,9 +562,30 @@ const listBetsByType = async (
                         },
                       },
                       {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
                         $project: {
                           name: 1,
+                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
                           abbreviation: 1,
+                          won: 1,
+                          lost: 1,
                           _id: 1,
                         },
                       },
@@ -583,9 +608,30 @@ const listBetsByType = async (
                         },
                       },
                       {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
                         $project: {
                           name: 1,
+                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
                           abbreviation: 1,
+                          won: 1,
+                          lost: 1,
                           _id: 1,
                         },
                       },
@@ -662,9 +708,30 @@ const listBetsByType = async (
                         },
                       },
                       {
+                        $lookup: {
+                          from: "nbateamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
                         $project: {
                           name: 1,
+                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
                           abbreviation: 1,
+                          won: 1,
+                          lost: 1,
                           _id: 1,
                         },
                       },
@@ -687,9 +754,30 @@ const listBetsByType = async (
                         },
                       },
                       {
+                        $lookup: {
+                          from: "nbateamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
                         $project: {
                           name: 1,
+                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
                           abbreviation: 1,
+                          won: 1,
+                          lost: 1,
                           _id: 1,
                         },
                       },
@@ -766,9 +854,30 @@ const listBetsByType = async (
                         },
                       },
                       {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
                         $project: {
                           name: 1,
+                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
                           abbreviation: 1,
+                          won: 1,
+                          lost: 1,
                           _id: 1,
                         },
                       },
@@ -791,9 +900,30 @@ const listBetsByType = async (
                         },
                       },
                       {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
                         $project: {
                           name: 1,
+                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
                           abbreviation: 1,
+                          won: 1,
+                          lost: 1,
                           _id: 1,
                         },
                       },
@@ -851,9 +981,6 @@ const listBetsByType = async (
       },
     },
   ]);
-  if (data && data.length == 0) {
-    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
-  }
   return data;
 };
 export default {
