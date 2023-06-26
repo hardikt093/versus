@@ -47,8 +47,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       { opponentUserId: loggedInUserId },
     ],
     goalServeMatchId: data.goalServeMatchId,
-    requestUserGoalServeOdd: data.requestUserGoalServeOdd
-    }).lean();
+    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
+  }).lean();
 
   if (betFound) {
     throw new AppError(
@@ -89,56 +89,53 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     throw new AppError(httpStatus.NOT_FOUND, Messages.TEAM_NOT_FOUND_IN_MATCH);
   }
 
-  let fairOddCalRes = {
-    favourite: 0,
-    underdog: 0,
-  };
-  if (data.requestUserGoalServeOdd > 0) {
-    fairOddCalRes = fairOddCalculation(
-      data.opponentUserGoalServeOdd,
-      data.requestUserGoalServeOdd
-    );
-  } else {
-    fairOddCalRes = fairOddCalculation(
-      data.requestUserGoalServeOdd,
-      data.opponentUserGoalServeOdd
-    );
-  }
-
   let preparedBetObject = {
     goalServeMatchId: data.goalServeMatchId,
     requestUserId: loggedInUserId,
     leagueType: data.leagueType,
+    oddType : data.oddType,
     opponentUserId: data.opponentUserId,
-    isRequestUserConfirmedBet: true,
-    betAmount: data.amount,
     goalServeLeagueId: data.goalServeLeagueId,
     goalServeRequestUserTeamId: data.goalServeRequestUserTeamId,
     goalServeOpponentUserTeamId: data.goalServeOpponentUserTeamId,
-    requestUserFairOdds:
-      data.requestUserGoalServeOdd > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite,
     requestUserGoalServeOdd: data.requestUserGoalServeOdd,
-    opponentUserFairOdds:
-      data.opponentUserGoalServeOdd > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite,
     opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
+    requestUserFairOdds: 0,
+    opponentUserFairOdds: 0,
     requestUserBetAmount: data.amount,
-    opponentUserBetAmount: 0,
-    betTotalAmount: 0,
+    opponentUserBetAmount: data.amount,
+    betTotalAmount: data.amount + data.amount,
   };
-  const winAmountRequestUser = winAmountCalculationUsingOdd(
-    preparedBetObject.requestUserBetAmount,
-    preparedBetObject.requestUserFairOdds
-  )
-  preparedBetObject.opponentUserBetAmount = winAmountRequestUser;
-  preparedBetObject.betTotalAmount =
-    preparedBetObject.requestUserBetAmount +
-    preparedBetObject.opponentUserBetAmount;
+  if (data.oddType === "Moneyline") {
+    let fairOddCalRes = {
+      favourite: 0,
+      underdog: 0,
+    };
+    if (data.requestUserGoalServeOdd > 0) {
+      fairOddCalRes = fairOddCalculation(
+        data.opponentUserGoalServeOdd,
+        data.requestUserGoalServeOdd
+      );
+      preparedBetObject.requestUserFairOdds = fairOddCalRes.underdog;
+      preparedBetObject.opponentUserFairOdds = fairOddCalRes.favourite;
+    } else {
+      fairOddCalRes = fairOddCalculation(
+        data.requestUserGoalServeOdd,
+        data.opponentUserGoalServeOdd
+      );
+      preparedBetObject.requestUserFairOdds = fairOddCalRes.favourite;
+      preparedBetObject.opponentUserFairOdds = fairOddCalRes.underdog;
+    }
+    const winAmountRequestUser = winAmountCalculationUsingOdd(
+      preparedBetObject.requestUserBetAmount,
+      preparedBetObject.requestUserFairOdds
+    );
+    preparedBetObject.opponentUserBetAmount = winAmountRequestUser;
+    preparedBetObject.betTotalAmount =
+      preparedBetObject.requestUserBetAmount +
+      preparedBetObject.opponentUserBetAmount;
+  }
   const createBet = await Bet.create(preparedBetObject);
-
   const createdBet = await Bet.findOne({
     _id: createBet._id,
   });
@@ -156,9 +153,7 @@ const responseBet = async (
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  if (
-    betData.opponentUserId !== loggedInUserId
-  ) {
+  if (betData.opponentUserId !== loggedInUserId) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.YOU_CAN_NOT_RESPONSE_TO_THIS_BET
