@@ -57,4 +57,12 @@ const userContacts = async (req: Request, res: Response) => {
   }
 };
 
-export default { profileUpdate, getAllContact, seacrchUsers, userContacts };
+const usersList = async (req: Request, res: Response) => {
+  try {
+    const allUsers = await userService.userlist(req.loggedInUser.id);
+    createResponse(res, httpStatus.OK, "", allUsers);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+export default { profileUpdate, getAllContact, seacrchUsers, userContacts, usersList };
