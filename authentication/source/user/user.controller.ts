@@ -59,7 +59,7 @@ const userContacts = async (req: Request, res: Response) => {
 
 const usersList = async (req: Request, res: Response) => {
   try {
-    const allUsers = await userService.userlist(req.loggedInUser.id);
+    const allUsers = await userService.userlist(req.loggedInUser.id, req.body.search);
     createResponse(res, httpStatus.OK, "", allUsers);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});

@@ -107,21 +107,50 @@ const userContacts = async (id: number) => {
   });
 }
 
-const userlist = async (id: number) => {
-  return await prisma.user.findMany({
-    where : {
-      id : {
-        not : id
+const userlist = async (id: number, search : string) => {
+  if (search) {
+    return await prisma.user.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { userName: { contains: search } },
+              { firstName: { contains: search } },
+              { lastName: { contains: search } },
+            ],
+          },
+          {
+            id: {
+              not: id,
+            },
+          },
+        ],
+      },
+      select: {
+        id : true,
+        email : true,
+        firstName : true,
+        lastName : true,
+        userName : true,
+        profileImage : true
+      },
+    });
+  } else {
+    return await prisma.user.findMany({
+      where : {
+        id : {
+          not : id
+        }
+      },
+      select : {
+        id : true,
+        email : true,
+        firstName : true,
+        lastName : true,
+        userName : true,
+        profileImage : true
       }
-    },
-    select : {
-      id : true,
-      email : true,
-      firstName : true,
-      lastName : true,
-      userName : true,
-      profileImage : true
-    }
-  });
+    });
+  }
 }
 export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation, userlist };
