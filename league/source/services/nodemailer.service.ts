@@ -3,7 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as handlebars from "handlebars";
 import { google } from "googleapis";
-import { log } from "console";
 
 var nodemailer = require("nodemailer");
 const OAuth2 = google.auth.OAuth2;
