@@ -367,9 +367,7 @@ const getUpcomingMatch = async () => {
               else: "no",
             },
           },
-          
         },
-        
       },
       {
         $addFields: {
@@ -403,7 +401,10 @@ const getUpcomingMatch = async () => {
               branches: [
                 {
                   case: {
-                    $eq: ["$isHomeTeamOutcomeNagative", "$isAwayTeamOutcomeNagative"],
+                    $eq: [
+                      "$isHomeTeamOutcomeNagative",
+                      "$isAwayTeamOutcomeNagative",
+                    ],
                   },
                   then: "bothNagative",
                 },
@@ -740,7 +741,7 @@ const getUpcomingMatch = async () => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -755,7 +756,7 @@ const getUpcomingMatch = async () => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -765,12 +766,15 @@ const getUpcomingMatch = async () => {
                 {
                   $multiply: [
                     {
-                      $divide: ["$favRemovePointOutcome", "$underdogFocOutcome"],
+                      $divide: [
+                        "$favRemovePointOutcome",
+                        "$underdogFocOutcome",
+                      ],
                     },
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -785,7 +789,7 @@ const getUpcomingMatch = async () => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -818,7 +822,7 @@ const getUpcomingMatch = async () => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
-          goalServeLeagueId:true,
+          goalServeLeagueId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
@@ -2172,7 +2176,7 @@ const mlbScoreWithDate = async (date1: string) => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -2187,7 +2191,7 @@ const mlbScoreWithDate = async (date1: string) => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -2202,7 +2206,7 @@ const mlbScoreWithDate = async (date1: string) => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
-          goalServeLeagueId:true,
+          goalServeLeagueId: true,
           awayTeam: {
             abbreviation: "$awayTeam.abbreviation",
             awayTeamName: "$awayTeam.name",
@@ -3137,7 +3141,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -3152,7 +3156,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -3165,7 +3169,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
           status: true,
           datetime_utc: "$dateTimeUtc",
           time: true,
-          goalServeLeagueId:true,
+          goalServeLeagueId: true,
           goalServeMatchId: true,
           awayTeam: {
             abbreviation: "$awayTeam.abbreviation",
@@ -3719,7 +3723,7 @@ const getLiveDataFromMongodb = async () => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -3734,7 +3738,7 @@ const getLiveDataFromMongodb = async () => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -4598,9 +4602,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               else: "no",
             },
           },
-          
         },
-        
       },
       {
         $addFields: {
@@ -4634,7 +4636,10 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               branches: [
                 {
                   case: {
-                    $eq: ["$isHomeTeamOutcomeNagative", "$isAwayTeamOutcomeNagative"],
+                    $eq: [
+                      "$isHomeTeamOutcomeNagative",
+                      "$isAwayTeamOutcomeNagative",
+                    ],
                   },
                   then: "bothNagative",
                 },
@@ -4971,7 +4976,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -4986,7 +4991,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -4996,12 +5001,15 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                 {
                   $multiply: [
                     {
-                      $divide: ["$favRemovePointOutcome", "$underdogFocOutcome"],
+                      $divide: [
+                        "$favRemovePointOutcome",
+                        "$underdogFocOutcome",
+                      ],
                     },
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -5016,7 +5024,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -6397,7 +6405,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -6412,7 +6420,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -9087,9 +9095,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               else: "no",
             },
           },
-          
         },
-        
       },
       {
         $addFields: {
@@ -9460,7 +9466,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -9475,7 +9481,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -9490,7 +9496,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -9505,13 +9511,12 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
         },
       },
-     
 
       {
         $project: {
@@ -10687,9 +10692,7 @@ const liveBoxscoreMlb = async () => {
               else: "no",
             },
           },
-          
         },
-        
       },
       {
         $addFields: {
@@ -11060,7 +11063,7 @@ const liveBoxscoreMlb = async () => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -11075,7 +11078,7 @@ const liveBoxscoreMlb = async () => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -11090,7 +11093,7 @@ const liveBoxscoreMlb = async () => {
                     -1,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -11105,7 +11108,7 @@ const liveBoxscoreMlb = async () => {
                     100,
                   ],
                 },
-                3,
+                0,
               ],
             },
           },
@@ -11590,22 +11593,22 @@ const liveBoxscoreMlb = async () => {
             awayTeamMoneyLine: {
               $cond: {
                 if: {
-                  $eq: ["$favorite.favorite", "away"],
+                  $eq: ["$favoriteLive.favorite", "away"],
                 },
                 then: {
                   $cond: {
                     if: {
                       $gte: [
                         {
-                          $toDouble: "$favoriteOdd",
+                          $toDouble: "$favoriteOddLive",
                         },
                         0,
                       ],
                     },
                     then: {
-                      $concat: ["+", "$favoriteOdd"],
+                      $concat: ["+", "$favoriteOddLive"],
                     },
-                    else: "$favoriteOdd",
+                    else: "$favoriteOddLive",
                   },
                 },
 
@@ -11614,15 +11617,15 @@ const liveBoxscoreMlb = async () => {
                     if: {
                       $gte: [
                         {
-                          $toDouble: "$underdogOdd",
+                          $toDouble: "$underdogOddLive",
                         },
                         0,
                       ],
                     },
                     then: {
-                      $concat: ["+", "$underdogOdd"],
+                      $concat: ["+", "$underdogOddLive"],
                     },
-                    else: "$underdogOdd",
+                    else: "$underdogOddLive",
                   },
                 },
               },
