@@ -582,7 +582,9 @@ const listBetsByType = async (
                       {
                         $project: {
                           name: 1,
-                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
                           abbreviation: 1,
                           won: 1,
                           lost: 1,
@@ -628,7 +630,9 @@ const listBetsByType = async (
                       {
                         $project: {
                           name: 1,
-                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
                           abbreviation: 1,
                           won: 1,
                           lost: 1,
@@ -728,7 +732,9 @@ const listBetsByType = async (
                       {
                         $project: {
                           name: 1,
-                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
                           abbreviation: 1,
                           won: 1,
                           lost: 1,
@@ -774,7 +780,9 @@ const listBetsByType = async (
                       {
                         $project: {
                           name: 1,
-                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
                           abbreviation: 1,
                           won: 1,
                           lost: 1,
@@ -874,7 +882,9 @@ const listBetsByType = async (
                       {
                         $project: {
                           name: 1,
-                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
                           abbreviation: 1,
                           won: 1,
                           lost: 1,
@@ -920,7 +930,9 @@ const listBetsByType = async (
                       {
                         $project: {
                           name: 1,
-                          teamImages: { $arrayElemAt: ["$teamImages", 0] },
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
                           abbreviation: 1,
                           won: 1,
                           lost: 1,
