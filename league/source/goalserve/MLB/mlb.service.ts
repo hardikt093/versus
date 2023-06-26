@@ -3165,6 +3165,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
           status: true,
           datetime_utc: "$dateTimeUtc",
           time: true,
+          goalServeLeagueId:true,
           goalServeMatchId: true,
           awayTeam: {
             abbreviation: "$awayTeam.abbreviation",
