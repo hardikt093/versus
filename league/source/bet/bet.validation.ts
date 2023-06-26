@@ -4,8 +4,14 @@ const createBet = {
   body: Joi.object().keys({
     opponentUserId: Joi.number().required(),
     amount: Joi.number().required().min(1),
-    requestUserTeamId: Joi.number().required(),
-    matchId: Joi.number().required(),
+    goalServeRequestUserTeamId: Joi.number().required(),
+    goalServeOpponentUserTeamId: Joi.number().required(),
+    goalServeMatchId: Joi.number().required(),
+    goalServeLeagueId : Joi.number().required(),
+    leagueType : Joi.string().required(),
+    oddType : Joi.string().required(),
+    requestUserGoalServeOdd : Joi.number().required(),
+    opponentUserGoalServeOdd : Joi.number().required()
   }),
 };
 const responseBet = {
@@ -60,6 +66,21 @@ const listBetsByStatus = {
   }),
 };
 
+const listbyType = {
+  body: Joi.object().keys({
+    size : Joi.number(),
+    page : Joi.number(),
+    type: Joi.string()
+      .valid(
+        "OPEN",
+        "ACTIVE",
+        "SETTLED",
+        "WON",
+        "LOST",
+      ),
+  }),
+};
+
 export default {
   listBetsByStatus,
   responseToBatResultSatisfiedOrNot,
@@ -67,4 +88,5 @@ export default {
   createBet,
   responseBet,
   modifyBet,
+  listbyType
 };

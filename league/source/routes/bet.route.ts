@@ -21,6 +21,13 @@ router.post(
   BetController.listBetsByStatus
 );
 
+router.post(
+  "/list",
+  auth,
+  validate(BetValidation.listbyType),
+  BetController.listBetsByType
+);
+
 router.get(
   "/request",
   auth,

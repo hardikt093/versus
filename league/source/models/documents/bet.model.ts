@@ -12,16 +12,24 @@ var betSchema = new Schema(
     opponentUserId: {
       type: Number,
     },
-    isRequestUserConfirmedBet: {
-      type: Boolean,
-      default: false,
-    },
-    isOpponentUserConfirmedBet: {
-      type: Boolean,
-      default: false,
-    },
-    betAmount: {
+    betTotalAmount: {
       type: Number,
+    },
+    requestUserBetAmount: {
+      type: Number,
+    },
+    opponentUserBetAmount: {
+      type: Number,
+    },
+    oddType: {
+      type: String,
+      enum: [
+        "Moneyline",
+        "Spread",
+        "Total",
+      ],
+      required : true,
+      default : "Moneyline"
     },
     goalServeLeagueId: {
       type: Number,
@@ -31,10 +39,6 @@ var betSchema = new Schema(
     },
     goalServeOpponentUserTeamId: {
       type: Number,
-    },
-    matchOddsId: {
-      type: Schema.Types.ObjectId,
-      ref: "odd",
     },
     goalServeWinTeamId: {
       type: Number,
@@ -59,10 +63,10 @@ var betSchema = new Schema(
     opponentUserFairOdds: {
       type: Number,
     },
-    requestUserMoneylineOdds: {
+    requestUserGoalServeOdd: {
       type: Number,
     },
-    opponentUserMoneylineOdds: {
+    opponentUserGoalServeOdd: {
       type: Number,
     },
     responseAt: {
@@ -76,6 +80,15 @@ var betSchema = new Schema(
     },
     isOpponentUserResultSatisfied: {
       type: Boolean,
+    },
+    leagueType: {
+      type: String,
+      enum: [
+        "NHL",
+        "MLB",
+        "NBA",
+      ],
+      required : true
     },
     status: {
       type: String,
