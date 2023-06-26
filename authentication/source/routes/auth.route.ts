@@ -2,6 +2,7 @@ import express from "express";
 import authController from "../auth/auth.controller";
 import validate from "../middlewares/validate";
 import authValidation from "./../auth/auth.validation";
+import auth from "../middlewares/auth";
 
 const router = express.Router();
 
@@ -199,7 +200,7 @@ router.post("/sendInvite", authController.sendInvite);
 router.post("/checkInviteExpire", authController.checkInviteExpire);
 router.post("/refresh-auth-token", authController.refreshAuthTokens);
 
-// router.post("/auth/getContact", authController.getContact);
+router.get("/getContact", auth, authController.getContact);
 // router.delete("/auth/userDelete", authController.deleteUser);
 
 export = router;

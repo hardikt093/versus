@@ -11,6 +11,7 @@ const signIn = {
     firstName: Joi.string().allow(null, ""),
     lastName: Joi.string().allow(null, ""),
     googleCode: Joi.string().allow(null, ""),
+    profileImage: Joi.string().allow(null, "")
   }),
 };
 
