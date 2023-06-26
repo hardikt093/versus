@@ -153,4 +153,21 @@ const userlist = async (id: number, search : string) => {
     });
   }
 }
-export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation, userlist };
+const userGetBulk = async (userIds: Array<number>) => {
+    return await prisma.user.findMany({
+      where : {
+        id : {
+          in : userIds
+        }
+      },
+      select : {
+        id : true,
+        email : true,
+        firstName : true,
+        lastName : true,
+        userName : true,
+        profileImage : true
+      }
+    });
+}
+export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation, userlist, userGetBulk };

@@ -65,4 +65,13 @@ const usersList = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-export default { profileUpdate, getAllContact, seacrchUsers, userContacts, usersList };
+
+const usersGetBulk = async (req: Request, res: Response) => {
+  try {
+    const allUsers = await userService.userGetBulk(req.body.ids);
+    createResponse(res, httpStatus.OK, "", allUsers);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+export default { profileUpdate, getAllContact, seacrchUsers, userContacts, usersList, usersGetBulk };

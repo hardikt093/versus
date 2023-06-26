@@ -3,6 +3,7 @@ import httpStatus from "http-status";
 import BetService from "../bet/bet.service";
 import createResponse from "../utils/response";
 import Messages from "../utils/messages";
+import { axiosPostMicro } from "../services/axios.service";
 
 const createBet = async (req: Request, res: Response) => {
   try {
@@ -136,7 +137,8 @@ const listBetsByType = async (req: Request, res: Response) => {
   try {
     const betListDataByStatus = await BetService.listBetsByType(
       req.loggedInUser.id,
-      req.body
+      req.body,
+      req.header("Authorization") ?? ""
     );
     createResponse(
       res,

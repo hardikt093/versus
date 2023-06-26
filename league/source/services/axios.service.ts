@@ -82,4 +82,18 @@ const axiosDelete = async (url: string, payload = {}) => {
   return request;
 };
 
-export { axiosGet, axiosPost, axiosDelete, axiosPut, axiosPatch };
+const axiosPostMicro = async (
+  data: object | Array<object>,
+  url: string,
+  token: ""
+) => {
+  try {
+    let request = await axios.post(`${url}`, data, getHeaders(token));
+    return request;
+  } catch (error: any) {
+    throw new AppError(error.response.data.status ?? httpStatus.UNPROCESSABLE_ENTITY,
+      error.response.data.message ?? error.message,
+     error.response.data.data ?? {});
+  }
+};
+export { axiosGet, axiosPost, axiosDelete, axiosPut, axiosPatch, axiosPostMicro };

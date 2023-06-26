@@ -13,6 +13,7 @@ import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
 import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
+import { axiosPostMicro } from "../services/axios.service";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -479,7 +480,8 @@ const listBetsByStatus = async (loggedInUserId: number, status: string) => {
 
 const listBetsByType = async (
   loggedInUserId: number,
-  body: IlistBetRequestData
+  body: IlistBetRequestData,
+  token : string | "",
 ) => {
   let page = 1;
   let limit = body.size ?? 10;
@@ -510,7 +512,7 @@ const listBetsByType = async (
   if (body.type === "LOST") {
     condition.status = "RESULT_DECLARED";
   }
-  const data = await Bet.aggregate([
+  let data = await Bet.aggregate([
     {
       $match: condition,
     },
@@ -993,6 +995,26 @@ const listBetsByType = async (
       },
     },
   ]);
+  // if (data && data.length > 0) {
+  //   const ids = [...new Set(data.map(item => [item.requestUserId, item.opponentUserId]).flat())];
+  //     const resp = await axiosPostMicro(
+  //       {
+  //         ids
+  //       },
+  //       `http://localhost:8000/users/getBulk`,
+  //       ''
+  //     );
+  //     const bindedObject = resp.data.data.map((item: { requestUserId: number; opponentUserId: number; }) => {
+  //       const requestUser = data.find(user => user.id == item.requestUserId);
+  //       const opponentUser = data.find(user => user.id == item.opponentUserId);
+  //       return {
+  //         ...item,
+  //         requestUser,
+  //         opponentUser
+  //       };
+  //     });
+  //     return bindedObject;
+  // }
   return data;
 };
 export default {
