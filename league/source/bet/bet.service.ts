@@ -995,26 +995,26 @@ const listBetsByType = async (
       },
     },
   ]);
-  // if (data && data.length > 0) {
-  //   const ids = [...new Set(data.map(item => [item.requestUserId, item.opponentUserId]).flat())];
-  //     const resp = await axiosPostMicro(
-  //       {
-  //         ids
-  //       },
-  //       `http://localhost:8000/users/getBulk`,
-  //       ''
-  //     );
-  //     const bindedObject = resp.data.data.map((item: { requestUserId: number; opponentUserId: number; }) => {
-  //       const requestUser = data.find(user => user.id == item.requestUserId);
-  //       const opponentUser = data.find(user => user.id == item.opponentUserId);
-  //       return {
-  //         ...item,
-  //         requestUser,
-  //         opponentUser
-  //       };
-  //     });
-  //     return bindedObject;
-  // }
+  if (data && data.length > 0) {
+    const ids = [...new Set(data.map(item => [item.requestUserId, item.opponentUserId]).flat())];
+      const resp = await axiosPostMicro(
+        {
+          ids
+        },
+        `http://localhost:8000/users/getBulk`,
+        ''
+      );
+      const bindedObject = data.map((item: { requestUserId: number; opponentUserId: number; }) => {
+        const requestUser = resp.data.data.find((user: { id: number; }) => user.id == item.requestUserId);
+        const opponentUser = resp.data.data.find((user: { id: number; }) => user.id == item.opponentUserId);
+        return {
+          ...item,
+          requestUser,
+          opponentUser
+        };
+      });
+      return bindedObject;
+  }
   return data;
 };
 export default {
