@@ -5,6 +5,8 @@ import authService from "../auth/auth.service";
 import createResponse from "./../utils/response";
 import Messages from "./../utils/messages";
 import googleService from "../services/google.service";
+import { string } from "@hapi/joi";
+import { IUser } from "../interfaces/input";
 
 /**
  *
@@ -134,6 +136,15 @@ const signIn = async (req: Request, res: Response) => {
           }
         }
       }
+      else if (req.body.provider == "meta") {
+        try {
+          const login = await authService.metaLogin(req.body)
+          createResponse(res, httpStatus.OK, "", login)
+        } catch (error: any) {
+          createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+        }
+
+      }
     }
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -205,7 +216,11 @@ const resetPassword = async (req: Request, res: Response) => {
 
 const getContact = async (req: Request, res: Response) => {
   try {
-  } catch (error) {}
+    const getContacts = await authService.getContact(req.query.text as string, req?.loggedInUser as IUser)
+    createResponse(res, httpStatus.OK, "", getContacts);
+  } catch (error) {
+    createResponse(res, httpStatus.BAD_REQUEST, "", {});
+  }
 };
 const deleteUser = async (req: Request, res: Response) => {
   const deleteUser = await authService.deleteUser(req.body.id);
