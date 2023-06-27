@@ -7725,6 +7725,17 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
             {
               $limit: 10,
             },
+            {
+              $project: {
+                _id: 0, // Exclude the _id field if not needed
+                dateUtc: 1,
+                goalServeAwayTeamId:1,
+                goalServeHomeTeamId:1,
+                homeTeamTotalScore:1,
+                awayTeamTotalScore:1,
+          
+              },
+            },
           ],
           as: "lastMatches",
         },
@@ -7750,7 +7761,9 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 foreignField: "goalServeTeamId",
                 as: "teamImage",
               },
+              
             },
+            
             {
               $lookup: {
                 from: "matches",
@@ -7783,6 +7796,17 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                           },
                         ],
                       },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0, // Exclude the _id field if not needed
+                      dateUtc: 1,
+                      goalServeAwayTeamId:1,
+                      goalServeHomeTeamId:1,
+                      homeTeamTotalScore:1,
+                      awayTeamTotalScore:1,
+                
                     },
                   },
                   {
@@ -7822,263 +7846,294 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
           as: "teamInjuredPlayers",
         },
       },
-      // {
-      //   $lookup: {
-      //     from: "players",
-      //     let: {
-      //       goalServeTeamId: "$goalServeTeamId",
-      //     },
-
-      //     pipeline: [
-      //       {
-      //         $match: {
-      //           $expr: {
-      //             $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
-      //           },
-      //         },
-      //       },
-      //       {
-      //         $addFields: {
-      //           hits: {
-      //             $toDouble: "$batting.hits",
-      //           },
-      //           home_runs: {
-      //             $toDouble: "$batting.home_runs",
-      //           },
-      //           batting_avg: {
-      //             $toDouble: "$batting.batting_avg",
-      //           },
-      //           runs_batted_in: {
-      //             $toDouble: "$batting.runs_batted_in",
-      //           },
-      //           on_base_percentage: {
-      //             $toDouble: "$batting.on_base_percentage",
-      //           },
-      //           wins: {
-      //             $toDouble: "$pitching.wins",
-      //           },
-      //           earned_run_average: {
-      //             $toDouble: "$pitching.earned_run_average",
-      //           },
-      //           strikeouts: {
-      //             $toDouble: "$pitching.strikeouts",
-      //           },
-      //           saves: {
-      //             $toDouble: "$pitching.saves",
-      //           },
-      //           holds: {
-      //             $toDouble: "$pitching.holds",
-      //           },
-      //         },
-      //       },
-      //       {
-      //         $facet: {
-      //           maxHits: [
-      //             {
-      //               $sort: {
-      //                 hits: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxHomeRun: [
-      //             {
-      //               $sort: {
-      //                 home_runs: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxOnBasePercentage: [
-      //             {
-      //               $sort: {
-      //                 on_base_percentage: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxRunsBattedIn: [
-      //             {
-      //               $sort: {
-      //                 runs_batted_in: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxBattingAvg: [
-      //             {
-      //               $sort: {
-      //                 batting_avg: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxHolds: [
-      //             {
-      //               $sort: {
-      //                 holds: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxSaves: [
-      //             {
-      //               $sort: {
-      //                 saves: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxStrikeouts: [
-      //             {
-      //               $sort: {
-      //                 strikeouts: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxEarnedRunAverage: [
-      //             {
-      //               $sort: {
-      //                 earned_run_average: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //           maxWins: [
-      //             {
-      //               $sort: {
-      //                 wins: -1,
-      //               },
-      //             },
-      //             {
-      //               $limit: 1,
-      //             },
-      //           ],
-      //         },
-      //       },
-      //       {
-      //         $project: {
-      //           maxHits: {
-      //             $arrayElemAt: ["$maxHits", 0],
-      //           },
-      //           maxHomeRun: {
-      //             $arrayElemAt: ["$maxHomeRun", 0],
-      //           },
-      //           maxBattingAvg: {
-      //             $arrayElemAt: ["$maxBattingAvg", 0],
-      //           },
-      //           maxRunsBattedIn: {
-      //             $arrayElemAt: ["$maxRunsBattedIn", 0],
-      //           },
-      //           maxOnBasePercentage: {
-      //             $arrayElemAt: ["$maxOnBasePercentage", 0],
-      //           },
-      //           maxHolds: {
-      //             $arrayElemAt: ["$maxHolds", 0],
-      //           },
-      //           maxSaves: {
-      //             $arrayElemAt: ["$maxSaves", 0],
-      //           },
-      //           maxStrikeouts: {
-      //             $arrayElemAt: ["$maxStrikeouts", 0],
-      //           },
-      //           maxEarnedRunAverage: {
-      //             $arrayElemAt: ["$maxEarnedRunAverage", 0],
-      //           },
-
-      //           maxWins: {
-      //             $arrayElemAt: ["$maxWins", 0],
-      //           },
-      //         },
-      //       },
-      //       {
-      //         $project: {
-      //           maxHomeRun: {
-      //             home_runs: "$maxHomeRun.home_runs",
-      //             name: "$maxHomeRun.name",
-      //             number: "$maxHomeRun.number",
-      //           },
-      //           maxHits: {
-      //             hits: "$maxHits.hits",
-      //             name: "$maxHits.name",
-      //             number: "$maxHits.number",
-      //           },
-      //           maxBattingAvg: {
-      //             batting_avg: "$maxBattingAvg.batting_avg",
-      //             name: "$maxBattingAvg.name",
-      //             number: "$maxBattingAvg.number",
-      //           },
-      //           maxRunsBattedIn: {
-      //             runs_batted_in: "$maxRunsBattedIn.runs_batted_in",
-      //             name: "$maxRunsBattedIn.name",
-      //             number: "$maxRunsBattedIn.number",
-      //           },
-      //           maxOnBasePercentage: {
-      //             on_base_percentage: "$maxOnBasePercentage.on_base_percentage",
-      //             name: "$maxOnBasePercentage.name",
-      //             number: "$maxOnBasePercentage.number",
-      //           },
-      //           maxHolds: {
-      //             holds: "$maxHolds.holds",
-      //             name: "$maxHolds.name",
-      //             number: "$maxHolds.number",
-      //           },
-      //           maxEarnedRunAverage: {
-      //             earned_run_average: "$maxEarnedRunAverage.earned_run_average",
-      //             name: "$maxEarnedRunAverage.name",
-      //             number: "$maxEarnedRunAverage.number",
-      //           },
-      //           maxSaves: {
-      //             saves: "$maxSaves.saves",
-      //             name: "$maxSaves.name",
-      //             number: "$maxSaves.number",
-      //           },
-      //           maxStrikeouts: {
-      //             strikeouts: "$maxStrikeouts.strikeouts",
-      //             name: "$maxStrikeouts.name",
-      //             number: "$maxStrikeouts.number",
-      //           },
-
-      //           maxWins: {
-      //             wins: "$maxWins.wins",
-      //             name: "$maxWins.name",
-      //             number: "$maxWins.number",
-      //           },
-      //         },
-      //       },
-      //     ],
-      //     as: "teamLeaders",
-      //   },
-      // },
-      // {
-      //   $unwind: "$teamLeaders",
-      // },
       {
         $lookup: {
           from: "players",
-          localField: "goalServeTeamId",
-          foreignField: "goalServeTeamId",
-          as: "teamPlayers",
+          let: {
+            goalServeTeamId: "$goalServeTeamId",
+          },
+
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
+                },
+              },
+            },
+            {
+              $addFields: {
+                hits: {
+                  $toDouble: "$batting.hits",
+                },
+                home_runs: {
+                  $toDouble: "$batting.home_runs",
+                },
+                batting_avg: {
+                  $toDouble: "$batting.batting_avg",
+                },
+                runs_batted_in: {
+                  $toDouble: "$batting.runs_batted_in",
+                },
+                on_base_percentage: {
+                  $toDouble: "$batting.on_base_percentage",
+                },
+                wins: {
+                  $toDouble: "$pitching.wins",
+                },
+                earned_run_average: {
+                  $toDouble: "$pitching.earned_run_average",
+                },
+                strikeouts: {
+                  $toDouble: "$pitching.strikeouts",
+                },
+                saves: {
+                  $toDouble: "$pitching.saves",
+                },
+                holds: {
+                  $toDouble: "$pitching.holds",
+                },
+              },
+            },
+            {
+              $facet: {
+                maxHits: [
+                  {
+                    $sort: {
+                      hits: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxHomeRun: [
+                  {
+                    $sort: {
+                      home_runs: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxOnBasePercentage: [
+                  {
+                    $sort: {
+                      on_base_percentage: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxRunsBattedIn: [
+                  {
+                    $sort: {
+                      runs_batted_in: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxBattingAvg: [
+                  {
+                    $sort: {
+                      batting_avg: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxHolds: [
+                  {
+                    $sort: {
+                      holds: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxSaves: [
+                  {
+                    $sort: {
+                      saves: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxStrikeouts: [
+                  {
+                    $sort: {
+                      strikeouts: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxEarnedRunAverage: [
+                  {
+                    $sort: {
+                      earned_run_average: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+                maxWins: [
+                  {
+                    $sort: {
+                      wins: -1,
+                    },
+                  },
+                  {
+                    $limit: 1,
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                maxHits: {
+                  $arrayElemAt: ["$maxHits", 0],
+                },
+                maxHomeRun: {
+                  $arrayElemAt: ["$maxHomeRun", 0],
+                },
+                maxBattingAvg: {
+                  $arrayElemAt: ["$maxBattingAvg", 0],
+                },
+                maxRunsBattedIn: {
+                  $arrayElemAt: ["$maxRunsBattedIn", 0],
+                },
+                maxOnBasePercentage: {
+                  $arrayElemAt: ["$maxOnBasePercentage", 0],
+                },
+                maxHolds: {
+                  $arrayElemAt: ["$maxHolds", 0],
+                },
+                maxSaves: {
+                  $arrayElemAt: ["$maxSaves", 0],
+                },
+                maxStrikeouts: {
+                  $arrayElemAt: ["$maxStrikeouts", 0],
+                },
+                maxEarnedRunAverage: {
+                  $arrayElemAt: ["$maxEarnedRunAverage", 0],
+                },
+
+                maxWins: {
+                  $arrayElemAt: ["$maxWins", 0],
+                },
+              },
+            },
+            {
+              $project: {
+                maxHomeRun: {
+                  home_runs: "$maxHomeRun.home_runs",
+                  name: "$maxHomeRun.name",
+                  number: "$maxHomeRun.number",
+                },
+                maxHits: {
+                  hits: "$maxHits.hits",
+                  name: "$maxHits.name",
+                  number: "$maxHits.number",
+                },
+                maxBattingAvg: {
+                  batting_avg: "$maxBattingAvg.batting_avg",
+                  name: "$maxBattingAvg.name",
+                  number: "$maxBattingAvg.number",
+                },
+                maxRunsBattedIn: {
+                  runs_batted_in: "$maxRunsBattedIn.runs_batted_in",
+                  name: "$maxRunsBattedIn.name",
+                  number: "$maxRunsBattedIn.number",
+                },
+                maxOnBasePercentage: {
+                  on_base_percentage: "$maxOnBasePercentage.on_base_percentage",
+                  name: "$maxOnBasePercentage.name",
+                  number: "$maxOnBasePercentage.number",
+                },
+                maxHolds: {
+                  holds: "$maxHolds.holds",
+                  name: "$maxHolds.name",
+                  number: "$maxHolds.number",
+                },
+                maxEarnedRunAverage: {
+                  earned_run_average: "$maxEarnedRunAverage.earned_run_average",
+                  name: "$maxEarnedRunAverage.name",
+                  number: "$maxEarnedRunAverage.number",
+                },
+                maxSaves: {
+                  saves: "$maxSaves.saves",
+                  name: "$maxSaves.name",
+                  number: "$maxSaves.number",
+                },
+                maxStrikeouts: {
+                  strikeouts: "$maxStrikeouts.strikeouts",
+                  name: "$maxStrikeouts.name",
+                  number: "$maxStrikeouts.number",
+                },
+
+                maxWins: {
+                  wins: "$maxWins.wins",
+                  name: "$maxWins.name",
+                  number: "$maxWins.number",
+                },
+              },
+            },
+          ],
+          as: "teamLeaders",
         },
+      },
+      {
+        $unwind: "$teamLeaders",
+      },
+      {
+        $lookup: {
+          from: "players",
+          let: { goalServeTeamId: "$goalServeTeamId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$goalServeTeamId", "$$goalServeTeamId"]
+                }
+                // Add additional conditions if needed
+              }
+            },
+            {
+              $project: {
+                _id: 0, // Exclude the _id field if not needed
+                positionType: 1, // Include only the positionType field
+                name:1,
+                pitching:1,
+                batting:1,
+                fielding:1,
+              
+                height: 1,
+                weight: 1,
+                birthplace: 1,
+                salary: 1,
+                age: 1,
+                bats: 1,
+                throws:1,
+                position: 1,
+                goalServePlayerId: 1,
+                number:1,
+
+              }
+            }
+          ],
+          as: "teamPlayers"
+        }
       },
       {
         $addFields: {
@@ -8115,6 +8170,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 },
               },
             },
+           
             {
               $addFields: {
                 opposingTeamId: {
@@ -8151,6 +8207,22 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                     onError: 0, // Default value when conversion fails
                   },
                 },
+              },
+            },
+             {
+              $project: {
+                goalServeAwayTeamId: 1,
+                goalServeHomeTeamId: 1,
+                dateUtc: 1,
+                awayTeamTotalScore: 1,
+                homeTeamTotalScore: 1,
+                goalServeMatchId:1,
+                date:1,
+                startingPitchers:1,
+            dateTimeUtc:1,
+            homeTeamTotalScoreInNumber:1,
+            awayTeamTotalScoreInNumber:1,
+            opposingTeamId:1
               },
             },
             {
@@ -8277,145 +8349,145 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
           position: true,
           won: true,
           lost: true,
-          // playerStatistics: {
-          //   playerBattingStats: {
-          //     $map: {
-          //       input: {
-          //         $filter: {
-          //           input: "$teamPlayers",
-          //           as: "item",
-          //           cond: {
-          //             $and: [
-          //               { $ne: ["$$item.batting", null] },
-          //               { $ne: [{ $type: "$$item.batting" }, "missing"] },
-          //             ],
-          //           },
-          //         },
-          //       },
-          //       as: "item",
-          //       in: {
-          //         name: "$$item.name",
-          //         games_played: "$$item.batting.games_played",
-          //         batting_avg: "$$item.batting.batting_avg",
-          //         at_bats: "$$item.batting.at_bats",
-          //         walks: "$$item.batting.walks",
-          //         hits: "$$item.batting.hits",
-          //         runs: "$$item.batting.runs",
-          //         triples: "$$item.batting.triples",
-          //         doubles: "$$item.batting.doubles",
-          //         home_runs: "$$item.batting.home_runs",
-          //         runs_batted_in: "$$item.batting.runs_batted_in",
-          //         total_bases: "$$item.batting.total_bases",
-          //         stolen_bases: "$$item.batting.stolen_bases",
-          //         strikeouts: "$$item.batting.strikeouts",
-          //         on_base_percentage: "$$item.batting.on_base_percentage",
-          //         goalServePlayerId: "$$item.goalServePlayerId",
-          //         slugging_percentage: "$$item.batting.slugging_percentage",
-          //         on_base_plus_slugging: {
-          //           $round: [
-          //             {
-          //               $sum: [
-          //                 {
-          //                   $toDouble: "$$item.batting.on_base_percentage",
-          //                 },
-          //                 {
-          //                   $toDouble: "$$item.batting.slugging_percentage",
-          //                 },
-          //               ],
-          //             },
-          //             3,
-          //           ],
-          //         },
-          //       },
-          //     },
-          //   },
-          //   playerPitchingStats: {
-          //     $map: {
-          //       input: {
-          //         $filter: {
-          //           input: "$teamPlayers",
-          //           as: "item",
-          //           cond: {
-          //             $and: [
-          //               { $ne: ["$$item.pitching", null] },
-          //               { $ne: [{ $type: "$$item.pitching" }, "missing"] },
-          //             ],
-          //           },
-          //         },
-          //       },
-          //       as: "item",
-          //       in: {
-          //         name: "$$item.name",
-          //         goalServePlayerId: "$$item.goalServePlayerId",
-          //         games_played: "$$item.pitching.games_played",
-          //         games_started: "$$item.pitching.games_started",
-          //         quality_starts: "$$item.pitching.quality_starts",
-          //         wins: "$$item.pitching.wins",
-          //         losses: "$$item.pitching.losses",
-          //         saves: "$$item.pitching.saves",
-          //         holds: "$$item.pitching.holds",
-          //         innings_pitched: "$$item.pitching.innings_pitched",
-          //         hits: "$$item.pitching.hits",
-          //         earned_runs: "$$item.pitching.earned_runs",
-          //         home_runs: "$$item.pitching.home_runs",
-          //         walks: "$$item.pitching.walks",
-          //         strikeouts: "$$item.pitching.strikeouts",
-          //         strikeouts_per_9_innings:
-          //           "$$item.pitching.strikeouts_per_9_innings",
-          //         pitches_per_start: "$$item.pitching.pitches_per_start",
-          //         walk_hits_per_inning_pitched:
-          //           "$$item.pitching.walk_hits_per_inning_pitched",
-          //       },
-          //     },
-          //   },
-          //   playerFieldingStats: {
-          //     $map: {
-          //       input: {
-          //         $filter: {
-          //           input: "$teamPlayers",
-          //           as: "item",
-          //           cond: {
-          //             $and: [
-          //               { $ne: ["$$item.fielding", null] },
-          //               { $ne: [{ $type: "$$item.fielding" }, "missing"] },
-          //             ],
-          //           },
-          //         },
-          //       },
-          //       as: "item",
-          //       in: {
-          //         name: "$$item.name",
-          //         goalServePlayerId: "$$item.goalServePlayerId",
-          //         games_played: "$$item.fielding.games_played",
-          //         games_started: "$$item.fielding.games_started",
-          //         full_innings: "$$item.fielding.full_innings",
-          //         total_chances: "$$item.fielding.total_chances",
-          //         fielding_percentage: "$$item.fielding.fielding_percentage",
-          //         putouts: "$$item.fielding.putouts",
-          //         assists: "$$item.fielding.assists",
-          //         range_factor: "$$item.fielding.range_factor",
-          //         errors: "$$item.fielding.errors",
-          //         double_plays: "$$item.fielding.double_plays",
-          //       },
-          //     },
-          //   },
-          // },
-          // teamLeaders: {
-          //   teamLeaderBatting: {
-          //     maxBattingAvg: "$teamLeaders.maxBattingAvg",
-          //     maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
-          //     maxHits: "$teamLeaders.maxHits",
-          //     maxOnBasePercentage: "$teamLeaders.maxOnBasePercentage",
-          //     maxHomeRun: "$teamLeaders.maxHomeRun",
-          //   },
-          //   teamLeadersPitching: {
-          //     maxWins: "$teamLeaders.maxWins",
-          //     maxStrikeouts: "$teamLeaders.maxStrikeouts",
-          //     maxSaves: "$teamLeaders.maxSaves",
-          //     maxEarnedRunAverage: "$teamLeaders.maxEarnedRunAverage",
-          //     maxHolds: "$teamLeaders.maxHolds",
-          //   },
-          // },
+          playerStatistics: {
+            playerBattingStats: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$teamPlayers",
+                    as: "item",
+                    cond: {
+                      $and: [
+                        { $ne: ["$$item.batting", null] },
+                        { $ne: [{ $type: "$$item.batting" }, "missing"] },
+                      ],
+                    },
+                  },
+                },
+                as: "item",
+                in: {
+                  name: "$$item.name",
+                  games_played: "$$item.batting.games_played",
+                  batting_avg: "$$item.batting.batting_avg",
+                  at_bats: "$$item.batting.at_bats",
+                  walks: "$$item.batting.walks",
+                  hits: "$$item.batting.hits",
+                  runs: "$$item.batting.runs",
+                  triples: "$$item.batting.triples",
+                  doubles: "$$item.batting.doubles",
+                  home_runs: "$$item.batting.home_runs",
+                  runs_batted_in: "$$item.batting.runs_batted_in",
+                  total_bases: "$$item.batting.total_bases",
+                  stolen_bases: "$$item.batting.stolen_bases",
+                  strikeouts: "$$item.batting.strikeouts",
+                  on_base_percentage: "$$item.batting.on_base_percentage",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  slugging_percentage: "$$item.batting.slugging_percentage",
+                  on_base_plus_slugging: {
+                    $round: [
+                      {
+                        $sum: [
+                          {
+                            $toDouble: "$$item.batting.on_base_percentage",
+                          },
+                          {
+                            $toDouble: "$$item.batting.slugging_percentage",
+                          },
+                        ],
+                      },
+                      3,
+                    ],
+                  },
+                },
+              },
+            },
+            playerPitchingStats: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$teamPlayers",
+                    as: "item",
+                    cond: {
+                      $and: [
+                        { $ne: ["$$item.pitching", null] },
+                        { $ne: [{ $type: "$$item.pitching" }, "missing"] },
+                      ],
+                    },
+                  },
+                },
+                as: "item",
+                in: {
+                  name: "$$item.name",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  games_played: "$$item.pitching.games_played",
+                  games_started: "$$item.pitching.games_started",
+                  quality_starts: "$$item.pitching.quality_starts",
+                  wins: "$$item.pitching.wins",
+                  losses: "$$item.pitching.losses",
+                  saves: "$$item.pitching.saves",
+                  holds: "$$item.pitching.holds",
+                  innings_pitched: "$$item.pitching.innings_pitched",
+                  hits: "$$item.pitching.hits",
+                  earned_runs: "$$item.pitching.earned_runs",
+                  home_runs: "$$item.pitching.home_runs",
+                  walks: "$$item.pitching.walks",
+                  strikeouts: "$$item.pitching.strikeouts",
+                  strikeouts_per_9_innings:
+                    "$$item.pitching.strikeouts_per_9_innings",
+                  pitches_per_start: "$$item.pitching.pitches_per_start",
+                  walk_hits_per_inning_pitched:
+                    "$$item.pitching.walk_hits_per_inning_pitched",
+                },
+              },
+            },
+            playerFieldingStats: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$teamPlayers",
+                    as: "item",
+                    cond: {
+                      $and: [
+                        { $ne: ["$$item.fielding", null] },
+                        { $ne: [{ $type: "$$item.fielding" }, "missing"] },
+                      ],
+                    },
+                  },
+                },
+                as: "item",
+                in: {
+                  name: "$$item.name",
+                  goalServePlayerId: "$$item.goalServePlayerId",
+                  games_played: "$$item.fielding.games_played",
+                  games_started: "$$item.fielding.games_started",
+                  full_innings: "$$item.fielding.full_innings",
+                  total_chances: "$$item.fielding.total_chances",
+                  fielding_percentage: "$$item.fielding.fielding_percentage",
+                  putouts: "$$item.fielding.putouts",
+                  assists: "$$item.fielding.assists",
+                  range_factor: "$$item.fielding.range_factor",
+                  errors: "$$item.fielding.errors",
+                  double_plays: "$$item.fielding.double_plays",
+                },
+              },
+            },
+          },
+          teamLeaders: {
+            teamLeaderBatting: {
+              maxBattingAvg: "$teamLeaders.maxBattingAvg",
+              maxRunsBattedIn: "$teamLeaders.maxRunsBattedIn",
+              maxHits: "$teamLeaders.maxHits",
+              maxOnBasePercentage: "$teamLeaders.maxOnBasePercentage",
+              maxHomeRun: "$teamLeaders.maxHomeRun",
+            },
+            teamLeadersPitching: {
+              maxWins: "$teamLeaders.maxWins",
+              maxStrikeouts: "$teamLeaders.maxStrikeouts",
+              maxSaves: "$teamLeaders.maxSaves",
+              maxEarnedRunAverage: "$teamLeaders.maxEarnedRunAverage",
+              maxHolds: "$teamLeaders.maxHolds",
+            },
+          },
           roaster: {
             $map: {
               input: "$positions",
@@ -8528,6 +8600,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                       else: "$$item.startingPitchers.awayteam.player.name",
                     },
                   },
+                  goalServeTeamId:'$$item.goalServeTeamId',
                   opposingTeam: {
                     $arrayElemAt: ["$$item.opposingTeam", 0],
                   },
