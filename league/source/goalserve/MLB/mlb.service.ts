@@ -1295,6 +1295,11 @@ const getLiveMatch = async () => {
                 $ne: "Suspended",
               },
             },
+            {
+              status: {
+                $ne: "Delayed",
+              },
+            },
           ],
         },
       },
@@ -3329,6 +3334,11 @@ const getLiveDataFromMongodb = async () => {
             {
               status: {
                 $ne: "Suspended",
+              },
+            },
+            {
+              status: {
+                $ne: "Delayed",
               },
             },
           ],
@@ -10156,6 +10166,11 @@ const liveBoxscoreMlb = async () => {
                 $ne: "Suspended",
               },
             },
+            {
+              status: {
+                $ne: "Delayed",
+              },
+            },
           ],
         },
       },
@@ -11711,9 +11726,12 @@ const liveBoxscoreMlb = async () => {
         },
       },
     ]);
-    const string = getMatch[0]?.inningNo;
-    const number = parseInt(string?.replace(/\D/g, ""));
-    if (getMatch[0]) getMatch[0].status = number ? `Inning ${number}` : "";
+    getMatch.map((item: any) => {
+      const string = item?.inningNo;
+      const number = parseInt(string?.replace(/\D/g, ""));
+      if (item) item.status = number ? `Inning ${number}` : "";
+    });
+
     await socket("mlbLiveBoxscore", {
       getMatch,
     });
