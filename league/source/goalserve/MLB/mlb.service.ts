@@ -594,13 +594,13 @@ const getUpcomingMatch = async () => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -613,13 +613,13 @@ const getUpcomingMatch = async () => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeOutcomeMoneyline",
+                  $abs: { $toDouble: "$homeOutcomeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayOutcomeMoneyline",
+                  $abs: { $toDouble: "$awayOutcomeMoneyline" },
                 },
               },
             },
@@ -2098,13 +2098,13 @@ const mlbScoreWithDate = async (date1: string) => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -3063,13 +3063,13 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -3650,13 +3650,13 @@ const getLiveDataFromMongodb = async () => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -4839,13 +4839,13 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -4858,13 +4858,13 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeOutcomeMoneyline",
+                  $abs: { $toDouble: "$homeOutcomeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayOutcomeMoneyline",
+                  $abs: { $toDouble: "$awayOutcomeMoneyline" },
                 },
               },
             },
@@ -6332,13 +6332,13 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -7729,11 +7729,10 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
               $project: {
                 _id: 0, // Exclude the _id field if not needed
                 dateUtc: 1,
-                goalServeAwayTeamId:1,
-                goalServeHomeTeamId:1,
-                homeTeamTotalScore:1,
-                awayTeamTotalScore:1,
-          
+                goalServeAwayTeamId: 1,
+                goalServeHomeTeamId: 1,
+                homeTeamTotalScore: 1,
+                awayTeamTotalScore: 1,
               },
             },
           ],
@@ -7761,9 +7760,8 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 foreignField: "goalServeTeamId",
                 as: "teamImage",
               },
-              
             },
-            
+
             {
               $lookup: {
                 from: "matches",
@@ -7802,11 +7800,10 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                     $project: {
                       _id: 0, // Exclude the _id field if not needed
                       dateUtc: 1,
-                      goalServeAwayTeamId:1,
-                      goalServeHomeTeamId:1,
-                      homeTeamTotalScore:1,
-                      awayTeamTotalScore:1,
-                
+                      goalServeAwayTeamId: 1,
+                      goalServeHomeTeamId: 1,
+                      homeTeamTotalScore: 1,
+                      awayTeamTotalScore: 1,
                     },
                   },
                   {
@@ -7841,8 +7838,29 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
       {
         $lookup: {
           from: "injuries",
-          localField: "goalServeTeamId",
-          foreignField: "goalServeTeamId",
+          let: {
+            goalServeTeamId: "$goalServeTeamId",
+          },
+
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
+                },
+              },
+            },
+            {
+              $project: {
+                date: 1,
+                description: 1,
+                goalServePlayerId: 1,
+                playerName: 1,
+                status: 1,
+                goalServeTeamId: 1,
+              },
+            },
+          ],
           as: "teamInjuredPlayers",
         },
       },
@@ -8104,36 +8122,34 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
             {
               $match: {
                 $expr: {
-                  $eq: ["$goalServeTeamId", "$$goalServeTeamId"]
-                }
+                  $eq: ["$goalServeTeamId", "$$goalServeTeamId"],
+                },
                 // Add additional conditions if needed
-              }
+              },
             },
             {
               $project: {
                 _id: 0, // Exclude the _id field if not needed
                 positionType: 1, // Include only the positionType field
-                name:1,
-                pitching:1,
-                batting:1,
-                fielding:1,
-              
+                name: 1,
+                pitching: 1,
+                batting: 1,
+                fielding: 1,
                 height: 1,
                 weight: 1,
                 birthplace: 1,
                 salary: 1,
                 age: 1,
                 bats: 1,
-                throws:1,
+                throws: 1,
                 position: 1,
                 goalServePlayerId: 1,
-                number:1,
-
-              }
-            }
+                number: 1,
+              },
+            },
           ],
-          as: "teamPlayers"
-        }
+          as: "teamPlayers",
+        },
       },
       {
         $addFields: {
@@ -8170,7 +8186,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 },
               },
             },
-           
+
             {
               $addFields: {
                 opposingTeamId: {
@@ -8209,20 +8225,20 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                 },
               },
             },
-             {
+            {
               $project: {
                 goalServeAwayTeamId: 1,
                 goalServeHomeTeamId: 1,
                 dateUtc: 1,
                 awayTeamTotalScore: 1,
                 homeTeamTotalScore: 1,
-                goalServeMatchId:1,
-                date:1,
-                startingPitchers:1,
-            dateTimeUtc:1,
-            homeTeamTotalScoreInNumber:1,
-            awayTeamTotalScoreInNumber:1,
-            opposingTeamId:1
+                goalServeMatchId: 1,
+                date: 1,
+                startingPitchers: 1,
+                dateTimeUtc: 1,
+                homeTeamTotalScoreInNumber: 1,
+                awayTeamTotalScoreInNumber: 1,
+                opposingTeamId: 1,
               },
             },
             {
@@ -8600,7 +8616,7 @@ const mlbGetTeam = async (goalServeTeamId: string) => {
                       else: "$$item.startingPitchers.awayteam.player.name",
                     },
                   },
-                  goalServeTeamId:'$$item.goalServeTeamId',
+                  goalServeTeamId: "$$item.goalServeTeamId",
                   opposingTeam: {
                     $arrayElemAt: ["$$item.opposingTeam", 0],
                   },
@@ -9403,13 +9419,13 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -9422,13 +9438,13 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeLiveMoneyline",
+                  $abs: { $toDouble: "$homeLiveMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayLiveMoneyline",
+                  $abs: { $toDouble: "$awayLiveMoneyline" },
                 },
               },
             },
@@ -11005,13 +11021,13 @@ const liveBoxscoreMlb = async () => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeMoneyline",
+                  $abs: { $toDouble: "$homeMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayMoneyline",
+                  $abs: { $toDouble: "$awayMoneyline" },
                 },
               },
             },
@@ -11024,13 +11040,13 @@ const liveBoxscoreMlb = async () => {
               then: {
                 underdog: "home",
                 moneyline: {
-                  $toDouble: "$homeLiveMoneyline",
+                  $abs: { $toDouble: "$homeLiveMoneyline" },
                 },
               },
               else: {
                 underdog: "away",
                 moneyline: {
-                  $toDouble: "$awayLiveMoneyline",
+                  $abs: { $toDouble: "$awayLiveMoneyline" },
                 },
               },
             },
