@@ -22,7 +22,7 @@ export const sendMail = async (mail: any) => {
     );
     oauth2Client.setCredentials({
       refresh_token:
-        "1//04WGGBaLQRO4YCgYIARAAGAQSNwF-L9IrGGZtZHhBaYA2XVfTsEkGbG2GehHU5DwE0KsOQCBjc0MDBHLB5crkLeJEOpb_W082q1E",
+        process.env.REFRESHTOKEN,
     });
     const accessToken = oauth2Client.getAccessToken();
     const smtpTransport = nodemailer.createTransport({
@@ -33,9 +33,9 @@ export const sendMail = async (mail: any) => {
         clientId: process.env.CLEINT_ID,
         clientSecret: process.env.CLIENT_SECRET,
         refreshToken:
-          "1//04WGGBaLQRO4YCgYIARAAGAQSNwF-L9IrGGZtZHhBaYA2XVfTsEkGbG2GehHU5DwE0KsOQCBjc0MDBHLB5crkLeJEOpb_W082q1E",
+          process.env.REFRESHTOKEN,
         accessToken:
-          "ya29.a0AWY7CknRXtLc-xPs8QgYG5x92oZbaM9tCQr5_JfGYaaLsX1hNVwTw1KK1r78V0F79UGPk9gUF5eqMwWZzc8I_tWB_tDFFOIewVBkg8egebqAuY5yUFElvlT3y82BooCuxUyZmUOuE4Xm2mH6RD3NVUl2KpG8aCgYKAd0SARISFQG1tDrpEROl3zlJem7DiT69ZZqz-w0163",
+          process.env.ACCESSTOKEN,
       },
       // tls: {
       //   rejectUnauthorized: false,
