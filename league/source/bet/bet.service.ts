@@ -14,6 +14,7 @@ import Messages from "../utils/messages";
 import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import { axiosPostMicro } from "../services/axios.service";
+import config from "../config/config";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -1001,7 +1002,7 @@ const listBetsByType = async (
         {
           ids
         },
-        `http://localhost:8000/users/getBulk`,
+        `${config.authServerUrl}/users/getBulk`,
         ''
       );
       const bindedObject = data.map((item: { requestUserId: number; opponentUserId: number; }) => {
