@@ -1,21 +1,25 @@
 import httpStatus from "http-status";
 import Bet from "../models/documents/bet.model";
 import Match from "../models/documents/MLB/match.model";
-import Odd from "../models/documents/MLB/odd.model";
 import AppError from "../utils/AppError";
-import { ICreateBetRequest, IresponseBetRequest } from "./bet.interface";
+import {
+  ICreateBetRequest,
+  IlistBetCondition,
+  IlistBetRequestData,
+  IlistBetTypes,
+  IresponseBetRequest,
+} from "./bet.interface";
 import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
+import NhlMatch from "../models/documents/NHL/match.model";
+import NbaMatch from "../models/documents/NBA/match.model";
+import { axiosPostMicro } from "../services/axios.service";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
-    if (amount >= Math.abs(odd)) {
-      return amount + (amount + 100 - Math.abs(odd));
-    } else {
-      return amount + (amount * 100) / Math.abs(odd);
-    }
+    return amount / ((-1 * odd) / 100);
   } else {
-    return amount - 100 + Math.abs(odd) + amount;
+    return (amount * odd) / 100;
   }
 };
 const fairOddCalculation = function (favourite: number, underdog: number) {
@@ -26,8 +30,8 @@ const fairOddCalculation = function (favourite: number, underdog: number) {
   const fav = ((favFairOdd * 100) / underFairOdd) * -1;
   const under = 100 / underFairOdd - 100;
   return {
-    favourite: fav,
-    underdog: under,
+    favourite: Math.round(fav),
+    underdog: Math.round(under),
   };
 };
 
@@ -43,7 +47,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       { requestUserId: loggedInUserId },
       { opponentUserId: loggedInUserId },
     ],
-    goalServeMatchId: data.matchId,
+    goalServeMatchId: data.goalServeMatchId,
+    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
   }).lean();
 
   if (betFound) {
@@ -59,83 +64,79 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       Messages.BET_AMOUNT_MUST_BE_GREATER_THAN_EQUALS_1
     );
   }
-  const matchData = await Match.findOne({
-    goalServeMatchId: data.matchId,
-  }).lean();
+  let matchData;
+  if (data.leagueType === "MLB") {
+    matchData = await Match.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+    }).lean();
+  } else if (data.leagueType === "NHL") {
+    matchData = await NhlMatch.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+    }).lean();
+  } else {
+    matchData = await NbaMatch.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+    }).lean();
+  }
 
   if (!matchData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.MATCH_DATA_NOT_FOUND);
   }
 
   if (
-    matchData.goalServeHomeTeamId != data.requestUserTeamId &&
-    matchData.goalServeAwayTeamId != data.requestUserTeamId
+    matchData.goalServeHomeTeamId != data.goalServeRequestUserTeamId &&
+    matchData.goalServeAwayTeamId != data.goalServeRequestUserTeamId
   ) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.TEAM_NOT_FOUND_IN_MATCH);
   }
-  const oddData = await Odd.findOne({
-    goalServeMatchId: data.matchId,
-  }).lean();
-
-  if (!oddData) {
-    throw new AppError(httpStatus.NOT_FOUND, Messages.MATCH_ODD_DATA_NOT_FOUND);
-  }
-
-  let fairOddCalRes = {
-    favourite: 0,
-    underdog: 0,
-  };
-  if (parseInt(oddData?.homeTeamMoneyline?.us) > 0) {
-    fairOddCalRes = fairOddCalculation(
-      parseInt(oddData?.awayTeamMoneyline?.us),
-      parseInt(oddData.homeTeamMoneyline.us)
-    );
-  } else {
-    fairOddCalRes = fairOddCalculation(
-      parseInt(oddData?.homeTeamMoneyline?.us),
-      parseInt(oddData.awayTeamMoneyline.us)
-    );
-  }
 
   let preparedBetObject = {
-    goalServeMatchId: data.matchId,
+    goalServeMatchId: data.goalServeMatchId,
     requestUserId: loggedInUserId,
+    leagueType: data.leagueType,
+    oddType: data.oddType,
     opponentUserId: data.opponentUserId,
-    isRequestUserConfirmedBet: true,
-    betAmount: data.amount,
-    goalServeLeagueId: matchData.goalServeLeagueId,
-    goalServeRequestUserTeamId: matchData.goalServeHomeTeamId,
-    goalServeOpponentUserTeamId: matchData.goalServeHomeTeamId,
-    requestUserFairOdds:
-      parseInt(oddData?.homeTeamMoneyline?.us) > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite,
-    requestUserMoneylineOdds: oddData?.homeTeamMoneyline?.us,
-    opponentUserFairOdds:
-      parseInt(oddData?.homeTeamMoneyline?.us) > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite,
-    opponentUserMoneylineOdds: oddData?.homeTeamMoneyline?.us,
+    goalServeLeagueId: data.goalServeLeagueId,
+    goalServeRequestUserTeamId: data.goalServeRequestUserTeamId,
+    goalServeOpponentUserTeamId: data.goalServeOpponentUserTeamId,
+    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
+    opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
+    requestUserFairOdds: 0,
+    opponentUserFairOdds: 0,
+    requestUserBetAmount: data.amount,
+    opponentUserBetAmount: data.amount,
+    betTotalAmount: data.amount + data.amount,
   };
-  if (matchData.goalServeHomeTeamId === data.requestUserTeamId) {
-    preparedBetObject.goalServeOpponentUserTeamId =
-      matchData.goalServeAwayTeamId;
-    preparedBetObject.opponentUserMoneylineOdds = oddData?.awayTeamMoneyline?.us;
-    preparedBetObject.opponentUserFairOdds =
-      parseInt(oddData?.awayTeamMoneyline?.us) > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite;
-  } else {
-    preparedBetObject.goalServeRequestUserTeamId =
-      matchData.goalServeAwayTeamId;
-    preparedBetObject.requestUserMoneylineOdds = oddData?.awayTeamMoneyline?.us;
-    preparedBetObject.requestUserFairOdds =
-      parseInt(oddData?.awayTeamMoneyline?.us) > 0
-        ? fairOddCalRes.underdog
-        : fairOddCalRes.favourite;
+  if (data.oddType === "Moneyline") {
+    let fairOddCalRes = {
+      favourite: 0,
+      underdog: 0,
+    };
+    if (data.requestUserGoalServeOdd > 0) {
+      fairOddCalRes = fairOddCalculation(
+        data.opponentUserGoalServeOdd,
+        data.requestUserGoalServeOdd
+      );
+      preparedBetObject.requestUserFairOdds = fairOddCalRes.underdog;
+      preparedBetObject.opponentUserFairOdds = fairOddCalRes.favourite;
+    } else {
+      fairOddCalRes = fairOddCalculation(
+        data.requestUserGoalServeOdd,
+        data.opponentUserGoalServeOdd
+      );
+      preparedBetObject.requestUserFairOdds = fairOddCalRes.favourite;
+      preparedBetObject.opponentUserFairOdds = fairOddCalRes.underdog;
+    }
+    const winAmountRequestUser = winAmountCalculationUsingOdd(
+      preparedBetObject.requestUserBetAmount,
+      preparedBetObject.requestUserFairOdds
+    );
+    preparedBetObject.opponentUserBetAmount = winAmountRequestUser;
+    preparedBetObject.betTotalAmount =
+      preparedBetObject.requestUserBetAmount +
+      preparedBetObject.opponentUserBetAmount;
   }
   const createBet = await Bet.create(preparedBetObject);
-
   const createdBet = await Bet.findOne({
     _id: createBet._id,
   });
@@ -153,10 +154,7 @@ const responseBet = async (
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  if (
-    betData.opponentUserId !== loggedInUserId &&
-    betData.requestUserId !== loggedInUserId
-  ) {
+  if (betData.opponentUserId !== loggedInUserId) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.YOU_CAN_NOT_RESPONSE_TO_THIS_BET
@@ -169,64 +167,15 @@ const responseBet = async (
     );
   }
   let prepareObject = {
-    isRequestUserConfirmedBet: betData.isRequestUserConfirmedBet,
-    isOpponentUserConfirmedBet: betData.isOpponentUserConfirmedBet,
-    status: betData.status as betStatus,
-    responseAt: betData.responseAt,
+    status: isConfirmed ? betStatus.CONFIRMED : betStatus.REJECTED,
+    responseAt: new Date(),
   };
-  if (loggedInUserId === betData.requestUserId) {
-    if (betData.isRequestUserConfirmedBet) {
-      throw new AppError(
-        httpStatus.UNPROCESSABLE_ENTITY,
-        Messages.ALREADY_CONFIRMED_BET
-      );
-    }
-    if (isConfirmed) {
-      prepareObject.isRequestUserConfirmedBet = true;
-      prepareObject.status =
-        betData.isOpponentUserConfirmedBet && isConfirmed
-          ? betStatus.CONFIRMED
-          : betStatus.PENDING;
-      prepareObject.responseAt =
-        betData.isOpponentUserConfirmedBet && isConfirmed
-          ? new Date()
-          : betData.responseAt;
-    } else {
-      prepareObject.isRequestUserConfirmedBet = false;
-      prepareObject.status = betStatus.REJECTED;
-      prepareObject.responseAt = new Date();
-    }
-  } else {
-    if (betData.isOpponentUserConfirmedBet) {
-      throw new AppError(
-        httpStatus.UNPROCESSABLE_ENTITY,
-        Messages.ALREADY_CONFIRMED_BET
-      );
-    }
-    if (isConfirmed) {
-      prepareObject.isOpponentUserConfirmedBet = true;
-      prepareObject.status =
-        betData.isRequestUserConfirmedBet && isConfirmed
-          ? betStatus.CONFIRMED
-          : betStatus.PENDING;
-      prepareObject.responseAt =
-        betData.isRequestUserConfirmedBet && isConfirmed
-          ? new Date()
-          : betData.responseAt;
-    } else {
-      prepareObject.isOpponentUserConfirmedBet = false;
-      prepareObject.status = betStatus.REJECTED;
-      prepareObject.responseAt = new Date();
-    }
-  }
-
   await Bet.updateOne(
     {
       _id: id,
     },
     prepareObject
   );
-
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
@@ -361,41 +310,23 @@ const resultBet = async (id: string, winTeamId: number) => {
   return updatedData;
 };
 
-const declareResultMatch = async (matchId: number, winTeamId: number) => {
-  const betData = await Bet.find({
-    goalServeMatchId: matchId,
-    status: betStatus.ACTIVE,
-  }).lean();
-  if (betData && betData.length > 0) {
-    for (const oneBet of betData) {
-      let isRequestUserWinAmount = false;
-      let isOpponentUserWinAmount = false;
-      let resultAmountRequestUser = 0 - oneBet.betAmount;
-      let resultAmountOpponentUser = 0 - oneBet.betAmount;
-      if (oneBet.goalServeRequestUserTeamId === winTeamId) {
-        isRequestUserWinAmount = true;
-        resultAmountRequestUser = oneBet.betAmount * 2;
-      } else {
-        isOpponentUserWinAmount = true;
-        resultAmountOpponentUser = oneBet.betAmount * 2;
-      }
-      await Bet.updateOne(
-        {
-          goalServeMatchId: matchId,
-          status: betStatus.ACTIVE,
-        },
-        {
-          status: betStatus.RESULT_DECLARED,
-          goalServeWinTeamId: winTeamId,
-          isRequestUserWinAmount: isRequestUserWinAmount,
-          isOpponentUserWinAmount: isOpponentUserWinAmount,
-          resultAmountRequestUser: resultAmountRequestUser,
-          resultAmountOpponentUser: resultAmountOpponentUser,
-          resultAt: new Date(),
-        }
-      );
+const declareResultMatch = async (
+  matchId: number,
+  winTeamId: number,
+  leagueType: string
+) => {
+  await Bet.updateMany(
+    {
+      goalServeMatchId: matchId,
+      status: betStatus.ACTIVE,
+      leagueType: leagueType,
+    },
+    {
+      status: betStatus.RESULT_DECLARED,
+      goalServeWinTeamId: winTeamId,
+      resultAt: new Date(),
     }
-  }
+  );
 };
 
 const getResultBet = async (loggedInUserId: number, betId: string) => {
@@ -546,6 +477,546 @@ const listBetsByStatus = async (loggedInUserId: number, status: string) => {
   }
   return data;
 };
+
+const listBetsByType = async (
+  loggedInUserId: number,
+  body: IlistBetRequestData,
+  token : string | "",
+) => {
+  let page = 1;
+  let limit = body.size ?? 10;
+  if (body.page) {
+    page = body.page;
+  }
+  let skip = limit * (page - 1);
+
+  let condition: IlistBetCondition = {
+    $or: [
+      { requestUserId: loggedInUserId },
+      { opponentUserId: loggedInUserId },
+    ],
+    isDeleted: false,
+  };
+  if (body.type === "OPEN") {
+    condition.status = "PENDING";
+  }
+  if (body.type === "ACTIVE") {
+    condition.status = "CONFIRMED";
+  }
+  if (body.type === "SETTLED") {
+    condition.status = "RESULT_DECLARED";
+  }
+  if (body.type === "WON") {
+    condition.status = "RESULT_DECLARED";
+  }
+  if (body.type === "LOST") {
+    condition.status = "RESULT_DECLARED";
+  }
+  let data = await Bet.aggregate([
+    {
+      $match: condition,
+    },
+    {
+      $sort: {
+        updatedAt: -1,
+      },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+    {
+      $facet: {
+        mlbData: [
+          {
+            $match: {
+              leagueType: "MLB",
+            },
+          },
+          {
+            $lookup: {
+              from: "matches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        nbaData: [
+          {
+            $match: {
+              leagueType: "NBA",
+            },
+          },
+          {
+            $lookup: {
+              from: "nbamatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nbateams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nbateamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nbateams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nbateamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        nhlData: [
+          {
+            $match: {
+              leagueType: "NHL",
+            },
+          },
+          {
+            $lookup: {
+              from: "nhlmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nhlteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        root: { $concatArrays: ["$mlbData", "$nhlData", "$nbaData"] },
+      },
+    },
+    { $unwind: "$root" },
+    { $replaceRoot: { newRoot: "$root" } },
+    {
+      $unwind: {
+        path: "$match",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  ]);
+  if (data && data.length > 0) {
+    const ids = [...new Set(data.map(item => [item.requestUserId, item.opponentUserId]).flat())];
+      const resp = await axiosPostMicro(
+        {
+          ids
+        },
+        `http://localhost:8000/users/getBulk`,
+        ''
+      );
+      const bindedObject = data.map((item: { requestUserId: number; opponentUserId: number; }) => {
+        const requestUser = resp.data.data.find((user: { id: number; }) => user.id == item.requestUserId);
+        const opponentUser = resp.data.data.find((user: { id: number; }) => user.id == item.opponentUserId);
+        return {
+          ...item,
+          requestUser,
+          opponentUser
+        };
+      });
+      return bindedObject;
+  }
+  return data;
+};
 export default {
   listBetsByStatus,
   resultBetVerified,
@@ -556,4 +1027,5 @@ export default {
   createBet,
   updateBetRequest,
   declareResultMatch,
+  listBetsByType,
 };

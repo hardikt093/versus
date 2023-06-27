@@ -3,6 +3,7 @@ import httpStatus from "http-status";
 import BetService from "../bet/bet.service";
 import createResponse from "../utils/response";
 import Messages from "../utils/messages";
+import { axiosPostMicro } from "../services/axios.service";
 
 const createBet = async (req: Request, res: Response) => {
   try {
@@ -131,6 +132,24 @@ const listBetsByStatus = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const listBetsByType = async (req: Request, res: Response) => {
+  try {
+    const betListDataByStatus = await BetService.listBetsByType(
+      req.loggedInUser.id,
+      req.body,
+      req.header("Authorization") ?? ""
+    );
+    createResponse(
+      res,
+      httpStatus.OK,
+      Messages.BET_DATA_FOUND,
+      betListDataByStatus
+    );
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   createBet,
   updateBetRequest,
@@ -140,4 +159,5 @@ export default {
   resultBet,
   responseBet,
   requestListBet,
+  listBetsByType
 };

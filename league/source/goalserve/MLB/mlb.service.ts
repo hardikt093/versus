@@ -7244,7 +7244,8 @@ const updateCurruntDateRecord = async () => {
               : matchArray[j].awayteam.id;
           await betServices.declareResultMatch(
             parseInt(goalServeMatchId),
-            parseInt(goalServeWinTeamId)
+            parseInt(goalServeWinTeamId),
+            "MLB"
           );
         }
       }

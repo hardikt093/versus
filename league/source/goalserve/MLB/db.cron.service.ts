@@ -289,6 +289,7 @@ export default class MlbDbCronServiceClass {
               {
                 status: "CONFIRMED",
                 goalServeMatchId: goalServeMatchId,
+                leagueType : "MLB"
               },
               {
                 status: "ACTIVE",
@@ -308,7 +309,8 @@ export default class MlbDbCronServiceClass {
                 : matchArray[j].awayteam.id;
             await betServices.declareResultMatch(
               parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId)
+              parseInt(goalServeWinTeamId),
+              "MLB"
             );
           }
         }
