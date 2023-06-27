@@ -29,6 +29,8 @@ const envVarsSchema = Joi.object()
     EMAIL_FROM: Joi.string().description(
       "The from field in the emails sent by the app"
     ),
+    AUTH_SERVER_URL: Joi.string().required().description("Auth Server Url")
+
   })
   .unknown();
 
@@ -42,6 +44,7 @@ if (error) {
 
 export default {
   env: envVars.NODE_ENV,
+  authServerUrl : envVars.AUTH_SERVER_URL,
   goalServeApiKey: envVars.GOAL_SERVE_API_KEY,
   port: envVars.PORT,
   mongoose: {

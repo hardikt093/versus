@@ -408,9 +408,10 @@ const sendInvite = async (data: any) => {
     },
   });
   const sendMai = await sendMail({
-    url: `${process.env.HOST}/register/${inviteSend.token}`,
+    url: `${process.env.HOST}/login/${inviteSend.token}`,
+    // url: `${process.env.HOST}/login/${inviteSend.token}`,
     mailFile: "VerifyAccount.html",
-    to: data.email,
+    to: data.email
   });
   if (sendMai) {
     const updateConractStatus = await prisma.contact.update({
