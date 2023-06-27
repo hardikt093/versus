@@ -328,23 +328,23 @@ const socialLogin = async (data: any) => {
 };
 
 const deleteUser = async (id: number) => {
-  const data = await axiosGet("http://localhost:8002/mlb/standings", {}, "");
+  // const data = await axiosGet("http://localhost:8002/mlb/standings", {}, "");
 
-  // await prisma.invite.deleteMany({
-  //   where: {
-  //     sendInviteBy: id,
-  //   },
-  // });
-  // await prisma.contact.deleteMany({
-  //   where: {
-  //     userId: id,
-  //   },
-  // });
-  // return await prisma.user.delete({
-  //   where: {
-  //     id: id,
-  //   },
-  // });
+  await prisma.invite.deleteMany({
+    where: {
+      sendInviteBy: id,
+    },
+  });
+  await prisma.contact.deleteMany({
+    where: {
+      userId: id,
+    },
+  });
+  return await prisma.user.delete({
+    where: {
+      id: id,
+    },
+  });
 };
 
 const createContact = async (data: any) => {
@@ -407,11 +407,27 @@ const sendInvite = async (data: any) => {
       token: randomUUID(),
     },
   });
-
   const sendMai = await sendMail({
-    url: `${process.env.REDIRECT_URI}/register/${inviteSend.token}`,
+    url: `${process.env.HOST}/register/${inviteSend.token}`,
     mailFile: "VerifyAccount.html",
+    to: data.email,
   });
+  if (sendMai) {
+    const updateConractStatus = await prisma.contact.update({
+      where: {
+        id: data.sendInviteContact
+      },
+      data: {
+        invite: 'SENT',
+      },
+    })
+    const contactData = await prisma.contact.findMany({
+      where: {
+        userId: data.sendInviteBy,
+      },
+    });
+    return contactData;
+  }
 };
 
 const checkInviteExpire = async (data: any) => {

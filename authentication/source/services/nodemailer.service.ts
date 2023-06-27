@@ -3,12 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 import * as handlebars from "handlebars";
 import { google } from "googleapis";
-import { log } from "console";
-// import { config } from "../../config";
-// import { Repository } from "typeorm";
-// import { Setting } from "../entity/Setting";
-// import connectDB from "../../ormconfig";
-// const settingsRepo: Repository<Setting> = connectDB.getRepository(Setting);
 
 var nodemailer = require("nodemailer");
 const OAuth2 = google.auth.OAuth2;
@@ -28,7 +22,7 @@ export const sendMail = async (mail: any) => {
     );
     oauth2Client.setCredentials({
       refresh_token:
-        "1//04bB4ztqVZSY7CgYIARAAGAQSNwF-L9IrxnKRQZg4MkMTOavEFDkq9aZAJAyhuvNJD-HAFsJ4ajSWc6O1dyk4nDEd55XHbShqeBw",
+        "1//04WGGBaLQRO4YCgYIARAAGAQSNwF-L9IrGGZtZHhBaYA2XVfTsEkGbG2GehHU5DwE0KsOQCBjc0MDBHLB5crkLeJEOpb_W082q1E",
     });
     const accessToken = oauth2Client.getAccessToken();
     const smtpTransport = nodemailer.createTransport({
@@ -39,9 +33,9 @@ export const sendMail = async (mail: any) => {
         clientId: process.env.CLEINT_ID,
         clientSecret: process.env.CLIENT_SECRET,
         refreshToken:
-          "1//04bB4ztqVZSY7CgYIARAAGAQSNwF-L9IrxnKRQZg4MkMTOavEFDkq9aZAJAyhuvNJD-HAFsJ4ajSWc6O1dyk4nDEd55XHbShqeBw",
+          "1//04WGGBaLQRO4YCgYIARAAGAQSNwF-L9IrGGZtZHhBaYA2XVfTsEkGbG2GehHU5DwE0KsOQCBjc0MDBHLB5crkLeJEOpb_W082q1E",
         accessToken:
-          "ya29.a0Ael9sCOvIliYnB0ChroPkNQx2zkbNl9GMvQVFP1S7Q7Xvut8QKB7vKKIQxvsHTVCDh3-pJSuQ5gRjQpdpc6oMhFU1Ye53pJgNhKvB5-AbLM-ZrtzySqPc9ceho-nGxSCkPxo039-Ql6OO5KYsEVaZrCCUyphaCgYKAU0SARISFQF4udJhHB_NCyK2T9k9uVMmLxqskA0163",
+          "ya29.a0AWY7CknRXtLc-xPs8QgYG5x92oZbaM9tCQr5_JfGYaaLsX1hNVwTw1KK1r78V0F79UGPk9gUF5eqMwWZzc8I_tWB_tDFFOIewVBkg8egebqAuY5yUFElvlT3y82BooCuxUyZmUOuE4Xm2mH6RD3NVUl2KpG8aCgYKAd0SARISFQG1tDrpEROl3zlJem7DiT69ZZqz-w0163",
       },
       // tls: {
       //   rejectUnauthorized: false,
@@ -52,16 +46,15 @@ export const sendMail = async (mail: any) => {
       path.join(BASE_PATH as string, `/public/template/${mail.mailFile}`),
       { encoding: "utf-8" }
     );
-
     const template = handlebars.compile(html)({
       url: mail.url,
     });
 
     const mailOptions = {
       from: '"joseph.meza112@gmail.com" "<joseph.meza112@gmail.com">',
-      to: "test2@mailinator.com",
+      to: mail.to,
       cc: [],
-      subject: "test",
+      subject: "Verses Invitation",
       generateTextFromHTML: true,
       html: template,
     };
@@ -70,6 +63,7 @@ export const sendMail = async (mail: any) => {
       error ? console.error("error", error) : console.info(response);
       smtpTransport.close();
     });
+    return true
   } catch (error) {
     console.error(error);
   }

@@ -201,6 +201,6 @@ router.post("/checkInviteExpire", authController.checkInviteExpire);
 router.post("/refresh-auth-token", authController.refreshAuthTokens);
 
 router.get("/getContact", auth, authController.getContact);
-// router.delete("/auth/userDelete", authController.deleteUser);
+router.delete("/userDelete", authController.deleteUser);
 
 export = router;

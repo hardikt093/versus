@@ -230,7 +230,7 @@ const deleteUser = async (req: Request, res: Response) => {
 const sendInvite = async (req: Request, res: Response) => {
   try {
     const sendInvite = await authService.sendInvite(req.body);
-    createResponse(res, httpStatus.OK, "invite send successfully", true);
+    createResponse(res, httpStatus.OK, "invite send successfully", { createContact: sendInvite });
   } catch (error) {
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
