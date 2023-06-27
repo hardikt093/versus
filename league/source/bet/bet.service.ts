@@ -14,6 +14,7 @@ import Messages from "../utils/messages";
 import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import { axiosPostMicro } from "../services/axios.service";
+import config from "../config/config";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -23,8 +24,8 @@ const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   }
 };
 const fairOddCalculation = function (favourite: number, underdog: number) {
-  const FavIP = (-favourite / (-favourite + 100)) * 100;
-  const underIP = (100 / (underdog + 100)) * 100;
+  const FavIP = (favourite < 0 ? ((-favourite / (-favourite + 100)) * 100) : ((100 / (favourite + 100)) * 10));
+  const underIP = (underdog < 0 ? ((-underdog / (-underdog + 100)) * 100) : ((100 / (underdog + 100)) * 10));
   const favFairOdd = FavIP / (FavIP + underIP);
   const underFairOdd = underIP / (underIP + FavIP);
   const fav = ((favFairOdd * 100) / underFairOdd) * -1;
@@ -112,7 +113,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       favourite: 0,
       underdog: 0,
     };
-    if (data.requestUserGoalServeOdd > 0) {
+    if (data.requestUserGoalServeOdd > data.opponentUserGoalServeOdd) {
       fairOddCalRes = fairOddCalculation(
         data.opponentUserGoalServeOdd,
         data.requestUserGoalServeOdd
@@ -1001,7 +1002,7 @@ const listBetsByType = async (
         {
           ids
         },
-        `http://localhost:8000/users/getBulk`,
+        `${config.authServerUrl}/users/getBulk`,
         ''
       );
       const bindedObject = data.map((item: { requestUserId: number; opponentUserId: number; }) => {
