@@ -6079,10 +6079,20 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           from: "players",
           let: {
             awayTeamStartingPictcherId: {
-              $toInt: "$startingPitchers.awayteam.player.id",
+              $convert: {
+                input:    "$startingPitchers.awayteam.player.id",
+                to: "int",
+                onError: 0, // Default value when conversion fails
+              },
+            
             },
             homeTeamStartingPictcherId: {
-              $toInt: "$startingPitchers.hometeam.player.id",
+              $convert: {
+                input: "$startingPitchers.hometeam.player.id",
+                to: "int",
+                onError: 0, // Default value when conversion fails
+              },
+    
             },
           },
           pipeline: [
@@ -6980,6 +6990,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
         },
       },
     ]);
+  
     return { getMatch: getMatch[0] };
   } catch (error: any) {
     console.log("error", error);
@@ -8925,10 +8936,19 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
           from: "players",
           let: {
             awayTeamStartingPictcherId: {
-              $toInt: "$startingPitchers.awayteam.player.id",
+              $convert: {
+                input:    "$startingPitchers.awayteam.player.id",
+                to: "int",
+                onError: 0, // Default value when conversion fails
+              },
+            
             },
             homeTeamStartingPictcherId: {
-              $toInt: "$startingPitchers.hometeam.player.id",
+              $convert: {
+                input: "$startingPitchers.hometeam.player.id",
+                to: "int",
+                onError: 0, // Default value when conversion fails
+              },
             },
           },
           pipeline: [
@@ -10528,11 +10548,20 @@ const liveBoxscoreMlb = async () => {
           from: "players",
           let: {
             awayTeamStartingPictcherId: {
-              $toInt: "$startingPitchers.awayteam.player.id",
+              $convert: {
+                input:    "$startingPitchers.awayteam.player.id",
+                to: "int",
+                onError: 0, // Default value when conversion fails
+              },
+            
             },
             homeTeamStartingPictcherId: {
-              $toInt: "$startingPitchers.hometeam.player.id",
-            },
+              $convert: {
+                input: "$startingPitchers.hometeam.player.id",
+                to: "int",
+                onError: 0, // Default value when conversion fails
+              },
+            }
           },
           pipeline: [
             {
