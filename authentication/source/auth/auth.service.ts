@@ -555,6 +555,20 @@ const getContact = async (query: string, user: IUser) => {
         },
       ],
     },
+    include: {
+      sendInvite: {
+        where: {
+          sendInviteBy: user.id,
+        },
+        select: {
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1
+      },
+    },
     orderBy: { createdAt: "asc" },
   });
   return contacts;
