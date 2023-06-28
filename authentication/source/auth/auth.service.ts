@@ -369,11 +369,26 @@ const createContact = async (data: any) => {
           email: item.email,
           phoneNumber: item.phoneNumber,
           userId: item.userId,
-          invite: "ACEEPTED",
+          invite: "ACCEPTED",
         };
         await prisma.contact.create({
           data: contact,
         });
+        const findUser = await prisma.user.findUnique({
+          where: {
+            id: item.userId
+          }
+        })
+        if (findUser) {
+          await prisma.contact.updateMany({
+            where: {
+              email: findUser.email
+            },
+            data: {
+              invite: "ACCEPTED"
+            }
+          })
+        }
       } else {
         await prisma.contact.create({
           data: item,
@@ -555,10 +570,19 @@ const getContact = async (query: string, user: IUser) => {
         },
       ],
     },
-    select: {
-      email: true,
-      name: true,
-      userId: true
+    include: {
+      sendInvite: {
+        where: {
+          sendInviteBy: user.id,
+        },
+        select: {
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1
+      },
     },
     orderBy: { createdAt: "asc" },
   });

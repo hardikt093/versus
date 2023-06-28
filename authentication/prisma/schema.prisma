@@ -141,7 +141,7 @@ model Invite {
 
 enum inviteSend {
   SENT
-  ACEEPTED
+  ACCEPTED
   PENDING
 }
 

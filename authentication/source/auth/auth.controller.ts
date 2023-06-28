@@ -217,7 +217,7 @@ const resetPassword = async (req: Request, res: Response) => {
 const getContact = async (req: Request, res: Response) => {
   try {
     const getContacts = await authService.getContact(req.query.text as string, req?.loggedInUser as IUser)
-    createResponse(res, httpStatus.OK, "", getContacts);
+    createResponse(res, httpStatus.OK, "", { createContact: getContacts });
   } catch (error) {
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
