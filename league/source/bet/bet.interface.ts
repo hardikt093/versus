@@ -18,9 +18,10 @@ export interface IresponseBetRequest {
 }
 
 export interface IlistBetCondition {
-    $or: [{ requestUserId: number }, { opponentUserId: number }],
+    $and : [],
+    $or: [],
     isDeleted: boolean,
-    status?: string
+    status?: string | object
 }
 
 export interface IlistBetRequestData {

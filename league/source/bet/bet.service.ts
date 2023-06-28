@@ -24,8 +24,14 @@ const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   }
 };
 const fairOddCalculation = function (favourite: number, underdog: number) {
-  const FavIP = (favourite < 0 ? ((-favourite / (-favourite + 100)) * 100) : ((100 / (favourite + 100)) * 10));
-  const underIP = (underdog < 0 ? ((-underdog / (-underdog + 100)) * 100) : ((100 / (underdog + 100)) * 10));
+  const FavIP =
+    favourite < 0
+      ? (-favourite / (-favourite + 100)) * 100
+      : (100 / (favourite + 100)) * 10;
+  const underIP =
+    underdog < 0
+      ? (-underdog / (-underdog + 100)) * 100
+      : (100 / (underdog + 100)) * 10;
   const favFairOdd = FavIP / (FavIP + underIP);
   const underFairOdd = underIP / (underIP + FavIP);
   const fav = ((favFairOdd * 100) / underFairOdd) * -1;
@@ -482,7 +488,7 @@ const listBetsByStatus = async (loggedInUserId: number, status: string) => {
 const listBetsByType = async (
   loggedInUserId: number,
   body: IlistBetRequestData,
-  token : string | "",
+  token: string | ""
 ) => {
   let page = 1;
   let limit = body.size ?? 10;
@@ -491,18 +497,24 @@ const listBetsByType = async (
   }
   let skip = limit * (page - 1);
 
-  let condition: IlistBetCondition = {
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
-    ],
+  let condition: any = {
     isDeleted: false,
+    $and: [
+      {
+        $or: [
+          { requestUserId: loggedInUserId },
+          { opponentUserId: loggedInUserId },
+        ],
+      },
+    ],
   };
   if (body.type === "OPEN") {
     condition.status = "PENDING";
   }
   if (body.type === "ACTIVE") {
-    condition.status = "CONFIRMED";
+    condition["$and"].push({
+      $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
+    });
   }
   if (body.type === "SETTLED") {
     condition.status = "RESULT_DECLARED";
@@ -997,24 +1009,34 @@ const listBetsByType = async (
     },
   ]);
   if (data && data.length > 0) {
-    const ids = [...new Set(data.map(item => [item.requestUserId, item.opponentUserId]).flat())];
-      const resp = await axiosPostMicro(
-        {
-          ids
-        },
-        `${config.authServerUrl}/users/getBulk`,
-        ''
-      );
-      const bindedObject = data.map((item: { requestUserId: number; opponentUserId: number; }) => {
-        const requestUser = resp.data.data.find((user: { id: number; }) => user.id == item.requestUserId);
-        const opponentUser = resp.data.data.find((user: { id: number; }) => user.id == item.opponentUserId);
+    const ids = [
+      ...new Set(
+        data.map((item) => [item.requestUserId, item.opponentUserId]).flat()
+      ),
+    ];
+    const resp = await axiosPostMicro(
+      {
+        ids,
+      },
+      `${config.authServerUrl}/users/getBulk`,
+      ""
+    );
+    const bindedObject = data.map(
+      (item: { requestUserId: number; opponentUserId: number }) => {
+        const requestUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.requestUserId
+        );
+        const opponentUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.opponentUserId
+        );
         return {
           ...item,
           requestUser,
-          opponentUser
+          opponentUser,
         };
-      });
-      return bindedObject;
+      }
+    );
+    return bindedObject;
   }
   return data;
 };
