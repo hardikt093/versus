@@ -369,7 +369,7 @@ const createContact = async (data: any) => {
           email: item.email,
           phoneNumber: item.phoneNumber,
           userId: item.userId,
-          invite: "ACEEPTED",
+          invite: "ACCEPTED",
         };
         await prisma.contact.create({
           data: contact,
