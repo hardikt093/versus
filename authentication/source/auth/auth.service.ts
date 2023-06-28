@@ -374,6 +374,21 @@ const createContact = async (data: any) => {
         await prisma.contact.create({
           data: contact,
         });
+        const findUser = await prisma.user.findUnique({
+          where: {
+            id: item.userId
+          }
+        })
+        if (findUser) {
+          await prisma.contact.updateMany({
+            where: {
+              email: findUser.email
+            },
+            data: {
+              invite: "ACCEPTED"
+            }
+          })
+        }
       } else {
         await prisma.contact.create({
           data: item,
