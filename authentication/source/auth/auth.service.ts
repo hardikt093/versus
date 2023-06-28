@@ -3,9 +3,9 @@ import bcrypt from "bcryptjs";
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 import { randomUUID } from "crypto";
-
 import AppError from "../utils/AppError";
 import Messages from "./../utils/messages";
+import verifyAccount from "./../mailTemplates/verifyAccount";
 import tokenService from "../services/token.services";
 import {
   ICreateUser,
@@ -409,9 +409,9 @@ const sendInvite = async (data: any) => {
   });
   const sendMai = await sendMail({
     url: `${process.env.HOST}/login/${inviteSend.token}`,
-    // url: `${process.env.HOST}/login/${inviteSend.token}`,
-    mailFile: "VerifyAccount.html",
-    to: data.email
+    html: verifyAccount.html,
+    to: data.email,
+    subject: "Versus Invitation",
   });
   if (sendMai) {
     const updateConractStatus = await prisma.contact.update({

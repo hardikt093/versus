@@ -1,6 +1,3 @@
-// import { Imail } from "../interface/mail";
-import * as fs from "fs";
-import * as path from "path";
 import * as handlebars from "handlebars";
 import { google } from "googleapis";
 
@@ -12,7 +9,6 @@ BASE_PATH = __dirname.split("\\");
 
 BASE_PATH.splice(-1, 1);
 BASE_PATH = BASE_PATH.join("/");
-
 export const sendMail = async (mail: any) => {
   try {
     const oauth2Client = new OAuth2(
@@ -21,8 +17,7 @@ export const sendMail = async (mail: any) => {
       process.env.REDIRECT_URI // Redirect URL
     );
     oauth2Client.setCredentials({
-      refresh_token:
-        process.env.REFRESHTOKEN,
+      refresh_token: process.env.REFRESHTOKEN,
     });
     const accessToken = oauth2Client.getAccessToken();
     const smtpTransport = nodemailer.createTransport({
@@ -32,29 +27,21 @@ export const sendMail = async (mail: any) => {
         user: "joseph.meza112@gmail.com",
         clientId: process.env.CLEINT_ID,
         clientSecret: process.env.CLIENT_SECRET,
-        refreshToken:
-          process.env.REFRESHTOKEN,
-        accessToken:
-          process.env.ACCESSTOKEN,
+        refreshToken: process.env.REFRESHTOKEN,
+        accessToken: process.env.ACCESSTOKEN,
       },
       // tls: {
       //   rejectUnauthorized: false,
       // },
     });
-
-    let html = fs.readFileSync(
-      path.join(BASE_PATH as string, `/public/template/${mail.mailFile}`),
-      { encoding: "utf-8" }
-    );
-    const template = handlebars.compile(html)({
+    const template = handlebars.compile(mail.html)({
       url: mail.url,
     });
-
     const mailOptions = {
       from: '"joseph.meza112@gmail.com" "<joseph.meza112@gmail.com">',
       to: mail.to,
       cc: [],
-      subject: "Verses Invitation",
+      subject: mail.subject,
       generateTextFromHTML: true,
       html: template,
     };
@@ -63,7 +50,7 @@ export const sendMail = async (mail: any) => {
       error ? console.error("error", error) : console.info(response);
       smtpTransport.close();
     });
-    return true
+    return true;
   } catch (error) {
     console.error(error);
   }
