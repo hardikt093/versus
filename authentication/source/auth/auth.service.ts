@@ -555,11 +555,6 @@ const getContact = async (query: string, user: IUser) => {
         },
       ],
     },
-    select: {
-      email: true,
-      name: true,
-      userId: true
-    },
     orderBy: { createdAt: "asc" },
   });
   return contacts;
