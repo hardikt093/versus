@@ -425,7 +425,7 @@ const sendInvite = async (data: any) => {
     },
   });
   const sendMai = await sendMail({
-    url: `${process.env.HOST}/login/${inviteSend.token}`,
+    url: `${process.env.HOST}/register/${inviteSend.token}`,
     html: verifyAccount.html,
     to: data.email,
     subject: "Versus Invitation",
