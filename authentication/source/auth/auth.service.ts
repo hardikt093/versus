@@ -147,7 +147,7 @@ const signUp = async (data: ICreateUser) => {
       return emailCheck;
     } else {
       await checkDuplicateUserName(data.userName);
-      return await prisma.user.create({
+      const userCreate = await prisma.user.create({
         data: {
           email: data.email,
           password: data.password ? data.password : "",
@@ -169,6 +169,8 @@ const signUp = async (data: ICreateUser) => {
           isContactScope: data.isContactScope ?? null,
         },
       });
+      await updateContact(userCreate.email)
+      return userCreate
     }
   }
 };
@@ -588,6 +590,25 @@ const getContact = async (query: string, user: IUser) => {
   });
   return contacts;
 };
+
+const updateContact = async (email: string) => {
+  const findUser = await prisma.user.findUnique({
+    where: {
+      email: email
+    }
+  })
+  if (findUser) {
+    await prisma.contact.updateMany({
+      where: {
+        email: findUser.email
+      },
+      data: {
+        invite: "ACCEPTED"
+      }
+    })
+  }
+  return true
+}
 
 export default {
   signUp,
