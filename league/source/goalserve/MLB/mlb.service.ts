@@ -645,7 +645,7 @@ const getUpcomingMatch = async () => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
@@ -2130,7 +2130,7 @@ const mlbScoreWithDate = async (date1: string) => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
@@ -3095,7 +3095,7 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
@@ -3682,7 +3682,7 @@ const getLiveDataFromMongodb = async () => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
@@ -4890,7 +4890,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
@@ -6374,7 +6374,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
@@ -9490,7 +9490,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
@@ -11101,7 +11101,7 @@ const liveBoxscoreMlb = async () => {
             $multiply: [
               {
                 $divide: [
-                  "$underdog.moneyline",
+                  100,
                   {
                     $add: ["$underdog.moneyline", 100],
                   },
