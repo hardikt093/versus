@@ -582,6 +582,25 @@ const listBetsByType = async (
                           as: "teamImages",
                         },
                       },
+                      //added standing
+                      {
+                        $lookup: {
+                          from: "standings",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "homeTeamStanding",
+                        },
+                      },
                       {
                         $project: {
                           name: 1,
@@ -589,8 +608,12 @@ const listBetsByType = async (
                             $arrayElemAt: ["$teamImages.image", 0],
                           },
                           abbreviation: 1,
-                          won: 1,
-                          lost: 1,
+                          won: {
+                            $arrayElemAt: ["$homeTeamStanding.won", 0]
+                          },
+                          lost: {
+                            $arrayElemAt: ["$homeTeamStanding.lost", 0]
+                          },
                           _id: 1,
                         },
                       },
@@ -630,6 +653,25 @@ const listBetsByType = async (
                           as: "teamImages",
                         },
                       },
+                      //added standing
+                      {
+                        $lookup: {
+                          from: "standings",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "awayTeamStanding",
+                        },
+                      },
                       {
                         $project: {
                           name: 1,
@@ -637,8 +679,12 @@ const listBetsByType = async (
                             $arrayElemAt: ["$teamImages.image", 0],
                           },
                           abbreviation: 1,
-                          won: 1,
-                          lost: 1,
+                          won: {
+                            $arrayElemAt: ["$awayTeamStanding.won", 0]
+                          },
+                          lost: {
+                            $arrayElemAt: ["$awayTeamStanding.lost", 0]
+                          },
                           _id: 1,
                         },
                       },
