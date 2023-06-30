@@ -89,6 +89,14 @@ const signUp = async (data: ICreateUser) => {
             isSignUp: "SUCCESS",
           },
         });
+        if(updateUser.isSignUp==="SUCCESS"){
+          await prisma.wallet.create({
+            data: {
+              userId: updateUser.id,
+              amount: 500,
+            },
+          });
+        }
         const user = await socialLogin(getUser.email);
         if (user.isContactScope == true) {
           const contactList = await googleService.contactList(
@@ -169,8 +177,17 @@ const signUp = async (data: ICreateUser) => {
           isContactScope: data.isContactScope ?? null,
         },
       });
-      await updateContact(userCreate.email)
-      return userCreate
+
+      if (userCreate.isSignUp === "SUCCESS") {
+        await prisma.wallet.create({
+          data: {
+            userId: userCreate.id,
+            amount: 500,
+          },
+        });
+      }
+      await updateContact(userCreate.email);
+      return userCreate;
     }
   }
 };
@@ -204,13 +221,17 @@ const signIn = async (data: ISignIn) => {
         },
       ],
     },
+    include: {
+      wallet: {
+        select: { amount: true },
+      },
+    },
   });
   if (signIn.length > 0) {
     if (signIn[0].password != "" || data.password.length > 0) {
       await checkPassword(data.password, signIn[0].password);
     }
     const tokens = await tokenService.generateAuthTokens(signIn[0].id);
-
     const user = {
       id: signIn[0].id,
       userName: signIn[0].userName,
@@ -220,6 +241,7 @@ const signIn = async (data: ISignIn) => {
       birthDate: signIn[0].birthDate,
       accessToken: tokens.access.token,
       refreshToken: tokens.refresh.token,
+      wallet:signIn[0].wallet
     };
     return { user };
   } else {
@@ -303,6 +325,11 @@ const socialLogin = async (data: any) => {
     where: {
       email: data,
     },
+    include: {
+      wallet: {
+        select: { amount: true },
+      },
+    },
   });
   if (checkEmail) {
     if (checkEmail.isSignUp == "PENDING") {
@@ -321,6 +348,8 @@ const socialLogin = async (data: any) => {
         accessToken: tokens.access.token,
         refreshToken: tokens.refresh.token,
         userName: checkEmail.userName,
+        wallet:checkEmail.wallet
+
       };
       return user;
     }
@@ -378,18 +407,18 @@ const createContact = async (data: any) => {
         });
         const findUser = await prisma.user.findUnique({
           where: {
-            id: item.userId
-          }
-        })
+            id: item.userId,
+          },
+        });
         if (findUser) {
           await prisma.contact.updateMany({
             where: {
-              email: findUser.email
+              email: findUser.email,
             },
             data: {
-              invite: "ACCEPTED"
-            }
-          })
+              invite: "ACCEPTED",
+            },
+          });
         }
       } else {
         await prisma.contact.create({
@@ -433,12 +462,12 @@ const sendInvite = async (data: any) => {
   if (sendMai) {
     const updateConractStatus = await prisma.contact.update({
       where: {
-        id: data.sendInviteContact
+        id: data.sendInviteContact,
       },
       data: {
-        invite: 'SENT',
+        invite: "SENT",
       },
-    })
+    });
     const contactData = await prisma.contact.findMany({
       where: {
         userId: data.sendInviteBy,
@@ -513,8 +542,7 @@ const metaLogin = async (data: any) => {
       refreshToken: tokens.refresh.token,
     };
     return { user };
-  }
-  else {
+  } else {
     const createUser = await prisma.user.create({
       data: {
         email: data.email,
@@ -549,9 +577,8 @@ const metaLogin = async (data: any) => {
       refreshToken: tokens.refresh.token,
     };
     return { user };
-
   }
-}
+};
 
 const getContact = async (query: string, user: IUser) => {
   const contacts = await prisma.contact.findMany({
@@ -561,14 +588,14 @@ const getContact = async (query: string, user: IUser) => {
         {
           email: {
             contains: query,
-            mode: 'insensitive'
+            mode: "insensitive",
           },
         },
         {
           name: {
             contains: query,
-            mode: 'insensitive'
-          }
+            mode: "insensitive",
+          },
         },
       ],
     },
@@ -581,9 +608,9 @@ const getContact = async (query: string, user: IUser) => {
           createdAt: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
-        take: 1
+        take: 1,
       },
     },
     orderBy: { createdAt: "asc" },
@@ -594,21 +621,21 @@ const getContact = async (query: string, user: IUser) => {
 const updateContact = async (email: string) => {
   const findUser = await prisma.user.findUnique({
     where: {
-      email: email
-    }
-  })
+      email: email,
+    },
+  });
   if (findUser) {
     await prisma.contact.updateMany({
       where: {
-        email: findUser.email
+        email: findUser.email,
       },
       data: {
-        invite: "ACCEPTED"
-      }
-    })
+        invite: "ACCEPTED",
+      },
+    });
   }
-  return true
-}
+  return true;
+};
 
 export default {
   signUp,
@@ -623,5 +650,5 @@ export default {
   checkInviteExpire,
   refreshAuthTokens,
   metaLogin,
-  getContact
+  getContact,
 };
