@@ -141,6 +141,16 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   const createdBet = await Bet.findOne({
     _id: createBet._id,
   });
+  if (createdBet) {
+    const resp = await axiosPostMicro(
+      {
+        amount: data.amount,
+        userId: createdBet.requestUserId
+      },
+      `${config.authServerUrl}/wallet/deduct`,
+      ''
+    );
+  }
   return createdBet;
 };
 
