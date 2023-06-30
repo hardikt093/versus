@@ -119,6 +119,7 @@ const signUp = async (data: ICreateUser) => {
             return contacts;
           });
           const createContactUser = await createContact(contacts);
+
           return {
             user,
             createContactUser,
@@ -372,6 +373,7 @@ const createContact = async (data: any) => {
           phoneNumber: item.phoneNumber,
           userId: item.userId,
           invite: "ACCEPTED",
+          contactUserId: getUser.id
         };
         await prisma.contact.create({
           data: contact,
@@ -603,7 +605,8 @@ const updateContact = async (email: string) => {
         email: findUser.email
       },
       data: {
-        invite: "ACCEPTED"
+        invite: "ACCEPTED",
+        contactUserId: findUser.id
       }
     })
   }
