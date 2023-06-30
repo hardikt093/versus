@@ -39,6 +39,7 @@ model User {
   isContactScope Boolean?
   isSignUp isSignUp @default(PENDING)
   wallet Wallet?
+  holdAmount HoldAmount?
 }
 
 model Token {
@@ -160,4 +161,13 @@ model Wallet {
   user   User? @relation(fields: [userId], references: [id])
   userId Int  @unique
   amount Int
+  holdAmount HoldAmount[]
+}
+model HoldAmount {
+    id     Int     @id @default(autoincrement())
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int  @unique
+  amount Int
+  wallet Wallet? @relation(fields: [walletId], references: [id])
+  walletId  Int
 }
