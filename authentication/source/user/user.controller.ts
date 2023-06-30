@@ -74,4 +74,13 @@ const usersGetBulk = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-export default { profileUpdate, getAllContact, seacrchUsers, userContacts, usersList, usersGetBulk };
+
+const getFriendList = async (req: Request, res: Response) => {
+  try {
+    const getFriendList = await userService.getFriendList(req.loggedInUser.id, req.query.search as string);
+    createResponse(res, httpStatus.OK, "", getFriendList);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+export default { profileUpdate, getAllContact, seacrchUsers, userContacts, usersList, usersGetBulk, getFriendList };
