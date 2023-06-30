@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const walletDeduction = async (amount: number, userId: number) => {
-  const findWallet = await prisma.user.findUnique({
+  const findWallet = await prisma.wallet.findUnique({
     where: {
       userId: userId,
     },
@@ -17,14 +17,13 @@ const walletDeduction = async (amount: number, userId: number) => {
         amount: balance,
       },
     });
-    await prisma.wallet.create({
+    await prisma.holdAmount.create({
       data: {
         walletId: updateWallet.id,
         userId: userId,
         amount: amount,
       },
     });
-
     return updateWallet;
   }
 };

@@ -352,7 +352,16 @@ const socialLogin = async (data: any) => {
 
 const deleteUser = async (id: number) => {
   // const data = await axiosGet("http://localhost:8002/mlb/standings", {}, "");
-
+  await prisma.wallet.deleteMany({
+    where: {
+      userId: id,
+    },
+  });
+  await prisma.holdAmount.deleteMany({
+    where: {
+      userId: id,
+    },
+  });
   await prisma.invite.deleteMany({
     where: {
       sendInviteBy: id,
