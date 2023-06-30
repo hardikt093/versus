@@ -38,6 +38,7 @@ model User {
   googleIdToken String?
   isContactScope Boolean?
   isSignUp isSignUp @default(PENDING)
+  wallet Wallet?
 }
 
 model Token {
@@ -151,4 +152,12 @@ enum inviteSend {
 enum isSignUp {
   SUCCESS
   PENDING
+}
+
+
+model Wallet {
+  id     Int     @id @default(autoincrement())
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int  @unique
+  amount Int
 }
