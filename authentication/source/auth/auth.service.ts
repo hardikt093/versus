@@ -27,6 +27,11 @@ const checkDuplicateEmail = async (email: string | undefined) => {
     where: {
       email: email,
     },
+    include: {
+      wallet: {
+        select: { amount: true },
+      },
+    },
   });
   if (checkEmail) {
     if (checkEmail?.isSignUp == "PENDING") {
@@ -75,6 +80,7 @@ const signUp = async (data: ICreateUser) => {
         id: data.userId,
       },
     });
+
     if (getUser) {
       let birthday = new Date(data.birthDate);
       const ageDifMs = new Date(Date.now() - birthday.getTime());
@@ -89,14 +95,15 @@ const signUp = async (data: ICreateUser) => {
             isSignUp: "SUCCESS",
           },
         });
-        if(updateUser.isSignUp==="SUCCESS"){
-          await prisma.wallet.create({
+        if (updateUser.isSignUp === "SUCCESS") {
+         await prisma.wallet.create({
             data: {
               userId: updateUser.id,
               amount: 500,
             },
           });
         }
+
         const user = await socialLogin(getUser.email);
         if (user.isContactScope == true) {
           const contactList = await googleService.contactList(
@@ -151,6 +158,7 @@ const signUp = async (data: ICreateUser) => {
       data.password = await bcrypt.hash(data.password, 8);
     }
     const emailCheck = await checkDuplicateEmail(data.email);
+
     if (emailCheck?.isBirthDateAvailable == false) {
       return emailCheck;
     } else {
@@ -179,13 +187,17 @@ const signUp = async (data: ICreateUser) => {
       });
 
       if (userCreate.isSignUp === "SUCCESS") {
-        await prisma.wallet.create({
+        const wallet = await prisma.wallet.create({
           data: {
             userId: userCreate.id,
             amount: 500,
           },
         });
+        userCreate.wallet = {
+          amount: wallet.amount,
+        };
       }
+
       await updateContact(userCreate.email);
       return userCreate;
     }
@@ -241,7 +253,7 @@ const signIn = async (data: ISignIn) => {
       birthDate: signIn[0].birthDate,
       accessToken: tokens.access.token,
       refreshToken: tokens.refresh.token,
-      wallet:signIn[0].wallet
+      wallet: signIn[0].wallet,
     };
     return { user };
   } else {
@@ -348,8 +360,7 @@ const socialLogin = async (data: any) => {
         accessToken: tokens.access.token,
         refreshToken: tokens.refresh.token,
         userName: checkEmail.userName,
-        wallet:checkEmail.wallet
-
+        wallet: checkEmail.wallet,
       };
       return user;
     }
