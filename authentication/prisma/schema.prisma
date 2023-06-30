@@ -27,8 +27,9 @@ model User {
   contacts         ContactTry[] @relation("contactToUserId")
   messagesSent     Message[] @relation("toUserId")
   messagesReceived Message[] @relation("fromUserId")
+  contactUser Contact[] @relation("contactUserId")
   contactsUser     ContactTry[] @relation("contactToUserUserId")
-  contact Contact[]
+  contact Contact[] @relation("userId")
   invite Invite[]
   reactionUser     MessageReaction[]  @relation("reactionfromUserId")
   threadUser       Threads[]  @relation("threadfromUserId")    
@@ -118,8 +119,10 @@ model Contact {
   name String?
   email String? 
   phoneNumber String? 
+ contactUserId Int?
+  contactUser User? @relation(name: "contactUserId",fields: [contactUserId], references: [id])
   userId Int?
-  user   User? @relation(fields: [userId], references: [id])
+  user   User? @relation(name: "userId",fields: [userId], references: [id])
   invite inviteSend @default(PENDING)
   sendInvite Invite[]
   createdAt          DateTime  @default(now()) @db.Timestamptz(3)
