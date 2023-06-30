@@ -27,11 +27,6 @@ const checkDuplicateEmail = async (email: string | undefined) => {
     where: {
       email: email,
     },
-    include: {
-      wallet: {
-        select: { amount: true },
-      },
-    },
   });
   if (checkEmail) {
     if (checkEmail?.isSignUp == "PENDING") {
@@ -96,7 +91,7 @@ const signUp = async (data: ICreateUser) => {
           },
         });
         if (updateUser.isSignUp === "SUCCESS") {
-         await prisma.wallet.create({
+          await prisma.wallet.create({
             data: {
               userId: updateUser.id,
               amount: 500,
@@ -187,15 +182,12 @@ const signUp = async (data: ICreateUser) => {
       });
 
       if (userCreate.isSignUp === "SUCCESS") {
-        const wallet = await prisma.wallet.create({
+        await prisma.wallet.create({
           data: {
             userId: userCreate.id,
             amount: 500,
           },
         });
-        userCreate.wallet = {
-          amount: wallet.amount,
-        };
       }
 
       await updateContact(userCreate.email);
@@ -233,11 +225,6 @@ const signIn = async (data: ISignIn) => {
         },
       ],
     },
-    include: {
-      wallet: {
-        select: { amount: true },
-      },
-    },
   });
   if (signIn.length > 0) {
     if (signIn[0].password != "" || data.password.length > 0) {
@@ -253,7 +240,6 @@ const signIn = async (data: ISignIn) => {
       birthDate: signIn[0].birthDate,
       accessToken: tokens.access.token,
       refreshToken: tokens.refresh.token,
-      wallet: signIn[0].wallet,
     };
     return { user };
   } else {
@@ -337,11 +323,6 @@ const socialLogin = async (data: any) => {
     where: {
       email: data,
     },
-    include: {
-      wallet: {
-        select: { amount: true },
-      },
-    },
   });
   if (checkEmail) {
     if (checkEmail.isSignUp == "PENDING") {
@@ -360,7 +341,6 @@ const socialLogin = async (data: any) => {
         accessToken: tokens.access.token,
         refreshToken: tokens.refresh.token,
         userName: checkEmail.userName,
-        wallet: checkEmail.wallet,
       };
       return user;
     }
@@ -647,7 +627,19 @@ const updateContact = async (email: string) => {
   }
   return true;
 };
-
+const getUser = async (user: IUser) => {
+  const userDetails = await prisma.user.findUnique({
+    where: {
+      id: user.id,
+    },
+    include: {
+      wallet: {
+        select: { amount: true },
+      },
+    },
+  });
+  return userDetails;
+};
 export default {
   signUp,
   signIn,
@@ -662,4 +654,5 @@ export default {
   refreshAuthTokens,
   metaLogin,
   getContact,
+  getUser,
 };
