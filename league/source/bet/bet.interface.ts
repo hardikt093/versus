@@ -37,7 +37,11 @@ export enum IlistBetTypes {
    SETTLED = "SETTLED",
    LOST = "LOST",
 }
-
+export interface IOpponentCount {
+    opponentUserId?:number|null,
+    [opponentUserId:number]: number,
+    count?:number |undefined
+}
 enum sportsType {
     SOCCER,
     BASKET,

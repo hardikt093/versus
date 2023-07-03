@@ -4,6 +4,7 @@ import Match from "../models/documents/MLB/match.model";
 import AppError from "../utils/AppError";
 import {
   ICreateBetRequest,
+  IOpponentCount,
   IlistBetCondition,
   IlistBetRequestData,
   IlistBetTypes,
@@ -24,8 +25,14 @@ const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   }
 };
 const fairOddCalculation = function (favourite: number, underdog: number) {
-  const FavIP = (favourite < 0 ? ((-favourite / (-favourite + 100)) * 100) : ((100 / (favourite + 100)) * 10));
-  const underIP = (underdog < 0 ? ((-underdog / (-underdog + 100)) * 100) : ((100 / (underdog + 100)) * 10));
+  const FavIP =
+    favourite < 0
+      ? (-favourite / (-favourite + 100)) * 100
+      : (100 / (favourite + 100)) * 10;
+  const underIP =
+    underdog < 0
+      ? (-underdog / (-underdog + 100)) * 100
+      : (100 / (underdog + 100)) * 10;
   const favFairOdd = FavIP / (FavIP + underIP);
   const underFairOdd = underIP / (underIP + FavIP);
   const fav = ((favFairOdd * 100) / underFairOdd) * -1;
@@ -145,10 +152,10 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     const resp = await axiosPostMicro(
       {
         amount: data.amount,
-        userId: createdBet.requestUserId
+        userId: createdBet.requestUserId,
       },
       `${config.authServerUrl}/wallet/deduct`,
-      ''
+      ""
     );
   }
   return createdBet;
@@ -492,7 +499,7 @@ const listBetsByStatus = async (loggedInUserId: number, status: string) => {
 const listBetsByType = async (
   loggedInUserId: number,
   body: IlistBetRequestData,
-  token : string | "",
+  token: string | ""
 ) => {
   let page = 1;
   let limit = body.size ?? 10;
@@ -619,10 +626,10 @@ const listBetsByType = async (
                           },
                           abbreviation: 1,
                           won: {
-                            $arrayElemAt: ["$homeTeamStanding.won", 0]
+                            $arrayElemAt: ["$homeTeamStanding.won", 0],
                           },
                           lost: {
-                            $arrayElemAt: ["$homeTeamStanding.lost", 0]
+                            $arrayElemAt: ["$homeTeamStanding.lost", 0],
                           },
                           _id: 1,
                         },
@@ -690,10 +697,10 @@ const listBetsByType = async (
                           },
                           abbreviation: 1,
                           won: {
-                            $arrayElemAt: ["$awayTeamStanding.won", 0]
+                            $arrayElemAt: ["$awayTeamStanding.won", 0],
                           },
                           lost: {
-                            $arrayElemAt: ["$awayTeamStanding.lost", 0]
+                            $arrayElemAt: ["$awayTeamStanding.lost", 0],
                           },
                           _id: 1,
                         },
@@ -1053,28 +1060,64 @@ const listBetsByType = async (
     },
   ]);
   if (data && data.length > 0) {
-    const ids = [...new Set(data.map(item => [item.requestUserId, item.opponentUserId]).flat())];
-      const resp = await axiosPostMicro(
-        {
-          ids
-        },
-        `${config.authServerUrl}/users/getBulk`,
-        ''
-      );
-      const bindedObject = data.map((item: { requestUserId: number; opponentUserId: number; }) => {
-        const requestUser = resp.data.data.find((user: { id: number; }) => user.id == item.requestUserId);
-        const opponentUser = resp.data.data.find((user: { id: number; }) => user.id == item.opponentUserId);
+    const ids = [
+      ...new Set(
+        data.map((item) => [item.requestUserId, item.opponentUserId]).flat()
+      ),
+    ];
+    const resp = await axiosPostMicro(
+      {
+        ids,
+      },
+      `${config.authServerUrl}/users/getBulk`,
+      ""
+    );
+    const bindedObject = data.map(
+      (item: { requestUserId: number; opponentUserId: number }) => {
+        const requestUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.requestUserId
+        );
+        const opponentUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.opponentUserId
+        );
         return {
           ...item,
           requestUser,
-          opponentUser
+          opponentUser,
         };
-      });
-      return bindedObject;
+      }
+    );
+    return bindedObject;
   }
   return data;
 };
+
+const getBetUser = async (userId: number) => {
+  const allApponentUser = await Bet.find({ requestUserId: userId });
+  const opponentCount: IOpponentCount = {};
+  // Count the occurrences of each opponentId
+  for (const item of allApponentUser) {
+    const { opponentUserId } = item;
+    if (opponentCount[opponentUserId]) {
+      opponentCount[opponentUserId]++;
+    } else {
+      opponentCount[opponentUserId] = 1;
+    }
+  }
+  // Convert the opponentCount object to an array of objects
+  const result = Object.entries(opponentCount).map(
+    ([opponentUserId, count]) => ({
+      opponentUserId: parseInt(opponentUserId),
+      count,
+    })
+  );
+  const opponentUser = result
+    .sort((a: any, b: any) => b?.count - a?.count)
+    .map((item: IOpponentCount) => item?.opponentUserId);
+  return opponentUser;
+};
 export default {
+  getBetUser,
   listBetsByStatus,
   resultBetVerified,
   getResultBet,
