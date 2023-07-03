@@ -6452,6 +6452,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           attendance: true,
           status: true,
           venueName: true,
+          goalServeMatchId:true,
+          goalServeLeagueId:true,
           startingPitcher: {
             awayTeam: {
               wins: {
