@@ -13,7 +13,10 @@ router.post(
   validate(BetValidation.createBet),
   BetController.createBet
 );
-
+router.post(
+  "/getBetUser",
+  BetController.getBetUser
+);
 router.post(
   "/listByStatus",
   auth,
@@ -28,11 +31,7 @@ router.post(
   BetController.listBetsByType
 );
 
-router.get(
-  "/request",
-  auth,
-  BetController.requestListBet
-);
+router.get("/request", auth, BetController.requestListBet);
 
 router.post(
   "/:id/response",
@@ -55,11 +54,7 @@ router.post(
   BetController.resultBet
 );
 
-router.get(
-  "/:id/result",
-  auth,
-  BetController.getResultBet
-);
+router.get("/:id/result", auth, BetController.getResultBet);
 
 router.post(
   "/:id/result-satisfied",

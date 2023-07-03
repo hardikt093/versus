@@ -4,6 +4,7 @@ import Match from "../models/documents/MLB/match.model";
 import AppError from "../utils/AppError";
 import {
   ICreateBetRequest,
+  IOpponentCount,
   IlistBetCondition,
   IlistBetRequestData,
   IlistBetTypes,
@@ -132,10 +133,10 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     const resp = await axiosPostMicro(
       {
         amount: data.amount,
-        userId: createdBet.requestUserId
+        userId: createdBet.requestUserId,
       },
       `${config.authServerUrl}/wallet/deduct`,
-      ''
+      ""
     );
   }
   return createdBet;
@@ -612,10 +613,10 @@ const listBetsByType = async (
                           },
                           abbreviation: 1,
                           won: {
-                            $arrayElemAt: ["$homeTeamStanding.won", 0]
+                            $arrayElemAt: ["$homeTeamStanding.won", 0],
                           },
                           lost: {
-                            $arrayElemAt: ["$homeTeamStanding.lost", 0]
+                            $arrayElemAt: ["$homeTeamStanding.lost", 0],
                           },
                           _id: 1,
                         },
@@ -683,10 +684,10 @@ const listBetsByType = async (
                           },
                           abbreviation: 1,
                           won: {
-                            $arrayElemAt: ["$awayTeamStanding.won", 0]
+                            $arrayElemAt: ["$awayTeamStanding.won", 0],
                           },
                           lost: {
-                            $arrayElemAt: ["$awayTeamStanding.lost", 0]
+                            $arrayElemAt: ["$awayTeamStanding.lost", 0],
                           },
                           _id: 1,
                         },
@@ -1077,7 +1078,33 @@ const listBetsByType = async (
   }
   return data;
 };
+
+const getBetUser = async (userId: number) => {
+  const allApponentUser = await Bet.find({ requestUserId: userId });
+  const opponentCount: IOpponentCount = {};
+  // Count the occurrences of each opponentId
+  for (const item of allApponentUser) {
+    const { opponentUserId } = item;
+    if (opponentCount[opponentUserId]) {
+      opponentCount[opponentUserId]++;
+    } else {
+      opponentCount[opponentUserId] = 1;
+    }
+  }
+  // Convert the opponentCount object to an array of objects
+  const result = Object.entries(opponentCount).map(
+    ([opponentUserId, count]) => ({
+      opponentUserId: parseInt(opponentUserId),
+      count,
+    })
+  );
+  const opponentUser = result
+    .sort((a: any, b: any) => b?.count - a?.count)
+    .map((item: IOpponentCount) => item?.opponentUserId);
+  return opponentUser;
+};
 export default {
+  getBetUser,
   listBetsByStatus,
   resultBetVerified,
   getResultBet,
