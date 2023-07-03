@@ -109,32 +109,13 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeOpponentUserTeamId: data.goalServeOpponentUserTeamId,
     requestUserGoalServeOdd: data.requestUserGoalServeOdd,
     opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
-    requestUserFairOdds: 0,
-    opponentUserFairOdds: 0,
+    requestUserFairOdds: (data.requestUserFairOdds ? data.requestUserFairOdds : 0),
+    opponentUserFairOdds: (data.opponentUserFairOdds ? data.opponentUserFairOdds : 0),
     requestUserBetAmount: data.amount,
     opponentUserBetAmount: data.amount,
     betTotalAmount: data.amount + data.amount,
   };
   if (data.oddType === "Moneyline") {
-    let fairOddCalRes = {
-      favourite: 0,
-      underdog: 0,
-    };
-    if (data.requestUserGoalServeOdd > data.opponentUserGoalServeOdd) {
-      fairOddCalRes = fairOddCalculation(
-        data.opponentUserGoalServeOdd,
-        data.requestUserGoalServeOdd
-      );
-      preparedBetObject.requestUserFairOdds = fairOddCalRes.underdog;
-      preparedBetObject.opponentUserFairOdds = fairOddCalRes.favourite;
-    } else {
-      fairOddCalRes = fairOddCalculation(
-        data.requestUserGoalServeOdd,
-        data.opponentUserGoalServeOdd
-      );
-      preparedBetObject.requestUserFairOdds = fairOddCalRes.favourite;
-      preparedBetObject.opponentUserFairOdds = fairOddCalRes.underdog;
-    }
     const winAmountRequestUser = winAmountCalculationUsingOdd(
       preparedBetObject.requestUserBetAmount,
       preparedBetObject.requestUserFairOdds
@@ -508,18 +489,24 @@ const listBetsByType = async (
   }
   let skip = limit * (page - 1);
 
-  let condition: IlistBetCondition = {
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
-    ],
+  let condition: any = {
     isDeleted: false,
+    $and: [
+      {
+        $or: [
+          { requestUserId: loggedInUserId },
+          { opponentUserId: loggedInUserId },
+        ],
+      },
+    ],
   };
   if (body.type === "OPEN") {
     condition.status = "PENDING";
   }
   if (body.type === "ACTIVE") {
-    condition.status = "CONFIRMED";
+    condition["$and"].push({
+      $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
+    });
   }
   if (body.type === "SETTLED") {
     condition.status = "RESULT_DECLARED";

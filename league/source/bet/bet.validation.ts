@@ -11,7 +11,9 @@ const createBet = {
     leagueType : Joi.string().required(),
     oddType : Joi.string().required(),
     requestUserGoalServeOdd : Joi.number().required(),
-    opponentUserGoalServeOdd : Joi.number().required()
+    opponentUserGoalServeOdd : Joi.number().required(),
+    requestUserFairOdds : Joi.number().required(),
+    opponentUserFairOdds : Joi.number().required()
   }),
 };
 const responseBet = {

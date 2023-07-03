@@ -9,6 +9,8 @@ export interface ICreateBetRequest {
     goalServeMatchId: number,
     requestUserGoalServeOdd: number,
     opponentUserGoalServeOdd : number,
+    requestUserFairOdds? : number,
+    opponentUserFairOdds? : number
 }
 
 export interface IresponseBetRequest {
@@ -18,9 +20,10 @@ export interface IresponseBetRequest {
 }
 
 export interface IlistBetCondition {
-    $or: [{ requestUserId: number }, { opponentUserId: number }],
+    $and : [],
+    $or: [],
     isDeleted: boolean,
-    status?: string
+    status?: string | object
 }
 
 export interface IlistBetRequestData {
