@@ -120,7 +120,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       preparedBetObject.requestUserBetAmount,
       preparedBetObject.requestUserFairOdds
     );
-    preparedBetObject.opponentUserBetAmount = winAmountRequestUser;
+    preparedBetObject.opponentUserBetAmount = Math.round(winAmountRequestUser);
     preparedBetObject.betTotalAmount =
       preparedBetObject.requestUserBetAmount +
       preparedBetObject.opponentUserBetAmount;
