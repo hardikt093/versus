@@ -3,6 +3,8 @@ const prisma = new PrismaClient();
 
 import { log } from "console";
 import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
+import { axiosPostMicro } from "../services/axios.service";
+import config from "../config/config";
 
 /**
  *
@@ -78,36 +80,36 @@ const searchUser = async (query: any, user: any) => {
 
 const userByIdMongoRelation = async (id: number) => {
   return await prisma.user.findUnique({
-    where : {
-      id : id
+    where: {
+      id: id,
     },
-    select : {
-      id : true,
-      email : true,
-      firstName : true,
-      lastName : true,
-      userName : true,
-      profileImage : true
-    }
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
+    },
   });
-}
+};
 
 const userContacts = async (id: number) => {
   return await prisma.contact.findMany({
-    where : {
-      userId : id
+    where: {
+      userId: id,
     },
-    select : {
-      id : true,
-      email : true,
-      name : true,
-      phoneNumber : true,
-      userId : true,
-    }
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      phoneNumber: true,
+      userId: true,
+    },
   });
-}
+};
 
-const userlist = async (id: number, search : string) => {
+const userlist = async (id: number, search: string) => {
   if (search) {
     return await prisma.user.findMany({
       where: {
@@ -127,96 +129,176 @@ const userlist = async (id: number, search : string) => {
         ],
       },
       select: {
-        id : true,
-        email : true,
-        firstName : true,
-        lastName : true,
-        userName : true,
-        profileImage : true
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        userName: true,
+        profileImage: true,
       },
     });
   } else {
     return await prisma.user.findMany({
-      where : {
-        id : {
-          not : id
-        }
+      where: {
+        id: {
+          not: id,
+        },
       },
-      select : {
-        id : true,
-        email : true,
-        firstName : true,
-        lastName : true,
-        userName : true,
-        profileImage : true
-      }
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        userName: true,
+        profileImage: true,
+      },
     });
   }
-}
+};
 const userGetBulk = async (userIds: Array<number>) => {
-    return await prisma.user.findMany({
-      where : {
-        id : {
-          in : userIds
-        }
-      },
-      select : {
-        id : true,
-        email : true,
-        firstName : true,
-        lastName : true,
-        userName : true,
-        profileImage : true
-      }
-    });
-}
-
-const getFriendList = async (userId: number | string, search: string) => {
-  console.log("serach", search)
-  const getFriendList = await prisma.user.findUnique({
+  return await prisma.user.findMany({
     where: {
-      id: userId
+      id: {
+        in: userIds,
+      },
     },
     select: {
       id: true,
-      contact: {
-        where: {
-          invite: "ACCEPTED",
-          OR: [
-            {
-              email: {
-                contains: search,
-                mode: 'insensitive'
-              },
-            },
-            {
-              name: {
-                contains: search,
-                mode: 'insensitive'
-              }
-            },
-          ],
-        },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          contactUser: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              userName: true,
-              profileImage: true,
-              email: true
-            }
-          }
-        }
-      },
-
+      email: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
     },
+  });
+};
 
-  })
-  return getFriendList
-}
-export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation, userlist, userGetBulk, getFriendList };
+const getFriendList = async (userId: number | string, search: string) => {
+  const getFriendList = await prisma.user.findMany({
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
+      email: true,
+    },
+    where:{
+      OR: [
+        {
+          email: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          firstName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          lastName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    }
+  });
+  const resp = await axiosPostMicro(
+    { userId },
+    `${config.leagueServer}/bet/getBetUser`,
+    ""
+  );
+  const getMaxBetOpponent = await prisma.user.findMany({
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
+      email: true,
+    },
+    where: {
+      id: {
+        in: resp.data.data,
+      },
+      OR: [
+        {
+          email: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          firstName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          lastName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+  });
+  // const getFriendList = await prisma.user.findUnique({
+  //   where: {
+  //     id: userId
+  //   },
+  //   select: {
+  //     id: true,
+  //     contact: {
+  //       where: {
+  //         invite: "ACCEPTED",
+  //         OR: [
+  //           {
+  //             email: {
+  //               contains: search,
+  //               mode: 'insensitive'
+  //             },
+  //           },
+  //           {
+  //             name: {
+  //               contains: search,
+  //               mode: 'insensitive'
+  //             }
+  //           },
+  //         ],
+  //       },
+  //       select: {
+  //         id: true,
+  //         name: true,
+  //         email: true,
+  //         contactUser: {
+  //           select: {
+  //             id: true,
+  //             firstName: true,
+  //             lastName: true,
+  //             userName: true,
+  //             profileImage: true,
+  //             email: true
+  //           }
+  //         }
+  //       }
+  //     },
+
+  //   },
+
+  // })
+  return { getFriendList, getMaxBetOpponent };
+};
+export default {
+  userContacts,
+  userProfileUpdate,
+  getAllContact,
+  searchUser,
+  userByIdMongoRelation,
+  userlist,
+  userGetBulk,
+  getFriendList,
+};

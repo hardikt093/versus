@@ -150,7 +150,20 @@ const listBetsByType = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+
+const getBetUser = async (req: Request, res: Response) => {
+  try {
+    const getBetUser = await BetService.getBetUser(
+      req.body.userId
+    );
+    createResponse(res, httpStatus.OK, Messages.BET_REQUESTED, getBetUser);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
+  getBetUser,
   createBet,
   updateBetRequest,
   listBetsByStatus,
