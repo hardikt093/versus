@@ -476,6 +476,26 @@ const getUpcomingMatch = async () => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -642,17 +662,42 @@ const getUpcomingMatch = async () => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
           favIPOutcome: {
             $multiply: [
@@ -2057,6 +2102,26 @@ const mlbScoreWithDate = async (date1: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -2127,17 +2192,42 @@ const mlbScoreWithDate = async (date1: string) => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
         },
       },
@@ -3022,6 +3112,26 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -3092,17 +3202,42 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
         },
       },
@@ -3609,6 +3744,26 @@ const getLiveDataFromMongodb = async () => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -3679,17 +3834,42 @@ const getLiveDataFromMongodb = async () => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
         },
       },
@@ -4721,6 +4901,26 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -4887,17 +5087,42 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
           favIPOutcome: {
             $multiply: [
@@ -6301,6 +6526,26 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -6371,17 +6616,42 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
         },
       },
@@ -6452,6 +6722,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           attendance: true,
           status: true,
           venueName: true,
+          goalServeMatchId:true,
+          goalServeLeagueId:true,
           startingPitcher: {
             awayTeam: {
               wins: {
@@ -9321,6 +9593,26 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -9487,17 +9779,42 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
           favIPLive: {
             $multiply: [
@@ -10932,6 +11249,26 @@ const liveBoxscoreMlb = async () => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -11098,17 +11435,42 @@ const liveBoxscoreMlb = async () => {
             ],
           },
           underIp: {
-            $multiply: [
-              {
-                $divide: [
-                  "$underdog.moneyline",
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
+                ]
+
+              },
+              then: {
+                $multiply: [
                   {
-                    $add: ["$underdog.moneyline", 100],
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
                   },
+                  100,
+                ],
+
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
                 ],
               },
-              100,
-            ],
+            },
           },
           favIPLive: {
             $multiply: [

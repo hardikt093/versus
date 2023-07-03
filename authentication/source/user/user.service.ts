@@ -170,4 +170,53 @@ const userGetBulk = async (userIds: Array<number>) => {
       }
     });
 }
-export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation, userlist, userGetBulk };
+
+const getFriendList = async (userId: number | string, search: string) => {
+  console.log("serach", search)
+  const getFriendList = await prisma.user.findUnique({
+    where: {
+      id: userId
+    },
+    select: {
+      id: true,
+      contact: {
+        where: {
+          invite: "ACCEPTED",
+          OR: [
+            {
+              email: {
+                contains: search,
+                mode: 'insensitive'
+              },
+            },
+            {
+              name: {
+                contains: search,
+                mode: 'insensitive'
+              }
+            },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          contactUser: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              userName: true,
+              profileImage: true,
+              email: true
+            }
+          }
+        }
+      },
+
+    },
+
+  })
+  return getFriendList
+}
+export default { userContacts, userProfileUpdate, getAllContact, searchUser, userByIdMongoRelation, userlist, userGetBulk, getFriendList };

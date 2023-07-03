@@ -258,6 +258,14 @@ const refreshAuthTokens = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const getUser = async (req: Request, res: Response) => {
+  try {
+    const user = await authService.getUser(req?.loggedInUser as IUser)
+    createResponse(res, httpStatus.OK, "", user);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   signIn,
   signUp,
@@ -268,4 +276,5 @@ export default {
   sendInvite,
   checkInviteExpire,
   refreshAuthTokens,
+  getUser
 };
