@@ -476,6 +476,26 @@ const getUpcomingMatch = async () => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -2057,6 +2077,26 @@ const mlbScoreWithDate = async (date1: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -3022,6 +3062,26 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -3592,6 +3652,26 @@ const getLiveDataFromMongodb = async () => {
                     {
                       case: {
                         $lt: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $eq: [
                           {
                             $toDouble: "$homeMoneyline",
                           },
@@ -4704,6 +4784,26 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                     {
                       case: {
                         $lt: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $eq: [
                           {
                             $toDouble: "$homeMoneyline",
                           },
@@ -6301,6 +6401,26 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -6452,6 +6572,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           attendance: true,
           status: true,
           venueName: true,
+          goalServeMatchId:true,
+          goalServeLeagueId:true,
           startingPitcher: {
             awayTeam: {
               wins: {
@@ -9321,6 +9443,26 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                         },
                       },
                     },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
                   ],
                   default: 10,
                 },
@@ -10915,6 +11057,26 @@ const liveBoxscoreMlb = async () => {
                     {
                       case: {
                         $lt: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $eq: [
                           {
                             $toDouble: "$homeMoneyline",
                           },
