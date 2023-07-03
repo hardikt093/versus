@@ -293,7 +293,7 @@ export default class MlbDbCronServiceClass {
                 leagueType : "MLB"
               },
               {
-                status: "CANCELED",
+                status: "EXPIRED",
               }
             );
             // active  CONFIRMED bet when match start
@@ -323,6 +323,18 @@ export default class MlbDbCronServiceClass {
               parseInt(goalServeMatchId),
               parseInt(goalServeWinTeamId),
               "MLB"
+            );
+          } else if (matchArray[j].status == "Canceled") {
+            const goalServeMatchId = matchArray[j].id;
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType : "MLB"
+              },
+              {
+                status: "CANCELED",
+              }
             );
           }
         }
