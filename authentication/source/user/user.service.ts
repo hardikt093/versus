@@ -188,7 +188,10 @@ const getFriendList = async (userId: number | string, search: string, page:strin
       profileImage: true,
       email: true,
     },
-    where: {
+    where:{
+      id: {
+        not: userId,
+      },
       OR: [
         {
           email: {
