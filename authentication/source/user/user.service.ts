@@ -175,8 +175,8 @@ const userGetBulk = async (userIds: Array<number>) => {
 const getFriendList = async (userId: number | string, search: string, page:string) => {
 
   const pages = parseInt(page) || 1;
-  const limit = 20;
-  const startIndex = (pages - 1) * limit;;
+  const limit = 10;
+  const startIndex = (pages - 1) * limit;
   const getFriendList = await prisma.user.findMany({
     take: limit,
     skip: startIndex,
