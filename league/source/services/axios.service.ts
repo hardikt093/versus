@@ -96,4 +96,15 @@ const axiosPostMicro = async (
      error.response.data.data ?? {});
   }
 };
-export { axiosGet, axiosPost, axiosDelete, axiosPut, axiosPatch, axiosPostMicro };
+
+const axiosGetMicro = async (url: string, payload = {}, token: "") => {
+  const params = new URLSearchParams(payload).toString();
+  try {
+    return await axios.get(`${url}?${params}`, getHeaders(token));
+  } catch (error: any) {
+    throw new AppError(error.response.data.status ?? httpStatus.UNPROCESSABLE_ENTITY,
+      error.response.data.message ?? error.message,
+      error.response.data.data ?? {});
+  }
+};
+export { axiosGet, axiosPost, axiosDelete, axiosPut, axiosPatch, axiosPostMicro, axiosGetMicro };
