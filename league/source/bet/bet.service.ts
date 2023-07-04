@@ -155,6 +155,7 @@ const responseBet = async (
   isConfirmed: boolean
 ) => {
   const betData = await Bet.findOne({
+    isDeleted : false,
     _id: id,
   }).lean();
   if (!betData) {
