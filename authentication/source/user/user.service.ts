@@ -184,6 +184,9 @@ const getFriendList = async (userId: number | string, search: string) => {
       email: true,
     },
     where:{
+      id: {
+        not: userId,
+      },
       OR: [
         {
           email: {
