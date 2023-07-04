@@ -1,9 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-
 import { log } from "console";
 import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
-import { axiosPostMicro } from "../services/axios.service";
+import {  axiosGetMicro  } from "../services/axios.service";
 import config from "../config/config";
 
 /**
@@ -173,8 +172,14 @@ const userGetBulk = async (userIds: Array<number>) => {
   });
 };
 
-const getFriendList = async (userId: number | string, search: string) => {
+const getFriendList = async (userId: number | string, search: string, page:string) => {
+
+  const pages = parseInt(page) || 1;
+  const limit = 20;
+  const startIndex = (pages - 1) * limit;;
   const getFriendList = await prisma.user.findMany({
+    take: limit,
+    skip: startIndex,
     select: {
       id: true,
       firstName: true,
@@ -207,11 +212,11 @@ const getFriendList = async (userId: number | string, search: string) => {
           },
         },
       ],
-    }
+    },
   });
-  const resp = await axiosPostMicro(
-    { userId },
-    `${config.leagueServer}/bet/getBetUser`,
+  const resp = await axiosGetMicro(
+    `${config.leagueServer}/bet/getBetUser/${userId}`,
+    {},
     ""
   );
   const getMaxBetOpponent = await prisma.user.findMany({
