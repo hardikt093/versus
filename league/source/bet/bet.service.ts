@@ -109,18 +109,24 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeOpponentUserTeamId: data.goalServeOpponentUserTeamId,
     requestUserGoalServeOdd: data.requestUserGoalServeOdd,
     opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
-    requestUserFairOdds: (data.requestUserFairOdds ? data.requestUserFairOdds : 0),
-    opponentUserFairOdds: (data.opponentUserFairOdds ? data.opponentUserFairOdds : 0),
+    requestUserFairOdds: data.requestUserFairOdds
+      ? data.requestUserFairOdds
+      : 0,
+    opponentUserFairOdds: data.opponentUserFairOdds
+      ? data.opponentUserFairOdds
+      : 0,
     requestUserBetAmount: data.amount,
     opponentUserBetAmount: data.amount,
-    betTotalAmount: data.amount + data.amount,
+    betTotalAmount: data.amount * 2,
   };
   if (data.oddType === "Moneyline") {
     const winAmountRequestUser = winAmountCalculationUsingOdd(
       preparedBetObject.requestUserBetAmount,
       preparedBetObject.requestUserFairOdds
     );
-    preparedBetObject.opponentUserBetAmount = winAmountRequestUser;
+    preparedBetObject.opponentUserBetAmount = parseFloat(
+      winAmountRequestUser.toFixed(2)
+    );
     preparedBetObject.betTotalAmount =
       preparedBetObject.requestUserBetAmount +
       preparedBetObject.opponentUserBetAmount;
@@ -132,8 +138,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   if (createdBet) {
     const resp = await axiosPostMicro(
       {
-        amount: data.amount,
+        amount: parseFloat((data?.amount).toFixed(2)),
         userId: createdBet.requestUserId,
+        betData: createdBet
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -169,15 +176,27 @@ const responseBet = async (
     status: isConfirmed ? betStatus.CONFIRMED : betStatus.REJECTED,
     responseAt: new Date(),
   };
-  await Bet.updateOne(
+  const updateBet = await Bet.updateOne(
     {
       _id: id,
     },
     prepareObject
   );
+
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
+  if (updateBet) {
+    const resp = await axiosPostMicro(
+      {
+        amount: responseBet?.opponentUserBetAmount,
+        userId: responseBet?.opponentUserId,
+        betData: responseBet
+      },
+      `${config.authServerUrl}/wallet/deduct`,
+      ""
+    );
+  }
   return responseBet;
 };
 
