@@ -51,6 +51,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
   const betFound = await Bet.findOne({
+    isDeleted : false,
     $or: [
       { requestUserId: loggedInUserId },
       { opponentUserId: loggedInUserId },
@@ -187,12 +188,33 @@ const responseBet = async (
   return responseBet;
 };
 
-const requestListBetByUserId = async (userId: number) => {
-  const requestListBet = await Bet.find({
-    opponentUserId: userId,
+const deleteBet = async (loggedInUserId : number, id: string) => {
+
+  const betData = await Bet.findOne({
+    isDeleted: false,
+    _id: id,
     status: betStatus.PENDING,
+    $or: [
+      { requestUserId: loggedInUserId },
+      { opponentUserId: loggedInUserId },
+    ],
   });
-  return requestListBet;
+
+  if (!betData) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
+  }
+  await Bet.updateOne({
+    _id: id,
+    status: betStatus.PENDING,
+    $or: [
+      { requestUserId: loggedInUserId },
+      { opponentUserId: loggedInUserId },
+    ],
+  },
+  {
+    isDeleted : true
+  });
+  return true;
 };
 
 const updateBetRequest = async (
@@ -1232,7 +1254,7 @@ export default {
   resultBetVerified,
   getResultBet,
   responseBet,
-  requestListBetByUserId,
+  deleteBet,
   resultBet,
   createBet,
   updateBetRequest,

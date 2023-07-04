@@ -45,5 +45,6 @@ class Messages {
   static BET_AMOUNT_MUST_BE_GREATER_THAN_EQUALS_1 = "Wager must be greather than or equals to 1";
   static ALREADY_CONFIRMED_BET = "You already confirmed this Bet";
   static BET_CHANGE_REQUESTED = "Bet request has been changed Successfully";
+  static BET_DELETED = "Bet deleted Successfully";
 }
 export default Messages;
