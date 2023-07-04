@@ -1,3 +1,5 @@
+import { number } from "joi";
+
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -34,7 +36,19 @@ const walletDeduction = async (amount: number, userId: number, body: any) => {
     return updateWallet;
   }
 };
+const checkBalance = async (data: { userId: string | number, requestAmount: number | string }) => {
+  return await prisma.wallet.findMany({
+    where: {
+      userId: Number(data?.userId),
+      amount: {
+        gt: Number(data.requestAmount)
+      }
+    }
+  })
+
+}
 
 export default {
   walletDeduction,
+  checkBalance
 };
