@@ -109,18 +109,24 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeOpponentUserTeamId: data.goalServeOpponentUserTeamId,
     requestUserGoalServeOdd: data.requestUserGoalServeOdd,
     opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
-    requestUserFairOdds: (data.requestUserFairOdds ? data.requestUserFairOdds : 0),
-    opponentUserFairOdds: (data.opponentUserFairOdds ? data.opponentUserFairOdds : 0),
+    requestUserFairOdds: data.requestUserFairOdds
+      ? data.requestUserFairOdds
+      : 0,
+    opponentUserFairOdds: data.opponentUserFairOdds
+      ? data.opponentUserFairOdds
+      : 0,
     requestUserBetAmount: data.amount,
     opponentUserBetAmount: data.amount,
-    betTotalAmount: data.amount + data.amount,
+    betTotalAmount: data.amount * 2,
   };
   if (data.oddType === "Moneyline") {
     const winAmountRequestUser = winAmountCalculationUsingOdd(
       preparedBetObject.requestUserBetAmount,
       preparedBetObject.requestUserFairOdds
     );
-    preparedBetObject.opponentUserBetAmount = Math.round(winAmountRequestUser);
+    preparedBetObject.opponentUserBetAmount = parseFloat(
+      winAmountRequestUser.toFixed(2)
+    );
     preparedBetObject.betTotalAmount =
       preparedBetObject.requestUserBetAmount +
       preparedBetObject.opponentUserBetAmount;
