@@ -77,7 +77,7 @@ const usersGetBulk = async (req: Request, res: Response) => {
 
 const getFriendList = async (req: Request, res: Response) => {
   try {
-    const getFriendList = await userService.getFriendList(req.loggedInUser.id, req.query.search as string);
+    const getFriendList = await userService.getFriendList(req.loggedInUser.id, req.query.search as string, req.query.page as string);
     createResponse(res, httpStatus.OK, "", getFriendList);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});

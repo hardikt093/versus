@@ -15,7 +15,6 @@ oauth2Client.setCredentials({
 const accessToken = oauth2Client.getAccessToken()
 
 export const sendMail = async () => {
-    console.log("function called")
     try {
         const smtpTransport = nodemailer.createTransport({
             service: "gmail",

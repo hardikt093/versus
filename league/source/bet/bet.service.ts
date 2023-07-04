@@ -14,7 +14,7 @@ import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
 import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
-import { axiosPostMicro } from "../services/axios.service";
+import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
@@ -139,8 +139,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   if (createdBet) {
     const resp = await axiosPostMicro(
       {
-        amount: data.amount,
+        amount: parseFloat((data?.amount).toFixed(2)),
         userId: createdBet.requestUserId,
+        betData: createdBet
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -154,10 +155,24 @@ const responseBet = async (
   loggedInUserId: number,
   isConfirmed: boolean
 ) => {
+
+
   const betData = await Bet.findOne({
     isDeleted : false,
     _id: id,
   }).lean();
+
+  if (isConfirmed == true && betData) {
+    const resp = await axiosGetMicro(
+      `${config.authServerUrl}/wallet/checkBalance`,
+      {
+        userId: loggedInUserId,
+        requestAmount: betData?.opponentUserBetAmount
+      },
+      ""
+    );
+  } 
+
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
@@ -177,15 +192,28 @@ const responseBet = async (
     status: isConfirmed ? betStatus.CONFIRMED : betStatus.REJECTED,
     responseAt: new Date(),
   };
-  await Bet.updateOne(
+
+  const updateBet = await Bet.updateOne(
     {
       _id: id,
     },
     prepareObject
   );
+
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
+  if (updateBet) {
+    const resp = await axiosPostMicro(
+      {
+        amount: responseBet?.opponentUserBetAmount,
+        userId: responseBet?.opponentUserId,
+        betData: responseBet
+      },
+      `${config.authServerUrl}/wallet/deduct`,
+      ""
+    );
+  }
   return responseBet;
 };
 

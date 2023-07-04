@@ -13,8 +13,8 @@ router.post(
   validate(BetValidation.createBet),
   BetController.createBet
 );
-router.post(
-  "/getBetUser",
+router.get(
+  "/getBetUser/:userId",
   BetController.getBetUser
 );
 router.post(

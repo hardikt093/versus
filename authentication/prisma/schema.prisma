@@ -160,14 +160,21 @@ model Wallet {
   id     Int     @id @default(autoincrement())
   user   User? @relation(fields: [userId], references: [id])
   userId Int  @unique
-  amount Int
+  amount Float?
   holdAmount HoldAmount[]
 }
 model HoldAmount {
     id     Int     @id @default(autoincrement())
   user   User? @relation(fields: [userId], references: [id])
   userId Int?  
-  amount Int
+  amount Float?
   wallet Wallet? @relation(fields: [walletId], references: [id])
   walletId  Int
+  goalServeMatchId Int?
+  requestUserId Int?
+  opponentUserId Int?
+  requestUserBetAmount Float?
+  opponentUserBetAmount Float?
+  goalServeLeagueId Int?
+  betId String?
 }

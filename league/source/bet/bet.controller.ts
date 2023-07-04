@@ -139,7 +139,7 @@ const listBetsByType = async (req: Request, res: Response) => {
 const getBetUser = async (req: Request, res: Response) => {
   try {
     const getBetUser = await BetService.getBetUser(
-      req.body.userId
+      Number(req.params.userId) 
     );
     createResponse(res, httpStatus.OK, Messages.BET_REQUESTED, getBetUser);
   } catch (error: any) {
