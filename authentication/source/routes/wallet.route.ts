@@ -5,4 +5,6 @@ const router = express.Router();
 
 router.post("/deduct", walletController.walletDeduction);
 router.get("/checkBalance", walletController.checkBalance);
+router.post("/revertAmount", walletController.revertAmount);
+router.post("/paymentRelease", walletController.paymentRelease);
 export default router;

@@ -16,7 +16,7 @@ const walletDeduction = async (amount: number, userId: number, body: any) => {
         userId: userId,
       },
       data: {
-        amount: balance,
+        amount: parseFloat((balance).toFixed(2)),
       },
     });
     await prisma.holdAmount.create({
@@ -48,7 +48,69 @@ const checkBalance = async (data: { userId: string | number, requestAmount: numb
 
 }
 
+const revertAmount = async (amount: number, userId: number, body: any) => {
+  const updateHoldingAmount = await prisma.holdAmount.updateMany({
+    where: {
+      AND: [
+        { betId: body._id, },
+        { userId: userId, }
+      ]
+    },
+    data: {
+      revertAmount: parseFloat((amount).toFixed(2))
+    }
+  })
+  const findWallet = await prisma.wallet.findUnique({
+    where: {
+      userId: userId
+    }
+  })
+  const finalAmount = findWallet.amount + amount
+  const updateWallet = await prisma.wallet.update({
+    where: {
+      userId: userId
+    },
+    data: {
+      amount: parseFloat((finalAmount).toFixed(2))
+    }
+  })
+  return true
+}
+
+const paymentRelease = async (amount: string | number, userId: string | number, body: any) => {
+  try {
+    const removeHoldingAmount = await prisma.holdAmount.updateMany({
+      where: {
+        userId: userId,
+        betId: body._id
+      },
+      data: {
+        amount: 0
+      }
+    })
+    const findWallet = await prisma.wallet.findUnique({
+      where: {
+        userId: userId
+      }
+    })
+    const finalAmount = findWallet.amount + amount
+    const releaseAmountToWallet = await prisma.wallet.update({
+      where: {
+        userId: userId
+      },
+      data: {
+        amount: parseFloat((finalAmount).toFixed(2))
+      }
+    })
+    return true
+  } catch (error: any) {
+    console.log("error", error)
+  }
+}
+
 export default {
   walletDeduction,
-  checkBalance
+  checkBalance,
+  revertAmount,
+  paymentRelease
 };

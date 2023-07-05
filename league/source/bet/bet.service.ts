@@ -51,13 +51,28 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
   const betFound = await Bet.findOne({
-    isDeleted : false,
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
+    isDeleted: false,
+    $and : [
+      {
+        $or: [
+          { requestUserId: loggedInUserId },
+          { opponentUserId: loggedInUserId },
+        ],
+      },
+      {
+        $or: [
+          { requestUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
+          { opponentUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
+        ],
+      },
+      {
+        $or: [
+          { requestUserFairOdds: data.requestUserFairOdds},
+          { opponentUserFairOdds: data.opponentUserFairOdds},
+        ],
+      }
     ],
     goalServeMatchId: data.goalServeMatchId,
-    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
   }).lean();
 
   if (betFound) {
@@ -116,9 +131,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     opponentUserFairOdds: data.opponentUserFairOdds
       ? data.opponentUserFairOdds
       : 0,
-    requestUserBetAmount: data.amount,
-    opponentUserBetAmount: data.amount,
-    betTotalAmount: data.amount * 2,
+    requestUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    opponentUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    betTotalAmount: parseFloat((data.amount * 2).toFixed(2)),
   };
   if (data.oddType === "Moneyline") {
     const winAmountRequestUser = winAmountCalculationUsingOdd(
@@ -132,6 +147,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       preparedBetObject.requestUserBetAmount +
       preparedBetObject.opponentUserBetAmount;
   }
+  preparedBetObject.betTotalAmount = parseFloat(
+    preparedBetObject.betTotalAmount.toFixed(2)
+  );
   const createBet = await Bet.create(preparedBetObject);
   const createdBet = await Bet.findOne({
     _id: createBet._id,
@@ -141,7 +159,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       {
         amount: parseFloat((data?.amount).toFixed(2)),
         userId: createdBet.requestUserId,
-        betData: createdBet
+        betData: createdBet,
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -155,10 +173,8 @@ const responseBet = async (
   loggedInUserId: number,
   isConfirmed: boolean
 ) => {
-
-
   const betData = await Bet.findOne({
-    isDeleted : false,
+    isDeleted: false,
     _id: id,
   }).lean();
 
@@ -167,11 +183,11 @@ const responseBet = async (
       `${config.authServerUrl}/wallet/checkBalance`,
       {
         userId: loggedInUserId,
-        requestAmount: betData?.opponentUserBetAmount
+        requestAmount: betData?.opponentUserBetAmount,
       },
       ""
     );
-  } 
+  }
 
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
@@ -203,12 +219,23 @@ const responseBet = async (
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
-  if (updateBet) {
+  if (updateBet && isConfirmed == false) {
+    const resp = await axiosPostMicro(
+      {
+        amount: responseBet?.requestUserBetAmount,
+        userId: responseBet?.requestUserId,
+        betData: responseBet,
+      },
+      `${config.authServerUrl}/wallet/revertAmount`,
+      ""
+    );
+  }
+  if (updateBet && isConfirmed == true) {
     const resp = await axiosPostMicro(
       {
         amount: responseBet?.opponentUserBetAmount,
         userId: responseBet?.opponentUserId,
-        betData: responseBet
+        betData: responseBet,
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -217,8 +244,7 @@ const responseBet = async (
   return responseBet;
 };
 
-const deleteBet = async (loggedInUserId : number, id: string) => {
-
+const deleteBet = async (loggedInUserId: number, id: string) => {
   const betData = await Bet.findOne({
     isDeleted: false,
     _id: id,
@@ -232,17 +258,31 @@ const deleteBet = async (loggedInUserId : number, id: string) => {
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  await Bet.updateOne({
-    _id: id,
-    status: betStatus.PENDING,
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
-    ],
-  },
-  {
-    isDeleted : true
-  });
+  const updateBet = await Bet.updateOne(
+    {
+      _id: id,
+      status: betStatus.PENDING,
+      $or: [
+        { requestUserId: loggedInUserId },
+        { opponentUserId: loggedInUserId },
+      ],
+    },
+    {
+      isDeleted: true,
+    }
+  );
+  if (updateBet) {
+    const resp = await axiosPostMicro(
+      {
+        amount: betData?.requestUserBetAmount,
+        userId: betData?.requestUserId,
+        betData: betData,
+      },
+      `${config.authServerUrl}/wallet/revertAmount`,
+      ""
+    );
+  }
+
   return true;
 };
 
@@ -641,6 +681,9 @@ const listBetsByType = async (
       }
     );
   } else {
+    condition.status = {
+      $ne: "REJECTED",
+    };
     query.push(
       {
         $match: condition,
@@ -660,6 +703,22 @@ const listBetsByType = async (
       }
     );
   }
+  let countQuery: Array<any> = Array.from(query);
+  countQuery.push({
+    $facet: {
+      count: [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ],
+    },
+  });
+  let count = await Bet.aggregate(countQuery);
   query.push(
     {
       $sort: {
@@ -1248,15 +1307,16 @@ const listBetsByType = async (
         };
       }
     );
-    return bindedObject;
+    return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
   }
-  return data;
+  return { list: data, count: count[0]?.count[0]?.count ?? 0 };
 };
 
 const getBetUser = async (userId: number) => {
-  const allApponentUser = await Bet.find({ requestUserId: userId });
+  const allApponentUser = await Bet.find({ requestUserId: userId }).sort({
+    updatedAt: -1,
+  });
   const opponentCount: IOpponentCount = {};
-  // Count the occurrences of each opponentId
   for (const item of allApponentUser) {
     const { opponentUserId } = item;
     if (opponentCount[opponentUserId]) {
@@ -1265,17 +1325,23 @@ const getBetUser = async (userId: number) => {
       opponentCount[opponentUserId] = 1;
     }
   }
-  // Convert the opponentCount object to an array of objects
   const result = Object.entries(opponentCount).map(
     ([opponentUserId, count]) => ({
       opponentUserId: parseInt(opponentUserId),
       count,
     })
   );
-  const opponentUser = result
-    .sort((a: any, b: any) => b?.count - a?.count)
-    .map((item: IOpponentCount) => item?.opponentUserId);
-  return opponentUser;
+  result.sort((a: any, b: any) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
+    } else {
+      const lastBetA:any = allApponentUser.find((bet) => bet.opponentUserId === a.opponentUserId);
+      const lastBetB :any= allApponentUser.find((bet) => bet.opponentUserId === b.opponentUserId);
+      return lastBetB.updatedAt - lastBetA.updatedAt;
+    }
+  });
+  const top5Opponents = result.slice(0, 5).map((item: IOpponentCount) => item.opponentUserId);
+  return top5Opponents;
 };
 export default {
   getBetUser,
