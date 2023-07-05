@@ -16,6 +16,8 @@ import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
+import socket, { notficationSocket } from "../services/socket.service";
+import Notification from "../models/documents/notification.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -51,7 +53,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
   const betFound = await Bet.findOne({
-    isDeleted : false,
+    isDeleted: false,
     $or: [
       { requestUserId: loggedInUserId },
       { opponentUserId: loggedInUserId },
@@ -141,12 +143,23 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       {
         amount: parseFloat((data?.amount).toFixed(2)),
         userId: createdBet.requestUserId,
-        betData: createdBet
+        betData: createdBet,
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
     );
   }
+  const createNotification = await Notification.create({
+    fromUserId: loggedInUserId,
+    toUserId: data.opponentUserId,
+    betId: createBet._id,
+  });
+  const unseenNotification = await Notification.find({
+    toUserId: data.opponentUserId,
+  });
+  await notficationSocket("notify", data.opponentUserId, {
+    notifications: unseenNotification.length,
+  });
   return createdBet;
 };
 
@@ -155,10 +168,8 @@ const responseBet = async (
   loggedInUserId: number,
   isConfirmed: boolean
 ) => {
-
-
   const betData = await Bet.findOne({
-    isDeleted : false,
+    isDeleted: false,
     _id: id,
   }).lean();
 
@@ -167,11 +178,11 @@ const responseBet = async (
       `${config.authServerUrl}/wallet/checkBalance`,
       {
         userId: loggedInUserId,
-        requestAmount: betData?.opponentUserBetAmount
+        requestAmount: betData?.opponentUserBetAmount,
       },
       ""
     );
-  } 
+  }
 
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
@@ -208,7 +219,7 @@ const responseBet = async (
       {
         amount: responseBet?.opponentUserBetAmount,
         userId: responseBet?.opponentUserId,
-        betData: responseBet
+        betData: responseBet,
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -217,8 +228,7 @@ const responseBet = async (
   return responseBet;
 };
 
-const deleteBet = async (loggedInUserId : number, id: string) => {
-
+const deleteBet = async (loggedInUserId: number, id: string) => {
   const betData = await Bet.findOne({
     isDeleted: false,
     _id: id,
@@ -232,17 +242,19 @@ const deleteBet = async (loggedInUserId : number, id: string) => {
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  await Bet.updateOne({
-    _id: id,
-    status: betStatus.PENDING,
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
-    ],
-  },
-  {
-    isDeleted : true
-  });
+  await Bet.updateOne(
+    {
+      _id: id,
+      status: betStatus.PENDING,
+      $or: [
+        { requestUserId: loggedInUserId },
+        { opponentUserId: loggedInUserId },
+      ],
+    },
+    {
+      isDeleted: true,
+    }
+  );
   return true;
 };
 
@@ -1277,6 +1289,29 @@ const getBetUser = async (userId: number) => {
     .map((item: IOpponentCount) => item?.opponentUserId);
   return opponentUser;
 };
+
+const readNotification = async (userId: number) => {
+  if (userId) {
+    const data = await Notification.updateMany(
+      {
+        toUserId: userId,
+        seen: false,
+      },
+      {
+        $set: {
+          seen: true,
+          readAt: new Date(),
+        },
+      },
+      {
+        multi: true,
+      }
+    );
+
+    console.log(data);
+    await notficationSocket("notify", userId, { notifications: data });
+  }
+};
 export default {
   getBetUser,
   listBetsByStatus,
@@ -1289,4 +1324,5 @@ export default {
   updateBetRequest,
   declareResultMatch,
   listBetsByType,
+  readNotification,
 };

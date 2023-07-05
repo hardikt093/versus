@@ -1,5 +1,27 @@
 import { io } from "../server";
+let connectedUsers: any = {};
+import BetService from "../bet/bet.service";
+export const socketHandShake = () => {
+  io.on("connection", (sockets) => {
+    sockets.on("userConnected", (userId) => {
+      const room = userId;
+      sockets.join(room);
+      connectedUsers[room] = sockets.id;
+    });
 
+    sockets.on("seen", (userId) => {
+      BetService.readNotification(userId);
+    });
+  });
+};
+export const notficationSocket = async (
+  eventName: string,
+  user: number,
+  data: object | Array<object>
+) => {
+  const filter = connectedUsers[user];
+  io.to(filter).emit(eventName, data);
+};
 const socket = async (eventName: string, data: object | Array<object>) => {
   switch (eventName) {
     case "mlbUpcomingMatch":
@@ -38,7 +60,6 @@ const socket = async (eventName: string, data: object | Array<object>) => {
     case "nbaLiveBoxscore":
       io.emit("nbaLiveBoxscore", data);
       break;
-
     default:
       break;
   }
