@@ -1269,7 +1269,6 @@ const getBetUser = async (userId: number) => {
     updatedAt: -1,
   });
   const opponentCount: IOpponentCount = {};
-  // Count the occurrences of each opponentId
   for (const item of allApponentUser) {
     const { opponentUserId } = item;
     if (opponentCount[opponentUserId]) {
@@ -1278,28 +1277,22 @@ const getBetUser = async (userId: number) => {
       opponentCount[opponentUserId] = 1;
     }
   }
-  // Convert the opponentCount object to an array of objects
   const result = Object.entries(opponentCount).map(
     ([opponentUserId, count]) => ({
       opponentUserId: parseInt(opponentUserId),
       count,
     })
   );
-  // Sort the result array in descending order based on the count of bets
   result.sort((a: any, b: any) => {
-    // Sort by count in descending order
     if (b.count !== a.count) {
       return b.count - a.count;
     } else {
-      // Sort by updatedAt in ascending order for same counts
       const lastBetA:any = allApponentUser.find((bet) => bet.opponentUserId === a.opponentUserId);
       const lastBetB :any= allApponentUser.find((bet) => bet.opponentUserId === b.opponentUserId);
       return lastBetB.updatedAt - lastBetA.updatedAt;
     }
   });
-  // Get the first 5 users' IDs
   const top5Opponents = result.slice(0, 5).map((item: IOpponentCount) => item.opponentUserId);
-  console.log(top5Opponents);
   return top5Opponents;
 };
 export default {
