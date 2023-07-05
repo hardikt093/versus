@@ -6,12 +6,12 @@ const goalserveService = new GoalserveService();
 let isupdateCurruntDateRecordNhlRunning: boolean = false;
 const updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateCurruntDateRecordNhlRunning) {
-    console.log("updateCurruntDateRecordNhl Skip");
+    // console.log("updateCurruntDateRecordNhl Skip");
     return;
   }
   isupdateCurruntDateRecordNhlRunning = true;
   try {
-    console.info("inside score cron updateCurruntDateRecordNhl");
+    // console.info("inside score cron updateCurruntDateRecordNhl");
     await goalserveService.updateCurruntDateRecordNhl();
   } catch (error) {
     console.log(error);
@@ -23,12 +23,12 @@ const updateCurruntDateRecordNhl = cron.schedule("*/10 * * * * *", async () => {
 let isupdateStandingNhlRunning: boolean = false;
 const updateStandingNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateStandingNhlRunning) {
-    console.log("updateStandingNhl Skip");
+    // console.log("updateStandingNhl Skip");
     return;
   }
   isupdateStandingNhlRunning = true;
   try {
-    console.info("inside score cron updateStandingNhl");
+    // console.info("inside score cron updateStandingNhl");
     await goalserveService.updateStandingNhl();
   } catch (error) {
     console.log(error);
@@ -40,12 +40,12 @@ const updateStandingNhl = cron.schedule("*/10 * * * * *", async () => {
 let isupdatePlayersNhlRunning: boolean = false;
 const updatePlayersNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isupdatePlayersNhlRunning) {
-    console.log("updatePlayersNhl Skip");
+    // console.log("updatePlayersNhl Skip");
     return;
   }
   isupdatePlayersNhlRunning = true;
   try {
-    console.info("inside score cron updatePlayersNhl");
+    // console.info("inside score cron updatePlayersNhl");
     await goalserveService.updatePlayersNhl();
   } catch (error) {
     console.log(error);
@@ -57,12 +57,12 @@ const updatePlayersNhl = cron.schedule("*/10 * * * * *", async () => {
 let isupdateInjuredPlayerNHLRunning: boolean = false;
 const updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
   if (isupdateInjuredPlayerNHLRunning) {
-    console.log("updateInjuredPlayerNHL Skip");
+    // console.log("updateInjuredPlayerNHL Skip");
     return;
   }
   isupdateInjuredPlayerNHLRunning = true;
   try {
-    console.info("inside score cron updateInjuredPlayerNHL");
+    // console.info("inside score cron updateInjuredPlayerNHL");
     await goalserveService.updateInjuredPlayerNHL();
   } catch (error) {
     console.log(error);
@@ -74,12 +74,12 @@ const updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
 let iscreateAndUpdateOddsNhlRunning: boolean = false;
 const createAndUpdateOddsNhl = cron.schedule("*/10 * * * * *", async () => {
   if (iscreateAndUpdateOddsNhlRunning) {
-    console.log("createAndUpdateOddsNhl Skip");
+    // console.log("createAndUpdateOddsNhl Skip");
     return;
   }
   iscreateAndUpdateOddsNhlRunning = true;
   try {
-    console.info("inside score cron createAndUpdateOddsNhl");
+    // console.info("inside score cron createAndUpdateOddsNhl");
     await goalserveService.createAndUpdateOddsNhl();
   } catch (error) {
     console.log(error);
@@ -91,12 +91,12 @@ const createAndUpdateOddsNhl = cron.schedule("*/10 * * * * *", async () => {
 let isupdateNhlMatchRunning: boolean = false;
 const updateNhlMatch = cron.schedule("0 */12 * * *", async () => {
   if (isupdateNhlMatchRunning) {
-    console.log("updateNhlMatch Skip");
+    // console.log("updateNhlMatch Skip");
     return;
   }
   isupdateNhlMatchRunning = true;
   try {
-    console.info("inside score cron updateNhlMatch");
+    // console.info("inside score cron updateNhlMatch");
     await goalserveService.updateNhlMatch();
   } catch (error) {
     console.log(error);

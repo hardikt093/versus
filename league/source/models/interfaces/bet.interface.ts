@@ -29,6 +29,8 @@ type TBet = {
   opponentUserBetAmount: number
   requestUserBetAmount: number
   betTotalAmount: number
+  requestUserGoalServeOdd: number
+  opponentUserGoalServeOdd: number
 }
 export default interface IBetModel extends TBet, Document {}
 export enum betStatus {

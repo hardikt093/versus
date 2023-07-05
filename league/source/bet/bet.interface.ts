@@ -10,7 +10,7 @@ export interface ICreateBetRequest {
     requestUserGoalServeOdd: number,
     opponentUserGoalServeOdd : number,
     requestUserFairOdds? : number,
-    opponentUserFairOdds? : number
+    opponentUserFairOdds? : number,
 }
 
 export interface IresponseBetRequest {
