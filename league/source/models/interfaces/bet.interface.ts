@@ -28,6 +28,7 @@ type TBet = {
   paymentStatus: paymentStatus
   opponentUserBetAmount: number
   requestUserBetAmount: number
+  betTotalAmount: number
 }
 export default interface IBetModel extends TBet, Document {}
 export enum betStatus {
