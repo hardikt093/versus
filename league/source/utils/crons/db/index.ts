@@ -1,6 +1,7 @@
 import nbaCron from './nba.cron';
 import nhlCron from './nhl.cron';
 import mlbCron from './mlb.cron';
+import betCron from './bet.cron';
 import config from "../../../config/config";
 import mongoose from "mongoose";
 
@@ -11,5 +12,6 @@ async function main() {
     nbaCron;
     nhlCron;
     mlbCron;
+    betCron;
 }
 main();
