@@ -203,7 +203,18 @@ const responseBet = async (
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
-  if (updateBet) {
+  if (updateBet && isConfirmed == false) {
+    const resp = await axiosPostMicro(
+      {
+        amount: responseBet?.requestUserBetAmount,
+        userId: responseBet?.requestUserId,
+        betData: responseBet
+      },
+      `${config.authServerUrl}/wallet/revertAmount`,
+      ""
+    );
+  }
+  if (updateBet && isConfirmed == true) {
     const resp = await axiosPostMicro(
       {
         amount: responseBet?.opponentUserBetAmount,

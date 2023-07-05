@@ -25,8 +25,9 @@ type TBet = {
   isRequestUserResultSatisfied: boolean;
   isOpponentUserResultSatisfied: boolean;
   isDeleted: boolean;
-  opponentUserBetAmount: number,
   paymentStatus: paymentStatus
+  opponentUserBetAmount: number
+  requestUserBetAmount: number
 }
 export default interface IBetModel extends TBet, Document {}
 export enum betStatus {
