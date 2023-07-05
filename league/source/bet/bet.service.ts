@@ -51,7 +51,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
   const betFound = await Bet.findOne({
-    isDeleted : false,
+    isDeleted: false,
     $or: [
       { requestUserId: loggedInUserId },
       { opponentUserId: loggedInUserId },
@@ -116,9 +116,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     opponentUserFairOdds: data.opponentUserFairOdds
       ? data.opponentUserFairOdds
       : 0,
-    requestUserBetAmount: data.amount,
-    opponentUserBetAmount: data.amount,
-    betTotalAmount: data.amount * 2,
+    requestUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    opponentUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    betTotalAmount: parseFloat((data.amount * 2).toFixed(2)),
   };
   if (data.oddType === "Moneyline") {
     const winAmountRequestUser = winAmountCalculationUsingOdd(
@@ -132,6 +132,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       preparedBetObject.requestUserBetAmount +
       preparedBetObject.opponentUserBetAmount;
   }
+  preparedBetObject.betTotalAmount = parseFloat(
+    preparedBetObject.betTotalAmount.toFixed(2)
+  );
   const createBet = await Bet.create(preparedBetObject);
   const createdBet = await Bet.findOne({
     _id: createBet._id,
@@ -141,7 +144,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       {
         amount: parseFloat((data?.amount).toFixed(2)),
         userId: createdBet.requestUserId,
-        betData: createdBet
+        betData: createdBet,
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -155,10 +158,8 @@ const responseBet = async (
   loggedInUserId: number,
   isConfirmed: boolean
 ) => {
-
-
   const betData = await Bet.findOne({
-    isDeleted : false,
+    isDeleted: false,
     _id: id,
   }).lean();
 
@@ -167,11 +168,11 @@ const responseBet = async (
       `${config.authServerUrl}/wallet/checkBalance`,
       {
         userId: loggedInUserId,
-        requestAmount: betData?.opponentUserBetAmount
+        requestAmount: betData?.opponentUserBetAmount,
       },
       ""
     );
-  } 
+  }
 
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
@@ -208,7 +209,7 @@ const responseBet = async (
       {
         amount: responseBet?.requestUserBetAmount,
         userId: responseBet?.requestUserId,
-        betData: responseBet
+        betData: responseBet,
       },
       `${config.authServerUrl}/wallet/revertAmount`,
       ""
@@ -219,7 +220,7 @@ const responseBet = async (
       {
         amount: responseBet?.opponentUserBetAmount,
         userId: responseBet?.opponentUserId,
-        betData: responseBet
+        betData: responseBet,
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -228,8 +229,7 @@ const responseBet = async (
   return responseBet;
 };
 
-const deleteBet = async (loggedInUserId : number, id: string) => {
-
+const deleteBet = async (loggedInUserId: number, id: string) => {
   const betData = await Bet.findOne({
     isDeleted: false,
     _id: id,
@@ -243,17 +243,19 @@ const deleteBet = async (loggedInUserId : number, id: string) => {
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  await Bet.updateOne({
-    _id: id,
-    status: betStatus.PENDING,
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
-    ],
-  },
-  {
-    isDeleted : true
-  });
+  await Bet.updateOne(
+    {
+      _id: id,
+      status: betStatus.PENDING,
+      $or: [
+        { requestUserId: loggedInUserId },
+        { opponentUserId: loggedInUserId },
+      ],
+    },
+    {
+      isDeleted: true,
+    }
+  );
   return true;
 };
 
@@ -652,6 +654,9 @@ const listBetsByType = async (
       }
     );
   } else {
+    condition.status = {
+      $ne: "REJECTED",
+    };
     query.push(
       {
         $match: condition,
@@ -671,6 +676,22 @@ const listBetsByType = async (
       }
     );
   }
+  let countQuery: Array<any> = Array.from(query);
+  countQuery.push({
+    $facet: {
+      count: [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ],
+    },
+  });
+  let count = await Bet.aggregate(countQuery);
   query.push(
     {
       $sort: {
@@ -1259,9 +1280,9 @@ const listBetsByType = async (
         };
       }
     );
-    return bindedObject;
+    return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
   }
-  return data;
+  return { list: data, count: count[0]?.count[0]?.count ?? 0 };
 };
 
 const getBetUser = async (userId: number) => {
