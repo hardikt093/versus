@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 import { log } from "console";
 import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
-import {  axiosGetMicro  } from "../services/axios.service";
+import { axiosGetMicro } from "../services/axios.service";
 import config from "../config/config";
 
 /**
@@ -172,8 +172,11 @@ const userGetBulk = async (userIds: Array<number>) => {
   });
 };
 
-const getFriendList = async (userId: number | string, search: string, page:string) => {
-
+const getFriendList = async (
+  userId: number | string,
+  search: string,
+  page: string
+) => {
   const pages = parseInt(page) || 1;
   const limit = 10;
   const startIndex = (pages - 1) * limit;
@@ -188,7 +191,7 @@ const getFriendList = async (userId: number | string, search: string, page:strin
       profileImage: true,
       email: true,
     },
-    where:{
+    where: {
       id: {
         not: userId,
       },
@@ -298,7 +301,10 @@ const getFriendList = async (userId: number | string, search: string, page:strin
   //   },
 
   // })
-  return { getFriendList, getMaxBetOpponent };
+  const sortedArray = resp.data.data.map((id: number) =>
+    getMaxBetOpponent.find((obj: any) => obj.id === id)
+  );
+  return { getFriendList,getMaxBetOpponent: sortedArray };
 };
 export default {
   userContacts,
