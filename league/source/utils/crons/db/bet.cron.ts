@@ -12,7 +12,7 @@ const releaseBetPayment = cron.schedule("*/5 * * * * *", async () => {
   isreleaseBetPaymentRunning = true;
   try {
     console.info("inside score cron releaseBetPayment");
-    await betService.releasePayment;
+    await betService.releasePayment();
   } catch (error) {
     console.log(error);
   } finally {
@@ -30,7 +30,7 @@ const expiredBetRefund = cron.schedule("*/5 * * * * *", async () => {
   isexpiredBetRefundRunning = true;
   try {
     console.info("inside score cron expiredBetRefund");
-    await betService.expiredBetRefund;
+    await betService.expiredBetRefund();
   } catch (error) {
     console.log(error);
   } finally {

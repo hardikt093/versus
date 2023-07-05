@@ -1,6 +1,6 @@
 import httpStatus from "http-status";
 import Bet from "../models/documents/bet.model";
-export default class MlbDbCronServiceClass {
+export default class BetDbCronServiceClass {
   public releasePayment = async () => {
     try {
       const betData = await Bet.find({
