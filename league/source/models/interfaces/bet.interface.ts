@@ -28,6 +28,7 @@ type TBet = {
   paymentStatus: paymentStatus
   opponentUserBetAmount: number
   requestUserBetAmount: number
+  betTotalAmount: number
   requestUserGoalServeOdd: number
   opponentUserGoalServeOdd: number
 }
