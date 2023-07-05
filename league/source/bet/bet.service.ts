@@ -258,7 +258,7 @@ const deleteBet = async (loggedInUserId: number, id: string) => {
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  await Bet.updateOne(
+  const updateBet = await Bet.updateOne(
     {
       _id: id,
       status: betStatus.PENDING,
@@ -271,6 +271,18 @@ const deleteBet = async (loggedInUserId: number, id: string) => {
       isDeleted: true,
     }
   );
+  if (updateBet) {
+    const resp = await axiosPostMicro(
+      {
+        amount: betData?.requestUserBetAmount,
+        userId: betData?.requestUserId,
+        betData: betData,
+      },
+      `${config.authServerUrl}/wallet/revertAmount`,
+      ""
+    );
+  }
+
   return true;
 };
 
