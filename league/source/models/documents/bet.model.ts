@@ -105,6 +105,15 @@ var betSchema = new Schema(
       ],
       default: "PENDING",
     },
+    paymentStatus: {
+      type: String,
+      enum: [
+        "PENDING",
+        "DONE",
+        "REFUNDED",
+      ],
+      default: "PENDING",
+    },
     isDeleted: { type: Boolean, default: false },
   },
   {
