@@ -51,8 +51,10 @@ const checkBalance = async (data: { userId: string | number, requestAmount: numb
 const revertAmount = async (amount: number, userId: number, body: any) => {
   const updateHoldingAmount = await prisma.holdAmount.updateMany({
     where: {
-      betId: body._id,
-      userId: userId,
+      AND: [
+        { betId: body._id, },
+        { userId: userId, }
+      ]
     },
     data: {
       revertAmount: parseFloat((amount).toFixed(2))

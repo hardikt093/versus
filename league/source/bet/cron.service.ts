@@ -61,7 +61,15 @@ export default class BetDbCronServiceClass {
       for (let i = 0; i < betData.length; i++) {
         const bet = betData[i];
         // Please Do refund Code below
-
+        const resp = await axiosPostMicro(
+          {
+            amount: bet?.requestUserBetAmount,
+            userId: bet?.requestUserId,
+            betData: bet
+          },
+          `${config.authServerUrl}/wallet/revertAmount`,
+          ""
+        );
         // update payment Status after payment refunded
         await Bet.updateOne(
           {
