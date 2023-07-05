@@ -7,6 +7,7 @@ export const socketHandShake = () => {
       const room = userId;
       sockets.join(room);
       connectedUsers[room] = sockets.id;
+      BetService.pushNotification(userId)
     });
 
     sockets.on("seen", (userId) => {

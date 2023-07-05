@@ -167,17 +167,12 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       ""
     );
   }
-  const createNotification = await Notification.create({
+ await Notification.create({
     fromUserId: loggedInUserId,
     toUserId: data.opponentUserId,
     betId: createBet._id,
   });
-  const unseenNotification = await Notification.find({
-    toUserId: data.opponentUserId,
-  });
-  await notficationSocket("notify", data.opponentUserId, {
-    notifications: unseenNotification.length,
-  });
+  pushNotification(data.opponentUserId)
   return createdBet;
 };
 
@@ -1348,15 +1343,32 @@ const getBetUser = async (userId: number) => {
     if (b.count !== a.count) {
       return b.count - a.count;
     } else {
-      const lastBetA:any = allApponentUser.find((bet) => bet.opponentUserId === a.opponentUserId);
-      const lastBetB :any= allApponentUser.find((bet) => bet.opponentUserId === b.opponentUserId);
+      const lastBetA: any = allApponentUser.find(
+        (bet) => bet.opponentUserId === a.opponentUserId
+      );
+      const lastBetB: any = allApponentUser.find(
+        (bet) => bet.opponentUserId === b.opponentUserId
+      );
       return lastBetB.updatedAt - lastBetA.updatedAt;
     }
   });
-  const top5Opponents = result.slice(0, 5).map((item: IOpponentCount) => item.opponentUserId);
+  const top5Opponents = result
+    .slice(0, 5)
+    .map((item: IOpponentCount) => item.opponentUserId);
   return top5Opponents;
 };
 
+
+const pushNotification=async (userId:number)=>{
+  const unseenNotification = await Notification.find({
+    toUserId: userId,
+    seen: false,
+  });
+
+  await notficationSocket("notify", userId, {
+    notifications: unseenNotification.length,
+  });
+}
 const readNotification = async (userId: number) => {
   if (userId) {
     const data = await Notification.updateMany(
@@ -1374,9 +1386,7 @@ const readNotification = async (userId: number) => {
         multi: true,
       }
     );
-
-    console.log(data);
-    await notficationSocket("notify", userId, { notifications: data });
+    await notficationSocket("notify", userId, { notifications: 0 });
   }
 };
 export default {
@@ -1392,4 +1402,5 @@ export default {
   declareResultMatch,
   listBetsByType,
   readNotification,
+  pushNotification
 };
