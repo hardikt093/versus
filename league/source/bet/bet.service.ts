@@ -52,12 +52,27 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   }
   const betFound = await Bet.findOne({
     isDeleted: false,
-    $or: [
-      { requestUserId: loggedInUserId },
-      { opponentUserId: loggedInUserId },
+    $and : [
+      {
+        $or: [
+          { requestUserId: loggedInUserId },
+          { opponentUserId: loggedInUserId },
+        ],
+      },
+      {
+        $or: [
+          { requestUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
+          { opponentUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
+        ],
+      },
+      {
+        $or: [
+          { requestUserFairOdds: data.requestUserFairOdds},
+          { opponentUserFairOdds: data.opponentUserFairOdds},
+        ],
+      }
     ],
     goalServeMatchId: data.goalServeMatchId,
-    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
   }).lean();
 
   if (betFound) {
