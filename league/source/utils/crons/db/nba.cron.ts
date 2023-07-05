@@ -5,12 +5,12 @@ const goalserveNbaService = new GoalserveNbaService();
 let createAndUpdateMatchOddsRunning: boolean = false;
 const createAndUpdateOddsNba = cron.schedule("*/10 * * * * *", async () => {
   if (createAndUpdateMatchOddsRunning) {
-    console.log("createAndUpdateMatchOdds Skip");
+    // console.log("createAndUpdateMatchOdds Skip");
     return;
   }
   createAndUpdateMatchOddsRunning = true;
   try {
-    console.info("inside score cron createAndUpdateOddsNba");
+    // console.info("inside score cron createAndUpdateOddsNba");
     await goalserveNbaService.createAndUpdateMatchOdds();
   } catch (error) {
     console.log(error);
@@ -22,12 +22,12 @@ const createAndUpdateOddsNba = cron.schedule("*/10 * * * * *", async () => {
 let isUpdateCurruntDateRecordNbaRunning: boolean = false;
 const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
   if (isUpdateCurruntDateRecordNbaRunning) {
-    console.log("updateCurruntDateRecordNba Skip");
+    // console.log("updateCurruntDateRecordNba Skip");
     return;
   }
   isUpdateCurruntDateRecordNbaRunning = true;
   try {
-    console.info("inside score cron updateCurruntDateRecordNba");
+    // console.info("inside score cron updateCurruntDateRecordNba");
     await goalserveNbaService.updateCurruntDateRecordNba();
   } catch (error) {
     console.log(error);
@@ -39,12 +39,12 @@ const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
 let isupdateNbaMatchRunning: boolean = false;
 const updateNbaMatch = cron.schedule("0 */12 * * *", async () => {
   if (isupdateNbaMatchRunning) {
-    console.log("updateNbaMatch Skip");
+    // console.log("updateNbaMatch Skip");
     return;
   }
   isupdateNbaMatchRunning = true;
   try {
-    console.info("inside score cron updateNbaMatch");
+    // console.info("inside score cron updateNbaMatch");
     await goalserveNbaService.updateNbaMatch();
   } catch (error) {
     console.log(error);
@@ -56,12 +56,12 @@ const updateNbaMatch = cron.schedule("0 */12 * * *", async () => {
 let isupdateStandingNbaRunning: boolean = false;
 const updateStandingNba = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateStandingNbaRunning) {
-    console.log("updateStandingNba Skip");
+    // console.log("updateStandingNba Skip");
     return;
   }
   isupdateNbaMatchRunning = true;
   try {
-    console.info("inside score cron updateStandingNba");
+    // console.info("inside score cron updateStandingNba");
     await goalserveNbaService.addNbaStandings();
   } catch (error) {
     console.log(error);
@@ -73,12 +73,12 @@ const updateStandingNba = cron.schedule("*/10 * * * * *", async () => {
 let isupdatePlayersNbaRunning: boolean = false;
 const updatePlayersNba = cron.schedule("*/10 * * * * *", async () => {
   if (isupdatePlayersNbaRunning) {
-    console.log("updatePlayersNba Skip");
+    // console.log("updatePlayersNba Skip");
     return;
   }
   isupdatePlayersNbaRunning = true;
   try {
-    console.info("inside score cron updatePlayersNba");
+    // console.info("inside score cron updatePlayersNba");
     await goalserveNbaService.addNbaPlayer();
   } catch (error) {
     console.log(error);
@@ -90,12 +90,12 @@ const updatePlayersNba = cron.schedule("*/10 * * * * *", async () => {
 let isupdateInjuredPlayerNBARunning: boolean = false;
 const updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateInjuredPlayerNBARunning) {
-    console.log("updateInjuredPlayerNBA Skip");
+    // console.log("updateInjuredPlayerNBA Skip");
     return;
   }
   isupdateInjuredPlayerNBARunning = true;
   try {
-    console.info("inside score cron updateInjuredPlayerNBA");
+    // console.info("inside score cron updateInjuredPlayerNBA");
     await goalserveNbaService.addNbaInjuredPlayer();
   } catch (error) {
     console.log(error);
@@ -107,12 +107,12 @@ const updateInjuredPlayerNBA = cron.schedule("*/10 * * * * *", async () => {
 let isupdateScoreSummaryRunning: boolean = false;
 const updateScoreSummary = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateScoreSummaryRunning) {
-    console.log("updateScoreSummary Skip");
+    // console.log("updateScoreSummary Skip");
     return;
   }
   isupdateScoreSummaryRunning = true;
   try {
-    console.info("inside score cron updateScoreSummary");
+    // console.info("inside score cron updateScoreSummary");
     await goalserveNbaService.updateScoreSummary();
   } catch (error) {
     console.log(error);
