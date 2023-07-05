@@ -30,7 +30,18 @@ const checkBalance = async (req: Request, res: Response) => {
   }
 }
 
+const revertAmount = async (req: Request, res: Response) => {
+  try {
+    const wallet = await walletService.revertAmount(req.body.amount, req.body.userId, req.body)
+    createResponse(res, httpStatus.OK, "", wallet);
+  } catch (error: any) {
+    console.log("error", error)
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
+
   export default {
   walletDeduction,
-  checkBalance
+  checkBalance,
+  revertAmount
   };

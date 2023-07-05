@@ -177,4 +177,5 @@ model HoldAmount {
   opponentUserBetAmount Float?
   goalServeLeagueId Int?
   betId String?
+  revertAmount Float?
 }

@@ -48,7 +48,35 @@ const checkBalance = async (data: { userId: string | number, requestAmount: numb
 
 }
 
+const revertAmount = async (amount: number, userId: number, body: any) => {
+  const updateHoldingAmount = await prisma.holdAmount.updateMany({
+    where: {
+      betId: body._id,
+      userId: userId,
+    },
+    data: {
+      revertAmount: Number(amount)
+    }
+  })
+  const findWallet = await prisma.wallet.findUnique({
+    where: {
+      userId: userId
+    }
+  })
+  const finalAmount = findWallet.amount + amount
+  const updateWallet = await prisma.wallet.update({
+    where: {
+      userId: userId
+    },
+    data: {
+      amount: finalAmount
+    }
+  })
+  return true
+}
+
 export default {
   walletDeduction,
-  checkBalance
+  checkBalance,
+  revertAmount
 };
