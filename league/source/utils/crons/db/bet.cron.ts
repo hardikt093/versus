@@ -6,12 +6,12 @@ const betService = new BetService();
 let isreleaseBetPaymentRunning: boolean = false;
 const releaseBetPayment = cron.schedule("*/5 * * * * *", async () => {
   if (isreleaseBetPaymentRunning) {
-    console.log("releaseBetPayment Skip");
+    // console.log("releaseBetPayment Skip");
     return;
   }
   isreleaseBetPaymentRunning = true;
   try {
-    console.info("inside score cron releaseBetPayment");
+    // console.info("inside score cron releaseBetPayment");
     await betService.releasePayment();
   } catch (error) {
     console.log(error);
@@ -24,12 +24,12 @@ const releaseBetPayment = cron.schedule("*/5 * * * * *", async () => {
 let isexpiredBetRefundRunning: boolean = false;
 const expiredBetRefund = cron.schedule("*/5 * * * * *", async () => {
   if (isexpiredBetRefundRunning) {
-    console.log("expiredBetRefund Skip");
+    // console.log("expiredBetRefund Skip");
     return;
   }
   isexpiredBetRefundRunning = true;
   try {
-    console.info("inside score cron expiredBetRefund");
+    // console.info("inside score cron expiredBetRefund");
     await betService.expiredBetRefund();
   } catch (error) {
     console.log(error);

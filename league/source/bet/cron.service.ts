@@ -1,5 +1,7 @@
 import httpStatus from "http-status";
 import Bet from "../models/documents/bet.model";
+import { axiosPostMicro } from "../services/axios.service";
+import config from "../config/config";
 export default class BetDbCronServiceClass {
   public releasePayment = async () => {
     try {
@@ -11,9 +13,28 @@ export default class BetDbCronServiceClass {
 
       for (let i = 0; i < betData.length; i++) {
         const bet = betData[i];
-        // Please Do Payment Code below
-
-        // update payment Status after payment Done
+        if (bet?.goalServeWinTeamId == bet?.goalServeRequestUserTeamId) {
+          const resp = await axiosPostMicro(
+            {
+              amount: bet?.betTotalAmount,
+              userId: bet?.requestUserId,
+              betData: bet
+            },
+            `${config.authServerUrl}/wallet/paymentRelease`,
+            ""
+          );
+        }
+        else if (bet?.goalServeWinTeamId == bet?.goalServeOpponentUserTeamId) {
+          const resp = await axiosPostMicro(
+            {
+              amount: bet?.betTotalAmount,
+              userId: bet?.opponentUserId,
+              betData: bet
+            },
+            `${config.authServerUrl}/wallet/paymentRelease`,
+            ""
+          );
+        }
         await Bet.updateOne(
           {
             isDeleted: false,
@@ -40,7 +61,15 @@ export default class BetDbCronServiceClass {
       for (let i = 0; i < betData.length; i++) {
         const bet = betData[i];
         // Please Do refund Code below
-
+        const resp = await axiosPostMicro(
+          {
+            amount: bet?.requestUserBetAmount,
+            userId: bet?.requestUserId,
+            betData: bet
+          },
+          `${config.authServerUrl}/wallet/revertAmount`,
+          ""
+        );
         // update payment Status after payment refunded
         await Bet.updateOne(
           {
