@@ -13,8 +13,8 @@ router.post(
   validate(BetValidation.createBet),
   BetController.createBet
 );
-router.post(
-  "/getBetUser",
+router.get(
+  "/getBetUser/:userId",
   BetController.getBetUser
 );
 router.post(
@@ -31,13 +31,18 @@ router.post(
   BetController.listBetsByType
 );
 
-router.get("/request", auth, BetController.requestListBet);
-
 router.post(
   "/:id/response",
   auth,
   validate(BetValidation.responseBet),
   BetController.responseBet
+);
+
+router.delete(
+  "/:id",
+  auth,
+  validate(BetValidation.deleteBet),
+  BetController.deleteBet
 );
 
 router.post(

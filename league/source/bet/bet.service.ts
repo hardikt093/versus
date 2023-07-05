@@ -14,7 +14,7 @@ import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
 import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
-import { axiosPostMicro } from "../services/axios.service";
+import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
@@ -51,6 +51,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
   const betFound = await Bet.findOne({
+    isDeleted : false,
     $or: [
       { requestUserId: loggedInUserId },
       { opponentUserId: loggedInUserId },
@@ -109,18 +110,24 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeOpponentUserTeamId: data.goalServeOpponentUserTeamId,
     requestUserGoalServeOdd: data.requestUserGoalServeOdd,
     opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
-    requestUserFairOdds: (data.requestUserFairOdds ? data.requestUserFairOdds : 0),
-    opponentUserFairOdds: (data.opponentUserFairOdds ? data.opponentUserFairOdds : 0),
+    requestUserFairOdds: data.requestUserFairOdds
+      ? data.requestUserFairOdds
+      : 0,
+    opponentUserFairOdds: data.opponentUserFairOdds
+      ? data.opponentUserFairOdds
+      : 0,
     requestUserBetAmount: data.amount,
     opponentUserBetAmount: data.amount,
-    betTotalAmount: data.amount + data.amount,
+    betTotalAmount: data.amount * 2,
   };
   if (data.oddType === "Moneyline") {
     const winAmountRequestUser = winAmountCalculationUsingOdd(
       preparedBetObject.requestUserBetAmount,
       preparedBetObject.requestUserFairOdds
     );
-    preparedBetObject.opponentUserBetAmount = winAmountRequestUser;
+    preparedBetObject.opponentUserBetAmount = parseFloat(
+      winAmountRequestUser.toFixed(2)
+    );
     preparedBetObject.betTotalAmount =
       preparedBetObject.requestUserBetAmount +
       preparedBetObject.opponentUserBetAmount;
@@ -132,8 +139,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   if (createdBet) {
     const resp = await axiosPostMicro(
       {
-        amount: data.amount,
+        amount: parseFloat((data?.amount).toFixed(2)),
         userId: createdBet.requestUserId,
+        betData: createdBet
       },
       `${config.authServerUrl}/wallet/deduct`,
       ""
@@ -147,9 +155,24 @@ const responseBet = async (
   loggedInUserId: number,
   isConfirmed: boolean
 ) => {
+
+
   const betData = await Bet.findOne({
+    isDeleted : false,
     _id: id,
   }).lean();
+
+  if (isConfirmed == true && betData) {
+    const resp = await axiosGetMicro(
+      `${config.authServerUrl}/wallet/checkBalance`,
+      {
+        userId: loggedInUserId,
+        requestAmount: betData?.opponentUserBetAmount
+      },
+      ""
+    );
+  } 
+
   if (!betData) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
@@ -169,24 +192,58 @@ const responseBet = async (
     status: isConfirmed ? betStatus.CONFIRMED : betStatus.REJECTED,
     responseAt: new Date(),
   };
-  await Bet.updateOne(
+
+  const updateBet = await Bet.updateOne(
     {
       _id: id,
     },
     prepareObject
   );
+
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
+  if (updateBet) {
+    const resp = await axiosPostMicro(
+      {
+        amount: responseBet?.opponentUserBetAmount,
+        userId: responseBet?.opponentUserId,
+        betData: responseBet
+      },
+      `${config.authServerUrl}/wallet/deduct`,
+      ""
+    );
+  }
   return responseBet;
 };
 
-const requestListBetByUserId = async (userId: number) => {
-  const requestListBet = await Bet.find({
-    opponentUserId: userId,
+const deleteBet = async (loggedInUserId : number, id: string) => {
+
+  const betData = await Bet.findOne({
+    isDeleted: false,
+    _id: id,
     status: betStatus.PENDING,
+    $or: [
+      { requestUserId: loggedInUserId },
+      { opponentUserId: loggedInUserId },
+    ],
   });
-  return requestListBet;
+
+  if (!betData) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
+  }
+  await Bet.updateOne({
+    _id: id,
+    status: betStatus.PENDING,
+    $or: [
+      { requestUserId: loggedInUserId },
+      { opponentUserId: loggedInUserId },
+    ],
+  },
+  {
+    isDeleted : true
+  });
+  return true;
 };
 
 const updateBetRequest = async (
@@ -488,7 +545,6 @@ const listBetsByType = async (
     page = body.page;
   }
   let skip = limit * (page - 1);
-
   let condition: any = {
     isDeleted: false,
     $and: [
@@ -500,27 +556,111 @@ const listBetsByType = async (
       },
     ],
   };
+
+  let query: any = [];
   if (body.type === "OPEN") {
     condition.status = "PENDING";
-  }
-  if (body.type === "ACTIVE") {
+    query.push({
+      $match: condition,
+    });
+  } else if (body.type === "ACTIVE") {
     condition["$and"].push({
       $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
     });
-  }
-  if (body.type === "SETTLED") {
-    condition.status = "RESULT_DECLARED";
-  }
-  if (body.type === "WON") {
-    condition.status = "RESULT_DECLARED";
-  }
-  if (body.type === "LOST") {
-    condition.status = "RESULT_DECLARED";
-  }
-  let data = await Bet.aggregate([
-    {
+    query.push({
       $match: condition,
-    },
+    });
+  } else if (body.type === "SETTLED") {
+    condition.status = "RESULT_DECLARED";
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $addFields: {
+          isWon: {
+            $cond: {
+              if: {
+                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+              },
+              then: { $eq: ["$requestUserId", loggedInUserId] },
+              else: { $eq: ["$opponentUserId", loggedInUserId] },
+            },
+          },
+        },
+      }
+    );
+  } else if (body.type === "WON") {
+    condition.status = "RESULT_DECLARED";
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $addFields: {
+          isWon: {
+            $cond: {
+              if: {
+                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+              },
+              then: { $eq: ["$requestUserId", loggedInUserId] },
+              else: { $eq: ["$opponentUserId", loggedInUserId] },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          isWon: true,
+        },
+      }
+    );
+  } else if (body.type === "LOST") {
+    condition.status = "RESULT_DECLARED";
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $addFields: {
+          isWon: {
+            $cond: {
+              if: {
+                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+              },
+              then: { $eq: ["$requestUserId", loggedInUserId] },
+              else: { $eq: ["$opponentUserId", loggedInUserId] },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          isWon: false,
+        },
+      }
+    );
+  } else {
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $addFields: {
+          isWon: {
+            $cond: {
+              if: {
+                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+              },
+              then: { $eq: ["$requestUserId", loggedInUserId] },
+              else: { $eq: ["$opponentUserId", loggedInUserId] },
+            },
+          },
+        },
+      }
+    );
+  }
+  query.push(
     {
       $sort: {
         updatedAt: -1,
@@ -1045,7 +1185,41 @@ const listBetsByType = async (
         preserveNullAndEmptyArrays: true,
       },
     },
-  ]);
+    {
+      $addFields: {
+        displayStatus: {
+          $switch: {
+            branches: [
+              {
+                case: { $eq: ["$status", "CONFIRMED"] },
+                then: "ACTIVE",
+              },
+              {
+                case: {
+                  $and: [
+                    { $eq: ["$status", "RESULT_DECLARED"] },
+                    { $eq: ["$isWon", true] },
+                  ],
+                },
+                then: "WON",
+              },
+              {
+                case: {
+                  $and: [
+                    { $eq: ["$status", "RESULT_DECLARED"] },
+                    { $eq: ["$isWon", false] },
+                  ],
+                },
+                then: "LOST",
+              },
+            ],
+            default: "$status",
+          },
+        },
+      },
+    }
+  );
+  let data = await Bet.aggregate(query);
   if (data && data.length > 0) {
     const ids = [
       ...new Set(
@@ -1109,7 +1283,7 @@ export default {
   resultBetVerified,
   getResultBet,
   responseBet,
-  requestListBetByUserId,
+  deleteBet,
   resultBet,
   createBet,
   updateBetRequest,

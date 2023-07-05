@@ -47,22 +47,6 @@ const updateBetRequest = async (req: Request, res: Response) => {
   }
 };
 
-const requestListBet = async (req: Request, res: Response) => {
-  try {
-    const list = await BetService.requestListBetByUserId(req.loggedInUser.id);
-    if (list && list.length < 1) {
-      return createResponse(
-        res,
-        httpStatus.NOT_FOUND,
-        Messages.BET_DATA_NOT_FOUND
-      );
-    }
-    createResponse(res, httpStatus.OK, Messages.BET_REQUEST_LIST, list);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
 const resultBet = async (req: Request, res: Response) => {
   try {
     const resultBetData = await BetService.resultBet(
@@ -155,9 +139,21 @@ const listBetsByType = async (req: Request, res: Response) => {
 const getBetUser = async (req: Request, res: Response) => {
   try {
     const getBetUser = await BetService.getBetUser(
-      req.body.userId
+      Number(req.params.userId) 
     );
     createResponse(res, httpStatus.OK, Messages.BET_REQUESTED, getBetUser);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const deleteBet = async (req: Request, res: Response) => {
+  try {
+    const betData = await BetService.deleteBet(
+      req.loggedInUser.id,
+      req.params.id
+    );
+    createResponse(res, httpStatus.OK, Messages.BET_DELETED, betData);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -171,6 +167,6 @@ export default {
   getResultBet,
   resultBet,
   responseBet,
-  requestListBet,
-  listBetsByType
+  listBetsByType,
+  deleteBet
 };

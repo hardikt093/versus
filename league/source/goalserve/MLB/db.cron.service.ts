@@ -285,6 +285,18 @@ export default class MlbDbCronServiceClass {
             matchArray[j].status != "Suspended"
           ) {
             const goalServeMatchId = matchArray[j].id;
+            // expire not accepted bet requests
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType : "MLB"
+              },
+              {
+                status: "EXPIRED",
+              }
+            );
+            // active  CONFIRMED bet when match start
             await Bet.updateMany(
               {
                 status: "CONFIRMED",
@@ -311,6 +323,18 @@ export default class MlbDbCronServiceClass {
               parseInt(goalServeMatchId),
               parseInt(goalServeWinTeamId),
               "MLB"
+            );
+          } else if (matchArray[j].status == "Canceled") {
+            const goalServeMatchId = matchArray[j].id;
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType : "MLB"
+              },
+              {
+                status: "CANCELED",
+              }
             );
           }
         }

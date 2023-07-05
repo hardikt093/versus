@@ -83,6 +83,11 @@ const listbyType = {
   }),
 };
 
+const deleteBet = {
+  params: Joi.object().keys({
+    id: Joi.string().required(),
+  })
+};
 export default {
   listBetsByStatus,
   responseToBatResultSatisfiedOrNot,
@@ -90,5 +95,6 @@ export default {
   createBet,
   responseBet,
   modifyBet,
-  listbyType
+  listbyType,
+  deleteBet
 };
