@@ -1289,10 +1289,70 @@ const listBetsByType = async (
         goalServeOpponentUserTeamId: 1,
         isRequestUserWinAmount: 1,
         isOpponentUserWinAmount: 1,
-        requestUserFairOdds: 1,
-        opponentUserFairOdds: 1,
-        requestUserGoalServeOdd: 1,
-        opponentUserGoalServeOdd: 1,
+        requestUserFairOdds: {
+          $cond: [
+            {
+              $gte: [
+                {
+                  $toDouble: "$requestUserFairOdds",
+                },
+                0,
+              ],
+            },
+            {
+              $concat: ["+", {$toString: "$requestUserFairOdds"}],
+            },
+            {$toString: "$requestUserFairOdds"},
+          ],
+        },
+        opponentUserFairOdds: {
+          $cond: [
+            {
+              $gte: [
+                {
+                  $toDouble: "$opponentUserFairOdds",
+                },
+                0,
+              ],
+            },
+            {
+              $concat: ["+", {$toString: "$opponentUserFairOdds"}],
+            },
+            {$toString: "$opponentUserFairOdds"},
+          ],
+        },
+        requestUserGoalServeOdd: {
+          $cond: [
+            {
+              $gte: [
+                {
+                  $toDouble: "$requestUserGoalServeOdd",
+                },
+                0,
+              ],
+            },
+            {
+              $concat: ["+", {$toString: "$requestUserGoalServeOdd"}],
+            },
+            {$toString: "$requestUserGoalServeOdd"},
+          ],
+        },
+        opponentUserGoalServeOdd: {
+          $cond: [
+            {
+              $gte: [
+                {
+                  $toDouble: "$opponentUserGoalServeOdd",
+                },
+                0,
+              ],
+            },
+            {
+              $concat: ["+", {$toString: "$opponentUserGoalServeOdd"}],
+            },
+            {$toString: "$opponentUserGoalServeOdd"},
+          ],
+        },
         leagueType: 1,
         status: 1,
         paymentStatus: 1,
