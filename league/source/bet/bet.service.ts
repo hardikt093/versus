@@ -54,7 +54,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   }
   const betFound = await Bet.findOne({
     isDeleted: false,
-    $and : [
+    $and: [
       {
         $or: [
           { requestUserId: loggedInUserId },
@@ -63,16 +63,16 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       },
       {
         $or: [
-          { requestUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
-          { opponentUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
+          { requestUserBetAmount: parseFloat(data.amount.toFixed(2)) },
+          { opponentUserBetAmount: parseFloat(data.amount.toFixed(2)) },
         ],
       },
       {
         $or: [
-          { requestUserFairOdds: data.requestUserFairOdds},
-          { opponentUserFairOdds: data.opponentUserFairOdds},
+          { requestUserFairOdds: data.requestUserFairOdds },
+          { opponentUserFairOdds: data.opponentUserFairOdds },
         ],
-      }
+      },
     ],
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
@@ -167,12 +167,12 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       ""
     );
   }
- await Notification.create({
+  await Notification.create({
     fromUserId: loggedInUserId,
     toUserId: data.opponentUserId,
     betId: createBet._id,
   });
-  pushNotification(data.opponentUserId)
+  pushNotification(data.opponentUserId);
   return createdBet;
 };
 
@@ -227,6 +227,7 @@ const responseBet = async (
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
+
   if (updateBet && isConfirmed == false) {
     const resp = await axiosPostMicro(
       {
@@ -237,6 +238,16 @@ const responseBet = async (
       `${config.authServerUrl}/wallet/revertAmount`,
       ""
     );
+
+    // notify
+    if (betData) {
+      await Notification.create({
+        fromUserId: betData.opponentUserId,
+        toUserId: betData.requestUserId,
+        betId: id,
+      });
+      pushNotification(betData?.requestUserId);
+    }
   }
   if (updateBet && isConfirmed == true) {
     const resp = await axiosPostMicro(
@@ -248,6 +259,15 @@ const responseBet = async (
       `${config.authServerUrl}/wallet/deduct`,
       ""
     );
+    // notify
+    if (betData) {
+      await Notification.create({
+        fromUserId: betData.opponentUserId,
+        toUserId: betData.requestUserId,
+        betId: id,
+      });
+      pushNotification(betData?.requestUserId);
+    }
   }
   return responseBet;
 };
@@ -1358,8 +1378,7 @@ const getBetUser = async (userId: number) => {
   return top5Opponents;
 };
 
-
-const pushNotification=async (userId:number)=>{
+const pushNotification = async (userId: number) => {
   const unseenNotification = await Notification.find({
     toUserId: userId,
     seen: false,
@@ -1368,7 +1387,7 @@ const pushNotification=async (userId:number)=>{
   await notficationSocket("notify", userId, {
     notifications: unseenNotification.length,
   });
-}
+};
 const readNotification = async (userId: number) => {
   if (userId) {
     const data = await Notification.updateMany(
@@ -1402,5 +1421,5 @@ export default {
   declareResultMatch,
   listBetsByType,
   readNotification,
-  pushNotification
+  pushNotification,
 };
