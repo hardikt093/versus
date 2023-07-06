@@ -74,41 +74,76 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     ""
   );
 
-  const betFound = await Bet.findOne({
+  // const betFound = await Bet.findOne({
+  //   isDeleted: false,
+  //   status: {
+  //     $ne: "REJECTED",
+  //   },
+  //   $and: [
+  //     {
+  //       $or: [
+  //         { requestUserId: loggedInUserId },
+  //         { opponentUserId: loggedInUserId },
+  //       ],
+  //     },
+  //     {
+  //       $or: [
+  //         { requestUserBetAmount: parseFloat(data.amount.toFixed(2)) },
+  //         { opponentUserBetAmount: parseFloat(data.amount.toFixed(2)) },
+  //       ],
+  //     },
+  //     {
+  //       $or: [
+  //         { requestUserFairOdds: data.requestUserFairOdds },
+  //         { opponentUserFairOdds: data.opponentUserFairOdds },
+  //       ],
+  //     },
+  //   ],
+  //   goalServeMatchId: data.goalServeMatchId,
+  // }).lean();
+
+  // if (betFound) {
+  //   throw new AppError(
+  //     httpStatus.UNPROCESSABLE_ENTITY,
+  //     Messages.ALREADY_APPLIED_ON_MATCH
+  //   );
+  // }
+
+  const betRequestUserDataFound = await Bet.findOne({
     isDeleted: false,
     status: {
       $ne: "REJECTED",
     },
-    $and: [
-      {
-        $or: [
-          { requestUserId: loggedInUserId },
-          { opponentUserId: loggedInUserId },
-        ],
-      },
-      {
-        $or: [
-          { requestUserBetAmount: parseFloat(data.amount.toFixed(2)) },
-          { opponentUserBetAmount: parseFloat(data.amount.toFixed(2)) },
-        ],
-      },
-      {
-        $or: [
-          { requestUserFairOdds: data.requestUserFairOdds },
-          { opponentUserFairOdds: data.opponentUserFairOdds },
-        ],
-      },
-    ],
+    requestUserId: loggedInUserId,
+    opponentUserId:  data.opponentUserId,
+    requestUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    requestUserFairOdds: data.requestUserFairOdds,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
-
-  if (betFound) {
+  if (betRequestUserDataFound ) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.ALREADY_APPLIED_ON_MATCH
     );
   }
+  const betOpponentUserDataFound = await Bet.findOne({
+    isDeleted: false,
+    status: {
+      $ne: "REJECTED",
+    },
+    opponentUserId: loggedInUserId,
+    requestUserId: data.opponentUserId,
+    opponentUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    opponentUserFairOdds: data.requestUserFairOdds,
+    goalServeMatchId: data.goalServeMatchId,
+  }).lean();
 
+  if (betOpponentUserDataFound){
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.ALREADY_APPLIED_ON_MATCH
+    );
+  }
   if (data.amount < 1) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
