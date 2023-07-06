@@ -46,5 +46,6 @@ class Messages {
   static ALREADY_CONFIRMED_BET = "You already confirmed this Bet";
   static BET_CHANGE_REQUESTED = "Bet request has been changed Successfully";
   static BET_DELETED = "Bet deleted Successfully";
+  static OPPONENT_USER_NOT_FOUND = "Opponent User Not Found";
 }
 export default Messages;
