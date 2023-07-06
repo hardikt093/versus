@@ -76,6 +76,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
 
   const betFound = await Bet.findOne({
     isDeleted: false,
+    status: {
+      $ne: "REJECTED",
+    },
     $and: [
       {
         $or: [
@@ -116,14 +119,17 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   if (data.leagueType === "MLB") {
     matchData = await Match.findOne({
       goalServeMatchId: data.goalServeMatchId,
+      status : "Not Started"
     }).lean();
   } else if (data.leagueType === "NHL") {
     matchData = await NhlMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
+      status : "Not Started"
     }).lean();
   } else {
     matchData = await NbaMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
+      status : "Not Started"
     }).lean();
   }
 
