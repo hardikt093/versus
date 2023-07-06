@@ -14,6 +14,7 @@ import { IUser } from "../interfaces/input";
  * @param res
  */
 const signIn = async (req: Request, res: Response) => {
+  console.log("checking")
   try {
     if (!req.body.provider) {
       const signIn = await authService.signIn(req.body);
