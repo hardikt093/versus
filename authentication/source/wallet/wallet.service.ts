@@ -1,4 +1,3 @@
-import { number } from "joi";
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -36,6 +35,7 @@ const walletDeduction = async (amount: number, userId: number, body: any) => {
         betId: body.betData._id
       },
     });
+    await authSocket("getUser", userId, await authService.getUser({ id: userId }))
     return updateWallet;
   }
 };
@@ -83,7 +83,7 @@ const revertAmount = async (amount: number, userId: number, body: any) => {
   return true
 }
 
-const paymentRelease = async (amount: string | number, userId: string | number, body: any) => {
+const paymentRelease = async (amount: string | number, userId: number | string | number, body: any) => {
   try {
     const removeHoldingAmount = await prisma.holdAmount.updateMany({
       where: {
@@ -108,6 +108,7 @@ const paymentRelease = async (amount: string | number, userId: string | number, 
         amount: parseFloat((finalAmount).toFixed(2))
       }
     })
+    await authSocket("getUser", userId, await authService.getUser({ id: userId }))
     return true
   } catch (error: any) {
     console.log("error", error)
