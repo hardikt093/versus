@@ -51,19 +51,32 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     );
   }
 
-  // check wallet Balance
-    const resp = await axiosGetMicro(
-      `${config.authServerUrl}/wallet/checkBalance`,
-      {
-        userId: loggedInUserId,
-        requestAmount: parseFloat((data.amount).toFixed(2)),
-      },
-      ""
+  const userData: any = await axiosPostMicro(
+    {
+      ids: [data.opponentUserId],
+    },
+    `${config.authServerUrl}/users/getBulk`,
+    ""
+  );
+  if (userData && userData.data.data.length == 0) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.OPPONENT_USER_NOT_FOUND
     );
+  }
+  // check wallet Balance
+  const resp = await axiosGetMicro(
+    `${config.authServerUrl}/wallet/checkBalance`,
+    {
+      userId: loggedInUserId,
+      requestAmount: parseFloat(data.amount.toFixed(2)),
+    },
+    ""
+  );
 
   const betFound = await Bet.findOne({
     isDeleted: false,
-    $and : [
+    $and: [
       {
         $or: [
           { requestUserId: loggedInUserId },
@@ -72,16 +85,16 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       },
       {
         $or: [
-          { requestUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
-          { opponentUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
+          { requestUserBetAmount: parseFloat(data.amount.toFixed(2)) },
+          { opponentUserBetAmount: parseFloat(data.amount.toFixed(2)) },
         ],
       },
       {
         $or: [
-          { requestUserFairOdds: data.requestUserFairOdds},
-          { opponentUserFairOdds: data.opponentUserFairOdds},
+          { requestUserFairOdds: data.requestUserFairOdds },
+          { opponentUserFairOdds: data.opponentUserFairOdds },
         ],
-      }
+      },
     ],
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
@@ -1346,12 +1359,18 @@ const getBetUser = async (userId: number) => {
     if (b.count !== a.count) {
       return b.count - a.count;
     } else {
-      const lastBetA:any = allApponentUser.find((bet) => bet.opponentUserId === a.opponentUserId);
-      const lastBetB :any= allApponentUser.find((bet) => bet.opponentUserId === b.opponentUserId);
+      const lastBetA: any = allApponentUser.find(
+        (bet) => bet.opponentUserId === a.opponentUserId
+      );
+      const lastBetB: any = allApponentUser.find(
+        (bet) => bet.opponentUserId === b.opponentUserId
+      );
       return lastBetB.updatedAt - lastBetA.updatedAt;
     }
   });
-  const top5Opponents = result.slice(0, 5).map((item: IOpponentCount) => item.opponentUserId);
+  const top5Opponents = result
+    .slice(0, 5)
+    .map((item: IOpponentCount) => item.opponentUserId);
   return top5Opponents;
 };
 export default {
