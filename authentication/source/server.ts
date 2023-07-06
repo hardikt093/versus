@@ -2,7 +2,9 @@ import http from "http";
 import express, { Express } from "express";
 import morgan from "morgan";
 import cors from "cors";
+import { Server } from "socket.io";
 
+import { socketHandShake } from "./services/socket.service";
 import routes from "./routes/";
 import logger from "./config/logger";
 import crons from "./utils/crons";
@@ -46,6 +48,18 @@ router.use((req, res, next) => {
 /** Server */
 const httpServer = http.createServer(router);
 const PORT: number | string = process.env.PORT ?? 6060;
+export const io = new Server(httpServer, {
+  cors: {
+    origin: [
+      "https://localhost:3000",
+      "http://localhost:3001",
+      "http://192.168.1.15:3000",
+      "https://app.versus-social.com"
+    ],
+    credentials: true,
+  },
+});
+socketHandShake()
 
 httpServer.listen(PORT, () =>
   console.info(`The server is running on port ${PORT}`)
