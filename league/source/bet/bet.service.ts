@@ -50,6 +50,17 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       Messages.SELECT_DIFFERENT_OPPONENT_USER
     );
   }
+
+  // check wallet Balance
+    const resp = await axiosGetMicro(
+      `${config.authServerUrl}/wallet/checkBalance`,
+      {
+        userId: loggedInUserId,
+        requestAmount: parseFloat((data.amount).toFixed(2)),
+      },
+      ""
+    );
+
   const betFound = await Bet.findOne({
     isDeleted: false,
     $and : [
