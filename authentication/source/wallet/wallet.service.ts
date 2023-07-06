@@ -1,7 +1,10 @@
 import { number } from "joi";
-
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+
+import { authSocket } from "../services/socket.service";
+import authService from "../auth/auth.service"
+
 
 const walletDeduction = async (amount: number, userId: number, body: any) => {
   const findWallet = await prisma.wallet.findUnique({
@@ -74,6 +77,9 @@ const revertAmount = async (amount: number, userId: number, body: any) => {
       amount: parseFloat((finalAmount).toFixed(2))
     }
   })
+  // call socket 
+  await authSocket("getUser", userId, await authService.getUser({ id: userId }))
+
   return true
 }
 
