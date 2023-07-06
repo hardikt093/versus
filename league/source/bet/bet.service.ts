@@ -52,9 +52,33 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       Messages.SELECT_DIFFERENT_OPPONENT_USER
     );
   }
+
+  const userData: any = await axiosPostMicro(
+    {
+      ids: [data.opponentUserId],
+    },
+    `${config.authServerUrl}/users/getBulk`,
+    ""
+  );
+  if (userData && userData.data.data.length == 0) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.OPPONENT_USER_NOT_FOUND
+    );
+  }
+  // check wallet Balance
+  const resp = await axiosGetMicro(
+    `${config.authServerUrl}/wallet/checkBalance`,
+    {
+      userId: loggedInUserId,
+      requestAmount: parseFloat(data.amount.toFixed(2)),
+    },
+    ""
+  );
+
   const betFound = await Bet.findOne({
     isDeleted: false,
-    $and : [
+    $and: [
       {
         $or: [
           { requestUserId: loggedInUserId },
@@ -63,16 +87,16 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       },
       {
         $or: [
-          { requestUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
-          { opponentUserBetAmount: parseFloat((data.amount).toFixed(2))} ,
+          { requestUserBetAmount: parseFloat(data.amount.toFixed(2)) },
+          { opponentUserBetAmount: parseFloat(data.amount.toFixed(2)) },
         ],
       },
       {
         $or: [
-          { requestUserFairOdds: data.requestUserFairOdds},
-          { opponentUserFairOdds: data.opponentUserFairOdds},
+          { requestUserFairOdds: data.requestUserFairOdds },
+          { opponentUserFairOdds: data.opponentUserFairOdds },
         ],
-      }
+      },
     ],
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
@@ -1253,7 +1277,38 @@ const listBetsByType = async (
       },
     },
     {
-      $addFields: {
+      $project: {
+        _id: 1,
+        goalServeMatchId: 1,
+        requestUserId: 1,
+        opponentUserId: 1,
+        betTotalAmount: { $round: ["$betTotalAmount", 2] },
+        requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
+        opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
+        oddType: 1,
+        goalServeLeagueId: 1,
+        goalServeRequestUserTeamId: 1,
+        goalServeOpponentUserTeamId: 1,
+        isRequestUserWinAmount: 1,
+        isOpponentUserWinAmount: 1,
+        requestUserFairOdds: 1,
+        opponentUserFairOdds: 1,
+        requestUserGoalServeOdd: 1,
+        opponentUserGoalServeOdd: 1,
+        leagueType: 1,
+        status: 1,
+        paymentStatus: 1,
+        isDeleted: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        __v: 1,
+        responseAt: 1,
+        goalServeWinTeamId: 1,
+        resultAt: 1,
+        isWon: 1,
+        match: 1,
+        requestUser: 1,
+        opponentUser: 1,
         displayStatus: {
           $switch: {
             branches: [
@@ -1300,7 +1355,7 @@ const listBetsByType = async (
       `${config.authServerUrl}/users/getBulk`,
       ""
     );
-    const bindedObject = data.map(
+    const bindedObject: any = data.map(
       (item: { requestUserId: number; opponentUserId: number }) => {
         const requestUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.requestUserId
