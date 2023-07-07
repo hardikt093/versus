@@ -11,7 +11,14 @@ const createBet = async (req: Request, res: Response) => {
       req.loggedInUser.id,
       req.body
     );
-    createResponse(res, httpStatus.OK, Messages.BET_REQUESTED, createdBetData);
+    createResponse(
+      res,
+      httpStatus.OK,
+      createdBetData && createdBetData.isDuplicate == true
+        ? Messages.ALREADY_APPLIED_ON_MATCH
+        : Messages.BET_REQUESTED,
+      createdBetData
+    );
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
