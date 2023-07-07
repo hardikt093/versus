@@ -74,57 +74,20 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     ""
   );
 
-  // const betFound = await Bet.findOne({
-  //   isDeleted: false,
-  //   status: {
-  //     $ne: "REJECTED",
-  //   },
-  //   $and: [
-  //     {
-  //       $or: [
-  //         { requestUserId: loggedInUserId },
-  //         { opponentUserId: loggedInUserId },
-  //       ],
-  //     },
-  //     {
-  //       $or: [
-  //         { requestUserBetAmount: parseFloat(data.amount.toFixed(2)) },
-  //         { opponentUserBetAmount: parseFloat(data.amount.toFixed(2)) },
-  //       ],
-  //     },
-  //     {
-  //       $or: [
-  //         { requestUserFairOdds: data.requestUserFairOdds },
-  //         { opponentUserFairOdds: data.opponentUserFairOdds },
-  //       ],
-  //     },
-  //   ],
-  //   goalServeMatchId: data.goalServeMatchId,
-  // }).lean();
-
-  // if (betFound) {
-  //   throw new AppError(
-  //     httpStatus.UNPROCESSABLE_ENTITY,
-  //     Messages.ALREADY_APPLIED_ON_MATCH
-  //   );
-  // }
-
+  let duplicateBetFound = false;
   const betRequestUserDataFound = await Bet.findOne({
     isDeleted: false,
     status: {
       $ne: "REJECTED",
     },
     requestUserId: loggedInUserId,
-    opponentUserId:  data.opponentUserId,
+    opponentUserId: data.opponentUserId,
     requestUserBetAmount: parseFloat(data.amount.toFixed(2)),
     requestUserFairOdds: data.requestUserFairOdds,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
-  if (betRequestUserDataFound ) {
-    throw new AppError(
-      httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.ALREADY_APPLIED_ON_MATCH
-    );
+  if (betRequestUserDataFound) {
+    duplicateBetFound = true;
   }
   const betOpponentUserDataFound = await Bet.findOne({
     isDeleted: false,
@@ -138,11 +101,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
 
-  if (betOpponentUserDataFound){
-    throw new AppError(
-      httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.ALREADY_APPLIED_ON_MATCH
-    );
+  if (betOpponentUserDataFound) {
+    duplicateBetFound = true;
   }
   if (data.amount < 1) {
     throw new AppError(
@@ -154,17 +114,17 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   if (data.leagueType === "MLB") {
     matchData = await Match.findOne({
       goalServeMatchId: data.goalServeMatchId,
-      status : "Not Started"
+      status: "Not Started",
     }).lean();
   } else if (data.leagueType === "NHL") {
     matchData = await NhlMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
-      status : "Not Started"
+      status: "Not Started",
     }).lean();
   } else {
     matchData = await NbaMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
-      status : "Not Started"
+      status: "Not Started",
     }).lean();
   }
 
@@ -230,7 +190,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       ""
     );
   }
-  return createdBet;
+  return { duplicateBetFound, data: createdBet };
 };
 
 const responseBet = async (
@@ -1335,9 +1295,9 @@ const listBetsByType = async (
               ],
             },
             {
-              $concat: ["+", {$toString: "$requestUserFairOdds"}],
+              $concat: ["+", { $toString: "$requestUserFairOdds" }],
             },
-            {$toString: "$requestUserFairOdds"},
+            { $toString: "$requestUserFairOdds" },
           ],
         },
         opponentUserFairOdds: {
@@ -1351,9 +1311,9 @@ const listBetsByType = async (
               ],
             },
             {
-              $concat: ["+", {$toString: "$opponentUserFairOdds"}],
+              $concat: ["+", { $toString: "$opponentUserFairOdds" }],
             },
-            {$toString: "$opponentUserFairOdds"},
+            { $toString: "$opponentUserFairOdds" },
           ],
         },
         requestUserGoalServeOdd: {
@@ -1367,9 +1327,9 @@ const listBetsByType = async (
               ],
             },
             {
-              $concat: ["+", {$toString: "$requestUserGoalServeOdd"}],
+              $concat: ["+", { $toString: "$requestUserGoalServeOdd" }],
             },
-            {$toString: "$requestUserGoalServeOdd"},
+            { $toString: "$requestUserGoalServeOdd" },
           ],
         },
         opponentUserGoalServeOdd: {
@@ -1383,9 +1343,9 @@ const listBetsByType = async (
               ],
             },
             {
-              $concat: ["+", {$toString: "$opponentUserGoalServeOdd"}],
+              $concat: ["+", { $toString: "$opponentUserGoalServeOdd" }],
             },
-            {$toString: "$opponentUserGoalServeOdd"},
+            { $toString: "$opponentUserGoalServeOdd" },
           ],
         },
         leagueType: 1,
