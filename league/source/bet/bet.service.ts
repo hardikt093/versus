@@ -44,6 +44,8 @@ const fairOddCalculation = function (favourite: number, underdog: number) {
 };
 
 const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
+  let isConfirmed: boolean = false;
+  isConfirmed = data.isConfirmed;
   if (data.opponentUserId === loggedInUserId) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
@@ -73,8 +75,6 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     },
     ""
   );
-
-  let duplicateBetFound = false;
   const betRequestUserDataFound = await Bet.findOne({
     isDeleted: false,
     status: {
@@ -86,8 +86,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     requestUserFairOdds: data.requestUserFairOdds,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
-  if (betRequestUserDataFound) {
-    duplicateBetFound = true;
+  if (betRequestUserDataFound && isConfirmed === false) {
+    return { isDuplicate: true };
   }
   const betOpponentUserDataFound = await Bet.findOne({
     isDeleted: false,
@@ -101,8 +101,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
 
-  if (betOpponentUserDataFound) {
-    duplicateBetFound = true;
+  if (betOpponentUserDataFound && isConfirmed === false) {
+    return { isDuplicate: true };
   }
   if (data.amount < 1) {
     throw new AppError(
@@ -190,7 +190,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       ""
     );
   }
-  return { duplicateBetFound, data: createdBet };
+  return createdBet;
 };
 
 const responseBet = async (
