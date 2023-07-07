@@ -157,6 +157,7 @@ const userlist = async (id: number, search: string) => {
 const userGetBulk = async (userIds: Array<number>) => {
   return await prisma.user.findMany({
     where: {
+      isDeleted : false,
       id: {
         in: userIds,
       },
