@@ -47,5 +47,5 @@ export interface IUserLogin extends Request {
 }
 
 export interface IUser {
-  id: number;
+  id: number | string;
 }
