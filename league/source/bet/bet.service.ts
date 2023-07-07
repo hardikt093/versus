@@ -1286,64 +1286,52 @@ const listBetsByType = async (
         isOpponentUserWinAmount: 1,
         requestUserFairOdds: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$requestUserFairOdds",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
+                { $toString: "$requestUserFairOdds" },
               ],
-            },
-            {
-              $concat: ["+", { $toString: "$requestUserFairOdds" }],
             },
             { $toString: "$requestUserFairOdds" },
           ],
         },
         opponentUserFairOdds: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$opponentUserFairOdds",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
+                { $toString: "$opponentUserFairOdds" },
               ],
-            },
-            {
-              $concat: ["+", { $toString: "$opponentUserFairOdds" }],
             },
             { $toString: "$opponentUserFairOdds" },
           ],
         },
         requestUserGoalServeOdd: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$requestUserGoalServeOdd",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
+                { $concat: ["+", { $toString: "$requestUserGoalServeOdd" }] },
+                { $toString: "$requestUserGoalServeOdd" },
               ],
-            },
-            {
-              $concat: ["+", { $toString: "$requestUserGoalServeOdd" }],
             },
             { $toString: "$requestUserGoalServeOdd" },
           ],
         },
         opponentUserGoalServeOdd: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$opponentUserGoalServeOdd",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
+                { $concat: ["+", { $toString: "$opponentUserGoalServeOdd" }] },
+                { $toString: "$opponentUserGoalServeOdd" },
               ],
-            },
-            {
-              $concat: ["+", { $toString: "$opponentUserGoalServeOdd" }],
             },
             { $toString: "$opponentUserGoalServeOdd" },
           ],
