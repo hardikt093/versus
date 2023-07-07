@@ -60,7 +60,8 @@ const revertAmount = async (amount: number, userId: number, body: any) => {
       ]
     },
     data: {
-      revertAmount: parseFloat((amount).toFixed(2))
+      revertAmount: parseFloat((amount).toFixed(2)),
+      amount: 0
     }
   })
   const findWallet = await prisma.wallet.findUnique({
