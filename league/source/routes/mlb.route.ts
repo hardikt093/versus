@@ -93,6 +93,10 @@ router.get(
   "/scoreWithCurrentDate",
   mlbController.scoreWithCurrentDate
 );
+router.get(
+  "/upcoming2DaysMatch",
+  mlbController.scoreWithCurrentDate
+);
 router.post("/addMatchData", mlbController.addMatchData);
 router.post("/addMatchDataFuture", mlbController.addMatchDataFuture);
 router.get("/addstandings", mlbController.addStanding);
