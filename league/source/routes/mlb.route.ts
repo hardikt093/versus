@@ -95,7 +95,7 @@ router.get(
 );
 router.get(
   "/upcoming2DaysMatch",
-  mlbController.scoreWithCurrentDate
+  mlbController.get2DaysUpcomingDataFromMongodb
 );
 router.post("/addMatchData", mlbController.addMatchData);
 router.post("/addMatchDataFuture", mlbController.addMatchDataFuture);
