@@ -16,7 +16,7 @@ import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
-import socket, { notficationSocket } from "../services/socket.service";
+import socketService from "../services/socket.service";
 import Notification from "../models/documents/notification.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
@@ -1488,7 +1488,7 @@ const pushNotification = async (userId: number) => {
     seen: false,
   });
 
-  await notficationSocket("notify", userId, {
+  await socketService.notficationSocket("notify", userId, {
     notifications: unseenNotification.length,
   });
 };
@@ -1509,7 +1509,7 @@ const readNotification = async (userId: number) => {
         multi: true,
       }
     );
-    await notficationSocket("notify", userId, { notifications: 0 });
+    await socketService.notficationSocket("notify", userId, { notifications: 0 });
   }
 };
 export default {
