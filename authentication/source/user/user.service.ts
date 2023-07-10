@@ -304,8 +304,8 @@ const getFriendList = async (
   // })
   const sortedArray = resp.data.data.map((id: number) =>
     getMaxBetOpponent.find((obj: any) => obj.id === id)
-  );
-  return { getFriendList,getMaxBetOpponent: sortedArray };
+  ).filter((item:any)=>item!==undefined);
+  return { getFriendList,getMaxBetOpponent:sortedArray };
 };
 export default {
   userContacts,
