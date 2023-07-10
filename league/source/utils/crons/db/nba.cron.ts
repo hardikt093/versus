@@ -123,10 +123,10 @@ const updateScoreSummary = cron.schedule("*/10 * * * * *", async () => {
 
 export default {
   updateCurruntDateRecordNba,
-  createAndUpdateOddsNba,
-  updateNbaMatch,
   updateStandingNba,
+  createAndUpdateOddsNba,
   updatePlayersNba,
   updateInjuredPlayerNBA,
+  updateNbaMatch,
   updateScoreSummary,
 };

@@ -25,7 +25,7 @@ import { axiosGet } from "../services/axios.service";
 const checkDuplicateEmail = async (email: string | undefined) => {
   const checkEmail = await prisma.user.findUnique({
     where: {
-      email: email,
+      email: email?.toLowerCase(),
     },
   });
   if (checkEmail) {
@@ -99,7 +99,7 @@ const signUp = async (data: ICreateUser) => {
           });
         }
 
-        const user = await socialLogin(getUser.email);
+        const user = await socialLogin(getUser.email.toLowerCase());
         if (user.isContactScope == true) {
           const contactList = await googleService.contactList(
             getUser.googleAccessToken
@@ -115,7 +115,7 @@ const signUp = async (data: ICreateUser) => {
             contacts.push({
               email:
                 person.emailAddresses?.length > 0
-                  ? person.emailAddresses[0].value
+                  ? person.emailAddresses[0].value.toLowerCase()
                   : "",
               name: person.names?.length > 0 ? person.names[0].displayName : "",
               phoneNumber:
@@ -153,7 +153,7 @@ const signUp = async (data: ICreateUser) => {
     if (data.password.length > 0) {
       data.password = await bcrypt.hash(data.password, 8);
     }
-    const emailCheck = await checkDuplicateEmail(data.email);
+    const emailCheck = await checkDuplicateEmail(data.email?.toLowerCase());
 
     if (emailCheck?.isBirthDateAvailable == false) {
       return emailCheck;
@@ -161,7 +161,7 @@ const signUp = async (data: ICreateUser) => {
       await checkDuplicateUserName(data.userName);
       const userCreate = await prisma.user.create({
         data: {
-          email: data.email,
+          email: data.email?.toLowerCase(),
           password: data.password ? data.password : "",
           firstName: data.firstName ? data.firstName : "",
           lastName: data.lastName ? data.lastName : "",
@@ -191,7 +191,7 @@ const signUp = async (data: ICreateUser) => {
         });
       }
 
-      await updateContact(userCreate.email);
+      await updateContact(userCreate.email.toLowerCase());
       return userCreate;
     }
   }
@@ -219,7 +219,7 @@ const signIn = async (data: ISignIn) => {
     where: {
       OR: [
         {
-          email: data.userNameEmail,
+          email: data.userNameEmail.toLowerCase(),
         },
         {
           userName: data.userNameEmail,
@@ -258,13 +258,13 @@ const signIn = async (data: ISignIn) => {
 const checkDuplicateEmailForSocialLogin = async (data: ICreateUser) => {
   const checkEmail = await prisma.user.findUnique({
     where: {
-      email: data.email,
+      email: data.email?.toLocaleLowerCase(),
     },
   });
 
   if (checkEmail) {
     const obj = {
-      userNameEmail: checkEmail.email,
+      userNameEmail: checkEmail.email.toLowerCase(),
       password: data.password,
     };
     return await signIn(obj);
@@ -322,7 +322,7 @@ const resetPassword = async (data: IResetPassword) => {
 const socialLogin = async (data: any) => {
   const checkEmail = await prisma.user.findUnique({
     where: {
-      email: data,
+      email: data.toLowerCase(),
     },
   });
   if (checkEmail) {
@@ -383,7 +383,7 @@ const createContact = async (data: any) => {
   const result = await data.reduce((acc: any, address: any) => {
     const dup = acc.find(
       (addr: any) =>
-        addr.email === address.email && addr.phoneNumber === address.phoneNumber
+        addr.email === address.email.toLowerCase() && addr.phoneNumber === address.phoneNumber
     );
     if (dup) {
       return acc;
@@ -393,12 +393,12 @@ const createContact = async (data: any) => {
   const extractContact = await result.map(async (item: any) => {
     if (item.email != "") {
       const getUser = await prisma.user.findUnique({
-        where: { email: item.email },
+        where: { email: item.email.toLowerCase() },
       });
       if (getUser) {
         let contact = {
           name: item.name,
-          email: item.email,
+          email: item.email.toLowerCase(),
           phoneNumber: item.phoneNumber,
           userId: item.userId,
           invite: "ACCEPTED",
@@ -415,7 +415,7 @@ const createContact = async (data: any) => {
         if (findUser) {
           await prisma.contact.updateMany({
             where: {
-              email: findUser.email,
+              email: findUser.email.toLowerCase(),
             },
             data: {
               invite: "ACCEPTED",
@@ -458,7 +458,7 @@ const sendInvite = async (data: any) => {
   const sendMai = await sendMail({
     url: `${process.env.HOST}/register/${inviteSend.token}`,
     html: verifyAccount.html,
-    to: data.email,
+    to: data.email.toLowerCase(),
     subject: "Versus Invitation",
   });
   if (sendMai) {
@@ -528,7 +528,7 @@ const refreshAuthTokens = async (refreshToken: any) => {
 const metaLogin = async (data: any) => {
   const findUser = await prisma.user.findUnique({
     where: {
-      email: data.email,
+      email: data.email.toLowerCase(),
     },
   });
   if (findUser) {
@@ -547,7 +547,7 @@ const metaLogin = async (data: any) => {
   } else {
     const createUser = await prisma.user.create({
       data: {
-        email: data.email,
+        email: data.email.toLowerCase(),
         password: data.password ? data.password : "",
         firstName: data.firstName ? data.firstName : "",
         lastName: data.lastName ? data.lastName : "",
@@ -567,6 +567,14 @@ const metaLogin = async (data: any) => {
         // isContactScope: data.isContactScope ?? null,
       },
     });
+    if (createUser.isSignUp === "SUCCESS") {
+      await prisma.wallet.create({
+        data: {
+          userId: createUser.id,
+          amount: 500,
+        },
+      });
+    }
     const tokens = await tokenService.generateAuthTokens(createUser.id);
     const user = {
       id: createUser.id,
@@ -623,13 +631,13 @@ const getContact = async (query: string, user: IUser) => {
 const updateContact = async (email: string) => {
   const findUser = await prisma.user.findUnique({
     where: {
-      email: email,
+      email: email.toLowerCase(),
     },
   });
   if (findUser) {
     await prisma.contact.updateMany({
       where: {
-        email: findUser.email,
+        email: findUser.email.toLowerCase(),
       },
       data: {
         invite: "ACCEPTED",

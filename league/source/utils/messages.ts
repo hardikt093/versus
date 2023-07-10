@@ -40,7 +40,7 @@ class Messages {
   static BET_RESULT_NOT_SATISFIED = "Result mark as not satisfied";
   static MATCH_ODD_DATA_NOT_FOUND = "Match Odd data not found";
   static TEAM_NOT_FOUND_IN_MATCH = "Team is Not Found in this Match";
-  static ALREADY_APPLIED_ON_MATCH = "You already applied on this match";
+  static ALREADY_APPLIED_ON_MATCH = "This wager has already been generated. Confirm to create a second identical wager.";
   static YOU_CAN_NOT_RESPONSE_TO_THIS_BET = "You can not respond this bet request";
   static BET_AMOUNT_MUST_BE_GREATER_THAN_EQUALS_1 = "Wager must be greather than or equals to 1";
   static ALREADY_CONFIRMED_BET = "You already confirmed this Bet";

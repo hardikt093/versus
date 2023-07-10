@@ -23,7 +23,7 @@ const signIn = async (req: Request, res: Response) => {
         const JWTpayload: any = await googleService.getGoogleToken(
           req.body.googleCode
         );
-        const login = await authService.socialLogin(JWTpayload.jwt.email);
+        const login = await authService.socialLogin(JWTpayload.jwt.email.toLowerCase());
         if (login) {
           if (login.isBirthDateAvailable == false) {
             createResponse(res, httpStatus.OK, "", {
@@ -41,7 +41,7 @@ const signIn = async (req: Request, res: Response) => {
             JWTpayload.getToken.data.access_token
           );
           const data = {
-            email: JWTpayload.jwt.email,
+            email: JWTpayload.jwt.email.toLowerCase(),
             password: "",
             firstName: JWTpayload.jwt.given_name
               ? JWTpayload.jwt.given_name
@@ -94,7 +94,7 @@ const signIn = async (req: Request, res: Response) => {
                   contacts.push({
                     email:
                       person.emailAddresses?.length > 0
-                        ? person.emailAddresses[0].value
+                        ? person.emailAddresses[0].value.toLowerCase()
                         : "",
                     name:
                       person.names?.length > 0
@@ -122,7 +122,7 @@ const signIn = async (req: Request, res: Response) => {
             }
           }
           if (signUp.isSignUp == "SUCCESS") {
-            const user = await authService.socialLogin(signUp.email);
+            const user = await authService.socialLogin(signUp.email.toLowerCase());
             createResponse(res, httpStatus.OK, "", {
               isBirthDateAvailable: true,
               createContact,
@@ -186,7 +186,7 @@ const signUp = async (req: Request, res: Response) => {
  */
 const forgotPassword = async (req: Request, res: Response) => {
   try {
-    const forgotPassword = await authService.forgotPassword(req.body.email);
+    const forgotPassword = await authService.forgotPassword(req.body.email.toLowerCase());
     createResponse(
       res,
       httpStatus.OK,
