@@ -1,9 +1,6 @@
 import httpStatus from "http-status";
 import { IDivision, ITeam } from "../../interfaces/input";
 import { goalserveApi } from "../../services/goalserve.service";
-import betServices from "../../bet/bet.service";
-import socketService from "../../services/socket.service";
-import AppError from "../../utils/AppError";
 import League from "../../models/documents/league.model";
 import moment from "moment";
 import Player from "../../models/documents/MLB/player.model";
@@ -20,6 +17,25 @@ import IMatchModel from "../../models/interfaces/match.interface";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import IOddModel from "../../models/interfaces/odd.interface";
 import { axiosGet } from "../../services/axios.service";
+import { betStatus } from "../../models/interfaces/bet.interface";
+async function declareResultMatch (
+  matchId: number,
+  winTeamId: number,
+  leagueType: string
+) {
+  await Bet.updateMany(
+    {
+      goalServeMatchId: matchId,
+      status: betStatus.ACTIVE,
+      leagueType: leagueType,
+    },
+    {
+      status: betStatus.RESULT_DECLARED,
+      goalServeWinTeamId: winTeamId,
+      resultAt: new Date(),
+    }
+  );
+};
 function removeByAttr(arr: any, attr: string, value: number) {
   let i = arr.length;
   while (i--) {
@@ -330,7 +346,7 @@ export default class MlbDbCronServiceClass {
               homeTeamTotalScore > awayTeamTotalScore
                 ? matchArray[j].hometeam.id
                 : matchArray[j].awayteam.id;
-            await betServices.declareResultMatch(
+            await declareResultMatch(
               parseInt(goalServeMatchId),
               parseInt(goalServeWinTeamId),
               "MLB"

@@ -14,8 +14,25 @@ import ILeagueModel from "../../models/interfaces/league.interface";
 import ITeamNHLModel from "../../models/interfaces/teamNHL.interface";
 import INhlMatchModel from "../../models/interfaces/nhlMatch.interface";
 import Bet from "../../models/documents/bet.model";
-import betServices from "../../bet/bet.service";
-
+import { betStatus } from "../../models/interfaces/bet.interface";
+async function declareResultMatch (
+  matchId: number,
+  winTeamId: number,
+  leagueType: string
+) {
+  await Bet.updateMany(
+    {
+      goalServeMatchId: matchId,
+      status: betStatus.ACTIVE,
+      leagueType: leagueType,
+    },
+    {
+      status: betStatus.RESULT_DECLARED,
+      goalServeWinTeamId: winTeamId,
+      resultAt: new Date(),
+    }
+  );
+};
 function removeByAttr(arr: any, attr: string, value: number) {
   let i = arr.length;
   while (i--) {
@@ -239,7 +256,7 @@ export default class NhlDbCronServiceClass {
               homeTeamTotalScore > awayTeamTotalScore
                 ? matchArray[j].hometeam.id
                 : matchArray[j].awayteam.id;
-            await betServices.declareResultMatch(
+            await declareResultMatch(
               parseInt(goalServeMatchId),
               parseInt(goalServeWinTeamId),
               "NHL"
@@ -425,7 +442,7 @@ export default class NhlDbCronServiceClass {
               homeTeamTotalScore > awayTeamTotalScore
                 ? matchArray.hometeam.id
                 : matchArray.awayteam.id;
-            await betServices.declareResultMatch(
+            await declareResultMatch(
               parseInt(goalServeMatchId),
               parseInt(goalServeWinTeamId),
               "NHL"
