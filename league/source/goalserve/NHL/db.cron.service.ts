@@ -13,6 +13,9 @@ import NhlOdds from "../../models/documents/NHL/odds.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import ITeamNHLModel from "../../models/interfaces/teamNHL.interface";
 import INhlMatchModel from "../../models/interfaces/nhlMatch.interface";
+import Bet from "../../models/documents/bet.model";
+import betServices from "../../bet/bet.service";
+
 function removeByAttr(arr: any, attr: string, value: number) {
   let i = arr.length;
   while (i--) {
@@ -192,6 +195,72 @@ export default class NhlDbCronServiceClass {
             { $set: data },
             { new: true }
           );
+
+          const regex = /^Final(.*)$/;
+          if (
+            matchArray[j].status != "Not Started" &&
+            !regex.test(matchArray[j].status) &&
+            matchArray[j].status != "Postponed" &&
+            matchArray[j].status != "Canceled" &&
+            matchArray[j].status != "Suspended"
+          ) {
+            const goalServeMatchId = matchArray[j].id;
+            // expire not accepted bet requests
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NHL",
+              },
+              {
+                status: "EXPIRED",
+              }
+            );
+            // active  CONFIRMED bet when match start
+            await Bet.updateMany(
+              {
+                status: "CONFIRMED",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NHL",
+              },
+              {
+                status: "ACTIVE",
+              }
+            );
+          } else if (regex.test(matchArray[j].status)) {
+            const homeTeamTotalScore = parseFloat(
+              matchArray[j].hometeam.totalscore
+            );
+            const awayTeamTotalScore = parseFloat(
+              matchArray[j].awayteam.totalscore
+            );
+            const goalServeMatchId = matchArray[j].id;
+            const goalServeWinTeamId =
+              homeTeamTotalScore > awayTeamTotalScore
+                ? matchArray[j].hometeam.id
+                : matchArray[j].awayteam.id;
+            await betServices.declareResultMatch(
+              parseInt(goalServeMatchId),
+              parseInt(goalServeWinTeamId),
+              "NHL"
+            );
+          } else if (
+            matchArray[j].status == "Canceled" ||
+            matchArray[j].status == "Postponed" ||
+            matchArray[j].status == "Suspended"
+          ) {
+            const goalServeMatchId = matchArray[j].id;
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NHL",
+              },
+              {
+                status: "CANCELED",
+              }
+            );
+          }
         }
       } else {
         if (matchArray) {
@@ -312,6 +381,72 @@ export default class NhlDbCronServiceClass {
             { $set: data },
             { new: true }
           );
+
+          const regex = /^Final(.*)$/;
+          if (
+            matchArray.status != "Not Started" &&
+            !regex.test(matchArray.status) &&
+            matchArray.status != "Postponed" &&
+            matchArray.status != "Canceled" &&
+            matchArray.status != "Suspended"
+          ) {
+            const goalServeMatchId = matchArray.id;
+            // expire not accepted bet requests
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NHL",
+              },
+              {
+                status: "EXPIRED",
+              }
+            );
+            // active  CONFIRMED bet when match start
+            await Bet.updateMany(
+              {
+                status: "CONFIRMED",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NHL",
+              },
+              {
+                status: "ACTIVE",
+              }
+            );
+          } else if (regex.test(matchArray.status)) {
+            const homeTeamTotalScore = parseFloat(
+              matchArray.hometeam.totalscore
+            );
+            const awayTeamTotalScore = parseFloat(
+              matchArray.awayteam.totalscore
+            );
+            const goalServeMatchId = matchArray.id;
+            const goalServeWinTeamId =
+              homeTeamTotalScore > awayTeamTotalScore
+                ? matchArray.hometeam.id
+                : matchArray.awayteam.id;
+            await betServices.declareResultMatch(
+              parseInt(goalServeMatchId),
+              parseInt(goalServeWinTeamId),
+              "NHL"
+            );
+          } else if (
+            matchArray.status == "Canceled" ||
+            matchArray.status == "Postponed" ||
+            matchArray.status == "Suspended"
+          ) {
+            const goalServeMatchId = matchArray.id;
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NHL",
+              },
+              {
+                status: "CANCELED",
+              }
+            );
+          }
         }
       }
     } catch (error: any) {

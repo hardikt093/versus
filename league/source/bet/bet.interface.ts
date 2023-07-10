@@ -11,6 +11,7 @@ export interface ICreateBetRequest {
     opponentUserGoalServeOdd : number,
     requestUserFairOdds? : number,
     opponentUserFairOdds? : number,
+    isConfirmed : boolean,
 }
 
 export interface IresponseBetRequest {

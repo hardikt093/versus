@@ -46,6 +46,8 @@ const fairOddCalculation = function (favourite: number, underdog: number) {
 };
 
 const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
+  let isConfirmed: boolean = false;
+  isConfirmed = data.isConfirmed;
   if (data.opponentUserId === loggedInUserId) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
@@ -75,42 +77,35 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     },
     ""
   );
-
-  const betFound = await Bet.findOne({
+  const betRequestUserDataFound = await Bet.findOne({
     isDeleted: false,
     status: {
       $ne: "REJECTED",
     },
-    $and: [
-      {
-        $or: [
-          { requestUserId: loggedInUserId },
-          { opponentUserId: loggedInUserId },
-        ],
-      },
-      {
-        $or: [
-          { requestUserBetAmount: parseFloat(data.amount.toFixed(2)) },
-          { opponentUserBetAmount: parseFloat(data.amount.toFixed(2)) },
-        ],
-      },
-      {
-        $or: [
-          { requestUserFairOdds: data.requestUserFairOdds },
-          { opponentUserFairOdds: data.opponentUserFairOdds },
-        ],
-      },
-    ],
+    requestUserId: loggedInUserId,
+    opponentUserId: data.opponentUserId,
+    requestUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    requestUserFairOdds: data.requestUserFairOdds,
+    goalServeMatchId: data.goalServeMatchId,
+  }).lean();
+  if (betRequestUserDataFound && isConfirmed === false) {
+    return { isDuplicate: true };
+  }
+  const betOpponentUserDataFound = await Bet.findOne({
+    isDeleted: false,
+    status: {
+      $ne: "REJECTED",
+    },
+    opponentUserId: loggedInUserId,
+    requestUserId: data.opponentUserId,
+    opponentUserBetAmount: parseFloat(data.amount.toFixed(2)),
+    opponentUserFairOdds: data.requestUserFairOdds,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
 
-  if (betFound) {
-    throw new AppError(
-      httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.ALREADY_APPLIED_ON_MATCH
-    );
+  if (betOpponentUserDataFound && isConfirmed === false) {
+    return { isDuplicate: true };
   }
-
   if (data.amount < 1) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
@@ -121,17 +116,17 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
   if (data.leagueType === "MLB") {
     matchData = await Match.findOne({
       goalServeMatchId: data.goalServeMatchId,
-      status : "Not Started"
+      status: "Not Started",
     }).lean();
   } else if (data.leagueType === "NHL") {
     matchData = await NhlMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
-      status : "Not Started"
+      status: "Not Started",
     }).lean();
   } else {
     matchData = await NbaMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
-      status : "Not Started"
+      status: "Not Started",
     }).lean();
   }
 
@@ -1299,66 +1294,54 @@ const listBetsByType = async (
         isOpponentUserWinAmount: 1,
         requestUserFairOdds: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$requestUserFairOdds",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
+                { $toString: "$requestUserFairOdds" },
               ],
             },
-            {
-              $concat: ["+", {$toString: "$requestUserFairOdds"}],
-            },
-            {$toString: "$requestUserFairOdds"},
+            { $toString: "$requestUserFairOdds" },
           ],
         },
         opponentUserFairOdds: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$opponentUserFairOdds",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
+                { $toString: "$opponentUserFairOdds" },
               ],
             },
-            {
-              $concat: ["+", {$toString: "$opponentUserFairOdds"}],
-            },
-            {$toString: "$opponentUserFairOdds"},
+            { $toString: "$opponentUserFairOdds" },
           ],
         },
         requestUserGoalServeOdd: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$requestUserGoalServeOdd",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
+                { $concat: ["+", { $toString: "$requestUserGoalServeOdd" }] },
+                { $toString: "$requestUserGoalServeOdd" },
               ],
             },
-            {
-              $concat: ["+", {$toString: "$requestUserGoalServeOdd"}],
-            },
-            {$toString: "$requestUserGoalServeOdd"},
+            { $toString: "$requestUserGoalServeOdd" },
           ],
         },
         opponentUserGoalServeOdd: {
           $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
             {
-              $gte: [
-                {
-                  $toDouble: "$opponentUserGoalServeOdd",
-                },
-                0,
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
+                { $concat: ["+", { $toString: "$opponentUserGoalServeOdd" }] },
+                { $toString: "$opponentUserGoalServeOdd" },
               ],
             },
-            {
-              $concat: ["+", {$toString: "$opponentUserGoalServeOdd"}],
-            },
-            {$toString: "$opponentUserGoalServeOdd"},
+            { $toString: "$opponentUserGoalServeOdd" },
           ],
         },
         leagueType: 1,

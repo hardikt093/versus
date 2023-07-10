@@ -11,7 +11,7 @@ export const socketHandShake = () => {
 };
 export const authSocket = async (
     eventName: string,
-    user: number,
+    user: number | string,
     data: object | Array<object>
 ) => {
     const filter = connectedUsers[user];

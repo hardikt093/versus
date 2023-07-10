@@ -14,6 +14,9 @@ import ILeagueModel from "../../models/interfaces/league.interface";
 import INbaMatchModel from "../../models/interfaces/nbaMatch.interface";
 import { INbaPlayerhModel } from "../../models/interfaces/nbaPlayer.interface";
 import ITeamNBAModel from "../../models/interfaces/teamNBA.interface";
+import Bet from "../../models/documents/bet.model";
+import betServices from "../../bet/bet.service";
+
 function removeByAttr(arr: any, attr: string, value: number) {
   let i = arr.length;
   while (i--) {
@@ -567,27 +570,27 @@ export default class NbaDbCronServiceClass {
             awayTeamQ3: matchArray[j].awayteam.q3,
             awayTeamQ4: matchArray[j].awayteam.q4,
             awayTeamPosession: matchArray[j].awayteam.posession,
-  
+
             homeTeamOt: matchArray[j].hometeam.ot,
             homeTeamQ1: matchArray[j].hometeam.q1,
             homeTeamQ2: matchArray[j].hometeam.q2,
             homeTeamQ3: matchArray[j].hometeam.q3,
             homeTeamQ4: matchArray[j].hometeam.q4,
             homeTeamPosession: matchArray[j].hometeam.posession,
-  
+
             teamStatsHomeTeam: matchArray[j]?.team_stats?.hometeam
               ? matchArray[j]?.team_stats?.hometeam
               : {},
             teamStatsAwayTeam: matchArray[j]?.team_stats?.awayteam
               ? matchArray[j]?.team_stats?.awayteam
               : {},
-  
-            playerStatsBenchAwayTeam: matchArray[j]?.player_stats?.awayteam?.bench
-              ?.player
+
+            playerStatsBenchAwayTeam: matchArray[j]?.player_stats?.awayteam
+              ?.bench?.player
               ? matchArray[j]?.player_stats?.awayteam?.bench?.player
               : [],
-            playerStatsBenchHomeTeam: matchArray[j]?.player_stats?.hometeam?.bench
-              ?.player
+            playerStatsBenchHomeTeam: matchArray[j]?.player_stats?.hometeam
+              ?.bench?.player
               ? matchArray[j]?.player_stats?.hometeam?.bench?.player
               : [],
             playerStatsStartersAwayTeam: matchArray[j]?.player_stats?.awayteam
@@ -603,16 +606,16 @@ export default class NbaDbCronServiceClass {
             await TeamNBA.findOne({
               goalServeTeamId: matchArray[j].awayteam.id,
             });
-  
+
           data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
             ? teamIdAway.goalServeTeamId
             : 1;
-  
+
           const teamIdHome: ITeamNBAModel | null | undefined =
             await TeamNBA.findOne({
               goalServeTeamId: matchArray[j].hometeam.id,
             });
-  
+
           data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
             ? teamIdHome.goalServeTeamId
             : 1;
@@ -621,6 +624,72 @@ export default class NbaDbCronServiceClass {
             { $set: data },
             { new: true }
           );
+
+          const regex = /^Final(.*)$/;
+          if (
+            matchArray[j].status != "Not Started" &&
+            !regex.test(matchArray[j].status) &&
+            matchArray[j].status != "Postponed" &&
+            matchArray[j].status != "Canceled" &&
+            matchArray[j].status != "Suspended"
+          ) {
+            const goalServeMatchId = matchArray[j].id;
+            // expire not accepted bet requests
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NBA",
+              },
+              {
+                status: "EXPIRED",
+              }
+            );
+            // active  CONFIRMED bet when match start
+            await Bet.updateMany(
+              {
+                status: "CONFIRMED",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NBA",
+              },
+              {
+                status: "ACTIVE",
+              }
+            );
+          } else if (regex.test(matchArray[j].status)) {
+            const homeTeamTotalScore = parseFloat(
+              matchArray[j].hometeam.totalscore
+            );
+            const awayTeamTotalScore = parseFloat(
+              matchArray[j].awayteam.totalscore
+            );
+            const goalServeMatchId = matchArray[j].id;
+            const goalServeWinTeamId =
+              homeTeamTotalScore > awayTeamTotalScore
+                ? matchArray[j].hometeam.id
+                : matchArray[j].awayteam.id;
+            await betServices.declareResultMatch(
+              parseInt(goalServeMatchId),
+              parseInt(goalServeWinTeamId),
+              "NBA"
+            );
+          } else if (
+            matchArray[j].status == "Canceled" ||
+            matchArray[j].status == "Postponed" ||
+            matchArray[j].status == "Suspended"
+          ) {
+            const goalServeMatchId = matchArray[j].id;
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NBA",
+              },
+              {
+                status: "CANCELED",
+              }
+            );
+          }
         }
       } else {
         if (matchArray) {
@@ -649,21 +718,21 @@ export default class NbaDbCronServiceClass {
             awayTeamQ3: matchArray.awayteam.q3,
             awayTeamQ4: matchArray.awayteam.q4,
             awayTeamPosession: matchArray.awayteam.posession,
-  
+
             homeTeamOt: matchArray.hometeam.ot,
             homeTeamQ1: matchArray.hometeam.q1,
             homeTeamQ2: matchArray.hometeam.q2,
             homeTeamQ3: matchArray.hometeam.q3,
             homeTeamQ4: matchArray.hometeam.q4,
             homeTeamPosession: matchArray.hometeam.posession,
-  
+
             teamStatsHomeTeam: matchArray?.team_stats?.hometeam
               ? matchArray?.team_stats?.hometeam
               : {},
             teamStatsAwayTeam: matchArray?.team_stats?.awayteam
               ? matchArray?.team_stats?.awayteam
               : {},
-  
+
             playerStatsBenchAwayTeam: matchArray?.player_stats?.awayteam?.bench
               ?.player
               ? matchArray?.player_stats?.awayteam?.bench?.player
@@ -681,7 +750,7 @@ export default class NbaDbCronServiceClass {
               ? matchArray?.player_stats?.hometeam?.starters?.player
               : [],
           };
-  
+
           const teamIdAway: ITeamNBAModel | null | undefined =
             await TeamNBA.findOne({
               goalServeTeamId: matchArray.awayteam.id,
@@ -708,6 +777,71 @@ export default class NbaDbCronServiceClass {
             { new: true }
           );
         }
+        const regex = /^Final(.*)$/;
+          if (
+            matchArray.status != "Not Started" &&
+            !regex.test(matchArray.status) &&
+            matchArray.status != "Postponed" &&
+            matchArray.status != "Canceled" &&
+            matchArray.status != "Suspended"
+          ) {
+            const goalServeMatchId = matchArray.id;
+            // expire not accepted bet requests
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NBA",
+              },
+              {
+                status: "EXPIRED",
+              }
+            );
+            // active  CONFIRMED bet when match start
+            await Bet.updateMany(
+              {
+                status: "CONFIRMED",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NBA",
+              },
+              {
+                status: "ACTIVE",
+              }
+            );
+          } else if (regex.test(matchArray.status)) {
+            const homeTeamTotalScore = parseFloat(
+              matchArray.hometeam.totalscore
+            );
+            const awayTeamTotalScore = parseFloat(
+              matchArray.awayteam.totalscore
+            );
+            const goalServeMatchId = matchArray.id;
+            const goalServeWinTeamId =
+              homeTeamTotalScore > awayTeamTotalScore
+                ? matchArray.hometeam.id
+                : matchArray.awayteam.id;
+            await betServices.declareResultMatch(
+              parseInt(goalServeMatchId),
+              parseInt(goalServeWinTeamId),
+              "NBA"
+            );
+          } else if (
+            matchArray.status == "Canceled" ||
+            matchArray.status == "Postponed" ||
+            matchArray.status == "Suspended"
+          ) {
+            const goalServeMatchId = matchArray.id;
+            await Bet.updateMany(
+              {
+                status: "PENDING",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NBA",
+              },
+              {
+                status: "CANCELED",
+              }
+            );
+          }
       }
     } catch (error: any) {
       console.log("error", error);
@@ -721,7 +855,7 @@ export default class NbaDbCronServiceClass {
       );
       let matchesNeedToRemove = await NbaMatch.find({
         goalServeLeagueId: getMatch?.data?.shedules?.id,
-        "status" : "Not Started"
+        status: "Not Started",
       }).lean();
       const matchArray = await getMatch?.data?.shedules?.matches;
       const league: ILeagueModel | null = await League.findOne({
@@ -729,7 +863,11 @@ export default class NbaDbCronServiceClass {
       });
       for (let i = 0; i < matchArray?.length; i++) {
         for (let j = 0; j < matchArray[i]?.match?.length; j++) {
-          matchesNeedToRemove = await removeByAttr(matchesNeedToRemove, 'goalServerMatchId', Number(matchArray[i]?.match[j]?.id))
+          matchesNeedToRemove = await removeByAttr(
+            matchesNeedToRemove,
+            "goalServerMatchId",
+            Number(matchArray[i]?.match[j]?.id)
+          );
           const match: INbaMatchModel | null = await NbaMatch.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
@@ -761,21 +899,21 @@ export default class NbaDbCronServiceClass {
               awayTeamQ3: matchArray[i]?.match[j].awayteam.q3,
               awayTeamQ4: matchArray[i]?.match[j].awayteam.q4,
               awayTeamPosession: matchArray[i]?.match[j].awayteam.posession,
-  
+
               homeTeamOt: matchArray[i]?.match[j].hometeam.ot,
               homeTeamQ1: matchArray[i]?.match[j].hometeam.q1,
               homeTeamQ2: matchArray[i]?.match[j].hometeam.q2,
               homeTeamQ3: matchArray[i]?.match[j].hometeam.q3,
               homeTeamQ4: matchArray[i]?.match[j].hometeam.q4,
               homeTeamPosession: matchArray[i]?.match[j].hometeam.posession,
-  
+
               teamStatsHomeTeam: matchArray[i]?.match[j]?.team_stats?.hometeam
                 ? matchArray[i]?.match[j]?.team_stats?.hometeam
                 : {},
               teamStatsAwayTeam: matchArray[i]?.match[j]?.team_stats?.awayteam
                 ? matchArray[i]?.match[j]?.team_stats?.awayteam
                 : {},
-  
+
               playerStatsBenchAwayTeam: matchArray[i]?.match[j]?.player_stats
                 ?.awayteam?.bench?.player
                 ? matchArray[i]?.match[j]?.player_stats?.awayteam?.bench?.player
@@ -799,16 +937,16 @@ export default class NbaDbCronServiceClass {
               await TeamNBA.findOne({
                 goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
               });
-  
+
             data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
               ? teamIdAway.goalServeTeamId
               : 1;
-  
+
             const teamIdHome: ITeamNBAModel | null | undefined =
               await TeamNBA.findOne({
                 goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
               });
-  
+
             data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
               ? teamIdHome.goalServeTeamId
               : 1;
@@ -820,7 +958,7 @@ export default class NbaDbCronServiceClass {
       for (let k = 0; k < matchesNeedToRemove.length; k++) {
         const match = matchesNeedToRemove[k];
         await NbaMatch.deleteOne({
-          goalServeMatchId : match.goalServeMatchId
+          goalServeMatchId: match.goalServeMatchId,
         });
       }
       return true;
@@ -920,7 +1058,8 @@ export default class NbaDbCronServiceClass {
               allGamePlayer.push(playerData);
             }
           } else {
-            const gamePlayer: any = statsApi?.data?.statistic?.category[0].player;
+            const gamePlayer: any =
+              statsApi?.data?.statistic?.category[0].player;
             const playerData = {
               isGamePlayer: true,
               game: {
@@ -947,7 +1086,7 @@ export default class NbaDbCronServiceClass {
             };
             allGamePlayer.push(playerData);
           }
-  
+
           if (statsApi?.data?.statistic?.category[1].player.length) {
             const shootingPlayers: any =
               statsApi?.data?.statistic?.category[1].player;
@@ -974,7 +1113,8 @@ export default class NbaDbCronServiceClass {
                   three_point_pct: shootingPlayer.three_point_pct,
                   two_point_attemps_per_game:
                     shootingPlayer.two_point_attemps_per_game,
-                  two_point_made_per_game: shootingPlayer.two_point_made_per_game,
+                  two_point_made_per_game:
+                    shootingPlayer.two_point_made_per_game,
                   two_point_pct: shootingPlayer.two_point_pct,
                 },
                 teamId: team.id,
@@ -1063,13 +1203,13 @@ export default class NbaDbCronServiceClass {
           await NbaInjury.deleteMany({
             _id: { $in: extraEntries.map((player) => player._id) },
           });
-  
+
           await Promise.all(
             injuryArray1?.report?.map(async (val: any) => {
               const player = await PlayersNBA.findOne({
                 goalServePlayerId: val?.player_id,
               }).lean();
-  
+
               const data = {
                 date: val?.date,
                 description: val?.description,
@@ -1104,7 +1244,7 @@ export default class NbaDbCronServiceClass {
           const player = await PlayersNBA.findOne({
             goalServePlayerId: val?.player_id,
           }).lean();
-  
+
           const data = {
             date: val?.date,
             description: val?.description,
@@ -1124,7 +1264,9 @@ export default class NbaDbCronServiceClass {
             { upsert: true }
           );
         } else {
-          await NbaInjury.deleteMany({_id: { $in: existingPlayers.map((player) => player._id)}});
+          await NbaInjury.deleteMany({
+            _id: { $in: existingPlayers.map((player) => player._id) },
+          });
         }
       })
     );
@@ -1138,7 +1280,7 @@ export default class NbaDbCronServiceClass {
       data,
       "bsktbl/nba-standings"
     );
-  
+
     const league: ILeagueModel | null = await League.findOne({
       goalServeLeagueId: getstanding?.data?.standings?.category?.id,
     });
@@ -1222,7 +1364,8 @@ export default class NbaDbCronServiceClass {
             const match = matchData;
             let data = {
               goalServeLeagueId: playByPlayData.data?.scores?.category?.id,
-              goalServeMatchId: playByPlayData.data?.scores?.category?.match?.id,
+              goalServeMatchId:
+                playByPlayData.data?.scores?.category?.match?.id,
               goalServeAwayTeamId: match?.hometeam.id,
               goalServeHomeTeamId: match?.awayteam.id,
               play: match?.playbyplay?.play,
