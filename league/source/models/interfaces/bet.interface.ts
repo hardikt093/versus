@@ -31,6 +31,7 @@ type TBet = {
   betTotalAmount: number
   requestUserGoalServeOdd: number
   opponentUserGoalServeOdd: number
+  isDuplicate? : boolean
 }
 export default interface IBetModel extends TBet, Document {}
 export enum betStatus {

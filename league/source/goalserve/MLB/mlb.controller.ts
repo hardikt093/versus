@@ -135,6 +135,18 @@ const mlbSingleGameBoxScoreLive = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 }
+
+const get2DaysUpcomingDataFromMongodb = async (req: Request, res: Response) => {
+  try {
+    const scoreWithCurrentDate = await goalserveService.get2DaysUpcomingDataFromMongodb(
+      req.query.date1 as string
+    );
+    createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -149,5 +161,6 @@ export default {
   singleGameBoxScoreUpcomming,
   statsTeam,
   mlbGetTeam,
-  mlbSingleGameBoxScoreLive
+  mlbSingleGameBoxScoreLive,
+  get2DaysUpcomingDataFromMongodb
 };

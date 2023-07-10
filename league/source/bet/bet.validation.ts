@@ -13,7 +13,8 @@ const createBet = {
     requestUserGoalServeOdd : Joi.number().required(),
     opponentUserGoalServeOdd : Joi.number().required(),
     requestUserFairOdds : Joi.number().required(),
-    opponentUserFairOdds : Joi.number().required()
+    opponentUserFairOdds : Joi.number().required(),
+    isConfirmed : Joi.boolean().required()
   }),
 };
 const responseBet = {

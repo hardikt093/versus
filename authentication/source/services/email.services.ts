@@ -45,6 +45,6 @@ function sendVerifyEmail(params: { email: string }) {
     name: "hello",
   });
 
-  sendEmail({ to: params.email, html: htmlToSend, subject: subject });
+  sendEmail({ to: params.email.toLowerCase(), html: htmlToSend, subject: subject });
 }
 export default { sendVerifyEmail };
