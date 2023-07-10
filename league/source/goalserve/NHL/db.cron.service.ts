@@ -1,6 +1,6 @@
 import { axiosGet } from "../../services/axios.service";
 import { goalserveApi } from "../../services/goalserve.service";
-import socket from "../../services/socket.service";
+import socketService from "../../services/socket.service";
 import League from "../../models/documents/league.model";
 import moment from "moment";
 import { isArray } from "lodash";

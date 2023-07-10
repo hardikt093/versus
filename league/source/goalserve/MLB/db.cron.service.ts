@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 import { IDivision, ITeam } from "../../interfaces/input";
 import { goalserveApi } from "../../services/goalserve.service";
 import betServices from "../../bet/bet.service";
-import socket from "../../services/socket.service";
+import socketService from "../../services/socket.service";
 import AppError from "../../utils/AppError";
 import League from "../../models/documents/league.model";
 import moment from "moment";
@@ -1000,7 +1000,7 @@ export default class MlbDbCronServiceClass {
       }).lean();
 
       const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches;
-        
+
       const league: ILeagueModel | undefined | null = await League.findOne({
         goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
       });
@@ -1045,16 +1045,20 @@ export default class MlbDbCronServiceClass {
               ? matchArray[i].match[j].events?.event
               : [],
             startingPitchers: matchArray[i].match[j].starting_pitchers,
-            awayTeamHitters: matchArray[i].match[j].stats?.hitters?.awayteam?.player
+            awayTeamHitters: matchArray[i].match[j].stats?.hitters?.awayteam
+              ?.player
               ? matchArray[i].match[j].stats?.hitters?.awayteam?.player
               : [],
-            homeTeamHitters: matchArray[i].match[j].stats?.hitters?.hometeam?.player
+            homeTeamHitters: matchArray[i].match[j].stats?.hitters?.hometeam
+              ?.player
               ? matchArray[i].match[j].stats?.hitters?.hometeam?.player
               : [],
-            awayTeamPitchers: matchArray[i].match[j].stats?.pitchers?.awayteam?.player
+            awayTeamPitchers: matchArray[i].match[j].stats?.pitchers?.awayteam
+              ?.player
               ? matchArray[i].match[j].stats?.pitchers?.awayteam?.player
               : [],
-            homeTeamPitchers: matchArray[i].match[j].stats?.pitchers?.hometeam?.player
+            homeTeamPitchers: matchArray[i].match[j].stats?.pitchers?.hometeam
+              ?.player
               ? matchArray[i].match[j].stats?.pitchers?.hometeam?.player
               : [],
           };

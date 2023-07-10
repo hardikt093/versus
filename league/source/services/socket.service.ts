@@ -1,21 +1,23 @@
 import { io } from "../server";
-let connectedUsers: any = {};
 import BetService from "../bet/bet.service";
-export const socketHandShake = () => {
+let connectedUsers: any = {};
+const socketHandShake = async () => {
   io.on("connection", (sockets) => {
     sockets.on("userConnected", (userId) => {
       const room = userId;
       sockets.join(room);
       connectedUsers[room] = sockets.id;
-      BetService.pushNotification(userId)
+      BetService.pushNotification(userId);
     });
 
     sockets.on("seen", (userId) => {
-      BetService.readNotification(userId);
+      if (userId) {
+        BetService.readNotification(userId);
+      }
     });
   });
 };
-export const notficationSocket = async (
+const notficationSocket = async (
   eventName: string,
   user: number,
   data: object | Array<object>
@@ -65,4 +67,4 @@ const socket = async (eventName: string, data: object | Array<object>) => {
       break;
   }
 };
-export default socket;
+export default { socket, socketHandShake, notficationSocket };
