@@ -64,10 +64,10 @@ var betSchema = new Schema(
       type: Number,
     },
     requestUserGoalServeOdd: {
-      type: Number,
+      type: String,
     },
     opponentUserGoalServeOdd: {
-      type: Number,
+      type: String,
     },
     responseAt: {
       type: Date,
