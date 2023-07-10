@@ -30,7 +30,7 @@ export interface IUpdateUserProfile {
   phoneNo: string;
   profileImage: string;
   id: string;
-  birthDate: string;
+  birthDate?: string;
 }
 
 export interface IForgotPassword {
