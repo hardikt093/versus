@@ -10,8 +10,8 @@ const createBet = {
     goalServeLeagueId : Joi.number().required(),
     leagueType : Joi.string().required(),
     oddType : Joi.string().required(),
-    requestUserGoalServeOdd : Joi.number().required(),
-    opponentUserGoalServeOdd : Joi.number().required(),
+    requestUserGoalServeOdd : Joi.string().required(),
+    opponentUserGoalServeOdd : Joi.string().required(),
     requestUserFairOdds : Joi.number().required(),
     opponentUserFairOdds : Joi.number().required(),
     isConfirmed : Joi.boolean().required()
