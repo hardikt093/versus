@@ -19,6 +19,21 @@ import ITeamModel from "../../models/interfaces/team.interface";
 import IMatchModel from "../../models/interfaces/match.interface";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import IOddModel from "../../models/interfaces/odd.interface";
+import { axiosGet } from "../../services/axios.service";
+function removeByAttr(arr: any, attr: string, value: number) {
+  let i = arr.length;
+  while (i--) {
+    if (
+      arr[i] &&
+      arr[i].hasOwnProperty(attr) &&
+      arguments.length > 2 &&
+      arr[i][attr] === value
+    ) {
+      arr.splice(i, 1);
+    }
+  }
+  return arr;
+}
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -30,11 +45,10 @@ const getOdds = (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
       if (isArray(myArray[i]?.bookmaker) == true) {
-        return myArray[i].bookmaker[0]
+        return myArray[i].bookmaker[0];
       } else {
         return myArray[i].bookmaker;
       }
-
     }
   }
 };
@@ -43,7 +57,7 @@ const getTotal = (nameKey: any, myArray: any) => {
     for (let i = 0; i < myArray?.length; i++) {
       if (myArray[i]?.value == nameKey) {
         if (isArray(myArray[i]?.bookmaker) == true) {
-          return myArray[i]?.bookmaker[0]
+          return myArray[i]?.bookmaker[0];
         } else {
           return myArray[i]?.bookmaker;
         }
@@ -55,9 +69,7 @@ const getTotal = (nameKey: any, myArray: any) => {
 const getTotalValues = async (total: any) => {
   if (total) {
     if (isArray(total?.total)) {
-      return total?.total[0]?.name
-        ? total?.total[0]?.name
-        : "";
+      return total?.total[0]?.name ? total?.total[0]?.name : "";
     } else {
       return total?.total?.name ? total?.total?.name : "";
     }
@@ -121,7 +133,6 @@ const transformLeague = async (getResponse: any, data: any) => {
   });
 };
 export default class MlbDbCronServiceClass {
-
   public updateCurruntDateRecord = async () => {
     try {
       let data = {
@@ -290,7 +301,7 @@ export default class MlbDbCronServiceClass {
               {
                 status: "PENDING",
                 goalServeMatchId: goalServeMatchId,
-                leagueType : "MLB"
+                leagueType: "MLB",
               },
               {
                 status: "EXPIRED",
@@ -301,7 +312,7 @@ export default class MlbDbCronServiceClass {
               {
                 status: "CONFIRMED",
                 goalServeMatchId: goalServeMatchId,
-                leagueType : "MLB"
+                leagueType: "MLB",
               },
               {
                 status: "ACTIVE",
@@ -330,7 +341,7 @@ export default class MlbDbCronServiceClass {
               {
                 status: "PENDING",
                 goalServeMatchId: goalServeMatchId,
-                leagueType : "MLB"
+                leagueType: "MLB",
               },
               {
                 status: "CANCELED",
@@ -450,7 +461,7 @@ export default class MlbDbCronServiceClass {
       data,
       "baseball/mlb_standings"
     );
-  
+
     const league: ILeagueModel | undefined | null = await League.findOne({
       goalServeLeagueId: getstanding?.data?.standings?.category?.id,
     });
@@ -483,7 +494,7 @@ export default class MlbDbCronServiceClass {
             runs_scored: team.runs_scored,
             won: team.won,
           };
-  
+
           await Standings.findOneAndUpdate(
             { goalServeTeamId: data.goalServeTeamId },
             { $set: data },
@@ -510,7 +521,7 @@ export default class MlbDbCronServiceClass {
         data.category = teamStatsNl.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
-        data.battingRank=teamStatsNl?.data.statistic.category.rank;
+        data.battingRank = teamStatsNl?.data.statistic.category.rank;
         await StatsTeam.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
@@ -532,7 +543,7 @@ export default class MlbDbCronServiceClass {
         data.category = teamStatsAL.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
-        data.battingRank=teamStatsAL?.data.statistic.category.rank;
+        data.battingRank = teamStatsAL?.data.statistic.category.rank;
         await StatsTeam.findOneAndUpdate(
           { goalServeTeamId: data.goalServeTeamId },
           { $set: data },
@@ -547,19 +558,21 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsNlPitching.data.statistic.category.team.map(async (item: any) => {
-        const team = await Team.findOne({ name: item.name });
-        let data = item;
-        data.category = teamStatsNlPitching.data.statistic.category.name;
-        data.teamId = team?.id;
-        data.goalServeTeamId = team?.goalServeTeamId;
-        data.pitchingRank=teamStatsNlPitching?.data.statistic.category.rank;
-        await StatsTeam.findOneAndUpdate(
-          { goalServeTeamId: data.goalServeTeamId },
-          { $set: data },
-          { new: true, upsert: true }
-        );
-      })
+      teamStatsNlPitching.data.statistic.category.team.map(
+        async (item: any) => {
+          const team = await Team.findOne({ name: item.name });
+          let data = item;
+          data.category = teamStatsNlPitching.data.statistic.category.name;
+          data.teamId = team?.id;
+          data.goalServeTeamId = team?.goalServeTeamId;
+          data.pitchingRank = teamStatsNlPitching?.data.statistic.category.rank;
+          await StatsTeam.findOneAndUpdate(
+            { goalServeTeamId: data.goalServeTeamId },
+            { $set: data },
+            { new: true, upsert: true }
+          );
+        }
+      )
     );
 
     const teamStatsALPitching = await goalserveApi(
@@ -569,19 +582,21 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsALPitching.data.statistic.category.team.map(async (item: any) => {
-        const team = await Team.findOne({ name: item.name });
-        let data = item;
-        data.category = teamStatsALPitching.data.statistic.category.name;
-        data.teamId = team?.id;
-        data.goalServeTeamId = team?.goalServeTeamId;
-        data.pitchingRank=teamStatsALPitching?.data.statistic.category.rank;
-        await StatsTeam.findOneAndUpdate(
-          { goalServeTeamId: data.goalServeTeamId },
-          { $set: data },
-          { new: true, upsert: true }
-        );
-      })
+      teamStatsALPitching.data.statistic.category.team.map(
+        async (item: any) => {
+          const team = await Team.findOne({ name: item.name });
+          let data = item;
+          data.category = teamStatsALPitching.data.statistic.category.name;
+          data.teamId = team?.id;
+          data.goalServeTeamId = team?.goalServeTeamId;
+          data.pitchingRank = teamStatsALPitching?.data.statistic.category.rank;
+          await StatsTeam.findOneAndUpdate(
+            { goalServeTeamId: data.goalServeTeamId },
+            { $set: data },
+            { new: true, upsert: true }
+          );
+        }
+      )
     );
   };
   public updatePlayerStats = async () => {
@@ -609,18 +624,18 @@ export default class MlbDbCronServiceClass {
         let allStatPlayers: any = [];
         let finalArr: any = [];
 
-         roasterApi?.data?.team.position.map((item: any) => {
-        if (item.player.length) {
-          item.player.map((player: any) => {
+        roasterApi?.data?.team.position.map((item: any) => {
+          if (item.player.length) {
+            item.player.map((player: any) => {
+              player.positionType = item.name;
+              allRosterPlayers.push(player);
+            });
+          } else {
+            let player = item.player;
             player.positionType = item.name;
             allRosterPlayers.push(player);
-          });
-        }else{
-          let player=item.player
-          player.positionType=item.name
-          allRosterPlayers.push( player)
-        }
-      });
+          }
+        });
 
         statsApi?.data?.statistic.category.forEach((cat: any) => {
           if (cat.team && cat.team.player.length) {
@@ -755,14 +770,10 @@ export default class MlbDbCronServiceClass {
               matchData[i]?.match[j]?.odds?.type
             );
             const awayTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.odd?.find(
-                  (item: any) => item?.name === "2"
-                )
+              ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
               : {};
             const homeTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.odd?.find(
-                  (item: any) => item?.name === "1"
-                )
+              ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
               : {};
             // getSpread
             const getSpread = await getOdds(
@@ -796,12 +807,16 @@ export default class MlbDbCronServiceClass {
               goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
               // homeTeamSpread: homeTeamSpread,
               ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
-              ...(getHomeTeamRunLine?.us && { homeTeamSpreadUs: getHomeTeamRunLine?.us }),
+              ...(getHomeTeamRunLine?.us && {
+                homeTeamSpreadUs: getHomeTeamRunLine?.us,
+              }),
               // homeTeamTotal: totalValues,
               ...(totalValues && { homeTeamTotal: totalValues }),
               // awayTeamSpread: awayTeamSpread,
               ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
-              ...(getAwayTeamRunLine?.us && { awayTeamSpreadUs: getAwayTeamRunLine?.us }),
+              ...(getAwayTeamRunLine?.us && {
+                awayTeamSpreadUs: getAwayTeamRunLine?.us,
+              }),
               // awayTeamTotal: totalValues,
               ...(totalValues && { awayTeamTotal: totalValues }),
               ...(awayTeamMoneyline && {
@@ -872,14 +887,10 @@ export default class MlbDbCronServiceClass {
               matchData[i]?.match[j]?.odds?.type
             );
             const awayTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.odd?.find(
-                  (item: any) => item?.name === "2"
-                )
+              ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
               : undefined;
             const homeTeamMoneyline = getMoneyLine
-              ? getMoneyLine?.odd?.find(
-                  (item: any) => item?.name === "1"
-                )
+              ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
               : undefined;
             // getSpread
             const getSpread = await getOdds(
@@ -913,12 +924,16 @@ export default class MlbDbCronServiceClass {
               goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
               // homeTeamSpread: homeTeamSpread,
               ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
-              ...(getHomeTeamRunLine?.us && { homeTeamSpreadUs: getHomeTeamRunLine?.us }),
+              ...(getHomeTeamRunLine?.us && {
+                homeTeamSpreadUs: getHomeTeamRunLine?.us,
+              }),
               // homeTeamTotal: totalValues,
               ...(totalValues && { homeTeamTotal: totalValues }),
               // awayTeamSpread: awayTeamSpread,
               ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
-              ...(getAwayTeamRunLine?.us && { awayTeamSpreadUs: getAwayTeamRunLine?.us }),
+              ...(getAwayTeamRunLine?.us && {
+                awayTeamSpreadUs: getAwayTeamRunLine?.us,
+              }),
               // awayTeamTotal: totalValues,
               ...(totalValues && { awayTeamTotal: totalValues }),
               ...(awayTeamMoneyline && {
@@ -969,6 +984,108 @@ export default class MlbDbCronServiceClass {
           }
         }
       }
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+  public updateMlbMatch = async () => {
+    try {
+      const mlb_shedule = await axiosGet(
+        `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
+        { json: true }
+      );
+      let matchesNeedToRemove = await Match.find({
+        goalServeLeagueId: mlb_shedule?.data?.shedules?.id,
+        status: "Not Started",
+      }).lean();
+
+      const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches;
+        
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
+      });
+      for (let i = 0; i < matchArray?.length; i++) {
+        for (let j = 0; j < matchArray[i].match?.length; j++) {
+          matchesNeedToRemove = await removeByAttr(
+            matchesNeedToRemove,
+            "goalServerMatchId",
+            Number(matchArray[i]?.match[j]?.id)
+          );
+          const match: IMatchModel | null = await Match.findOne({
+            goalServeMatchId: matchArray[i]?.match[j]?.id,
+          });
+          const data: Partial<IMatchModel> = {
+            leagueId: league?._id,
+            goalServeLeagueId: league?.goalServeLeagueId,
+            outs: matchArray[i].match[j].outs,
+            date: matchArray[i].match[j].date,
+            formattedDate: matchArray[i].match[j].formatted_date,
+            timezone: matchArray[i].match[j].timezone,
+            oddsid: matchArray[i].match[j].seasonType,
+            attendance: matchArray[i].match[j].attendance,
+            goalServeMatchId: matchArray[i].match[j].id,
+            dateTimeUtc: matchArray[i].match[j].datetime_utc,
+            status: matchArray[i].match[j].status,
+            time: matchArray[i].match[j].time,
+            goalServeVenueId: matchArray[i].match[j].venue_id,
+            venueName: matchArray[i].match[j].venue_name,
+            homeTeamHit: matchArray[i].match[j].hometeam.hits,
+            homeTeamTotalScore: matchArray[i].match[j].hometeam.totalscore,
+            homeTeamError: matchArray[i].match[j].hometeam.errors,
+            awayTeamHit: matchArray[i].match[j].awayteam.hits,
+            awayTeamTotalScore: matchArray[i].match[j].awayteam.totalscore,
+            awayTeamError: matchArray[i].match[j].awayteam.errors,
+            awayTeamInnings: matchArray[i].match[j].awayteam?.innings?.inning
+              ? matchArray[i].match[j].awayteam?.innings?.inning
+              : [],
+            homeTeamInnings: matchArray[i].match[j].hometeam?.innings?.inning
+              ? matchArray[i].match[j].hometeam?.innings?.inning
+              : [],
+            event: matchArray[i].match[j].events?.event
+              ? matchArray[i].match[j].events?.event
+              : [],
+            startingPitchers: matchArray[i].match[j].starting_pitchers,
+            awayTeamHitters: matchArray[i].match[j].stats?.hitters?.awayteam?.player
+              ? matchArray[i].match[j].stats?.hitters?.awayteam?.player
+              : [],
+            homeTeamHitters: matchArray[i].match[j].stats?.hitters?.hometeam?.player
+              ? matchArray[i].match[j].stats?.hitters?.hometeam?.player
+              : [],
+            awayTeamPitchers: matchArray[i].match[j].stats?.pitchers?.awayteam?.player
+              ? matchArray[i].match[j].stats?.pitchers?.awayteam?.player
+              : [],
+            homeTeamPitchers: matchArray[i].match[j].stats?.pitchers?.hometeam?.player
+              ? matchArray[i].match[j].stats?.pitchers?.hometeam?.player
+              : [],
+          };
+
+          const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
+            goalServeTeamId: matchArray[i].match[j].awayteam.id,
+          });
+          if (teamIdAway) {
+            data.awayTeamId = teamIdAway.id;
+            data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
+              ? teamIdAway?.goalServeTeamId
+              : undefined;
+          }
+          const teamIdHome: ITeamModel | null | undefined = await Team.findOne({
+            goalServeTeamId: matchArray[i].match[j].hometeam.id,
+          });
+          if (teamIdHome) {
+            data.homeTeamId = teamIdHome.id;
+            data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+          }
+          const matchData = new Match(data);
+          await matchData.save();
+        }
+      }
+      for (let k = 0; k < matchesNeedToRemove.length; k++) {
+        const match = matchesNeedToRemove[k];
+        await Match.deleteOne({
+          goalServeMatchId: match.goalServeMatchId,
+        });
+      }
+      return true;
     } catch (error: any) {
       console.log("error", error);
     }

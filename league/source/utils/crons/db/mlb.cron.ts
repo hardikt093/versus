@@ -122,12 +122,28 @@ const createOrUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
   }
 });
 
+
+let isupdateMlbMatchRunning: boolean = false;
+const updateMlbMatch = cron.schedule("*/5 * * * * *", async () => {
+  if (isupdateMlbMatchRunning) {
+    return;
+  }
+  isupdateMlbMatchRunning = true;
+  try {;
+    await mlbService.updateMlbMatch();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateMlbMatchRunning = false;
+  }
+});
 export default {
   createOdds,
   updateCurruntDateRecord,
   updateStandingRecord,
-  updateTeamStats,
-  updateInjuryRecored,
+  createOrUpdateOdds,
   updatePlayerStats,
-  createOrUpdateOdds
+  updateInjuryRecored,
+  updateMlbMatch,
+  updateTeamStats,
 };
