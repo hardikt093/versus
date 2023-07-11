@@ -6,7 +6,6 @@ const profileUpdate = {
     lastName: Joi.string().allow(null, ""),
     userName: Joi.string().allow(null, ""),
     profileImage: Joi.string().allow(null, ""),
-    birthDate: Joi.string().allow(null, ""),
     phone: Joi.object().allow(null, ""),
   }),
 };

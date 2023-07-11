@@ -28,7 +28,6 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
-        birthDate: data.birthDate,
         userName: data.userName,
         phone: data.phone
       },
@@ -56,7 +55,6 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
-        birthDate: data.birthDate,
         userName: data.userName,
         phone: data.phone
       },
