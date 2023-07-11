@@ -8,7 +8,7 @@ import NbaMatch from "../../models/documents/NBA/match.model";
 import PlayersNBA from "../../models/documents/NBA/player.model";
 import NbaInjury from "../../models/documents/NBA/injury.model";
 import NbaStandings from "../../models/documents/NBA/standings.model";
-import socket from "../../services/socket.service";
+import socketService from "../../services/socket.service";
 import NbaOdds from "../../models/documents/NBA/odds.model";
 import NbaScoreSummary from "../../models/documents/NBA/scoreSummary.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
@@ -1822,7 +1822,7 @@ const getLiveDataOfNba = async (date1: string) => {
       },
     },
   ]);
-  await socket("nbaLiveMatch", {
+  await socketService.socket("nbaLiveMatch", {
     getLiveDataOfNba,
   });
   return getLiveDataOfNba;
@@ -3795,7 +3795,7 @@ const getUpcommingMatchNba = async () => {
         },
       },
     ]);
-    await socket("nbaUpcomingMatch", {
+    await socketService.socket("nbaUpcomingMatch", {
       getUpcomingMatch,
     });
     return getUpcomingMatch;
@@ -4025,7 +4025,7 @@ const getFinalMatchNba = async () => {
         },
       },
     ]);
-    await socket("nbaFinalMatch", {
+    await socketService.socket("nbaFinalMatch", {
       getFinalMatch,
     });
     return getFinalMatch;
@@ -5658,7 +5658,7 @@ const liveBoxscoreNBA = async (date1: string) => {
       },
     },
   ]);
-  await socket("nbaLiveBoxscore", {
+  await socketService.socket("nbaLiveBoxscore", {
     getMatch,
   });
   return getMatch;

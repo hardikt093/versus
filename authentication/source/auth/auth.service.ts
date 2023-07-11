@@ -567,6 +567,14 @@ const metaLogin = async (data: any) => {
         // isContactScope: data.isContactScope ?? null,
       },
     });
+    if (createUser.isSignUp === "SUCCESS") {
+      await prisma.wallet.create({
+        data: {
+          userId: createUser.id,
+          amount: 500,
+        },
+      });
+    }
     const tokens = await tokenService.generateAuthTokens(createUser.id);
     const user = {
       id: createUser.id,

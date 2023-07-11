@@ -9,6 +9,7 @@ import logger from "./config/logger";
 import { Server } from "socket.io";
 import cron from "./utils/crons/index";
 import config from "./config/config";
+import socketService from "./services/socket.service"
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -61,7 +62,7 @@ export const io = new Server(httpServer, {
     credentials: true,
   },
 });
-
+socketService.socketHandShake()
 mongoose.connect(config.mongoose.url).then((result: any) => {
   console.info(`Connected to MongoDB -${config.mongoose.url}`);
   httpServer.listen(PORT, () =>

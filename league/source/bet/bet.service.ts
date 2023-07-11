@@ -16,6 +16,8 @@ import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
+import socketService from "../services/socket.service";
+import Notification from "../models/documents/notification.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -190,6 +192,12 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       ""
     );
   }
+  await Notification.create({
+    fromUserId: loggedInUserId,
+    toUserId: data.opponentUserId,
+    betId: createBet._id,
+  });
+  pushNotification(data.opponentUserId);
   return createdBet;
 };
 
@@ -244,6 +252,7 @@ const responseBet = async (
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
+
   if (updateBet && isConfirmed == false) {
     const resp = await axiosPostMicro(
       {
@@ -254,6 +263,16 @@ const responseBet = async (
       `${config.authServerUrl}/wallet/revertAmount`,
       ""
     );
+
+    // notify
+    if (betData) {
+      await Notification.create({
+        fromUserId: betData.opponentUserId,
+        toUserId: betData.requestUserId,
+        betId: id,
+      });
+      pushNotification(betData?.requestUserId);
+    }
   }
   if (updateBet && isConfirmed == true) {
     const resp = await axiosPostMicro(
@@ -265,6 +284,15 @@ const responseBet = async (
       `${config.authServerUrl}/wallet/deduct`,
       ""
     );
+    // notify
+    if (betData) {
+      await Notification.create({
+        fromUserId: betData.opponentUserId,
+        toUserId: betData.requestUserId,
+        betId: id,
+      });
+      pushNotification(betData?.requestUserId);
+    }
   }
   return responseBet;
 };
@@ -1453,6 +1481,37 @@ const getBetUser = async (userId: number) => {
     .map((item: IOpponentCount) => item.opponentUserId);
   return top5Opponents;
 };
+
+const pushNotification = async (userId: number) => {
+  const unseenNotification = await Notification.find({
+    toUserId: userId,
+    seen: false,
+  });
+
+  await socketService.notficationSocket("notify", userId, {
+    notifications: unseenNotification.length,
+  });
+};
+const readNotification = async (userId: number) => {
+  if (userId) {
+    const data = await Notification.updateMany(
+      {
+        toUserId: userId,
+        seen: false,
+      },
+      {
+        $set: {
+          seen: true,
+          readAt: new Date(),
+        },
+      },
+      {
+        multi: true,
+      }
+    );
+    await socketService.notficationSocket("notify", userId, { notifications: 0 });
+  }
+};
 export default {
   getBetUser,
   listBetsByStatus,
@@ -1465,4 +1524,6 @@ export default {
   updateBetRequest,
   declareResultMatch,
   listBetsByType,
+  readNotification,
+  pushNotification,
 };
