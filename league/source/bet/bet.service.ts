@@ -707,7 +707,7 @@ const listBetsByType = async (
     );
   } else {
     condition.status = {
-      $ne: "REJECTED",
+      $nin: ["REJECTED", "EXPIRED"],
     };
     query.push(
       {
