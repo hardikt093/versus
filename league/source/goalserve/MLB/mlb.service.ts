@@ -2,7 +2,7 @@ import httpStatus from "http-status";
 import { IDivision, ITeam } from "../../interfaces/input";
 import { goalserveApi } from "../../services/goalserve.service";
 import betServices from "../../bet/bet.service";
-import socket from "../../services/socket.service";
+import socketService from "../../services/socket.service";
 import AppError from "../../utils/AppError";
 import League from "../../models/documents/league.model";
 import moment from "moment";
@@ -1011,7 +1011,7 @@ const getUpcomingMatch = async () => {
         },
       },
     ]);
-    await socket("mlbUpcomingMatch", {
+    await socketService.socket("mlbUpcomingMatch", {
       getUpcomingMatch,
     });
   } catch (error: any) {
@@ -1301,7 +1301,7 @@ const getFinalMatch = async () => {
       },
     ]);
 
-    await socket("mlbFinalMatch", {
+    await socketService.socket("mlbFinalMatch", {
       getFinalMatch,
     });
   } catch (error) {
@@ -1581,7 +1581,7 @@ const getLiveMatch = async () => {
         },
       },
     ]);
-    await socket("mlbLiveMatch", {
+    await socketService.socket("mlbLiveMatch", {
       getLiveMatch,
     });
   } catch (error) {
@@ -12212,7 +12212,7 @@ const liveBoxscoreMlb = async () => {
       if (item) item.status = number ? `Inning ${number}` : "";
     });
 
-    await socket("mlbLiveBoxscore", {
+    await socketService.socket("mlbLiveBoxscore", {
       getMatch,
     });
     return getMatch;
