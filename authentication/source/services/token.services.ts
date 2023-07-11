@@ -9,7 +9,7 @@ import AppError from "../utils/AppError";
 import httpStatus from "http-status";
 
 const generateToken = (
-  id: number,
+  id: number | string,
   expires: { unix: () => string | number },
   secret = config.jwt.secret
 ) => {
@@ -22,7 +22,7 @@ const generateToken = (
 };
 const saveToken = async (
   token: string,
-  userId: number,
+  userId: number | string,
   expires: moment.Moment,
   type: string | number,
   blacklisted = false
@@ -68,15 +68,15 @@ const generateAuthTokens = async (userId: number) => {
   };
 };
 
-const generateResetPasswordToken = async (data: { _id: number }) => {
+const generateResetPasswordToken = async (data: { id: number | string }) => {
   const expires = moment().add(
     config.jwt.resetPasswordExpirationMinutes,
     "minutes"
   );
-  const resetPasswordToken = generateToken(data._id, expires);
+  const resetPasswordToken = generateToken(data.id, expires);
   await saveToken(
     resetPasswordToken,
-    data._id,
+    data.id,
     expires,
     constant.TOKEN_TYPE.RESET_PASSWORD
   );

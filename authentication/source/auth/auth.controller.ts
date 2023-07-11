@@ -266,6 +266,14 @@ const getUser = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const changePassword = async (req: Request, res: Response) => {
+  try {
+    const changePassword = await authService.changePassword(req.loggedInUser, req.body);
+    createResponse(res, httpStatus.OK, "", true);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   signIn,
   signUp,
@@ -276,5 +284,6 @@ export default {
   sendInvite,
   checkInviteExpire,
   refreshAuthTokens,
-  getUser
+  getUser,
+  changePassword
 };

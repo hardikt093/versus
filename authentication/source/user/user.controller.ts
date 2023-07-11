@@ -83,13 +83,4 @@ const getFriendList = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-
-const changePassword = async (req: Request, res: Response) => {
-  try {
-    const changePassword = await userService.changePassword(req.loggedInUser, req.body);
-    createResponse(res, httpStatus.OK, "", true);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-export default { profileUpdate, getAllContact, seacrchUsers, userContacts, usersList, usersGetBulk, getFriendList, changePassword };
+export default { profileUpdate, getAllContact, seacrchUsers, userContacts, usersList, usersGetBulk, getFriendList };

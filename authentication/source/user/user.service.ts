@@ -348,32 +348,6 @@ const getFriendList = async (
   ).filter((item:any)=>item!==undefined);
   return { getFriendList,getMaxBetOpponent:sortedArray };
 };
-
-const changePassword = async (id: any, body: { oldPassword: string, newPassword: string }) => {
-  const findUser = await prisma.user.findUnique({
-    where: {
-      id: id.id
-    }
-  })
-  const checkPassword = await bcrypt.compare(body.oldPassword, findUser.password);
-  if (checkPassword) {
-    const hashPassword = await bcrypt.hash(body.newPassword, 8);
-    return await prisma.user.update({
-      where: {
-        id: id.id
-      },
-      data: {
-        password: hashPassword
-      }
-    })
-  } else {
-    throw new AppError(
-      httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.PASSWORD_INCORRECT
-    );
-  }
-
-}
 export default {
   userContacts,
   userProfileUpdate,
@@ -382,6 +356,5 @@ export default {
   userByIdMongoRelation,
   userlist,
   userGetBulk,
-  getFriendList,
-  changePassword
+  getFriendList
 };
