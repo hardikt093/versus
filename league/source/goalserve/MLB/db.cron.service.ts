@@ -18,7 +18,7 @@ import ILeagueModel from "../../models/interfaces/league.interface";
 import IOddModel from "../../models/interfaces/odd.interface";
 import { axiosGet } from "../../services/axios.service";
 import { betStatus } from "../../models/interfaces/bet.interface";
-async function declareResultMatch (
+async function declareResultMatch(
   matchId: number,
   winTeamId: number,
   leagueType: string
@@ -35,7 +35,7 @@ async function declareResultMatch (
       resultAt: new Date(),
     }
   );
-};
+}
 function removeByAttr(arr: any, attr: string, value: number) {
   let i = arr.length;
   while (i--) {
@@ -321,6 +321,7 @@ export default class MlbDbCronServiceClass {
               },
               {
                 status: "EXPIRED",
+                isDeleted: true,
               }
             );
             // active  CONFIRMED bet when match start
@@ -361,6 +362,7 @@ export default class MlbDbCronServiceClass {
               },
               {
                 status: "CANCELED",
+                isDeleted: true,
               }
             );
           }

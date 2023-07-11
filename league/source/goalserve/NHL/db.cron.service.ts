@@ -15,7 +15,7 @@ import ITeamNHLModel from "../../models/interfaces/teamNHL.interface";
 import INhlMatchModel from "../../models/interfaces/nhlMatch.interface";
 import Bet from "../../models/documents/bet.model";
 import { betStatus } from "../../models/interfaces/bet.interface";
-async function declareResultMatch (
+async function declareResultMatch(
   matchId: number,
   winTeamId: number,
   leagueType: string
@@ -32,7 +32,7 @@ async function declareResultMatch (
       resultAt: new Date(),
     }
   );
-};
+}
 function removeByAttr(arr: any, attr: string, value: number) {
   let i = arr.length;
   while (i--) {
@@ -64,12 +64,12 @@ const getTotal = (nameKey: string, myArray: any) => {
   }
 };
 const getRunLine = async (nameKey: string, myArray: any) => {
-    for (let i = 0; i < myArray?.length; i++) {
-      if (myArray[i].name.split(" ").slice(0, -1).join(" ") == nameKey) {
-        return myArray[i];
-      }
+  for (let i = 0; i < myArray?.length; i++) {
+    if (myArray[i].name.split(" ").slice(0, -1).join(" ") == nameKey) {
+      return myArray[i];
     }
-  };
+  }
+};
 const getTotalValues = async (total: any) => {
   if (total?.bookmaker) {
     if (isArray(total?.bookmaker?.total)) {
@@ -84,7 +84,6 @@ const getTotalValues = async (total: any) => {
   }
 };
 export default class NhlDbCronServiceClass {
-  
   public updateCurruntDateRecordNhl = async () => {
     try {
       const getMatch = await axiosGet(
@@ -122,14 +121,14 @@ export default class NhlDbCronServiceClass {
             awayTeamP3: matchArray[j].awayteam.p3,
             awayTeamPp: matchArray[j].awayteam.pp,
             awayTeamSo: matchArray[j].awayteam.so,
-  
+
             homeTeamOt: matchArray[j].hometeam.ot,
             homeTeamP1: matchArray[j].hometeam.p1,
             homeTeamP2: matchArray[j].hometeam.p2,
             homeTeamP3: matchArray[j].hometeam.p3,
             homeTeamPp: matchArray[j].hometeam.pp,
             homeTeamSo: matchArray[j].hometeam.so,
-  
+
             scoringFirstperiod: matchArray[j]?.scoring?.firstperiod?.event
               ? matchArray[j]?.scoring?.firstperiod?.event
               : [],
@@ -145,41 +144,42 @@ export default class NhlDbCronServiceClass {
             scoringThirdperiod: matchArray[j]?.scoring?.thirdperiod?.event
               ? matchArray[j]?.scoring?.thirdperiod?.event
               : [],
-  
+
             penaltiesFirstperiod: matchArray[j]?.penalties?.firstperiod?.penalty
               ? matchArray[j]?.penalties?.firstperiod?.penalty
               : [],
             penaltiesOvertime: matchArray[j]?.penalties?.overtime?.penalty
               ? matchArray[j]?.penalties?.overtime?.penalty
               : [],
-            penaltiesSecondperiod: matchArray[j]?.penalties?.secondperiod?.penalty
+            penaltiesSecondperiod: matchArray[j]?.penalties?.secondperiod
+              ?.penalty
               ? matchArray[j]?.penalties?.secondperiod?.penalty
               : [],
             penaltiesThirdperiod: matchArray[j]?.penalties?.thirdperiod?.penalty
               ? matchArray[j]?.penalties?.thirdperiod?.penalty
               : [],
-  
+
             teamStatsHomeTeam: matchArray[j]?.team_stats?.hometeam
               ? matchArray[j]?.team_stats?.hometeam
               : {},
             teamStatsAwayTeam: matchArray[j]?.team_stats?.awayteam
               ? matchArray[j]?.team_stats?.awayteam
               : {},
-  
+
             playerStatsAwayTeam: matchArray[j]?.player_stats?.awayteam?.player
               ? matchArray[j]?.player_stats?.awayteam?.player
               : [],
             playerStatsHomeTeam: matchArray[j]?.player_stats?.hometeam?.player
               ? matchArray[j]?.player_stats?.hometeam?.player
               : [],
-  
+
             powerPlayAwayTeam: matchArray[j]?.powerplay?.awayteam
               ? matchArray[j]?.powerplay?.awayteam
               : {},
             powerPlayHomeTeam: matchArray[j]?.powerplay?.hometeam
               ? matchArray[j]?.powerplay?.hometeam
               : {},
-  
+
             goalkeeperStatsAwayTeam: matchArray[j]?.goalkeeper_stats?.awayteam
               ?.player
               ? matchArray[j]?.goalkeeper_stats?.awayteam?.player
@@ -189,21 +189,21 @@ export default class NhlDbCronServiceClass {
               ? matchArray[j]?.goalkeeper_stats?.hometeam?.player
               : [],
           };
-  
+
           const teamIdAway: ITeamNHLModel | null | undefined =
             await TeamNHL.findOne({
               goalServeTeamId: matchArray[j].awayteam.id,
             });
-  
+
           data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
             ? teamIdAway.goalServeTeamId
             : 1;
-  
+
           const teamIdHome: ITeamNHLModel | null | undefined =
             await TeamNHL.findOne({
               goalServeTeamId: matchArray[j].hometeam.id,
             });
-  
+
           data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
             ? teamIdHome.goalServeTeamId
             : 1;
@@ -231,6 +231,7 @@ export default class NhlDbCronServiceClass {
               },
               {
                 status: "EXPIRED",
+                isDeleted: true,
               }
             );
             // active  CONFIRMED bet when match start
@@ -275,6 +276,7 @@ export default class NhlDbCronServiceClass {
               },
               {
                 status: "CANCELED",
+                isDeleted: true,
               }
             );
           }
@@ -305,14 +307,14 @@ export default class NhlDbCronServiceClass {
             awayTeamP3: matchArray.awayteam.p3,
             awayTeamPp: matchArray.awayteam.pp,
             awayTeamSo: matchArray.awayteam.so,
-  
+
             homeTeamOt: matchArray.hometeam.ot,
             homeTeamP1: matchArray.hometeam.p1,
             homeTeamP2: matchArray.hometeam.p2,
             homeTeamP3: matchArray.hometeam.p3,
             homeTeamPp: matchArray.hometeam.pp,
             homeTeamSo: matchArray.hometeam.so,
-  
+
             scoringFirstperiod: matchArray?.scoring?.firstperiod?.event
               ? matchArray?.scoring?.firstperiod?.event
               : [],
@@ -328,7 +330,7 @@ export default class NhlDbCronServiceClass {
             scoringThirdperiod: matchArray?.scoring?.thirdperiod?.event
               ? matchArray?.scoring?.thirdperiod?.event
               : [],
-  
+
             penaltiesFirstperiod: matchArray?.penalties?.firstperiod?.penalty
               ? matchArray?.penalties?.firstperiod?.penalty
               : [],
@@ -341,28 +343,28 @@ export default class NhlDbCronServiceClass {
             penaltiesThirdperiod: matchArray?.penalties?.thirdperiod?.penalty
               ? matchArray?.penalties?.thirdperiod?.penalty
               : [],
-  
+
             teamStatsHomeTeam: matchArray?.team_stats?.hometeam
               ? matchArray?.team_stats?.hometeam
               : {},
             teamStatsAwayTeam: matchArray?.team_stats?.awayteam
               ? matchArray?.team_stats?.awayteam
               : {},
-  
+
             playerStatsAwayTeam: matchArray?.player_stats?.awayteam?.player
               ? matchArray?.player_stats?.awayteam?.player
               : [],
             playerStatsHomeTeam: matchArray?.player_stats?.hometeam?.player
               ? matchArray?.player_stats?.hometeam?.player
               : [],
-  
+
             powerPlayAwayTeam: matchArray?.powerplay?.awayteam
               ? matchArray?.powerplay?.awayteam
               : {},
             powerPlayHomeTeam: matchArray?.powerplay?.hometeam
               ? matchArray?.powerplay?.hometeam
               : {},
-  
+
             goalkeeperStatsAwayTeam: matchArray?.goalkeeper_stats?.awayteam
               ?.player
               ? matchArray?.goalkeeper_stats?.awayteam?.player
@@ -372,7 +374,7 @@ export default class NhlDbCronServiceClass {
               ? matchArray?.goalkeeper_stats?.hometeam?.player
               : [],
           };
-  
+
           const teamIdAway: ITeamNHLModel | null | undefined =
             await TeamNHL.findOne({
               goalServeTeamId: matchArray.awayteam.id,
@@ -417,6 +419,7 @@ export default class NhlDbCronServiceClass {
               },
               {
                 status: "EXPIRED",
+                isDeleted: true,
               }
             );
             // active  CONFIRMED bet when match start
@@ -461,6 +464,7 @@ export default class NhlDbCronServiceClass {
               },
               {
                 status: "CANCELED",
+                isDeleted: true,
               }
             );
           }
@@ -559,7 +563,7 @@ export default class NhlDbCronServiceClass {
             player.teamId = item.id;
             player.goalServeTeamId = item.goalServeTeamId;
             player.goalServePlayerId = roasterApiItem.player.id;
-  
+
             allRosterPlayers.push(player);
           }
         });
@@ -631,7 +635,7 @@ export default class NhlDbCronServiceClass {
           data,
           `hockey/${item?.goalServeTeamId}_injuries`
         );
-  
+
         const injuryArray1 = injuryApi?.data?.team;
         const existingPlayers = await NhlInjury.find({
           goalServeTeamId: item?.goalServeTeamId,
@@ -661,7 +665,7 @@ export default class NhlDbCronServiceClass {
                 goalServeTeamId: injuryApi?.data?.team?.id,
                 teamId: item?.id,
               };
-               await NhlInjury.updateOne(
+              await NhlInjury.updateOne(
                 {
                   goalServeTeamId: data?.goalServeTeamId,
                   goalServePlayerId: data?.goalServePlayerId,
@@ -685,7 +689,7 @@ export default class NhlDbCronServiceClass {
           const player = await PlayersNHL.findOne({
             goalServePlayerId: val?.player_id,
           });
-  
+
           const data = {
             date: val?.date,
             description: val?.description,
@@ -704,7 +708,6 @@ export default class NhlDbCronServiceClass {
             { $set: data },
             { upsert: true }
           );
-        
         } else {
           await NhlInjury.deleteMany({
             _id: { $in: existingPlayers.map((player) => player._id) },
@@ -718,7 +721,7 @@ export default class NhlDbCronServiceClass {
     let month = moment().format("MM");
     let year = moment().format("YYYY");
     let date = `${day}.${month}.${year}`;
-  
+
     try {
       let data = { json: true, date1: date, showodds: "1", bm: "451," };
       const getScore = await goalserveApi(
@@ -765,7 +768,7 @@ export default class NhlDbCronServiceClass {
               const awayTeamSpread = getAwayTeamRunLine
                 ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
                 : "";
-  
+
               const homeTeamSpread = getHomeTeamRunLine
                 ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
                 : "";
@@ -815,7 +818,7 @@ export default class NhlDbCronServiceClass {
               const awayTeamSpread = getAwayTeamRunLine
                 ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
                 : "null";
-  
+
               const homeTeamSpread = getHomeTeamRunLine
                 ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
                 : "null";
@@ -879,7 +882,7 @@ export default class NhlDbCronServiceClass {
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
-  
+
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
@@ -929,7 +932,7 @@ export default class NhlDbCronServiceClass {
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
-  
+
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
               : "";
@@ -968,7 +971,7 @@ export default class NhlDbCronServiceClass {
       );
       let matchesNeedToRemove = await NhlMatch.find({
         goalServeLeagueId: getMatch?.data?.shedules?.id,
-        "status" : "Not Started"
+        status: "Not Started",
       }).lean();
       const matchArray = await getMatch?.data?.shedules?.matches;
       const league: any = await League.findOne({
@@ -976,7 +979,11 @@ export default class NhlDbCronServiceClass {
       });
       for (let i = 0; i < matchArray?.length; i++) {
         for (let j = 0; j < matchArray[i]?.match?.length; j++) {
-          matchesNeedToRemove = await removeByAttr(matchesNeedToRemove, 'goalServerMatchId', Number(matchArray[i]?.match[j]?.id))
+          matchesNeedToRemove = await removeByAttr(
+            matchesNeedToRemove,
+            "goalServerMatchId",
+            Number(matchArray[i]?.match[j]?.id)
+          );
           const match: any = await NhlMatch.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
@@ -1015,14 +1022,14 @@ export default class NhlDbCronServiceClass {
               awayTeamP3: matchArray[i]?.match[j]?.awayteam.p3,
               awayTeamPp: matchArray[i]?.match[j]?.awayteam.pp,
               awayTeamSo: matchArray[i]?.match[j]?.awayteam.so,
-  
+
               homeTeamOt: matchArray[i]?.match[j]?.hometeam.ot,
               homeTeamP1: matchArray[i]?.match[j]?.hometeam.p1,
               homeTeamP2: matchArray[i]?.match[j]?.hometeam.p2,
               homeTeamP3: matchArray[i]?.match[j]?.hometeam.p3,
               homeTeamPp: matchArray[i]?.match[j]?.hometeam.pp,
               homeTeamSo: matchArray[i]?.match[j]?.hometeam.so,
-  
+
               scoringFirstperiod: matchArray[i]?.match[j]?.scoring?.firstperiod
                 ?.event
                 ? matchArray[i]?.match[j]?.scoring?.firstperiod?.event
@@ -1030,8 +1037,8 @@ export default class NhlDbCronServiceClass {
               scoringOvertime: matchArray[i]?.match[j]?.scoring?.overtime?.event
                 ? matchArray[i]?.match[j]?.scoring?.overtime?.event
                 : [],
-              scoringSecondperiod: matchArray[i]?.match[j]?.scoring?.secondperiod
-                ?.event
+              scoringSecondperiod: matchArray[i]?.match[j]?.scoring
+                ?.secondperiod?.event
                 ? matchArray[i]?.match[j]?.scoring?.secondperiod?.event
                 : [],
               scoringShootout: matchArray[i]?.match[j]?.scoring?.shootout?.event
@@ -1041,7 +1048,7 @@ export default class NhlDbCronServiceClass {
                 ?.event
                 ? matchArray[i]?.match[j]?.scoring?.thirdperiod?.event
                 : [],
-  
+
               penaltiesFirstperiod: matchArray[i]?.match[j]?.penalties
                 ?.firstperiod?.penalty
                 ? matchArray[i]?.match[j]?.penalties?.firstperiod?.penalty
@@ -1058,30 +1065,30 @@ export default class NhlDbCronServiceClass {
                 ?.thirdperiod?.penalty
                 ? matchArray[i]?.match[j]?.penalties?.thirdperiod?.penalty
                 : [],
-  
+
               teamStatsHomeTeam: matchArray[i]?.match[j]?.team_stats?.hometeam
                 ? matchArray[i]?.match[j]?.team_stats?.hometeam
                 : {},
               teamStatsAwayTeam: matchArray[i]?.match[j]?.team_stats?.awayteam
                 ? matchArray[i]?.match[j]?.team_stats?.awayteam
                 : {},
-  
-              playerStatsAwayTeam: matchArray[i]?.match[j]?.player_stats?.awayteam
-                ?.player
+
+              playerStatsAwayTeam: matchArray[i]?.match[j]?.player_stats
+                ?.awayteam?.player
                 ? matchArray[i]?.match[j]?.player_stats?.awayteam?.player
                 : [],
-              playerStatsHomeTeam: matchArray[i]?.match[j]?.player_stats?.hometeam
-                ?.player
+              playerStatsHomeTeam: matchArray[i]?.match[j]?.player_stats
+                ?.hometeam?.player
                 ? matchArray[i]?.match[j]?.player_stats?.hometeam?.player
                 : [],
-  
+
               powerPlayAwayTeam: matchArray[i]?.match[j]?.powerplay?.awayteam
                 ? matchArray[i]?.match[j]?.powerplay?.awayteam
                 : {},
               powerPlayHomeTeam: matchArray[i]?.match[j]?.powerplay?.hometeam
                 ? matchArray[i]?.match[j]?.powerplay?.hometeam
                 : {},
-  
+
               goalkeeperStatsAwayTeam: matchArray[i]?.match[j]?.goalkeeper_stats
                 ?.awayteam?.player
                 ? matchArray[i]?.match[j]?.goalkeeper_stats?.awayteam?.player
@@ -1091,21 +1098,21 @@ export default class NhlDbCronServiceClass {
                 ? matchArray[i]?.match[j]?.goalkeeper_stats?.hometeam?.player
                 : [],
             };
-  
+
             const teamIdAway: ITeamNHLModel | null | undefined =
               await TeamNHL.findOne({
                 goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
               });
-  
+
             data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
               ? teamIdAway.goalServeTeamId
               : 1;
-  
+
             const teamIdHome: ITeamNHLModel | null | undefined =
               await TeamNHL.findOne({
                 goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
               });
-  
+
             data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
               ? teamIdHome.goalServeTeamId
               : 1;
@@ -1117,7 +1124,7 @@ export default class NhlDbCronServiceClass {
       for (let k = 0; k < matchesNeedToRemove.length; k++) {
         const match = matchesNeedToRemove[k];
         await NhlMatch.deleteOne({
-          goalServeMatchId : match.goalServeMatchId
+          goalServeMatchId: match.goalServeMatchId,
         });
       }
       return true;
