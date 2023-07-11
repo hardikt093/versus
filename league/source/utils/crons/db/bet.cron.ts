@@ -38,8 +38,25 @@ const expiredBetRefund = cron.schedule("*/5 * * * * *", async () => {
   }
 });
 
+let istieMatchBetRefundRunning: boolean = false;
+const tieMatchBetRefund = cron.schedule("*/5 * * * * *", async () => {
+  if (istieMatchBetRefundRunning) {
+    // console.log("tieMatchBetRefund Skip");
+    return;
+  }
+  istieMatchBetRefundRunning = true;
+  try {
+    // console.info("inside score cron tieMatchBetRefund");
+    await betService.tieMatchBetRefund();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    istieMatchBetRefundRunning = false;
+  }
+});
 
 export default {
     releaseBetPayment,
-    expiredBetRefund
+    expiredBetRefund,
+    tieMatchBetRefund
 };

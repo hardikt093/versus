@@ -682,15 +682,28 @@ export default class NbaDbCronServiceClass {
               matchArray[j].awayteam.totalscore
             );
             const goalServeMatchId = matchArray[j].id;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? matchArray[j].hometeam.id
-                : matchArray[j].awayteam.id;
-            await declareResultMatch(
-              parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId),
-              "NBA"
-            );
+            if (homeTeamTotalScore === awayTeamTotalScore) {
+              await Bet.updateMany(
+                {
+                  status: "ACTIVE",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NBA",
+                },
+                {
+                  status: "TIE",
+                }
+              );
+            } else {
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray[j].hometeam.id
+                  : matchArray[j].awayteam.id;
+              await declareResultMatch(
+                parseInt(goalServeMatchId),
+                parseInt(goalServeWinTeamId),
+                "NBA"
+              );
+            }
           } else if (
             matchArray[j].status == "Canceled" ||
             matchArray[j].status == "Postponed" ||
@@ -832,15 +845,28 @@ export default class NbaDbCronServiceClass {
           const homeTeamTotalScore = parseFloat(matchArray.hometeam.totalscore);
           const awayTeamTotalScore = parseFloat(matchArray.awayteam.totalscore);
           const goalServeMatchId = matchArray.id;
-          const goalServeWinTeamId =
-            homeTeamTotalScore > awayTeamTotalScore
-              ? matchArray.hometeam.id
-              : matchArray.awayteam.id;
-          await declareResultMatch(
-            parseInt(goalServeMatchId),
-            parseInt(goalServeWinTeamId),
-            "NBA"
-          );
+          if (homeTeamTotalScore === awayTeamTotalScore) {
+            await Bet.updateMany(
+              {
+                status: "ACTIVE",
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "NBA",
+              },
+              {
+                status: "TIE",
+              }
+            );
+          } else {
+            const goalServeWinTeamId =
+              homeTeamTotalScore > awayTeamTotalScore
+                ? matchArray.hometeam.id
+                : matchArray.awayteam.id;
+            await declareResultMatch(
+              parseInt(goalServeMatchId),
+              parseInt(goalServeWinTeamId),
+              "NBA"
+            );
+          }
         } else if (
           matchArray.status == "Canceled" ||
           matchArray.status == "Postponed" ||

@@ -253,15 +253,28 @@ export default class NhlDbCronServiceClass {
               matchArray[j].awayteam.totalscore
             );
             const goalServeMatchId = matchArray[j].id;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? matchArray[j].hometeam.id
-                : matchArray[j].awayteam.id;
-            await declareResultMatch(
-              parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId),
-              "NHL"
-            );
+            if (homeTeamTotalScore === awayTeamTotalScore) {
+              await Bet.updateMany(
+                {
+                  status: "ACTIVE",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NHL",
+                },
+                {
+                  status: "TIE",
+                }
+              );
+            } else {
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray[j].hometeam.id
+                  : matchArray[j].awayteam.id;
+              await declareResultMatch(
+                parseInt(goalServeMatchId),
+                parseInt(goalServeWinTeamId),
+                "NHL"
+              );
+            }
           } else if (
             matchArray[j].status == "Canceled" ||
             matchArray[j].status == "Postponed" ||
@@ -441,15 +454,28 @@ export default class NhlDbCronServiceClass {
               matchArray.awayteam.totalscore
             );
             const goalServeMatchId = matchArray.id;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? matchArray.hometeam.id
-                : matchArray.awayteam.id;
-            await declareResultMatch(
-              parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId),
-              "NHL"
-            );
+            if (homeTeamTotalScore === awayTeamTotalScore) {
+              await Bet.updateMany(
+                {
+                  status: "ACTIVE",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NHL",
+                },
+                {
+                  status: "TIE",
+                }
+              );
+            } else {
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray.hometeam.id
+                  : matchArray.awayteam.id;
+              await declareResultMatch(
+                parseInt(goalServeMatchId),
+                parseInt(goalServeWinTeamId),
+                "NHL"
+              );
+            }
           } else if (
             matchArray.status == "Canceled" ||
             matchArray.status == "Postponed" ||

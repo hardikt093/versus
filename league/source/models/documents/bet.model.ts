@@ -101,7 +101,8 @@ var betSchema = new Schema(
         "RESULT_NOT_SATISFIED",
         "COMPLETED",
         "CANCELED",
-        "EXPIRED"
+        "EXPIRED",
+        "TIE"
       ],
       default: "PENDING",
     },

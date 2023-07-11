@@ -85,4 +85,32 @@ export default class BetDbCronServiceClass {
       console.log("error", error);
     }
   };
+
+  public tieMatchBetRefund = async () => {
+    try {
+      const betData = await Bet.find({
+        isDeleted: false,
+        status: "TIE",
+        paymentStatus: "PENDING",
+      });
+
+      for (let i = 0; i < betData.length; i++) {
+        const bet = betData[i];
+        // Please Do refund Code below
+        
+        // update payment Status after payment refunded
+        await Bet.updateOne(
+          {
+            isDeleted: false,
+            _id: bet._id,
+          },
+          {
+            paymentStatus: "REFUNDED",
+          }
+        );
+      }
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
 }

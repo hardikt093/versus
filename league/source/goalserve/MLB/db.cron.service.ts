@@ -343,15 +343,28 @@ export default class MlbDbCronServiceClass {
               matchArray[j].awayteam.totalscore
             );
             const goalServeMatchId = matchArray[j].id;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? matchArray[j].hometeam.id
-                : matchArray[j].awayteam.id;
-            await declareResultMatch(
-              parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId),
-              "MLB"
-            );
+            if (homeTeamTotalScore === awayTeamTotalScore) {
+              await Bet.updateMany(
+                {
+                  status: "ACTIVE",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "MLB",
+                },
+                {
+                  status: "TIE",
+                }
+              );
+            } else {
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray[j].hometeam.id
+                  : matchArray[j].awayteam.id;
+              await declareResultMatch(
+                parseInt(goalServeMatchId),
+                parseInt(goalServeWinTeamId),
+                "MLB"
+              );
+            }
           } else if (matchArray[j].status == "Canceled") {
             const goalServeMatchId = matchArray[j].id;
             await Bet.updateMany(
