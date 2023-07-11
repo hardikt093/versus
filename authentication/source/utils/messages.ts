@@ -22,5 +22,6 @@ class Messages {
   static USERS_CONTACT_LIST = "Contact list fetched sucessfully";
   static USERS_CONTACT_NOT_FOUND = "Contact not found";
   static INVALIDTOKEN = "Your token is invalid";
+  static PASSWORD_INCORRECT = "You have entered wrong password"
 }
 export default Messages;
