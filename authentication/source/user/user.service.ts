@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-import { log } from "console";
+import bcrypt from "bcryptjs";
+
 import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
 import { axiosGetMicro } from "../services/axios.service";
 import config from "../config/config";
@@ -27,7 +28,6 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
-        birthDate: data.birthDate,
         userName: data.userName,
         phone: data.phone,
       },
@@ -53,7 +53,6 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
-        birthDate: data.birthDate,
         userName: data.userName,
         phone: data.phone,
       },
@@ -365,6 +364,32 @@ const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
     },
   });
 };
+
+const changePassword = async (id: any, body: { oldPassword: string, newPassword: string }) => {
+  const findUser = await prisma.user.findUnique({
+    where: {
+      id: id.id
+    }
+  })
+  const checkPassword = await bcrypt.compare(body.oldPassword, findUser.password);
+  if (checkPassword) {
+    const hashPassword = await bcrypt.hash(body.newPassword, 8);
+    return await prisma.user.update({
+      where: {
+        id: id.id
+      },
+      data: {
+        password: hashPassword
+      }
+    })
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.PASSWORD_INCORRECT
+    );
+  }
+
+}
 export default {
   profilePictureUpdate,
   userContacts,
@@ -375,4 +400,5 @@ export default {
   userlist,
   userGetBulk,
   getFriendList,
+  changePassword
 };
