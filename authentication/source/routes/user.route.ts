@@ -56,8 +56,8 @@ const router = express.Router();
  *       200:
  *         description: user profile update.
  */
-router.put(
-  "/user/profileUpdate",
+router.post(
+  "/profileUpdate",
   auth,
   validate(userValidation.profileUpdate),
   userController.profileUpdate
