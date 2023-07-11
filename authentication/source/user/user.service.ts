@@ -4,31 +4,73 @@ import { log } from "console";
 import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
 import { axiosGetMicro } from "../services/axios.service";
 import config from "../config/config";
+import authService from "../auth/auth.service";
+import AppError from "../utils/AppError";
+import httpStatus from "http-status";
+import Messages from "../utils/messages";
 
 /**
  *
  * @param data
  */
 const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
-  return await prisma.user.update({
+  const findUserName = await prisma.user.findUnique({
     where: {
-      id: id.id,
-    },
-    data: {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      profileImage: data.profileImage,
-      birthDate: data.birthDate,
-    },
-    select: {
-      firstName: true,
-      lastName: true,
-      userName: true,
-      phone: true,
-      profileImage: true,
-      id: true,
-    },
-  });
+      userName: data.userName
+    }
+  })
+  if (findUserName && findUserName.id == id.id) {
+    return await prisma.user.update({
+      where: {
+        id: id.id,
+      },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthDate: data.birthDate,
+        userName: data.userName,
+        phone: data.phone
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        userName: true,
+        phone: true,
+        profileImage: true,
+        id: true,
+      },
+    });
+  }
+  else if (findUserName) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.USERNAME_ALREADY_EXIST
+    );
+  }
+  else {
+    return await prisma.user.update({
+      where: {
+        id: id.id,
+      },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        birthDate: data.birthDate,
+        userName: data.userName,
+        phone: data.phone
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        userName: true,
+        phone: true,
+        profileImage: true,
+        id: true,
+      },
+    });
+  }
+
+
 };
 
 const getAllContact = async () => {
