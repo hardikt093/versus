@@ -17,9 +17,9 @@ import Messages from "../utils/messages";
 const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
   const findUserName = await prisma.user.findUnique({
     where: {
-      userName: data.userName
-    }
-  })
+      userName: data.userName,
+    },
+  });
   if (findUserName && findUserName.id == id.id) {
     return await prisma.user.update({
       where: {
@@ -29,7 +29,7 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         firstName: data.firstName,
         lastName: data.lastName,
         userName: data.userName,
-        phone: data.phone
+        phone: data.phone,
       },
       select: {
         firstName: true,
@@ -40,14 +40,12 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         id: true,
       },
     });
-  }
-  else if (findUserName) {
+  } else if (findUserName) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.USERNAME_ALREADY_EXIST
     );
-  }
-  else {
+  } else {
     return await prisma.user.update({
       where: {
         id: id.id,
@@ -56,7 +54,7 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         firstName: data.firstName,
         lastName: data.lastName,
         userName: data.userName,
-        phone: data.phone
+        phone: data.phone,
       },
       select: {
         firstName: true,
@@ -68,8 +66,6 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
       },
     });
   }
-
-
 };
 
 const getAllContact = async () => {
@@ -198,7 +194,7 @@ const userlist = async (id: number, search: string) => {
 const userGetBulk = async (userIds: Array<number>) => {
   return await prisma.user.findMany({
     where: {
-      isDeleted : false,
+      isDeleted: false,
       id: {
         in: userIds,
       },
@@ -343,12 +339,33 @@ const getFriendList = async (
   //   },
 
   // })
-  const sortedArray = resp.data.data.map((id: number) =>
-    getMaxBetOpponent.find((obj: any) => obj.id === id)
-  ).filter((item:any)=>item!==undefined);
-  return { getFriendList,getMaxBetOpponent:sortedArray };
+  const sortedArray = resp.data.data
+    .map((id: number) => getMaxBetOpponent.find((obj: any) => obj.id === id))
+    .filter((item: any) => item !== undefined);
+  return { getFriendList, getMaxBetOpponent: sortedArray };
+};
+
+const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
+  return await prisma.user.update({
+    where: {
+      id: loggedInUser,
+    },
+    data: {
+      profileImage: imageUrl,
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
+      email: true,
+      phone: true,
+    },
+  });
 };
 export default {
+  profilePictureUpdate,
   userContacts,
   userProfileUpdate,
   getAllContact,
