@@ -1,34 +1,71 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-import { log } from "console";
+import bcrypt from "bcryptjs";
+
 import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
 import { axiosGetMicro } from "../services/axios.service";
 import config from "../config/config";
+import authService from "../auth/auth.service";
+import AppError from "../utils/AppError";
+import httpStatus from "http-status";
+import Messages from "../utils/messages";
 
 /**
  *
  * @param data
  */
 const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
-  return await prisma.user.update({
+  const findUserName = await prisma.user.findUnique({
     where: {
-      id: id.id,
-    },
-    data: {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      profileImage: data.profileImage,
-      birthDate: data.birthDate,
-    },
-    select: {
-      firstName: true,
-      lastName: true,
-      userName: true,
-      phone: true,
-      profileImage: true,
-      id: true,
+      userName: data.userName,
     },
   });
+  if (findUserName && findUserName.id == id.id) {
+    return await prisma.user.update({
+      where: {
+        id: id.id,
+      },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        userName: data.userName,
+        phone: data.phone,
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        userName: true,
+        phone: true,
+        profileImage: true,
+        id: true,
+      },
+    });
+  } else if (findUserName) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.USERNAME_ALREADY_EXIST
+    );
+  } else {
+    return await prisma.user.update({
+      where: {
+        id: id.id,
+      },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        userName: data.userName,
+        phone: data.phone,
+      },
+      select: {
+        firstName: true,
+        lastName: true,
+        userName: true,
+        phone: true,
+        profileImage: true,
+        id: true,
+      },
+    });
+  }
 };
 
 const getAllContact = async () => {
@@ -157,7 +194,7 @@ const userlist = async (id: number, search: string) => {
 const userGetBulk = async (userIds: Array<number>) => {
   return await prisma.user.findMany({
     where: {
-      isDeleted : false,
+      isDeleted: false,
       id: {
         in: userIds,
       },
@@ -302,12 +339,59 @@ const getFriendList = async (
   //   },
 
   // })
-  const sortedArray = resp.data.data.map((id: number) =>
-    getMaxBetOpponent.find((obj: any) => obj.id === id)
-  ).filter((item:any)=>item!==undefined);
-  return { getFriendList,getMaxBetOpponent:sortedArray };
+  const sortedArray = resp.data.data
+    .map((id: number) => getMaxBetOpponent.find((obj: any) => obj.id === id))
+    .filter((item: any) => item !== undefined);
+  return { getFriendList, getMaxBetOpponent: sortedArray };
 };
+
+const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
+  return await prisma.user.update({
+    where: {
+      id: loggedInUser,
+    },
+    data: {
+      profileImage: imageUrl,
+    },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
+      email: true,
+      phone: true,
+    },
+  });
+};
+
+const changePassword = async (id: any, body: { oldPassword: string, newPassword: string }) => {
+  const findUser = await prisma.user.findUnique({
+    where: {
+      id: id.id
+    }
+  })
+  const checkPassword = await bcrypt.compare(body.oldPassword, findUser.password);
+  if (checkPassword) {
+    const hashPassword = await bcrypt.hash(body.newPassword, 8);
+    return await prisma.user.update({
+      where: {
+        id: id.id
+      },
+      data: {
+        password: hashPassword
+      }
+    })
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.PASSWORD_INCORRECT
+    );
+  }
+
+}
 export default {
+  profilePictureUpdate,
   userContacts,
   userProfileUpdate,
   getAllContact,
@@ -316,4 +400,5 @@ export default {
   userlist,
   userGetBulk,
   getFriendList,
+  changePassword
 };

@@ -31,6 +31,7 @@ export interface IUpdateUserProfile {
   profileImage: string;
   id: string;
   birthDate?: string;
+  phone?: object
 }
 
 export interface IForgotPassword {

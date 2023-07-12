@@ -1,10 +1,58 @@
-import express from "express";
+import express, { Request } from "express";
 
 import userController from "../user/user.controller";
 import validate from "../middlewares/validate";
 import userValidation from "./../user/user.validation";
 import auth from "../middlewares/auth";
+import multer from "multer";
+import path from "path";
+import multerS3 from "multer-s3";
+import { S3Client } from "@aws-sdk/client-s3";
+const s3 = new S3Client({
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "AKIAWQEXOJV37YTOR52L",
+    secretAccessKey:
+      process.env.AWS_SECRET_ACCESS_KEY ??
+      "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",
+  },
+  region: process.env.AWS_S3_BUCKET_REGION ?? "us-west-1",
+});
+const folder = "profile-images/";
+const s3Storage = multerS3({
+  s3: s3,
+  bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "versus-s3-data",
+  acl: "private",
+  metadata: (req: Request, file, cb) => {
+    cb(null, { fieldname: file.fieldname });
+  },
+  key: (req: Request, file, cb) => {
+    const fileName = folder + req.loggedInUser.id;
+    cb(null, fileName);
+  },
+});
 
+function sanitizeFile(file: any, cb: any) {
+  const fileExts = [".png", ".jpg", ".jpeg", ".gif"];
+  const isAllowedExt = fileExts.includes(
+    path.extname(file.originalname.toLowerCase())
+  );
+  const isAllowedMimeType = file.mimetype.startsWith("image/");
+
+  if (isAllowedExt && isAllowedMimeType) {
+    return cb(null, true);
+  } else {
+    cb("Error: File type not allowed!");
+  }
+}
+const uploadImage = multer({
+  storage: s3Storage,
+  fileFilter: (req: Request, file, callback) => {
+    sanitizeFile(file, callback);
+  },
+  limits: {
+    fileSize: 1024 * 1024 * 10,
+  },
+});
 const router = express.Router();
 
 /**
@@ -56,17 +104,26 @@ const router = express.Router();
  *       200:
  *         description: user profile update.
  */
-router.put(
-  "/user/profileUpdate",
+router.post(
+  "/profileUpdate",
   auth,
   validate(userValidation.profileUpdate),
   userController.profileUpdate
 );
+
+router.put(
+  "/profilePicture",
+  auth,
+  uploadImage.single("image"),
+  userController.profilePictureUpdate
+);
 router.get("/", auth, userController.seacrchUsers);
 
+router.get("/get/image", userController.getImageBasedOnS3Key);
 router.get("/user/getAllContact", userController.getAllContact);
 router.post("/friends", auth, userController.userContacts);
 router.post("/list", auth, userController.usersList);
 router.post("/getBulk", userController.usersGetBulk);
 router.get("/getFriendList", auth, userController.getFriendList);
+router.post("/changePassword", auth, userController.changePassword);
 export default router;

@@ -675,4 +675,5 @@ export default {
   metaLogin,
   getContact,
   getUser,
+  checkDuplicateUserName
 };
