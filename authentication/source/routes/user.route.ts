@@ -119,7 +119,7 @@ router.put(
 );
 router.get("/", auth, userController.seacrchUsers);
 
-router.get("/get/image", userController.getImageBasedOnS3Key);
+router.get("/get/image/:folder/:image", userController.getImageBasedOnS3Key);
 router.get("/user/getAllContact", userController.getAllContact);
 router.post("/friends", auth, userController.userContacts);
 router.post("/list", auth, userController.usersList);
