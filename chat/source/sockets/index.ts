@@ -65,15 +65,15 @@ export default (socket: any) => {
   const myId = socket.handshake.query.userId
     ? socket.handshake.query.userId
     : 0;
-  connection(socket);
+  connection(socket,myId);
   socket.on("join chat", (room: string) => {
-    joinChat(socket, room);
+    joinChat(socket, room,myId);
   });
   socket.on("typing", (room: string) => socket.in(room).emit("typing"));
   socket.on("stop typing", (room: string) =>
     socket.in(room).emit("stop typing")
   );
-  socket.on("new message", (newMessageRecieved:any) => {
+  socket.on("myMessage", (newMessageRecieved:any) => {
     groupMessage(socket,newMessageRecieved,)
   })
   // socket.off("setup", () => {

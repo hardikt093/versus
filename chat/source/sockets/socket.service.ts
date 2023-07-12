@@ -5,7 +5,7 @@ import { HandshakeUserId, IConversation, IMessage } from "../interfaces/input";
 
 const prisma = new PrismaClient();
 const onlineUsers = new Map();
-const users = [];
+const users: any = [];
 // old code
 const connectionOld = async (userId: any, socket: any) => {
   if (userId > 0) {
@@ -275,36 +275,63 @@ const conversationChange = async (
 };
 // old code end
 
-const connection = async (socket: any) => {
+function userJoin(id: string, room: string, userId: number) {
+  const user = { id, userId, room };
+
+  users.push(user);
+
+  return user;
+}
+
+// Get current user
+function getCurrentUser(id: number) {
+  console.log(id, users);
+  return users.find((user: any) => user.id === id);
+}
+const connection = async (socket: any, myId: number) => {
   console.log("Connected to socket.io");
-  socket.on("setup", (userId: number) => {
-    socket.join(userId);
-    socket.emit("connected");
+};
+const joinChat = async (socket: any, room: string, userId: number) => {
+  console.log(socket.id, room, userId);
+  const user = userJoin(socket.id, room, userId);
+  socket.join(user.room);
+  // Welcome current user
+  socket.emit("message", "Welcome to ChatCord!");
+  // Broadcast when a user connects
+  socket.broadcast.to(user.room).emit("message", `user has joined the chat`);
+};
+
+const groupMessage = async (socket: any, newMessageRecieved: any) => {
+  const user = getCurrentUser(socket.id);
+  io.to(user.room).emit("message", newMessageRecieved);
+  const { message } = newMessageRecieved;
+  console.log(message);
+  const newMessage = await prisma.message.create({
+    include: {
+      from: { select: { userName: true, id: true } },
+      to: { select: { userName: true, id: true } },
+      reaction: {
+        select: {
+          reaction: true,
+          from: { select: { userName: true, id: true } },
+        },
+      },
+      threads: {
+        select: {
+          text: true,
+          from: { select: { userName: true, id: true } },
+          filePath: true,
+        },
+      },
+    },
+    data: { ...message, room: user.room },
   });
-};
-const joinChat = async (socket: any, room: string) => {
-  socket.join(room);
-  console.log("User Joined Room: " + room);
+  console.log("newMessage", newMessage);
 };
 
-const groupMessage = async (socket: any,newMessageRecieved: any) => {
-  var chat = newMessageRecieved.chat;
-
-  if (!chat.users) return console.log("chat.users not defined");
-
-  chat.users.forEach((user:any) => {
-    if (user._id == newMessageRecieved.sender._id) return;
-
-    socket.in(user._id).emit("message recieved", newMessageRecieved);
-  });
+const disconnectUser = () => {
+  io.emit("message", "A user has left the chat");
 };
-
-// const disconnect=()=>{
-//   console.log("USER DISCONNECTED");
-//   socket.leave(userData._id);
-// }
-
-
 
 export {
   conversationChange,
@@ -318,5 +345,6 @@ export {
 
   // new
   joinChat,
-  groupMessage
+  groupMessage,
+  disconnectUser,
 };
