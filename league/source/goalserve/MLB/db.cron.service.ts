@@ -1030,6 +1030,7 @@ export default class MlbDbCronServiceClass {
           const match: IMatchModel | null = await Match.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
+          if (!match) {
           const data: Partial<IMatchModel> = {
             leagueId: league?._id,
             goalServeLeagueId: league?.goalServeLeagueId,
@@ -1097,6 +1098,7 @@ export default class MlbDbCronServiceClass {
           }
           const matchData = new Match(data);
           await matchData.save();
+        }
         }
       }
       for (let k = 0; k < matchesNeedToRemove.length; k++) {

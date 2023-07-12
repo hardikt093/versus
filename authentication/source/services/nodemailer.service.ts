@@ -28,7 +28,7 @@ export const sendMail = async (mail: any) => {
         clientId: process.env.CLEINT_ID,
         clientSecret: process.env.CLIENT_SECRET,
         refreshToken: process.env.REFRESHTOKEN,
-        accessToken: process.env.ACCESSTOKEN,
+        accessToken: accessToken,
       },
       // tls: {
       //   rejectUnauthorized: false,

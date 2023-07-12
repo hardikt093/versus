@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import AppError from "../utils/AppError";
 import Messages from "./../utils/messages";
 import verifyAccount from "./../mailTemplates/verifyAccount";
+import resetPasswordMail from "./../mailTemplates/resetPassword";
 import tokenService from "../services/token.services";
 import {
   ICreateUser,
@@ -293,6 +294,13 @@ const forgotPassword = async (email: IForgotPassword) => {
     );
   }
   const tokens = await tokenService.generateResetPasswordToken(checkEmail);
+  // console.log("tokens", tokens)
+  // const sendMai = await sendMail({
+  //   url: `${process.env.HOST}/register/${tokens}`,
+  //   html: resetPasswordMail.html,
+  //   to: email,
+  //   subject: "Versus reset password",
+  // });
   return { id: checkEmail.id, emailFound: true };
 };
 
