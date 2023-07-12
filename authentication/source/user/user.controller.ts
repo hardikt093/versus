@@ -111,7 +111,8 @@ const getFriendList = async (req: Request, res: Response) => {
 
 const profilePictureUpdate = async (req: Request, res: Response) => {
   try {
-    const url = `${process.env.AUTH_SERVER}/users/get/image?key=profile-images/${req.loggedInUser.id}`;
+    const key = req.file && req.file.key ? req.file.key : req.loggedInUser.id;
+    const url = `${process.env.AUTH_SERVER}/users/get/image?key=${key}`;
     const profilePictureUpdateData = await userService.profilePictureUpdate(
       req.loggedInUser.id,
       url

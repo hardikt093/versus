@@ -22,11 +22,11 @@ const s3Storage = multerS3({
   s3: s3,
   bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "versus-s3-data",
   acl: "private",
-  metadata: (req: Request, file, cb) => {
+  metadata: (req: Request, file: any, cb) => {
     cb(null, { fieldname: file.fieldname });
   },
-  key: (req: Request, file, cb) => {
-    const fileName = folder + req.loggedInUser.id + path.extname(file.originalname.toLowerCase());
+  key: (req: Request, file: any, cb) => {
+    const fileName = folder + req.loggedInUser.id + path.extname(file.originalname);
     cb(null, fileName);
   },
 });
