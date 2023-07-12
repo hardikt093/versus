@@ -109,18 +109,6 @@ const getFriendList = async (req: Request, res: Response) => {
   }
 };
 
-const changePassword = async (req: Request, res: Response) => {
-  try {
-    const changePassword = await userService.changePassword(
-      req.loggedInUser,
-      req.body
-    );
-    createResponse(res, httpStatus.OK, "", true);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
 const profilePictureUpdate = async (req: Request, res: Response) => {
   try {
     const url = `${process.env.AUTH_SERVER}/users/get/image?key=profile-images/${req.loggedInUser.id}`;
@@ -171,5 +159,4 @@ export default {
   usersList,
   usersGetBulk,
   getFriendList,
-  changePassword,
 };
