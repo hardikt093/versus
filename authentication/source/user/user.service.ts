@@ -9,7 +9,15 @@ import authService from "../auth/auth.service";
 import AppError from "../utils/AppError";
 import httpStatus from "http-status";
 import Messages from "../utils/messages";
-
+import aws, { S3 } from "aws-sdk";
+aws.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "AKIAWQEXOJV37YTOR52L",
+  secretAccessKey:
+    process.env.AWS_SECRET_ACCESS_KEY ??
+    "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",
+  region: process.env.AWS_S3_BUCKET_REGION ?? "us-west-1",
+});
+const s3 = new aws.S3();
 /**
  *
  * @param data
@@ -346,6 +354,24 @@ const getFriendList = async (
 };
 
 const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
+  const userData = await prisma.user.findUnique({
+    where: {
+      id: loggedInUser,
+    }
+  });
+  const keys = userData.profileImage.split('profile-images/');
+    const param: S3.DeleteObjectRequest = {
+      Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
+      Key: 'profile-images/'+ keys[1]
+    };
+    s3.deleteObject(param, (err, data) => {
+      if (err) {
+        throw new AppError(
+          httpStatus.UNPROCESSABLE_ENTITY,
+          ""
+        );
+      }
+    });
   return await prisma.user.update({
     where: {
       id: loggedInUser,
