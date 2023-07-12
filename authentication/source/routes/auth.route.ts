@@ -203,5 +203,6 @@ router.post("/refresh-auth-token", authController.refreshAuthTokens);
 router.get("/getContact", auth, authController.getContact);
 router.get("/getUser", auth, authController.getUser);
 router.delete("/userDelete", authController.deleteUser);
+router.post("/changePassword", auth, authController.changePassword);
 
 export = router;
