@@ -26,7 +26,7 @@ const s3Storage = multerS3({
     cb(null, { fieldname: file.fieldname });
   },
   key: (req: Request, file, cb) => {
-    const fileName = folder + req.loggedInUser.id;
+    const fileName = folder + req.loggedInUser.id + path.extname(file.originalname.toLowerCase());
     cb(null, fileName);
   },
 });
