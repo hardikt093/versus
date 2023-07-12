@@ -5,8 +5,9 @@ import { HandshakeUserId, IConversation, IMessage } from "../interfaces/input";
 
 const prisma = new PrismaClient();
 const onlineUsers = new Map();
-
-const connection = async (userId: any, socket: any) => {
+const users = [];
+// old code
+const connectionOld = async (userId: any, socket: any) => {
   if (userId > 0) {
     onlineUsers.set(+userId, { socketRef: socket.id });
     await prisma.contactTry.updateMany({
@@ -272,6 +273,38 @@ const conversationChange = async (
     console.log(error);
   }
 };
+// old code end
+
+const connection = async (socket: any) => {
+  console.log("Connected to socket.io");
+  socket.on("setup", (userId: number) => {
+    socket.join(userId);
+    socket.emit("connected");
+  });
+};
+const joinChat = async (socket: any, room: string) => {
+  socket.join(room);
+  console.log("User Joined Room: " + room);
+};
+
+const groupMessage = async (socket: any,newMessageRecieved: any) => {
+  var chat = newMessageRecieved.chat;
+
+  if (!chat.users) return console.log("chat.users not defined");
+
+  chat.users.forEach((user:any) => {
+    if (user._id == newMessageRecieved.sender._id) return;
+
+    socket.in(user._id).emit("message recieved", newMessageRecieved);
+  });
+};
+
+// const disconnect=()=>{
+//   console.log("USER DISCONNECTED");
+//   socket.leave(userData._id);
+// }
+
+
 
 export {
   conversationChange,
@@ -282,4 +315,8 @@ export {
   editMessage,
   deleteMessage,
   disconnect,
+
+  // new
+  joinChat,
+  groupMessage
 };

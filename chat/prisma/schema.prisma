@@ -53,7 +53,6 @@ model Token {
 model Conversation {
   id           Int       @id @default(autoincrement())
   participants Int[]
-  messages     Message[]
   contacts     ContactTry[]
 }
 
@@ -82,7 +81,7 @@ model Message {
   filePath       String[]
   createdAt      DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
-  Conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  channel        String
   conversationId Int?
   reaction      MessageReaction[]
   threads       Threads[]
@@ -104,7 +103,7 @@ model Threads {
   from           User?         @relation(name: "threadfromUserId", fields: [fromId], references: [id])
   fromId         Int?
   text           String
-  filePath       String?
+  filePath       String[]
   createdAt      DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
 }

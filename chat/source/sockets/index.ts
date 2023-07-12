@@ -15,47 +15,68 @@ import {
   myMessage,
   deleteMessage,
   disconnect,
+  joinChat,
+  groupMessage,
 } from "./socket.service";
 
+// export default (socket: any) => {
+//   const myId = socket.handshake.query.userId
+//     ? socket.handshake.query.userId
+//     : 0;
+//   connection(Number(myId), socket);
+//   socket.on(
+//     "myMessage",
+//     ({ message, conversation, myUserId }: IMessageInput) => {
+//       myMessage(message, conversation, myUserId);
+//     }
+//   );
+//   socket.on(
+//     "updateMyMessage",
+//     ({ myUserId, text, conversationId, messageId }: IUpdateMessageInput) => {
+//       editMessage(myUserId, text, conversationId, messageId);
+//     }
+//   );
+//   socket.on(
+//     "deleteMyMessage",
+//     ({ conversationId, messageId }: IDeleteMessage) => {
+//       deleteMessage(conversationId, messageId);
+//     }
+//   );
+//   socket.on(
+//     "messageReaction",
+//     ({ reaction, messageId, conversationId, myUserId }: IMessageReaction) => {
+//       messageReaction(reaction, conversationId, messageId, myUserId);
+//     }
+//   );
+//   socket.on(
+//     "threadMessage",
+//     ({ text, messageId, myUserId, conversationId }: IThreadMessage) => {
+//       messageThread(text, messageId, myUserId, conversationId);
+//     }
+//   );
+//   socket.on(
+//     "conversationChange",
+//     ({ conversationId, myUserId }: IConversationChange) =>
+//       conversationChange(conversationId, myUserId, socket)
+//   );
+//   // socket.on("disconnect", () => disconnect(Number(myId), socket));
+// };
 export default (socket: any) => {
   const myId = socket.handshake.query.userId
     ? socket.handshake.query.userId
     : 0;
-  connection(Number(myId), socket);
-  socket.on(
-    "myMessage",
-    ({ message, conversation, myUserId }: IMessageInput) => {
-      myMessage(message, conversation, myUserId);
-    }
+  connection(socket);
+  socket.on("join chat", (room: string) => {
+    joinChat(socket, room);
+  });
+  socket.on("typing", (room: string) => socket.in(room).emit("typing"));
+  socket.on("stop typing", (room: string) =>
+    socket.in(room).emit("stop typing")
   );
-  socket.on(
-    "updateMyMessage",
-    ({ myUserId, text, conversationId, messageId }: IUpdateMessageInput) => {
-      editMessage(myUserId, text, conversationId, messageId);
-    }
-  );
-  socket.on(
-    "deleteMyMessage",
-    ({ conversationId, messageId }: IDeleteMessage) => {
-      deleteMessage(conversationId, messageId);
-    }
-  );
-  socket.on(
-    "messageReaction",
-    ({ reaction, messageId, conversationId, myUserId }: IMessageReaction) => {
-      messageReaction(reaction, conversationId, messageId, myUserId);
-    }
-  );
-  socket.on(
-    "threadMessage",
-    ({ text, messageId, myUserId, conversationId }: IThreadMessage) => {
-      messageThread(text, messageId, myUserId, conversationId);
-    }
-  );
-  socket.on(
-    "conversationChange",
-    ({ conversationId, myUserId }: IConversationChange) =>
-      conversationChange(conversationId, myUserId, socket)
-  );
-  // socket.on("disconnect", () => disconnect(Number(myId), socket));
+  socket.on("new message", (newMessageRecieved:any) => {
+    groupMessage(socket,newMessageRecieved,)
+  })
+  // socket.off("setup", () => {
+  //   disconnect()
+  // })
 };
