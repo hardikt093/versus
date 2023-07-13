@@ -241,6 +241,7 @@ const signIn = async (data: ISignIn) => {
       profileImage: signIn[0].profileImage,
       birthDate: signIn[0].birthDate,
       accessToken: tokens.access.token,
+      phone: signIn[0].phone,
       refreshToken: tokens.refresh.token,
     };
     return { user };
@@ -351,6 +352,7 @@ const socialLogin = async (data: any) => {
         accessToken: tokens.access.token,
         refreshToken: tokens.refresh.token,
         userName: checkEmail.userName,
+        phone:checkEmail.phone
       };
       return user;
     }
