@@ -17,6 +17,8 @@ import {
   disconnect,
   joinChat,
   groupMessage,
+  disconnectUser,
+  groupMessageThread,
 } from "./socket.service";
 
 // export default (socket: any) => {
@@ -76,7 +78,9 @@ export default (socket: any) => {
   socket.on("myMessage", (newMessageRecieved:any) => {
     groupMessage(socket,newMessageRecieved,)
   })
-  // socket.off("setup", () => {
-  //   disconnect()
-  // })
+  socket.on("threadMessage", (newThreadMessage:any) => {
+    groupMessageThread(socket,newThreadMessage)
+  })
+  // disconnectUser()
+  
 };
