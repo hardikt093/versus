@@ -99,12 +99,13 @@ const generateVerifyPasswordToken = async (data: { _id: number }) => {
   return resetPasswordToken;
 };
 
-const verifyToken = async (token: string, type: string | number) => {
+const verifyToken = async (token: string, type?: string | number) => {
   const payload: any = jwt.verify(token, config.jwt.secret);
 
-  const tokenDoc: object = await prisma.token.findUnique({
+  const tokenDoc: object = await prisma.token.findMany({
     where: {
-      user: payload.sub.user.id,
+      user: payload.sub.id,
+      type: 4
     },
   });
   if (!tokenDoc) {
