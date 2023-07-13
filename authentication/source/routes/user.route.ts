@@ -22,11 +22,11 @@ const s3Storage = multerS3({
   s3: s3,
   bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "versus-s3-data",
   acl: "private",
-  metadata: (req: Request, file, cb) => {
+  metadata: (req: Request, file: any, cb) => {
     cb(null, { fieldname: file.fieldname });
   },
-  key: (req: Request, file, cb) => {
-    const fileName = folder + req.loggedInUser.id;
+  key: (req: Request, file: any, cb) => {
+    const fileName = folder + Date.now() + path.extname(file.originalname);
     cb(null, fileName);
   },
 });
@@ -119,11 +119,10 @@ router.put(
 );
 router.get("/", auth, userController.seacrchUsers);
 
-router.get("/get/image", userController.getImageBasedOnS3Key);
+router.get("/get/image/:folder/:image", userController.getImageBasedOnS3Key);
 router.get("/user/getAllContact", userController.getAllContact);
 router.post("/friends", auth, userController.userContacts);
 router.post("/list", auth, userController.usersList);
 router.post("/getBulk", userController.usersGetBulk);
 router.get("/getFriendList", auth, userController.getFriendList);
-router.post("/changePassword", auth, userController.changePassword);
 export default router;

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import httpStatus from "http-status";
-import aws from "aws-sdk";
+import aws, { S3 } from "aws-sdk";
 aws.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "AKIAWQEXOJV37YTOR52L",
   secretAccessKey:
@@ -109,21 +109,10 @@ const getFriendList = async (req: Request, res: Response) => {
   }
 };
 
-const changePassword = async (req: Request, res: Response) => {
-  try {
-    const changePassword = await userService.changePassword(
-      req.loggedInUser,
-      req.body
-    );
-    createResponse(res, httpStatus.OK, "", true);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-};
-
 const profilePictureUpdate = async (req: Request, res: Response) => {
   try {
-    const url = `${process.env.AUTH_SERVER}/users/get/image?key=profile-images/${req.loggedInUser.id}`;
+    const key = req.file && req.file.key ? req.file.key : req.loggedInUser.id;
+    const url = `${process.env.AUTH_SERVER}/users/get/image/${key}`;
     const profilePictureUpdateData = await userService.profilePictureUpdate(
       req.loggedInUser.id,
       url
@@ -142,21 +131,26 @@ const profilePictureUpdate = async (req: Request, res: Response) => {
 
 const getImageBasedOnS3Key = async (req: Request, res: Response) => {
   try {
-    const params = {
-      Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET,
-      Key: req.query.key,
-      Expires: 30,
+    const key = req.params.folder + '/'+req.params.image;
+    const param: S3.GetObjectRequest = {
+      Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
+      Key: key
     };
-
-    s3.getSignedUrl("getObject", params, (err: any, url: any) => {
-      if (err) {
-        console.error("Error generating pre-signed URL:", err);
-        return res
-          .status(500)
-          .json({ error: "Failed to generate pre-signed URL" });
-      }
-      return res.redirect(url);
+  
+    const readStream = s3.getObject(param).createReadStream();
+    readStream.on('error', (error) => {
+      createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
     });
+    readStream.pipe(res);
+    // s3.getSignedUrl("getObject", params, (err: any, url: any) => {
+    //   if (err) {
+    //     console.error("Error generating pre-signed URL:", err);
+    //     return res
+    //       .status(500)
+    //       .json({ error: "Failed to generate pre-signed URL" });
+    //   }
+    //   return res.redirect(url);
+    // });
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -171,5 +165,4 @@ export default {
   usersList,
   usersGetBulk,
   getFriendList,
-  changePassword,
 };

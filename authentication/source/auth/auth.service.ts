@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import AppError from "../utils/AppError";
 import Messages from "./../utils/messages";
 import verifyAccount from "./../mailTemplates/verifyAccount";
+import resetPasswordMail from "./../mailTemplates/resetPassword";
 import tokenService from "../services/token.services";
 import {
   ICreateUser,
@@ -292,6 +293,14 @@ const forgotPassword = async (email: IForgotPassword) => {
       Messages.EMAIL_NOT_FOUND_FORGOTPASSWORD
     );
   }
+  const tokens = await tokenService.generateResetPasswordToken(checkEmail);
+  // console.log("tokens", tokens)
+  // const sendMai = await sendMail({
+  //   url: `${process.env.HOST}/register/${tokens}`,
+  //   html: resetPasswordMail.html,
+  //   to: email,
+  //   subject: "Versus reset password",
+  // });
   return { id: checkEmail.id, emailFound: true };
 };
 
@@ -660,6 +669,32 @@ const getUser = async (user: IUser) => {
   });
   return userDetails;
 };
+
+const changePassword = async (id: any, body: { oldPassword: string, newPassword: string }) => {
+  const findUser = await prisma.user.findUnique({
+    where: {
+      id: id.id
+    }
+  })
+  const checkPassword = await bcrypt.compare(body.oldPassword, findUser.password);
+  if (checkPassword) {
+    const hashPassword = await bcrypt.hash(body.newPassword, 8);
+    return await prisma.user.update({
+      where: {
+        id: id.id
+      },
+      data: {
+        password: hashPassword
+      }
+    })
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.PASSWORD_INCORRECT
+    );
+  }
+
+}
 export default {
   signUp,
   signIn,
@@ -675,5 +710,6 @@ export default {
   metaLogin,
   getContact,
   getUser,
-  checkDuplicateUserName
+  checkDuplicateUserName,
+  changePassword
 };

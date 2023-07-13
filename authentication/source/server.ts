@@ -16,6 +16,11 @@ declare global {
         id: number;
       };
     }
+    namespace Multer {
+      interface File {
+        key : String
+      }
+    }
   }
 }
 
