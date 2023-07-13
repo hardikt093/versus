@@ -295,13 +295,12 @@ const forgotPassword = async (email: IForgotPassword) => {
     );
   }
   const tokens = await tokenService.generateResetPasswordToken(checkEmail);
-  // console.log("tokens", tokens)
-  // const sendMai = await sendMail({
-  //   url: `${process.env.HOST}/register/${tokens}`,
-  //   html: resetPasswordMail.html,
-  //   to: email,
-  //   subject: "Versus reset password",
-  // });
+  const sendMai = await sendMail({
+    url: `${process.env.HOST}/reset-password/${tokens}`,
+    html: resetPasswordMail.html,
+    to: email,
+    subject: "Versus reset password",
+  });
   return { id: checkEmail.id, emailFound: true };
 };
 
@@ -310,10 +309,11 @@ const forgotPassword = async (email: IForgotPassword) => {
  * @param data requesting password for reset existing password
  */
 const resetPassword = async (data: IResetPassword) => {
+  const isVerify = await tokenService.verifyToken(data.token);
   data.password = await bcrypt.hash(data.password, 8);
   return await prisma.user.update({
     where: {
-      id: data.id,
+      id: isVerify.sub.id,
     },
     data: {
       password: data.password,

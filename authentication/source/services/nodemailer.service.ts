@@ -19,7 +19,8 @@ export const sendMail = async (mail: any) => {
     oauth2Client.setCredentials({
       refresh_token: process.env.REFRESHTOKEN,
     });
-    const accessToken = oauth2Client.getAccessToken();
+    const accessToken = await oauth2Client.getAccessToken();
+    console.log("Access Token : ",accessToken);
     const smtpTransport = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -30,9 +31,9 @@ export const sendMail = async (mail: any) => {
         refreshToken: process.env.REFRESHTOKEN,
         accessToken: accessToken,
       },
-      // tls: {
-      //   rejectUnauthorized: false,
-      // },
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
     const template = handlebars.compile(mail.html)({
       url: mail.url,

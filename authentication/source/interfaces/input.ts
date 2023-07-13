@@ -39,8 +39,8 @@ export interface IForgotPassword {
 }
 
 export interface IResetPassword {
-  id: string;
   password: string;
+  token: string;
 }
 
 export interface IUserLogin extends Request {
