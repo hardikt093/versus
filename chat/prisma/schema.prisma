@@ -59,17 +59,28 @@ model Token {
 }
 
 model Conversation {
-  id               Int             @id @default(autoincrement())
-  isPrivate        Boolean         @default(false)
-  conversationType String
-  admin            User[]
-  name             String
-  description      String
-  uniqueKeyWord    String
-  chatInvite       chatInvite[]
-  message          Message[]
-  channelUser      channelUser[]
-  reportUser       reportUser[]
+  id                Int              @id @default(autoincrement())
+  isPrivate         Boolean          @default(false)
+  conversationType  conversationType @default(channel)
+  admin             User[]
+  name              String
+  description       String?
+  uniqueKeyWord     String?
+  goalServeMatchId  Int?
+  goalServeLeagueId Int?
+  expiredAt         DateTime?
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime         @updatedAt @db.Timestamptz(3)
+  isDeleted         Boolean          @default(false)
+  chatInvite        chatInvite[]
+  message           Message[]
+  channelUser       channelUser[]
+  reportUser        reportUser[]
+}
+
+enum conversationType {
+  oneToOne
+  channel
 }
 
 model Message {

@@ -9,8 +9,8 @@ class DBCronJob {
 
   constructor() {
     const conversationDbCronService = new ConversationDbCronService();
-    this.createSingleGameChat = cron.schedule("*/2 * * * * *", this.createSingleGameChatMethod.bind(this, conversationDbCronService));
-    this.expireSingleGameChat = cron.schedule("*/5 * * * * *", this.expireSingleGameChatMethod.bind(this, conversationDbCronService));
+    this.createSingleGameChat = cron.schedule("*/10 * * * * *", this.createSingleGameChatMethod.bind(this, conversationDbCronService));
+    this.expireSingleGameChat = cron.schedule("*/10 * * * * *", this.expireSingleGameChatMethod.bind(this, conversationDbCronService));
   }
 
   private async createSingleGameChatMethod(conversationDbCronService: ConversationDbCronService): Promise<void> {
