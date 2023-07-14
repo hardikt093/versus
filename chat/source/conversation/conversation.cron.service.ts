@@ -16,6 +16,7 @@ export default class ConversationDbCronServiceClass {
           const match = resp.data.data[i];
           const conversation = await prisma.conversation.findFirst({
             where: {
+              isDeleted : false,
               goalServeMatchId: match.goalServeMatchId,
               goalServeLeagueId: match.goalServeLeagueId,
             },

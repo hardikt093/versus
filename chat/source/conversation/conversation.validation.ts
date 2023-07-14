@@ -6,4 +6,11 @@ const createMessage = {
     conversationId: Joi.number().required(),
   }),
 };
-export default { createMessage };
+
+const getMatchPublicChannelConversation = {
+  body: Joi.object().keys({
+    goalServeLeagueId: Joi.number().required(),
+    goalServeMatchId: Joi.number().required(),
+  }),
+};
+export default { createMessage, getMatchPublicChannelConversation };
