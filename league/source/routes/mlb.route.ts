@@ -97,6 +97,10 @@ router.get(
   "/upcoming2DaysMatch",
   mlbController.get2DaysUpcomingDataFromMongodb
 );
+router.get(
+  "/upcoming12HoursGame",
+  mlbController.get12HoursUpcomingGameData
+);
 router.post("/addMatchData", mlbController.addMatchData);
 router.post("/addMatchDataFuture", mlbController.addMatchDataFuture);
 router.get("/addstandings", mlbController.addStanding);

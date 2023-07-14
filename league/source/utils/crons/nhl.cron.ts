@@ -6,12 +6,12 @@ import moment from "moment";
 let isgetLiveMatchNHLRunning: boolean = false;
 const getLiveMatchNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isgetLiveMatchNHLRunning) {
-    console.log("getLiveMatchNHL Skip");
+    // console.log("getLiveMatchNHL Skip");
     return;
   }
   isgetLiveMatchNHLRunning = true;
   try {
-    console.info("inside score cron getLiveMatchNHL");
+    // console.info("inside score cron getLiveMatchNHL");
     await goalserveService.getLiveDataOfNhl(
       moment().startOf("day").utc().toISOString()
     );
@@ -25,12 +25,12 @@ const getLiveMatchNhl = cron.schedule("*/10 * * * * *", async () => {
 let isgetUpcommingMatchNhlRunning: boolean = false;
 const getUpcommingMatchNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isgetUpcommingMatchNhlRunning) {
-    console.log("getUpcommingMatchNhl Skip");
+    // console.log("getUpcommingMatchNhl Skip");
     return;
   }
   isgetUpcommingMatchNhlRunning = true;
   try {
-    console.info("inside score cron getUpcommingMatchNhl");
+    // console.info("inside score cron getUpcommingMatchNhl");
     await goalserveService.getUpcommingMatchNhl();
   } catch (error) {
     console.log(error);
@@ -42,12 +42,12 @@ const getUpcommingMatchNhl = cron.schedule("*/10 * * * * *", async () => {
 let isgetFinalMatchNhlRunning: boolean = false;
 const getFinalMatchNhl = cron.schedule("*/10 * * * * *", async () => {
   if (isgetFinalMatchNhlRunning) {
-    console.log("getUpcommingMatchNhl Skip");
+    // console.log("getUpcommingMatchNhl Skip");
     return;
   }
   isgetFinalMatchNhlRunning = true;
   try {
-    console.info("inside score cron getFinalMatchNhl");
+    // console.info("inside score cron getFinalMatchNhl");
     await goalserveService.getFinalMatchNhl();
   } catch (error) {
     console.log(error);
@@ -59,12 +59,12 @@ const getFinalMatchNhl = cron.schedule("*/10 * * * * *", async () => {
 let isliveBoxscoreNhlRunning: boolean = false;
 const liveBoxscore = cron.schedule("*/10 * * * * *", async () => {
   if (isliveBoxscoreNhlRunning) {
-    console.log("liveBoxscoreNhl Skip");
+    // console.log("liveBoxscoreNhl Skip");
     return;
   }
   isliveBoxscoreNhlRunning = true;
   try {
-    console.info("inside score cron liveBoxscoreNhl");
+    // console.info("inside score cron liveBoxscoreNhl");
     await goalserveService.liveBoxscore({
       date1: moment().startOf("day").utc().toISOString(),
     });

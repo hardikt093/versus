@@ -147,6 +147,15 @@ const get2DaysUpcomingDataFromMongodb = async (req: Request, res: Response) => {
   }
 };
 
+const get12HoursUpcomingGameData = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.get12HoursUpcomingGameData();
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -162,5 +171,6 @@ export default {
   statsTeam,
   mlbGetTeam,
   mlbSingleGameBoxScoreLive,
-  get2DaysUpcomingDataFromMongodb
+  get2DaysUpcomingDataFromMongodb,
+  get12HoursUpcomingGameData
 };

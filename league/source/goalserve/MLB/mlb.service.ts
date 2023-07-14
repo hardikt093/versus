@@ -13625,6 +13625,48 @@ const get2DaysUpcomingDataFromMongodb = async (date1: string) => {
     console.log("error", error);
   }
 };
+
+const get12HoursUpcomingGameData = async () => {
+  const date1 = moment().utc().toISOString();
+  const date2 = moment(date1).add(12, "hours").utc().toISOString();
+  try {
+    const data = await Match.aggregate([
+      {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $match: {
+          dateInString: {
+            $gte: date1,
+            $lte: date2,
+          },
+          status: "Not Started",
+        },
+      }
+    ]);
+    return data
+  } catch (error: any) {
+    console.log("error", error);
+  }
+};
 export default {
   mlbGetTeam,
   getMLBStandings,
@@ -13654,5 +13696,6 @@ export default {
   mlbSingleGameBoxScoreLive,
   liveBoxscoreMlb,
   createOrUpdateOdds,
-  get2DaysUpcomingDataFromMongodb
+  get2DaysUpcomingDataFromMongodb,
+  get12HoursUpcomingGameData
 };
