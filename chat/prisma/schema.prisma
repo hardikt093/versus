@@ -45,7 +45,6 @@ model User {
   reportedTo         reportUser[]      @relation("reportedTo")
   channelUser        channelUser[]     @relation("channelUser")
   permissionBy       channelUser[]     @relation("permissionBy")
-  followChannel      followChannel[]
 }
 
 model Token {
@@ -71,7 +70,6 @@ model Conversation {
   message          Message[]
   channelUser      channelUser[]
   reportUser       reportUser[]
-  followChannel    followChannel[]
 }
 
 model Message {
@@ -132,14 +130,6 @@ model reportUser {
   description      String
   User             User?         @relation(name: "reportUser", fields: [userId], references: [id])
   userId           Int?
-}
-
-model followChannel {
-  id        Int          @id @default(autoincrement())
-  user      User?        @relation(fields: [userId], references: [id])
-  userId    Int?
-  channel   Conversation @relation(fields: [channelId], references: [id])
-  channelId Int?
 }
 
 enum Status {
