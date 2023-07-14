@@ -11,39 +11,47 @@ datasource db {
 }
 
 model User {
-  id               Int          @id @default(autoincrement())
-  email            String    @unique
-  password         String
-  firstName        String?
-  lastName         String?
-  userName         String    @unique
-  profileImage     String?
-  socialLogin      Boolean
-  birthDate        String?
-  phone            Json?
-  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime  @updatedAt @db.Timestamptz(3)
-  isDeleted        Boolean   @default(false)
-  contacts         ContactTry[] @relation("contactToUserId")
-  messagesSent     Message[] @relation("toUserId")
-  messagesReceived Message[] @relation("fromUserId")
-  contactsUser     ContactTry[] @relation("contactToUserUserId")
-  contact Contact[]
-  invite Invite[]
-  reactionUser     MessageReaction[]  @relation("reactionfromUserId")
-  threadUser       Threads[]  @relation("threadfromUserId")    
-  googleAccessToken String?
+  id                 Int               @id @default(autoincrement())
+  email              String            @unique
+  password           String
+  firstName          String?
+  lastName           String?
+  userName           String            @unique
+  profileImage       String?
+  socialLogin        Boolean
+  birthDate          String?
+  phone              Json?
+  createdAt          DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime          @updatedAt @db.Timestamptz(3)
+  isDeleted          Boolean           @default(false)
+  messagesReceived   Message[]         @relation("fromUserId")
+  contactUser        Contact[]         @relation("contactUserId")
+  contact            Contact[]         @relation("userId")
+  invite             Invite[]
+  googleAccessToken  String?
   googleRefreshToken String?
-  googleIdToken String?
-  isContactScope Boolean?
-  isSignUp isSignUp @default(PENDING)
+  googleIdToken      String?
+  isContactScope     Boolean?
+  isSignUp           isSignUp          @default(PENDING)
+  wallet             Wallet?
+  holdAmount         HoldAmount[]
+  conversation       Conversation?     @relation(fields: [conversationId], references: [id])
+  conversationId     Int?
+  messageReaction    MessageReaction[] @relation("reactionUserId")
+  chatInvite         chatInvite[]      @relation("invitingUser")
+  invitedTo          chatInvite[]      @relation("invitedTo")
+  reportUser         reportUser[]      @relation("reportUser")
+  reportedBy         reportUser[]      @relation("reportedBy")
+  reportedTo         reportUser[]      @relation("reportedTo")
+  channelUser        channelUser[]     @relation("channelUser")
+  permissionBy       channelUser[]     @relation("permissionBy")
 }
 
 model Token {
-  id     Int     @id @default(autoincrement())
-  token    String
-  user Int   
-  type Int
+  id        Int      @id @default(autoincrement())
+  token     String
+  user      Int
+  type      Int
   expiresAt String
   createdAt DateTime @default(now()) @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @db.Timestamptz(3)
@@ -51,101 +59,144 @@ model Token {
 }
 
 model Conversation {
-  id           Int       @id @default(autoincrement())
-  participants Int[]
-  messages     Message[]
-  contacts     ContactTry[]
-}
-
-model ContactTry {
-  id             Int          @id @default(autoincrement())
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
-  conversationId Int
-  unreadMessages Int          @default(0)
-  status         Status       @default(offline)
-  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime     @updatedAt @db.Timestamptz(3)
-  User           User?        @relation(name:"contactToUserId",fields: [userId], references: [id])
-  userId         Int?
-  contactUser    User?        @relation(name: "contactToUserUserId",fields: [contactUserId], references: [id])
-  contactUserId  Int?
-
+  id               Int             @id @default(autoincrement())
+  isPrivate        Boolean         @default(false)
+  conversationType String
+  admin            User[]
+  name             String
+  description      String
+  uniqueKeyWord    String
+  chatInvite       chatInvite[]
+  message          Message[]
+  channelUser      channelUser[]
+  reportUser       reportUser[]
 }
 
 model Message {
-  id             Int           @id @default(autoincrement())
-  from           User?         @relation(name: "fromUserId", fields: [fromId], references: [id])
-  fromId         Int?
-  to             User?         @relation(name: "toUserId", fields: [toId], references: [id])
-  toId           Int?
-  text           String
-  filePath       String[]
-  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
-  Conversation   Conversation? @relation(fields: [conversationId], references: [id])
-  conversationId Int?
-  reaction      MessageReaction[]
-  threads       Threads[]
+  id              Int               @id @default(autoincrement())
+  user            User?             @relation(name: "fromUserId", fields: [userId], references: [id])
+  userId          Int?
+  messageType     String
+  parentMessageId Int?
+  text            String
+  mediaUrl        String[]
+  createdAt       DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime          @updatedAt @db.Timestamptz(3)
+  Conversation    Conversation?     @relation(fields: [conversationId], references: [id])
+  conversationId  Int?
+  reaction        MessageReaction[]
+  parentMessage   Message?          @relation("childMessages", fields: [parentMessageId], references: [id])
+  childMessages   Message[]         @relation("childMessages")
 }
 
 model MessageReaction {
-  id             Int           @id @default(autoincrement())
-  message        Message?      @relation(fields: [messageId], references: [id])
-  messageId      Int?
-  reaction       String
-  from           User?         @relation(name: "reactionfromUserId", fields: [fromId], references: [id])
-  fromId         Int?         
+  id        Int      @id @default(autoincrement())
+  message   Message? @relation(fields: [messageId], references: [id])
+  messageId Int?
+  reaction  String
+  user      User?    @relation(name: "reactionUserId", fields: [userId], references: [id])
+  userId    Int?
 }
 
-model Threads {
-  id             Int           @id @default(autoincrement())
-  message        Message?      @relation(fields: [messageId], references: [id])
-  messageId      Int?
-  from           User?         @relation(name: "threadfromUserId", fields: [fromId], references: [id])
-  fromId         Int?
-  text           String
-  filePath       String?
-  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime      @updatedAt @db.Timestamptz(3)
+model chatInvite {
+  id              Int           @id @default(autoincrement())
+  conversation    Conversation? @relation(fields: [conversationId], references: [id])
+  conversationId  Int?
+  user            User?         @relation("invitedTo", fields: [userId], references: [id])
+  userId          Int?
+  invitedBy       User?         @relation(name: "invitingUser", fields: [invitedByUserId], references: [id])
+  invitedByUserId Int?
+}
+
+model channelUser {
+  id                 Int           @id @default(autoincrement())
+  isPrivateChannel   Boolean       @default(false)
+  user               User?         @relation(name: "channelUser", fields: [userId], references: [id])
+  userId             Int?
+  permissionBy       User?         @relation(name: "permissionBy", fields: [permissionByUserId], references: [id])
+  permissionByUserId Int?
+  Conversation       Conversation? @relation(fields: [conversationId], references: [id])
+  conversationId     Int?
+}
+
+model reportUser {
+  id               Int           @id @default(autoincrement())
+  Conversation     Conversation? @relation(fields: [conversationId], references: [id])
+  conversationId   Int?
+  reportedBy       User?         @relation(name: "reportedBy", fields: [reportedByUserId], references: [id])
+  reportedByUserId Int?
+  reportedTo       User?         @relation(name: "reportedTo", fields: [reportedToUserId], references: [id])
+  reportedToUserId Int?
+  description      String
+  User             User?         @relation(name: "reportUser", fields: [userId], references: [id])
+  userId           Int?
 }
 
 enum Status {
   online
   offline
 }
+
 model Contact {
-  id     Int     @id @default(autoincrement())
-  name String?
-  email String? 
-  phoneNumber String? 
-  userId Int?
-  user   User? @relation(fields: [userId], references: [id])
-  invite inviteSend @default(PENDING)
-  sendInvite Invite[]
-  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
-  isDeleted Boolean  @default(false)
+  id            Int        @id @default(autoincrement())
+  name          String?
+  email         String?
+  phoneNumber   String?
+  contactUserId Int?
+  contactUser   User?      @relation(name: "contactUserId", fields: [contactUserId], references: [id])
+  userId        Int?
+  user          User?      @relation(name: "userId", fields: [userId], references: [id])
+  invite        inviteSend @default(PENDING)
+  sendInvite    Invite[]
+  createdAt     DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime   @updatedAt @db.Timestamptz(3)
+  isDeleted     Boolean    @default(false)
 }
 
 model Invite {
-  id     Int     @id @default(autoincrement())
-  token String @unique @db.Uuid
-  expire DateTime
-  sendInviteBy Int
+  id                Int      @id @default(autoincrement())
+  token             String   @unique @db.Uuid
+  expire            DateTime
+  sendInviteBy      Int
   sendInviteContact Int
-  contact   Contact? @relation(fields: [sendInviteContact], references: [id])
-  user   User? @relation(fields: [sendInviteBy], references: [id])
-  createdAt          DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime  @updatedAt @db.Timestamptz(3)
+  contact           Contact? @relation(fields: [sendInviteContact], references: [id])
+  user              User?    @relation(fields: [sendInviteBy], references: [id])
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
 }
 
 enum inviteSend {
   SENT
-  ACEEPTED
+  ACCEPTED
   PENDING
 }
 
 enum isSignUp {
   SUCCESS
   PENDING
+}
+
+model Wallet {
+  id         Int          @id @default(autoincrement())
+  user       User?        @relation(fields: [userId], references: [id])
+  userId     Int          @unique
+  amount     Float?
+  holdAmount HoldAmount[]
+}
+
+model HoldAmount {
+  id                    Int     @id @default(autoincrement())
+  user                  User?   @relation(fields: [userId], references: [id])
+  userId                Int?
+  amount                Float?
+  wallet                Wallet? @relation(fields: [walletId], references: [id])
+  walletId              Int
+  goalServeMatchId      Int?
+  requestUserId         Int?
+  opponentUserId        Int?
+  requestUserBetAmount  Float?
+  opponentUserBetAmount Float?
+  goalServeLeagueId     Int?
+  betId                 String?
+  revertAmount          Float?
 }
