@@ -32,12 +32,12 @@ export default class ConversationDbCronServiceClass {
             const date = matchDate.split(".");
             let day = date[0] ?? moment(utcDate).format("D");
             let month = date[1] ?? moment(utcDate).format("M");
-            let awayTeamNameSplit = match.awayTeam.awayTeamName.split(" ");
-            let homeTeamNameSplit = match.homeTeam.homeTeamName.split(" ");
+            let awayTeamNameSplit = match.awayTeam.awayTeamName.split(" ").pop();
+            let homeTeamNameSplit = match.homeTeam.homeTeamName.split(" ").pop();
             const chatName = `#${
-              awayTeamNameSplit[awayTeamNameSplit.length - 1]
+              awayTeamNameSplit
             }@${
-              homeTeamNameSplit[awayTeamNameSplit.length - 1]
+              homeTeamNameSplit
             }-${day}/${month}`;
             await prisma.channel.create({
               data: {
