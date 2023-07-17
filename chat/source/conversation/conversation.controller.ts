@@ -17,5 +17,15 @@ const getConversation = async (req: Request, res: Response) => {
   }
 };
 
+const getMatchPublicChannelConversation = async (req: Request, res: Response) => {
+  try {
+    const getConversation = await conversationService.getMatchPublicChannelConversation(
+      req.body,
+    );
+    createResponse(res, httpStatus.OK, "", getConversation);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 
-export default { getConversation };
+export default { getConversation, getMatchPublicChannelConversation };

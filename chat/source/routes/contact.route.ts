@@ -1,8 +1,8 @@
 import express from "express";
 
 import validate from "../middlewares/validate";
-import contactController from "../contact/contact.controller";
-import contactValidation from "../contact/contact.validation";
+// import contactController from "../contact/contact.controller";
+// import contactValidation from "../contact/contact.validation";
 import auth from "../middlewares/auth";
 
 const router = express.Router();
@@ -33,7 +33,7 @@ const router = express.Router();
  *       200:
  *         description: get users contact list
  */
-router.get("/getContacts", auth, contactController.getContacts);
+// router.get("/getContacts", auth, contactController.getContacts);
 
 /**
  * @swagger
@@ -69,11 +69,11 @@ router.get("/getContacts", auth, contactController.getContacts);
  *       200:
  *         description:  add user in contact list
  */
-router.post(
-  "/createContact",
-  auth,
-  validate(contactValidation.createContact),
-  contactController.createContact
-);
+// router.post(
+//   "/createContact",
+//   auth,
+//   validate(contactValidation.createContact),
+//   contactController.createContact
+// );
 
 export = router;
