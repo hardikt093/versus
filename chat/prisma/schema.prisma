@@ -35,8 +35,6 @@ model User {
   isSignUp           isSignUp      @default(PENDING)
   wallet             Wallet?
   holdAmount         HoldAmount[]
-  conversation       Channel?      @relation(fields: [conversationId], references: [id])
-  conversationId     Int?
   // messageReaction    MessageReaction[] @relation("reactionUserId")
   reportedBy         reportUser[]  @relation("reportedBy")
   reportedTo         reportUser[]  @relation("reportedTo")
@@ -58,7 +56,6 @@ model Token {
 model Channel {
   id          Int           @id @default(autoincrement())
   channelType ChannelType
-  admin       User[]
   name        String
   description String
   message     Message[]
@@ -77,7 +74,7 @@ model Message {
   createdAt       DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
   channel         Channel?     @relation(fields: [channelId], references: [id])
-  channelId  Int?
+  channelId       Int?
   parentMessage   Message?     @relation("childMessages", fields: [parentMessageId], references: [id])
   childMessages   Message[]    @relation("childMessages")
   reportUser      reportUser[]
@@ -103,14 +100,16 @@ model Message {
 // }
 
 model channelUser {
-  id             Int         @id @default(autoincrement())
-  channelType    ChannelType
-  user           User?       @relation(name: "channelUser", fields: [userId], references: [id])
-  userId         Int?
-  adminAccess    User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
-  adminAccessId  Int?
-  channel        Channel?    @relation(fields: [conversationId], references: [id])
-  conversationId Int?
+  id               Int         @id @default(autoincrement())
+  channelType      ChannelType
+  channelUser      User?       @relation(name: "channelUser", fields: [userId], references: [id])
+  userId           Int?
+  isAdmin          Boolean     @default(false)
+  isCreatedChannel Boolean     @default(false)
+  adminAccess      User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
+  adminAccessId    Int?
+  channel          Channel?    @relation(fields: [channelId], references: [id])
+  channelId        Int?
   permisionGranted String
 }
 
