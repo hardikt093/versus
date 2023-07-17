@@ -1011,7 +1011,7 @@ export default class MlbDbCronServiceClass {
         { json: true }
       );
       let matchesNeedToRemove = await Match.find({
-        goalServeLeagueId: mlb_shedule?.data?.fixtures?.category?.id,
+        goalServeLeagueId: mlb_shedule?.data?.shedules?.id,
         status: "Not Started",
       }).lean();
 
@@ -1031,78 +1031,74 @@ export default class MlbDbCronServiceClass {
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
           if (!match) {
-            const data: Partial<IMatchModel> = {
-              leagueId: league?._id,
-              goalServeLeagueId: league?.goalServeLeagueId,
-              outs: matchArray[i].match[j].outs,
-              date: matchArray[i].match[j].date,
-              formattedDate: matchArray[i].match[j].formatted_date,
-              timezone: matchArray[i].match[j].timezone,
-              oddsid: matchArray[i].match[j].seasonType,
-              attendance: matchArray[i].match[j].attendance,
-              goalServeMatchId: matchArray[i].match[j].id,
-              dateTimeUtc: matchArray[i].match[j].datetime_utc,
-              status: matchArray[i].match[j].status,
-              time: matchArray[i].match[j].time,
-              goalServeVenueId: matchArray[i].match[j].venue_id,
-              venueName: matchArray[i].match[j].venue_name,
-              homeTeamHit: matchArray[i].match[j].hometeam.hits,
-              homeTeamTotalScore: matchArray[i].match[j].hometeam.totalscore,
-              homeTeamError: matchArray[i].match[j].hometeam.errors,
-              awayTeamHit: matchArray[i].match[j].awayteam.hits,
-              awayTeamTotalScore: matchArray[i].match[j].awayteam.totalscore,
-              awayTeamError: matchArray[i].match[j].awayteam.errors,
-              awayTeamInnings: matchArray[i].match[j].awayteam?.innings?.inning
-                ? matchArray[i].match[j].awayteam?.innings?.inning
-                : [],
-              homeTeamInnings: matchArray[i].match[j].hometeam?.innings?.inning
-                ? matchArray[i].match[j].hometeam?.innings?.inning
-                : [],
-              event: matchArray[i].match[j].events?.event
-                ? matchArray[i].match[j].events?.event
-                : [],
-              startingPitchers: matchArray[i].match[j].starting_pitchers,
-              awayTeamHitters: matchArray[i].match[j].stats?.hitters?.awayteam
-                ?.player
-                ? matchArray[i].match[j].stats?.hitters?.awayteam?.player
-                : [],
-              homeTeamHitters: matchArray[i].match[j].stats?.hitters?.hometeam
-                ?.player
-                ? matchArray[i].match[j].stats?.hitters?.hometeam?.player
-                : [],
-              awayTeamPitchers: matchArray[i].match[j].stats?.pitchers?.awayteam
-                ?.player
-                ? matchArray[i].match[j].stats?.pitchers?.awayteam?.player
-                : [],
-              homeTeamPitchers: matchArray[i].match[j].stats?.pitchers?.hometeam
-                ?.player
-                ? matchArray[i].match[j].stats?.pitchers?.hometeam?.player
-                : [],
-            };
+          const data: Partial<IMatchModel> = {
+            leagueId: league?._id,
+            goalServeLeagueId: league?.goalServeLeagueId,
+            outs: matchArray[i].match[j].outs,
+            date: matchArray[i].match[j].date,
+            formattedDate: matchArray[i].match[j].formatted_date,
+            timezone: matchArray[i].match[j].timezone,
+            oddsid: matchArray[i].match[j].seasonType,
+            attendance: matchArray[i].match[j].attendance,
+            goalServeMatchId: matchArray[i].match[j].id,
+            dateTimeUtc: matchArray[i].match[j].datetime_utc,
+            status: matchArray[i].match[j].status,
+            time: matchArray[i].match[j].time,
+            goalServeVenueId: matchArray[i].match[j].venue_id,
+            venueName: matchArray[i].match[j].venue_name,
+            homeTeamHit: matchArray[i].match[j].hometeam.hits,
+            homeTeamTotalScore: matchArray[i].match[j].hometeam.totalscore,
+            homeTeamError: matchArray[i].match[j].hometeam.errors,
+            awayTeamHit: matchArray[i].match[j].awayteam.hits,
+            awayTeamTotalScore: matchArray[i].match[j].awayteam.totalscore,
+            awayTeamError: matchArray[i].match[j].awayteam.errors,
+            awayTeamInnings: matchArray[i].match[j].awayteam?.innings?.inning
+              ? matchArray[i].match[j].awayteam?.innings?.inning
+              : [],
+            homeTeamInnings: matchArray[i].match[j].hometeam?.innings?.inning
+              ? matchArray[i].match[j].hometeam?.innings?.inning
+              : [],
+            event: matchArray[i].match[j].events?.event
+              ? matchArray[i].match[j].events?.event
+              : [],
+            startingPitchers: matchArray[i].match[j].starting_pitchers,
+            awayTeamHitters: matchArray[i].match[j].stats?.hitters?.awayteam
+              ?.player
+              ? matchArray[i].match[j].stats?.hitters?.awayteam?.player
+              : [],
+            homeTeamHitters: matchArray[i].match[j].stats?.hitters?.hometeam
+              ?.player
+              ? matchArray[i].match[j].stats?.hitters?.hometeam?.player
+              : [],
+            awayTeamPitchers: matchArray[i].match[j].stats?.pitchers?.awayteam
+              ?.player
+              ? matchArray[i].match[j].stats?.pitchers?.awayteam?.player
+              : [],
+            homeTeamPitchers: matchArray[i].match[j].stats?.pitchers?.hometeam
+              ?.player
+              ? matchArray[i].match[j].stats?.pitchers?.hometeam?.player
+              : [],
+          };
 
-            data.goalServeAwayTeamId = matchArray[i].match[j].awayteam.id ?? 1;
-            const teamIdAway: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: data.awayTeamId,
-              });
-            if (teamIdAway) {
-              data.awayTeamId = teamIdAway.id;
-              data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
-                ? teamIdAway?.goalServeTeamId
-                : 1;
-            }
-            data.goalServeHomeTeamId = matchArray[i].match[j].hometeam.id ?? 1;
-            const teamIdHome: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: data.homeTeamId,
-              });
-            if (teamIdHome) {
-              data.homeTeamId = teamIdHome.id;
-              data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-            }
-            const matchData = new Match(data);
-            await matchData.save();
+          const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
+            goalServeTeamId: matchArray[i].match[j].awayteam.id,
+          });
+          if (teamIdAway) {
+            data.awayTeamId = teamIdAway.id;
+            data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
+              ? teamIdAway?.goalServeTeamId
+              : undefined;
           }
+          const teamIdHome: ITeamModel | null | undefined = await Team.findOne({
+            goalServeTeamId: matchArray[i].match[j].hometeam.id,
+          });
+          if (teamIdHome) {
+            data.homeTeamId = teamIdHome.id;
+            data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+          }
+          const matchData = new Match(data);
+          await matchData.save();
+        }
         }
       }
       for (let k = 0; k < matchesNeedToRemove.length; k++) {
