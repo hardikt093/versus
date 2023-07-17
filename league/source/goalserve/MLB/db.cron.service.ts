@@ -1006,6 +1006,7 @@ export default class MlbDbCronServiceClass {
   };
   public updateMlbMatch = async () => {
     try {
+      console.log("INSIDE  updateMlbMatch function");
       const mlb_shedule = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
         { json: true }

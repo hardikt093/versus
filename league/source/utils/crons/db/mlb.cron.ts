@@ -126,11 +126,14 @@ const createOrUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
 let isupdateMlbMatchRunning: boolean = false;
 const updateMlbMatch = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateMlbMatchRunning) {
+    console.log("skip updateMlbMatch");
     return;
   }
   isupdateMlbMatchRunning = true;
   try {
+    console.log("start updateMlbMatch");
     await mlbService.updateMlbMatch();
+    console.log("end updateMlbMatch");
   } catch (error) {
     console.log(error);
   } finally {
