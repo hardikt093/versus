@@ -7,19 +7,13 @@ import { IUser } from "../interfaces/input";
 const prisma = new PrismaClient();
 
 const getMatchPublicChannelConversation = async (data: any) => {
-  const conversation = await prisma.conversation.findFirst({
+  const conversation = await prisma.channel.findFirst({
     where: {
       isDeleted: false, 
       goalServeMatchId: data.goalServeMatchId,
       goalServeLeagueId: data.goalServeLeagueId,
     },
   });
-  if (!conversation) {
-    throw new AppError(
-      httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.CONVERSATION_NOT_FOUND
-    );
-  }
   return conversation;
 };
 export default {
