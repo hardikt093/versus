@@ -44,11 +44,4 @@ router.get(
   conversationController.getConversation
 );
 
-router.post(
-  "/getMatchChannel",
-  auth,
-  validate(conversationValidation.getMatchPublicChannelConversation),
-  conversationController.getMatchPublicChannelConversation
-);
-
 export = router;

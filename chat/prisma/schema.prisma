@@ -56,14 +56,23 @@ model Token {
 }
 
 model Channel {
-  id          Int           @id @default(autoincrement())
-  channelType ChannelType
-  admin       User[]
-  name        String
-  description String
-  message     Message[]
-  channelUser channelUser[]
-  reportUser  reportUser[]
+  id                Int           @id @default(autoincrement())
+  channelType       ChannelType
+  admin             User[]
+  channelName       String?
+  matchChannelName  String?
+  description       String?
+  goalServeMatchId  Int?
+  goalServeLeagueId Int?
+  matchStartAt      DateTime?
+  channelStartAt    DateTime?
+  channelExpiredAt  DateTime?
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+  isDeleted         Boolean       @default(false)
+  message           Message[]
+  channelUser       channelUser[]
+  reportUser        reportUser[]
 }
 
 model Message {
@@ -77,7 +86,7 @@ model Message {
   createdAt       DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
   channel         Channel?     @relation(fields: [channelId], references: [id])
-  channelId  Int?
+  channelId       Int?
   parentMessage   Message?     @relation("childMessages", fields: [parentMessageId], references: [id])
   childMessages   Message[]    @relation("childMessages")
   reportUser      reportUser[]
@@ -103,14 +112,14 @@ model Message {
 // }
 
 model channelUser {
-  id             Int         @id @default(autoincrement())
-  channelType    ChannelType
-  user           User?       @relation(name: "channelUser", fields: [userId], references: [id])
-  userId         Int?
-  adminAccess    User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
-  adminAccessId  Int?
-  channel        Channel?    @relation(fields: [conversationId], references: [id])
-  conversationId Int?
+  id               Int         @id @default(autoincrement())
+  channelType      ChannelType
+  user             User?       @relation(name: "channelUser", fields: [userId], references: [id])
+  userId           Int?
+  adminAccess      User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
+  adminAccessId    Int?
+  channel          Channel?    @relation(fields: [conversationId], references: [id])
+  conversationId   Int?
   permisionGranted String
 }
 

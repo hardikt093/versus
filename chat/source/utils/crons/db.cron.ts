@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import ConversationDbCronService from "../../conversation/conversation.cron.service";
+import ChannelDbCronService from "../../channel/channel.cron.service";
 
 class DBCronJob {
   private iscreateSingleGameChatRunning = false;
@@ -8,12 +8,12 @@ class DBCronJob {
   private expireSingleGameChat: cron.ScheduledTask;
 
   constructor() {
-    const conversationDbCronService = new ConversationDbCronService();
-    this.createSingleGameChat = cron.schedule("*/10 * * * * *", this.createSingleGameChatMethod.bind(this, conversationDbCronService));
-    this.expireSingleGameChat = cron.schedule("*/10 * * * * *", this.expireSingleGameChatMethod.bind(this, conversationDbCronService));
+    const channelDbCronService = new ChannelDbCronService();
+    this.createSingleGameChat = cron.schedule("*/10 * * * * *", this.createSingleGameChatMethod.bind(this, channelDbCronService));
+    this.expireSingleGameChat = cron.schedule("*/10 * * * * *", this.expireSingleGameChatMethod.bind(this, channelDbCronService));
   }
 
-  private async createSingleGameChatMethod(conversationDbCronService: ConversationDbCronService): Promise<void> {
+  private async createSingleGameChatMethod(channelDbCronService: ChannelDbCronService): Promise<void> {
     if (this.iscreateSingleGameChatRunning){
       console.log("SKIP createSingleGameChat");
       return;
@@ -21,7 +21,7 @@ class DBCronJob {
     this.iscreateSingleGameChatRunning = true;
     try {
       console.log("createSingleGameChat");
-      await conversationDbCronService.createSingleGameChat();
+      await channelDbCronService.createSingleGameChat();
     } catch (error) {
       console.log(error);
     } finally {
@@ -29,12 +29,12 @@ class DBCronJob {
     }
   }
 
-  private async expireSingleGameChatMethod(conversationDbCronService: ConversationDbCronService): Promise<void> {
+  private async expireSingleGameChatMethod(channelDbCronService: ChannelDbCronService): Promise<void> {
     if (this.isexpireSingleGameChatRunning) return;
     this.isexpireSingleGameChatRunning = true;
     try {
       console.log("expireSingleGameChatMethod");
-      await conversationDbCronService.expireSingleGameChat();
+      await channelDbCronService.expireSingleGameChat();
     } catch (error) {
       console.log(error);
     } finally {
