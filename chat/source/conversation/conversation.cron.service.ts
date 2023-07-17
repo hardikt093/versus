@@ -7,7 +7,7 @@ export default class ConversationDbCronServiceClass {
   public createSingleGameChat = async () => {
     try {
       const resp = await axiosGetMicro(
-        `${process.env.LEAGUE_SERVER}/league/mlb/upcoming12HoursGame`,
+        `${process.env.LEAGUE_SERVER}/league/mlb/getAllUpcomingGameData`,
         {},
         ""
       );
@@ -22,10 +22,13 @@ export default class ConversationDbCronServiceClass {
             },
           });
           if (!conversation) {
-            const date = match.datetime_utc.split(" ");
-            let day = moment().format('D');
-            let month = moment().format('M');
-            const chatName = `#${match.awayTeam.abbreviation}@${match.homeTeam.abbreviation}-${day}/${month}`
+            let matchDate = match.date ? match.date : match.datetime_utc
+            const date = matchDate.split(".");
+            let day = date[0] ?? moment().format('D');
+            let month = date[1] ?? moment().format('M');
+            let awayTeamNameSplit = ((match.awayTeam.awayTeamName).split(" "));
+            let homeTeamNameSplit = ((match.homeTeam.homeTeamName).split(" "));
+            const chatName = `#${awayTeamNameSplit[awayTeamNameSplit.length -1 ]}@${homeTeamNameSplit[awayTeamNameSplit.length -1 ]}-${day}/${month}`
             await prisma.conversation.create({
               data: {
                 goalServeMatchId: match.goalServeMatchId,
