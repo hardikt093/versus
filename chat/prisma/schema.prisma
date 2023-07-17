@@ -11,37 +11,36 @@ datasource db {
 }
 
 model User {
-  id                 Int           @id @default(autoincrement())
-  email              String        @unique
+  id                 Int          @id @default(autoincrement())
+  email              String       @unique
   password           String
   firstName          String?
   lastName           String?
-  userName           String        @unique
+  userName           String       @unique
   profileImage       String?
   socialLogin        Boolean
   birthDate          String?
   phone              Json?
-  createdAt          DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime      @updatedAt @db.Timestamptz(3)
-  isDeleted          Boolean       @default(false)
-  messagesReceived   Message[]     @relation("fromUserId")
-  contactUser        Contact[]     @relation("contactUserId")
-  contact            Contact[]     @relation("userId")
+  createdAt          DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime     @updatedAt @db.Timestamptz(3)
+  isDeleted          Boolean      @default(false)
+  messagesReceived   Message[]    @relation("fromUserId")
+  contactUser        Contact[]    @relation("contactUserId")
+  contact            Contact[]    @relation("userId")
   invite             Invite[]
   googleAccessToken  String?
   googleRefreshToken String?
   googleIdToken      String?
   isContactScope     Boolean?
-  isSignUp           isSignUp      @default(PENDING)
+  isSignUp           isSignUp     @default(PENDING)
   wallet             Wallet?
   holdAmount         HoldAmount[]
-  conversation       Channel?      @relation(fields: [conversationId], references: [id])
-  conversationId     Int?
+  channelAdmin       Channel[]    @relation("channelAdmin")
   // messageReaction    MessageReaction[] @relation("reactionUserId")
-  reportedBy         reportUser[]  @relation("reportedBy")
-  reportedTo         reportUser[]  @relation("reportedTo")
-  channelUser        channelUser[] @relation("channelUser")
-  adminAccess        channelUser[] @relation("adminAccess")
+  reportedBy  reportUser[]  @relation("reportedBy")
+  reportedTo  reportUser[]  @relation("reportedTo")
+  channelUser channelUser[] @relation("channelUser")
+  adminAccess channelUser[] @relation("adminAccess")
 }
 
 model Token {
@@ -58,7 +57,7 @@ model Token {
 model Channel {
   id          Int           @id @default(autoincrement())
   channelType ChannelType
-  admin       User[]
+  admin       User[]        @relation("channelAdmin")
   name        String
   description String
   message     Message[]
@@ -77,7 +76,7 @@ model Message {
   createdAt       DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
   channel         Channel?     @relation(fields: [channelId], references: [id])
-  channelId  Int?
+  channelId       Int?
   parentMessage   Message?     @relation("childMessages", fields: [parentMessageId], references: [id])
   childMessages   Message[]    @relation("childMessages")
   reportUser      reportUser[]
@@ -103,14 +102,14 @@ model Message {
 // }
 
 model channelUser {
-  id             Int         @id @default(autoincrement())
-  channelType    ChannelType
-  user           User?       @relation(name: "channelUser", fields: [userId], references: [id])
-  userId         Int?
-  adminAccess    User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
-  adminAccessId  Int?
-  channel        Channel?    @relation(fields: [conversationId], references: [id])
-  conversationId Int?
+  id               Int         @id @default(autoincrement())
+  channelType      ChannelType
+  user             User?       @relation(name: "channelUser", fields: [userId], references: [id])
+  userId           Int?
+  adminAccess      User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
+  adminAccessId    Int?
+  channel          Channel?    @relation(fields: [channelId], references: [id])
+  channelId        Int?
   permisionGranted String
 }
 
