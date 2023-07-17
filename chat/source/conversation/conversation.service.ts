@@ -62,7 +62,25 @@ const getConversation = async (data: IUser, param: string) => {
 const isMyConversation = async (id: number, conversation: any) => {
   return conversation.participants.includes(id);
 };
+
+const getMatchPublicChannelConversation = async (data: any) => {
+  const conversation = await prisma.conversation.findFirst({
+    where: {
+      isDeleted: false, 
+      goalServeMatchId: data.goalServeMatchId,
+      goalServeLeagueId: data.goalServeLeagueId,
+    },
+  });
+  if (!conversation) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.CONVERSATION_NOT_FOUND
+    );
+  }
+  return conversation;
+};
 export default {
   getConversation,
   isMyConversation,
+  getMatchPublicChannelConversation
 };

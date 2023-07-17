@@ -54,13 +54,22 @@ model Token {
 }
 
 model Channel {
-  id          Int           @id @default(autoincrement())
-  channelType ChannelType
-  name        String
-  description String
-  message     Message[]
-  channelUser channelUser[]
-  reportUser  reportUser[]
+  id                Int           @id @default(autoincrement())
+  channelType       ChannelType
+  channelName       String?
+  matchChannelName  String?
+  description       String?
+  goalServeMatchId  Int?
+  goalServeLeagueId Int?
+  matchStartAt      DateTime?
+  channelStartAt    DateTime?
+  channelExpiredAt  DateTime?
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+  isDeleted         Boolean       @default(false)
+  message           Message[]
+  channelUser       channelUser[]
+  reportUser        reportUser[]
 }
 
 model Message {
