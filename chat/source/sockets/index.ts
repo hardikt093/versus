@@ -17,6 +17,8 @@
 //   disconnect,
 // } from "./socket.service";
 
+import { groupMessage, groupMessageThread, joinChat } from "./socket.service";
+
 // export default (socket: any) => {
 //   const myId = socket.handshake.query.userId
 //     ? socket.handshake.query.userId
@@ -63,7 +65,7 @@ export default (socket: any) => {
   const myId = socket.handshake.query.userId
     ? socket.handshake.query.userId
     : 0;
-  connection(socket,myId);
+  // connection(socket,myId);
   socket.on("join chat", (room: string) => {
     joinChat(socket, room,myId);
   });
