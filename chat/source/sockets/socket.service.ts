@@ -285,70 +285,94 @@ function userJoin(id: string, channelId: number, userId: number) {
 function getCurrentUser(id: number) {
   return users.find((user: any) => user.id === id);
 }
-const connection = async (socket: any, myId: number) => {
+const connection = async () => {
   console.log("Connected to socket.io");
 };
 const joinChat = async (socket: any, channelId: number, userId: number) => {
-  const user = userJoin(socket.id, channelId, userId);
-  const findChannel = await prisma.channel.findUnique({
-    where: { id: channelId },
-  });
-  socket.join(user.channelId);
-  if (findChannel) {
-    const checkUserExist = await prisma.channelUser.findFirst({
-      where: {
-        channelId: channelId,
-        userId: Number(userId),
-        channelType: findChannel.channelType,
-      },
+  try {
+    const user = userJoin(socket.id, channelId, userId);
+    const findChannel = await prisma.channel.findUnique({
+      where: { id: channelId },
     });
-    if (!checkUserExist) {
-      const joinUser = await prisma.channelUser.create({
-        data: {
-          channelId,
+    socket.join(user.channelId);
+    if (findChannel) {
+      const checkUserExist = await prisma.channelUser.findFirst({
+        where: {
+          channelId: channelId,
           userId: Number(userId),
           channelType: findChannel.channelType,
         },
-        include: {
-          channelUser: {
-            select: { userName: true },
-          },
-        },
       });
-      socket.emit("message", `Welcome to ${findChannel.matchChannelName}!`);
-      socket.broadcast
-        .to(user.channelId)
-        .emit(
-          "message",
-          `${joinUser.channelUser.userName} has joined the group`
-        );
+      if (!checkUserExist) {
+        const joinUser = await prisma.channelUser.create({
+          data: {
+            channelId,
+            userId: Number(userId),
+            channelType: findChannel.channelType,
+          },
+          include: {
+            channelUser: {
+              select: { userName: true },
+            },
+          },
+        });
+        socket.emit("message", `Welcome to ${findChannel.matchChannelName}!`);
+        socket.broadcast
+          .to(user.channelId)
+          .emit(
+            "message",
+            `${joinUser.channelUser.userName} has joined the group`
+          );
+      }
     }
+  } catch (error) {
+    console.log(error);
   }
 };
 
 const getConversation = async (socket: any, channelId: number) => {
-  const user = getCurrentUser(socket.id);
-  const getMessage = await prisma.message.findMany({
-    where: { channelId },
-  });
-  if (user) io.to(user.channelId).emit("conversation", getMessage);
-};
-
-const groupMessage = async (socket: any, newMessageRecieved: any) => {
-  const user = getCurrentUser(socket.id);
-  const { message } = newMessageRecieved;
-  if (user) {
-    const newMessage = await prisma.message.create({
-      include: {
-        user: { select: { userName: true, id: true } },
+  try {
+    const user = getCurrentUser(socket.id);
+    const channelDetails = await prisma.channel.findUnique({
+      where: {
+        id: channelId,
       },
-      data: {
-        ...message,
-        channelId: user.channelId,
-        userId: Number(user.userId),
+      include: {
+        channelUser: true,
       },
     });
-    io.to(user.channelId).emit("message", newMessage);
+    const getMessage = await prisma.message.findMany({
+      where: { channelId },
+    });
+    if (user)
+      io.to(user.channelId).emit("conversation", {
+        channelDetails: channelDetails,
+        messages: getMessage,
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const singleGameChat = async (socket: any, newMessageRecieved: any) => {
+  try {
+    const user = getCurrentUser(socket.id);
+    const { message } = newMessageRecieved;
+    if (user) {
+      const newMessage = await prisma.message.create({
+        include: {
+          user: { select: { userName: true, id: true } },
+        },
+        data: {
+          ...message,
+          channelId: user.channelId,
+          userId: Number(user.userId),
+        },
+      });
+      io.to(user.channelId).emit("message", newMessage);
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -412,7 +436,7 @@ export {
 
   // new
   joinChat,
-  groupMessage,
+  singleGameChat,
   disconnectUser,
   groupMessageThread,
   connection,
