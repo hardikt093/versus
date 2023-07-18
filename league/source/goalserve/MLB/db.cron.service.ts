@@ -363,6 +363,16 @@ export default class MlbDbCronServiceClass {
                 status: "EXPIRED",
               }
             );
+            await Bet.updateMany(
+              {
+                status: { "$in" : ["CONFIRMED", "ACTIVE"] },
+                goalServeMatchId: goalServeMatchId,
+                leagueType: "MLB",
+              },
+              {
+                status: "CANCELED",
+              }
+            );
           }
         }
       }
