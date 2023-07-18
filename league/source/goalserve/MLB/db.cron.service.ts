@@ -355,7 +355,7 @@ export default class MlbDbCronServiceClass {
             const goalServeMatchId = matchArray[j].id;
             await Bet.updateMany(
               {
-                status: { "$ne" : "RESULT_DECLARED" },
+                status: "PENDING",
                 goalServeMatchId: goalServeMatchId,
                 leagueType: "MLB",
               },
