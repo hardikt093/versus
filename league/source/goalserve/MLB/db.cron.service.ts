@@ -351,16 +351,16 @@ export default class MlbDbCronServiceClass {
               parseInt(goalServeWinTeamId),
               "MLB"
             );
-          } else if (matchArray[j].status == "Canceled") {
+          } else if (matchArray[j].status == "Canceled" || matchArray[j].status == "Postponed" || matchArray[j].status == "Suspended") {
             const goalServeMatchId = matchArray[j].id;
             await Bet.updateMany(
               {
-                status: "PENDING",
+                status: { "$ne" : "RESULT_DECLARED" },
                 goalServeMatchId: goalServeMatchId,
                 leagueType: "MLB",
               },
               {
-                status: "CANCELED",
+                status: "EXPIRED",
               }
             );
           }
