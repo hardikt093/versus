@@ -1745,6 +1745,7 @@ const mlbScoreWithDate = async (date1: string) => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
+          goalServeLeagueId: true,
           awayTeam: {
             abbreviation: "$awayTeam.abbreviation",
             awayTeamName: "$awayTeam.name",
@@ -2751,6 +2752,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
+          goalServeLeagueId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
