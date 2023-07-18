@@ -17,7 +17,7 @@
 //   disconnect,
 // } from "./socket.service";
 
-import { groupMessage, groupMessageThread, joinChat } from "./socket.service";
+import { connection, getConversation, groupMessage, groupMessageThread, joinChat } from "./socket.service";
 
 // export default (socket: any) => {
 //   const myId = socket.handshake.query.userId
@@ -65,19 +65,19 @@ export default (socket: any) => {
   const myId = socket.handshake.query.userId
     ? socket.handshake.query.userId
     : 0;
-  // connection(socket,myId);
-  socket.on("join chat", (room: string) => {
-    joinChat(socket, room,myId);
+  connection(socket,myId);
+  socket.on("joinChat", (room: {channelId:number}) => {
+    joinChat(socket,room.channelId,myId);
   });
   socket.on("typing", (room: string) => socket.in(room).emit("typing"));
   socket.on("stop typing", (room: string) =>
     socket.in(room).emit("stop typing")
   );
-  socket.on("myMessage", (newMessageRecieved:any) => {
+  socket.on("groupMessage", (newMessageRecieved:any) => {
     groupMessage(socket,newMessageRecieved,)
   })
-  socket.on("threadMessage", (newThreadMessage:any) => {
-    groupMessageThread(socket,newThreadMessage)
+  socket.on("getConversation", (channelId:number) => {
+    getConversation(socket,channelId)
   })
   // disconnectUser()
   

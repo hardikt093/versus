@@ -4,7 +4,7 @@ import { io } from "../server";
 import { HandshakeUserId, IConversation, IMessage } from "../interfaces/input";
 
 const prisma = new PrismaClient();
-const onlineUsers = new Map();
+const onlineUsers = new Set();
 const users: any = [];
 // old code
 
@@ -275,11 +275,9 @@ const users: any = [];
 //   }
 // };
 
-function userJoin(id: string, room: string, userId: number) {
-  const user = { id, userId, room };
-  console.log(user);
+function userJoin(id: string, channelId: number, userId: number) {
+  const user = { id, userId, channelId };
   users.push(user);
-
   return user;
 }
 
@@ -290,50 +288,76 @@ function getCurrentUser(id: number) {
 const connection = async (socket: any, myId: number) => {
   console.log("Connected to socket.io");
 };
-const joinChat = async (socket: any, room: string, userId: number) => {
-  const user = userJoin(socket.id, room, userId);
-  socket.join(user.room);
-  // Welcome current user
-  socket.emit("message", "Welcome to ChatCord!");
-  // Broadcast when a user connects
-  socket.broadcast.to(user.room).emit("message", `user has joined the chat`);
+const joinChat = async (socket: any, channelId: number, userId: number) => {
+  const user = userJoin(socket.id, channelId, userId);
+  const findChannel = await prisma.channel.findUnique({
+    where: { id: channelId },
+  });
+  socket.join(user.channelId);
+  if (findChannel) {
+    const checkUserExist = await prisma.channelUser.findFirst({
+      where: {
+        channelId: channelId,
+        userId: Number(userId),
+        channelType: findChannel.channelType,
+      },
+    });
+    if (!checkUserExist) {
+      const joinUser = await prisma.channelUser.create({
+        data: {
+          channelId,
+          userId: Number(userId),
+          channelType: findChannel.channelType,
+        },
+        include: {
+          channelUser: {
+            select: { userName: true },
+          },
+        },
+      });
+      socket.emit("message", `Welcome to ${findChannel.matchChannelName}!`);
+      socket.broadcast
+        .to(user.channelId)
+        .emit(
+          "message",
+          `${joinUser.channelUser.userName} has joined the group`
+        );
+    }
+  }
+};
+
+const getConversation = async (socket: any, channelId: number) => {
+  const user = getCurrentUser(socket.id);
+  const getMessage = await prisma.message.findMany({
+    where: { channelId },
+  });
+  if (user) io.to(user.channelId).emit("conversation", getMessage);
 };
 
 const groupMessage = async (socket: any, newMessageRecieved: any) => {
   const user = getCurrentUser(socket.id);
-
   const { message } = newMessageRecieved;
-  const newMessage = await prisma.message.create({
-    include: {
-      from: { select: { userName: true, id: true } },
-      to: { select: { userName: true, id: true } },
-      reaction: {
-        select: {
-          reaction: true,
-          from: { select: { userName: true, id: true } },
-        },
+  if (user) {
+    const newMessage = await prisma.message.create({
+      include: {
+        user: { select: { userName: true, id: true } },
       },
-      threads: {
-        select: {
-          text: true,
-          from: { select: { userName: true, id: true } },
-          filePath: true,
-        },
+      data: {
+        ...message,
+        channelId: user.channelId,
+        userId: Number(user.userId),
       },
-    },
-    data: { ...message, channel: user.room },
-  });
-  io.to(user.room).emit("message", newMessage);
+    });
+    io.to(user.channelId).emit("message", newMessage);
+  }
 };
 
 const disconnectUser = () => {
   io.emit("message", "A user has left the chat");
 };
-const groupMessageThread = async (
-  socket: any, newThreadMessage: any
-) => {
+const groupMessageThread = async (socket: any, newThreadMessage: any) => {
   const user = getCurrentUser(socket.id);
- const {message}=newThreadMessage
+  const { message } = newThreadMessage;
   const findMessage = await prisma.message.findUnique({
     where: {
       id: message.messageId,
@@ -391,6 +415,8 @@ export {
   groupMessage,
   disconnectUser,
   groupMessageThread,
+  connection,
+  getConversation,
   // conversationChange,
   // messageThread,
   // messageReaction,
