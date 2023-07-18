@@ -1,5 +1,5 @@
 import moment from "moment";
-import { axiosGetMicro } from "../services/axios.service";
+import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -39,7 +39,7 @@ export default class ConversationDbCronServiceClass {
             }@${
               homeTeamNameSplit
             }-${day}/${month}`;
-            await prisma.channel.create({
+            const createdChannelDetail = await prisma.channel.create({
               data: {
                 goalServeMatchId: match.goalServeMatchId,
                 goalServeLeagueId: match.goalServeLeagueId,
@@ -50,6 +50,16 @@ export default class ConversationDbCronServiceClass {
                 channelExpiredAt : channelExpiredAt
               },
             });
+            const resp = await axiosPostMicro(
+              {
+                goalServeMatchId: match.goalServeMatchId,
+                goalServeLeagueId: match.goalServeLeagueId,
+                chatChannelId: createdChannelDetail.id,
+                chatChannelName: createdChannelDetail.matchChannelName,
+              },
+              `${process.env.LEAGUE_SERVER}/league/mlb/addChatDetailInMatch`,
+              ""
+            );
           }
         }
       }

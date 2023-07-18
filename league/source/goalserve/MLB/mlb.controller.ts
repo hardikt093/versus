@@ -174,6 +174,14 @@ const get24HoursFinalGameData = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const addChatDetailInMatch = async (req: Request, res: Response) => {
+  try {
+    await goalserveService.addChatDetailInMatch(req.body);
+    createResponse(res, httpStatus.OK, "", {});
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -192,5 +200,6 @@ export default {
   get2DaysUpcomingDataFromMongodb,
   get20HoursUpcomingGameData,
   getAllUpcomingGameData,
-  get24HoursFinalGameData
+  get24HoursFinalGameData,
+  addChatDetailInMatch
 };
