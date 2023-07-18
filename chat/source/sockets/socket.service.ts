@@ -289,6 +289,7 @@ const connection = async () => {
   console.log("Connected to socket.io");
 };
 const joinChat = async (socket: any, channelId: number, userId: number) => {
+  console.log("joim")
   try {
     const user = userJoin(socket.id, channelId, userId);
     const findChannel = await prisma.channel.findUnique({
@@ -331,6 +332,7 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 };
 
 const getConversation = async (socket: any, channelId: number) => {
+
   try {
     const user = getCurrentUser(socket.id);
     const channelDetails = await prisma.channel.findUnique({
@@ -340,7 +342,7 @@ const getConversation = async (socket: any, channelId: number) => {
       include: {
         channelUser: {
           include: {
-            channelUser: { select: { userName: true, id: true } },
+            channelUser: { select: { userName: true, id: true, firstName:true, lastName:true , profileImage:true} },
           },
         },
       },
@@ -348,7 +350,7 @@ const getConversation = async (socket: any, channelId: number) => {
     const getMessage = await prisma.message.findMany({
       where: { channelId },
       include: {
-        user: { select: { userName: true, id: true } },
+        user: { select: { userName: true, id: true, firstName:true, lastName:true , profileImage:true}  },
       },
     });
     if (user)
@@ -368,7 +370,7 @@ const singleGameChat = async (socket: any, newMessageRecieved: any) => {
     if (user) {
       const newMessage = await prisma.message.create({
         include: {
-          user: { select: { userName: true, id: true } },
+          user: { select: { userName: true, id: true, firstName:true, lastName:true , profileImage:true}  },
         },
         data: {
           ...message,
