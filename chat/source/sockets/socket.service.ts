@@ -4,7 +4,7 @@ import { io } from "../server";
 import { HandshakeUserId, IConversation, IMessage } from "../interfaces/input";
 
 const prisma = new PrismaClient();
-const onlineUsers = new Set();
+// const onlineUsers = new Set();
 const users: any = [];
 // old code
 
@@ -338,11 +338,18 @@ const getConversation = async (socket: any, channelId: number) => {
         id: channelId,
       },
       include: {
-        channelUser: true,
+        channelUser: {
+          include: {
+            channelUser: { select: { userName: true, id: true } },
+          },
+        },
       },
     });
     const getMessage = await prisma.message.findMany({
       where: { channelId },
+      include: {
+        user: { select: { userName: true, id: true } },
+      },
     });
     if (user)
       io.to(user.channelId).emit("conversation", {
