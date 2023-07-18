@@ -98,8 +98,6 @@ var betSchema = new Schema(
         "REJECTED",
         "ACTIVE",
         "RESULT_DECLARED",
-        "RESULT_NOT_SATISFIED",
-        "COMPLETED",
         "CANCELED",
         "EXPIRED"
       ],
