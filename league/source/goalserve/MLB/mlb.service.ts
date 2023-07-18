@@ -11601,6 +11601,7 @@ const liveBoxscoreMlb = async () => {
           attendance: 1,
           goalServeMatchId: 1,
           venueName: 1,
+          goalServeLeagueId: true,
           event: true,
           outs: {
             $cond: {
