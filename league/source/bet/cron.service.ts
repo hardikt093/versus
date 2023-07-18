@@ -85,4 +85,50 @@ export default class BetDbCronServiceClass {
       console.log("error", error);
     }
   };
+
+  public cancelBetRefund = async () => {
+    try {
+      const betData = await Bet.find({
+        isDeleted: false,
+        status: "CANCELED",
+        paymentStatus: "PENDING",
+      });
+
+      for (let i = 0; i < betData.length; i++) {
+        const bet = betData[i];
+        // Please Do refund Code below
+        const resp = await axiosPostMicro(
+          {
+            amount: bet?.requestUserBetAmount,
+            userId: bet?.requestUserId,
+            betData: bet
+          },
+          `${config.authServerUrl}/wallet/revertAmount`,
+          ""
+        );
+
+        const resp2 = await axiosPostMicro(
+          {
+            amount: bet?.opponentUserBetAmount,
+            userId: bet?.opponentUserId,
+            betData: bet
+          },
+          `${config.authServerUrl}/wallet/revertAmount`,
+          ""
+        );
+        // update payment Status after payment refunded
+        await Bet.updateOne(
+          {
+            isDeleted: false,
+            _id: bet._id,
+          },
+          {
+            paymentStatus: "REFUNDED",
+          }
+        );
+      }
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
 }
