@@ -38,8 +38,26 @@ const expiredBetRefund = cron.schedule("*/5 * * * * *", async () => {
   }
 });
 
+let isCancelBetRefundRunning: boolean = false;
+const canselBetRefund = cron.schedule("*/5 * * * * *", async () => {
+  if (isCancelBetRefundRunning) {
+    // console.log("expiredBetRefund Skip");
+    return;
+  }
+  isCancelBetRefundRunning = true;
+  try {
+    // console.info("inside score cron expiredBetRefund");
+    await betService.cancelBetRefund();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isCancelBetRefundRunning = false;
+  }
+});
+
 
 export default {
     releaseBetPayment,
-    expiredBetRefund
+  expiredBetRefund,
+  canselBetRefund
 };
