@@ -24,10 +24,8 @@ export default class ConversationDbCronServiceClass {
           if (!conversation) {
             const utcDate = moment.utc(match.datetime_utc, "DD.MM.YYYY HH:mm");
             const startDate = moment(utcDate).subtract(20, "hours");
-            const endDate = moment(utcDate).add(2, "hours");
             const matchStartAt = utcDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
             const channelStartAt = startDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-            const channelExpiredAt = endDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
             let matchDate = match.date ? match.date : match.datetime_utc;
             const date = matchDate.split(".");
             let day = date[0] ?? moment(utcDate).format("D");
@@ -46,8 +44,7 @@ export default class ConversationDbCronServiceClass {
                 channelType : 'matchChannel',
                 matchChannelName: chatName,
                 matchStartAt : matchStartAt,
-                channelStartAt : channelStartAt,
-                channelExpiredAt : channelExpiredAt
+                channelStartAt : channelStartAt
               },
             });
             const resp = await axiosPostMicro(
@@ -61,6 +58,8 @@ export default class ConversationDbCronServiceClass {
               ""
             );
           }
+
+
         }
       }
       return true;
