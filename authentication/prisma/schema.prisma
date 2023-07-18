@@ -119,7 +119,7 @@ model channelUser {
   adminAccessId    Int?
   channel          Channel?    @relation(fields: [channelId], references: [id])
   channelId        Int?
-  permisionGranted String
+  permisionGranted String?
 }
 
 model reportUser {
