@@ -5285,6 +5285,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           venueName: true,
           datetime_utc: "$dateTimeUtc",
           goalServeMatchId: true,
+          goalServeLeagueId: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
@@ -9947,6 +9948,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
           attendance: 1,
           venueName: 1,
           goalServeMatchId: 1,
+          goalServeLeagueId: 1,
           event: true,
           outs: {
             $cond: {
