@@ -25,6 +25,7 @@ const envVarsSchema = Joi.object()
     EMAIL_FROM: Joi.string().description(
       "The from field in the emails sent by the app"
     ),
+    MESSAGE_KEY: Joi.string().description("message decryption key")
   })
   .unknown();
 
@@ -39,7 +40,7 @@ if (error) {
 export default {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
-
+  message_key: envVars.MESSAGE_KEY,
   jwt: {
     secret: envVars.JWT_SECRET,
     accessExpirationMinutes: envVars.JWT_ACCESS_EXPIRATION_MINUTES,

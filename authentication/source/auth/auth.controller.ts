@@ -82,8 +82,9 @@ const signIn = async (req: Request, res: Response) => {
               JWTpayload.getToken.data.access_token
             );
             if (!contactList || contactList.length === 0) {
+              const user = await authService.socialLogin(signUp.email.toLowerCase());
               createResponse(res, httpStatus.OK, "", {
-                user: signUp,
+                user: user,
                 isBirthDateAvailable: true,
               });
               return;
@@ -274,6 +275,7 @@ const changePassword = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
 export default {
   signIn,
   signUp,
@@ -285,5 +287,5 @@ export default {
   checkInviteExpire,
   refreshAuthTokens,
   getUser,
-  changePassword
+  changePassword,
 };

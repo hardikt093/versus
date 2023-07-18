@@ -19,6 +19,7 @@ import ITeamModel from "../../models/interfaces/team.interface";
 import IMatchModel from "../../models/interfaces/match.interface";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import IOddModel from "../../models/interfaces/odd.interface";
+import { IaddChatDetailInMatch } from "./mlb.interface";
 function camelize(str: string) {
   return str
     .replace(/(?:^\w|[A-Z]|\b\w)/g, function (word, index) {
@@ -666,9 +667,8 @@ const getUpcomingMatch = async () => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -682,7 +682,6 @@ const getUpcomingMatch = async () => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -1746,6 +1745,7 @@ const mlbScoreWithDate = async (date1: string) => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
+          goalServeLeagueId: true,
           awayTeam: {
             abbreviation: "$awayTeam.abbreviation",
             awayTeamName: "$awayTeam.name",
@@ -2196,9 +2196,8 @@ const mlbScoreWithDate = async (date1: string) => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -2212,7 +2211,6 @@ const mlbScoreWithDate = async (date1: string) => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -2754,6 +2752,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
+          goalServeLeagueId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
@@ -3206,9 +3205,8 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -3222,7 +3220,6 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -3838,9 +3835,8 @@ const getLiveDataFromMongodb = async () => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -3854,7 +3850,6 @@ const getLiveDataFromMongodb = async () => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -5091,9 +5086,8 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -5107,7 +5101,6 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -5292,6 +5285,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           venueName: true,
           datetime_utc: "$dateTimeUtc",
           goalServeMatchId: true,
+          goalServeLeagueId: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
@@ -6305,11 +6299,10 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           let: {
             awayTeamStartingPictcherId: {
               $convert: {
-                input:    "$startingPitchers.awayteam.player.id",
+                input: "$startingPitchers.awayteam.player.id",
                 to: "int",
                 onError: 0, // Default value when conversion fails
               },
-            
             },
             homeTeamStartingPictcherId: {
               $convert: {
@@ -6317,7 +6310,6 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                 to: "int",
                 onError: 0, // Default value when conversion fails
               },
-    
             },
           },
           pipeline: [
@@ -6620,9 +6612,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -6636,7 +6627,6 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -6722,8 +6712,8 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
           attendance: true,
           status: true,
           venueName: true,
-          goalServeMatchId:true,
-          goalServeLeagueId:true,
+          goalServeMatchId: true,
+          goalServeLeagueId: true,
           startingPitcher: {
             awayTeam: {
               wins: {
@@ -7262,7 +7252,7 @@ const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
         },
       },
     ]);
-  
+
     return { getMatch: getMatch[0] };
   } catch (error: any) {
     console.log("error", error);
@@ -9209,11 +9199,10 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
           let: {
             awayTeamStartingPictcherId: {
               $convert: {
-                input:    "$startingPitchers.awayteam.player.id",
+                input: "$startingPitchers.awayteam.player.id",
                 to: "int",
                 onError: 0, // Default value when conversion fails
               },
-            
             },
             homeTeamStartingPictcherId: {
               $convert: {
@@ -9783,9 +9772,8 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -9799,7 +9787,6 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -9961,6 +9948,7 @@ const mlbSingleGameBoxScoreLive = async (goalServeMatchId: string) => {
           attendance: 1,
           venueName: 1,
           goalServeMatchId: 1,
+          goalServeLeagueId: 1,
           event: true,
           outs: {
             $cond: {
@@ -10866,11 +10854,10 @@ const liveBoxscoreMlb = async () => {
           let: {
             awayTeamStartingPictcherId: {
               $convert: {
-                input:    "$startingPitchers.awayteam.player.id",
+                input: "$startingPitchers.awayteam.player.id",
                 to: "int",
                 onError: 0, // Default value when conversion fails
               },
-            
             },
             homeTeamStartingPictcherId: {
               $convert: {
@@ -10878,7 +10865,7 @@ const liveBoxscoreMlb = async () => {
                 to: "int",
                 onError: 0, // Default value when conversion fails
               },
-            }
+            },
           },
           pipeline: [
             {
@@ -11439,9 +11426,8 @@ const liveBoxscoreMlb = async () => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -11455,7 +11441,6 @@ const liveBoxscoreMlb = async () => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -11616,6 +11601,7 @@ const liveBoxscoreMlb = async () => {
           attendance: 1,
           goalServeMatchId: 1,
           venueName: 1,
+          goalServeLeagueId: true,
           event: true,
           outs: {
             $cond: {
@@ -12767,9 +12753,8 @@ const get2DaysUpcomingDataFromMongodb = async (date1: string) => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -12783,7 +12768,6 @@ const get2DaysUpcomingDataFromMongodb = async (date1: string) => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -13387,9 +13371,8 @@ const get2DaysUpcomingDataFromMongodb = async (date1: string) => {
               if: {
                 $or: [
                   { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] }
-                ]
-
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
               },
               then: {
                 $multiply: [
@@ -13403,7 +13386,6 @@ const get2DaysUpcomingDataFromMongodb = async (date1: string) => {
                   },
                   100,
                 ],
-
               },
               else: {
                 $multiply: [
@@ -13619,8 +13601,8 @@ const get2DaysUpcomingDataFromMongodb = async (date1: string) => {
     ]);
     return {
       todayData,
-      tomorrowData
-    }
+      tomorrowData,
+    };
   } catch (error: any) {
     console.log("error", error);
   }
@@ -13743,7 +13725,7 @@ const get20HoursUpcomingGameData = async () => {
         },
       },
     ]);
-    return data
+    return data;
   } catch (error: any) {
     console.log("error", error);
   }
@@ -13859,12 +13841,11 @@ const getAllUpcomingGameData = async () => {
         },
       },
     ]);
-    return data
+    return data;
   } catch (error: any) {
     console.log("error", error);
   }
 };
-
 
 const get24HoursFinalGameData = async () => {
   const date1 = moment().utc().toISOString();
@@ -13902,7 +13883,7 @@ const get24HoursFinalGameData = async () => {
           dateInString: {
             $gte: date1,
             $lte: date2,
-          }
+          },
         },
       },
       {
@@ -13987,7 +13968,25 @@ const get24HoursFinalGameData = async () => {
         },
       },
     ]);
-    return data
+    return data;
+  } catch (error: any) {
+    console.log("error", error);
+  }
+};
+
+const addChatDetailInMatch = async (data: IaddChatDetailInMatch) => {
+  try {
+    await Match.updateOne(
+      {
+        goalServeLeagueId: data.goalServeLeagueId,
+        goalServeMatchId: data.goalServeMatchId,
+      },
+      {
+        chatChannelId: data.chatChannelId,
+        chatChannelName: data.chatChannelName,
+      }
+    );
+    return;
   } catch (error: any) {
     console.log("error", error);
   }
@@ -14024,5 +14023,6 @@ export default {
   get2DaysUpcomingDataFromMongodb,
   get20HoursUpcomingGameData,
   getAllUpcomingGameData,
-  get24HoursFinalGameData
+  get24HoursFinalGameData,
+  addChatDetailInMatch
 };
