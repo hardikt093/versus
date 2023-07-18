@@ -147,6 +147,33 @@ const get2DaysUpcomingDataFromMongodb = async (req: Request, res: Response) => {
   }
 };
 
+const get20HoursUpcomingGameData = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.get20HoursUpcomingGameData();
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+
+const getAllUpcomingGameData = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.getAllUpcomingGameData();
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const get24HoursFinalGameData = async (req: Request, res: Response) => {
+  try {
+    const data = await goalserveService.get24HoursFinalGameData();
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -162,5 +189,8 @@ export default {
   statsTeam,
   mlbGetTeam,
   mlbSingleGameBoxScoreLive,
-  get2DaysUpcomingDataFromMongodb
+  get2DaysUpcomingDataFromMongodb,
+  get20HoursUpcomingGameData,
+  getAllUpcomingGameData,
+  get24HoursFinalGameData
 };
