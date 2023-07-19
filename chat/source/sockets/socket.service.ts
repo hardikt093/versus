@@ -1,8 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 
 import { io } from "../server";
-import { HandshakeUserId, IConversation, IMessage } from "../interfaces/input";
-
 const prisma = new PrismaClient();
 // const onlineUsers = new Set();
 const users: any = [];
@@ -274,7 +272,6 @@ const users: any = [];
 //     console.log(error);
 //   }
 // };
-
 function userJoin(id: string, channelId: number, userId: number) {
   const user = { id, userId, channelId };
   users.push(user);
@@ -289,7 +286,6 @@ const connection = async () => {
   console.log("Connected to socket.io");
 };
 const joinChat = async (socket: any, channelId: number, userId: number) => {
-  console.log("joim")
   try {
     const user = userJoin(socket.id, channelId, userId);
     const findChannel = await prisma.channel.findUnique({
@@ -332,7 +328,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 };
 
 const getConversation = async (socket: any, channelId: number) => {
-
   try {
     const user = getCurrentUser(socket.id);
     const channelDetails = await prisma.channel.findUnique({
@@ -354,7 +349,7 @@ const getConversation = async (socket: any, channelId: number) => {
       },
     });
     if (user)
-      io.to(user.channelId).emit("conversation", {
+      socket.to(user.channelId).emit("conversation", {
         channelDetails: channelDetails,
         messages: getMessage,
       });
@@ -378,7 +373,7 @@ const singleGameChat = async (socket: any, newMessageRecieved: any) => {
           userId: Number(user.userId),
         },
       });
-      io.to(user.channelId).emit("message", newMessage);
+      io.to(user.channelId).emit(`message:${user.channelId}`, newMessage);
     }
   } catch (error) {
     console.log(error);
