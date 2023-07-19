@@ -15,12 +15,10 @@ class DBCronJob {
 
   private async createSingleGameChatMethod(channelDbCronService: ChannelDbCronService): Promise<void> {
     if (this.iscreateSingleGameChatRunning){
-      console.log("SKIP createSingleGameChat");
       return;
     } 
     this.iscreateSingleGameChatRunning = true;
     try {
-      console.log("createSingleGameChat");
       await channelDbCronService.createSingleGameChat();
     } catch (error) {
       console.log(error);
@@ -33,7 +31,6 @@ class DBCronJob {
     if (this.isexpireSingleGameChatRunning) return;
     this.isexpireSingleGameChatRunning = true;
     try {
-      console.log("expireSingleGameChatMethod");
       await channelDbCronService.expireSingleGameChat();
     } catch (error) {
       console.log(error);
