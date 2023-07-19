@@ -274,13 +274,25 @@ const users: any = [];
 // };
 function userJoin(id: string, channelId: number, userId: number) {
   const user = { id, userId, channelId };
-  users.push(user);
-  return user;
+  const index = users.findIndex(
+    (object: any) => object.userId === userId && object.channelId === channelId
+  );
+  if (index === -1) {
+    users.push(user);
+    return user;
+  } else {
+    const user = users.filter(
+      (item: any) => item.userId === userId && item.channelId === channelId
+    );
+    return user[0];
+  }
 }
 
 // Get current user
-function getCurrentUser(id: number) {
-  return users.find((user: any) => user.id === id);
+function getCurrentUser(channelId: number, id: any) {
+  return users.find(
+    (user: any) => user.channelId === channelId && id === user.id
+  );
 }
 const connection = async () => {
   console.log("Connected to socket.io");
@@ -329,7 +341,7 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 
 const getConversation = async (socket: any, channelId: number) => {
   try {
-    const user = getCurrentUser(socket.id);
+    const user = getCurrentUser(channelId, socket.id);
     const channelDetails = await prisma.channel.findUnique({
       where: {
         id: channelId,
@@ -337,7 +349,15 @@ const getConversation = async (socket: any, channelId: number) => {
       include: {
         channelUser: {
           include: {
-            channelUser: { select: { userName: true, id: true, firstName:true, lastName:true , profileImage:true} },
+            channelUser: {
+              select: {
+                userName: true,
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
           },
         },
       },
@@ -345,14 +365,23 @@ const getConversation = async (socket: any, channelId: number) => {
     const getMessage = await prisma.message.findMany({
       where: { channelId },
       include: {
-        user: { select: { userName: true, id: true, firstName:true, lastName:true , profileImage:true}  },
+        user: {
+          select: {
+            userName: true,
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
       },
     });
-    if (user)
-      socket.to(user.channelId).emit("conversation", {
+    if (user) {
+      io.to(user.channelId).emit(`conversation: ${user.channelId}`, {
         channelDetails: channelDetails,
         messages: getMessage,
       });
+    }
   } catch (error) {
     console.log(error);
   }
@@ -360,16 +389,24 @@ const getConversation = async (socket: any, channelId: number) => {
 
 const singleGameChat = async (socket: any, newMessageRecieved: any) => {
   try {
-    const user = getCurrentUser(socket.id);
     const { message } = newMessageRecieved;
+    const user = getCurrentUser(message.channelId, socket.id);
+
     if (user) {
       const newMessage = await prisma.message.create({
         include: {
-          user: { select: { userName: true, id: true, firstName:true, lastName:true , profileImage:true}  },
+          user: {
+            select: {
+              userName: true,
+              id: true,
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
         },
         data: {
           ...message,
-          channelId: user.channelId,
           userId: Number(user.userId),
         },
       });
@@ -383,26 +420,26 @@ const singleGameChat = async (socket: any, newMessageRecieved: any) => {
 const disconnectUser = () => {
   io.emit("message", "A user has left the chat");
 };
-const groupMessageThread = async (socket: any, newThreadMessage: any) => {
-  const user = getCurrentUser(socket.id);
-  const { message } = newThreadMessage;
-  const findMessage = await prisma.message.findUnique({
-    where: {
-      id: message.messageId,
-    },
-  });
-  if (!findMessage) {
-    return;
-  } else {
-    const newThread = await prisma.threads.create({
-      data: message,
-      include: {
-        from: { select: { userName: true, id: true } },
-      },
-    });
-    io.to(user.room).emit("message", newThread);
-  }
-};
+// const groupMessageThread = async (socket: any, newThreadMessage: any) => {
+//   const user = getCurrentUser(socket.id);
+//   const { message } = newThreadMessage;
+//   const findMessage = await prisma.message.findUnique({
+//     where: {
+//       id: message.messageId,
+//     },
+//   });
+//   if (!findMessage) {
+//     return;
+//   } else {
+//     const newThread = await prisma.threads.create({
+//       data: message,
+//       include: {
+//         from: { select: { userName: true, id: true } },
+//       },
+//     });
+//     io.to(user.room).emit("message", newThread);
+//   }
+// };
 // const messageReaction = async (
 //   reaction: string,
 //   conversationId: number,
@@ -442,7 +479,7 @@ export {
   joinChat,
   singleGameChat,
   disconnectUser,
-  groupMessageThread,
+  // groupMessageThread,
   connection,
   getConversation,
   // conversationChange,
