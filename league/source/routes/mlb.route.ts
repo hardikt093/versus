@@ -110,6 +110,10 @@ router.get(
   "/get24HoursFinalGameData",
   mlbController.get24HoursFinalGameData
 );
+router.get(
+  "/getAllFinalGameData",
+  mlbController.getAllFinalGameData
+);
 router.post(
   "/addChatDetailInMatch",
   mlbController.addChatDetailInMatch
