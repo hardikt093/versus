@@ -15,4 +15,13 @@ const getMatchPublicChannelConversation = async (req: Request, res: Response) =>
   }
 };
 
-export default { getMatchPublicChannelConversation };
+const addFinalMatchChannel = async (req: Request, res: Response) => {
+  try {
+    const getConversation = await conversationService.addFinalMatchChannel();
+    createResponse(res, httpStatus.OK, "", getConversation);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+export default { getMatchPublicChannelConversation, addFinalMatchChannel };
