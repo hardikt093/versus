@@ -16,7 +16,7 @@ const getMatchPublicChannelConversation = async (data: any) => {
       goalServeLeagueId: data.goalServeLeagueId,
     },
   });
-  if (conversation) {
+  if (conversation && conversation.channelType == "matchChannel") {
     let status = 'Not Started'
     const startMoment = moment.utc(conversation.channelStartAt);
     let endMoment = moment.utc();
@@ -33,7 +33,7 @@ const getMatchPublicChannelConversation = async (data: any) => {
     }
     return {status, ...conversation};
   } else {
-    return null;
+    return conversation;
   }
 };
 
