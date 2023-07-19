@@ -53,49 +53,15 @@ export interface IFile {
   name: string;
 }
 export interface IMessage {
-  toId: number;
-  fromId: number;
-  text: string;
-  filePath: IFile;
-  conversationId: number;
+  message: {
+    text: string;
+    createdAt: Date;
+    messageType: string;
+  };
 }
-export interface IConversation {
-  messages: IMessage[];
-  id: number;
-  participants: number[];
-}
-export type HandshakeUserId = number | number[] | undefined;
-
-export interface IMessageInput {
-  message: IMessage;
-  conversation: IConversation;
-  myUserId: number;
-}
-export interface IUpdateMessageInput {
-  myUserId: number;
-  text: string;
-  conversationId: number;
-  messageId: number;
-}
-export interface IDeleteMessage {
-  conversationId: number;
-  messageId: number;
-}
-export interface IMessageReaction {
-  reaction: string;
-  conversationId: number;
-  messageId: number;
-  myUserId: number;
-}
-
-export interface IThreadMessage {
-  text: string,
-  reaction: string;
-  conversationId: number;
-  messageId: number;
-  myUserId: number;
-}
-export interface IConversationChange {
-  conversationId: number;
-  myUserId: number;
+export interface IChannelData {
+  userId?:number,
+  channelId?:number
+  channelName?: string;
+  channelType?: string;
 }
