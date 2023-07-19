@@ -19,9 +19,11 @@ const getMatchPublicChannelConversation = async (data: any) => {
   if (conversation) {
     let status = 'Not Started'
     const startMoment = moment.utc(conversation.channelStartAt);
-    let endMoment = moment.utc(conversation.channelExpiredAt);
+    let endMoment = moment.utc();
     if (!conversation.channelExpiredAt) {
       endMoment = moment.utc(conversation.matchStartAt).add(12, "hours");
+    } else {
+      endMoment = moment.utc(conversation.channelExpiredAt);
     }
     const currentTime = moment().utc();
     if (currentTime.isSameOrAfter(startMoment) && currentTime.isSameOrBefore(endMoment)) {

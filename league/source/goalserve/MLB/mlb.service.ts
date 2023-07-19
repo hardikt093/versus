@@ -13848,8 +13848,9 @@ const getAllUpcomingGameData = async () => {
 };
 
 const get24HoursFinalGameData = async () => {
-  const date1 = moment().utc().toISOString();
-  const date2 = moment(date1).add(24, "hours").utc().toISOString();
+  const date = moment().utc().toISOString();
+  const date1 = moment(date).subtract(24, "hours").utc().toISOString();
+  const date2 = moment(date).add(24, "hours").utc().toISOString();
   try {
     const data = await Match.aggregate([
       {
