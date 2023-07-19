@@ -14,6 +14,7 @@ import { IUser } from "../interfaces/input";
  * @param res
  */
 const signIn = async (req: Request, res: Response) => {
+  console.log("in signin")
   try {
     if (!req.body.provider) {
       const signIn = await authService.signIn(req.body);
@@ -24,6 +25,9 @@ const signIn = async (req: Request, res: Response) => {
           req.body.googleCode
         );
         const login = await authService.socialLogin(JWTpayload.jwt.email.toLowerCase());
+        if (login.id == 9) {
+          console.log("login", login)
+        }
         if (login) {
           if (login.isBirthDateAvailable == false) {
             createResponse(res, httpStatus.OK, "", {
