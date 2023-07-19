@@ -14,4 +14,9 @@ router.post(
   channelController.getMatchPublicChannelConversation
 );
 
+router.post(
+  "/addFinalMatchChannel",
+  channelController.addFinalMatchChannel
+);
+
 export = router;
