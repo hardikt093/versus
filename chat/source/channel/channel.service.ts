@@ -15,19 +15,23 @@ const getMatchPublicChannelConversation = async (data: any) => {
       goalServeLeagueId: data.goalServeLeagueId,
     },
   });
-  let status = 'Not Started'
-  const startMoment = moment.utc(conversation.channelStartAt);
-  let endMoment = moment.utc(conversation.channelExpiredAt);
-  if (!conversation.channelExpiredAt) {
-    endMoment = moment.utc(conversation.matchStartAt).add(12, "hours");
+  if (conversation) {
+    let status = 'Not Started'
+    const startMoment = moment.utc(conversation.channelStartAt);
+    let endMoment = moment.utc(conversation.channelExpiredAt);
+    if (!conversation.channelExpiredAt) {
+      endMoment = moment.utc(conversation.matchStartAt).add(12, "hours");
+    }
+    const currentTime = moment().utc();
+    if (currentTime.isSameOrAfter(startMoment) && currentTime.isSameOrBefore(endMoment)) {
+      status = "Started"
+    } else if (currentTime.isSameOrAfter(endMoment)) {
+      status = "Expired"
+    }
+    return {status, ...conversation};
+  } else {
+    return {}
   }
-  const currentTime = moment().utc();
-  if (currentTime.isSameOrAfter(startMoment) && currentTime.isSameOrBefore(endMoment)) {
-    status = "Started"
-  } else if (currentTime.isSameOrAfter(endMoment)) {
-    status = "Expired"
-  }
-  return {status, ...conversation};
 };
 export default {
   getMatchPublicChannelConversation
