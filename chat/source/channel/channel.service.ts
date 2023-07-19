@@ -30,7 +30,7 @@ const getMatchPublicChannelConversation = async (data: any) => {
     }
     return {status, ...conversation};
   } else {
-    return {}
+    return null;
   }
 };
 export default {
