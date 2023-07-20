@@ -769,12 +769,26 @@ export default class MlbDbCronServiceClass {
     );
   };
   public createOdds = async () => {
-    let day = moment().format("D");
-    let month = moment().format("MM");
-    let year = moment().format("YYYY");
-    let date = `${day}.${month}.${year}`;
+    let subDate = moment()
+      .startOf("day")
+      .subtract(24, "hours")
+      .utc()
+      .toISOString();
+    let addDate = moment().add(30, "days").utc().toISOString();
+    let day1 = moment(subDate).format("D");
+    let month1 = moment(subDate).format("MM");
+    let year1 = moment(subDate).format("YYYY");
+    let date1 = `${day1}.${month1}.${year1}`;
+
+    let day2 = moment(addDate).format("D");
+    let month2 = moment(addDate).format("MM");
+    let year2 = moment(addDate).format("YYYY");
+    let date2 = `${day2}.${month2}.${year2}`;
     try {
-      let data = { json: true, showodds: "1", bm: "451,455," };
+      let data = {
+        json: true, showodds: "1", bm: "451,455,", date1: date1,
+        date2: date2,
+      };
       const getScore = await goalserveApi(
         "https://www.goalserve.com/getfeed",
         data,
@@ -866,10 +880,10 @@ export default class MlbDbCronServiceClass {
   public createOrUpdateOdds = async () => {
     let subDate = moment()
       .startOf("day")
-      .subtract(12, "hours")
+      .subtract(24, "hours")
       .utc()
       .toISOString();
-    let addDate = moment().add(48, "hours").utc().toISOString();
+    let addDate = moment().add(30, "days").utc().toISOString();
     let day1 = moment(subDate).format("D");
     let month1 = moment(subDate).format("MM");
     let year1 = moment(subDate).format("YYYY");
@@ -883,8 +897,8 @@ export default class MlbDbCronServiceClass {
     try {
       let data = {
         json: true,
-        // date1: date1,
-        // date2: date2,
+        date1: date1,
+        date2: date2,
         showodds: "1",
         bm: "455,451",
       };

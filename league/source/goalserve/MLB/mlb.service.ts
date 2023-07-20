@@ -13848,8 +13848,9 @@ const getAllUpcomingGameData = async () => {
 };
 
 const get24HoursFinalGameData = async () => {
-  const date1 = moment().utc().toISOString();
-  const date2 = moment(date1).add(24, "hours").utc().toISOString();
+  const date = moment().utc().toISOString();
+  const date1 = moment(date).subtract(24, "hours").utc().toISOString();
+  const date2 = moment(date).add(24, "hours").utc().toISOString();
   try {
     const data = await Match.aggregate([
       {
@@ -13991,6 +13992,122 @@ const addChatDetailInMatch = async (data: IaddChatDetailInMatch) => {
     console.log("error", error);
   }
 };
+const getAllFinalGameData = async () => {
+  try {
+    const data = await Match.aggregate([
+      {
+        $match: {
+          status: {$ne : "Not Started"},
+        },
+      },
+      {
+        $addFields: {
+          spliteTime: {
+            $split: ["$dateTimeUtc", " "],
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeam",
+        },
+      },
+      {
+        $lookup: {
+          from: "teams",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeam",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeam",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeAwayTeamId",
+          foreignField: "goalServeTeamId",
+          as: "awayTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$awayTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "standings",
+          localField: "goalServeHomeTeamId",
+          foreignField: "goalServeTeamId",
+          as: "homeTeamStandings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$homeTeamStandings",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          id: true,
+          date: true,
+          status: true,
+          datetime_utc: "$dateTimeUtc",
+          time: true,
+          goalServeLeagueId: true,
+          goalServeMatchId: true,
+          awayTeam: {
+            abbreviation: "$awayTeam.abbreviation",
+            awayTeamName: "$awayTeam.name",
+            goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
+          },
+          homeTeam: {
+            abbreviation: "$homeTeam.abbreviation",
+            homeTeamName: "$homeTeam.name",
+            goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
+          },
+        },
+      },
+    ]);
+    return data;
+  } catch (error: any) {
+    console.log("error", error);
+  }
+};
 export default {
   mlbGetTeam,
   getMLBStandings,
@@ -14024,5 +14141,6 @@ export default {
   get20HoursUpcomingGameData,
   getAllUpcomingGameData,
   get24HoursFinalGameData,
-  addChatDetailInMatch
+  addChatDetailInMatch,
+  getAllFinalGameData
 };
