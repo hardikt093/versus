@@ -74,7 +74,7 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 const getConversation = async (socket: any, channelId: number) => {
   try {
     if (channelId) {
-      const user = getCurrentUser(channelId, socket.id);
+      // const user = getCurrentUser(channelId, socket.id);
       const channelDetails = await prisma.channel.findUnique({
         where: { id: channelId },
         include: {
@@ -107,45 +107,75 @@ const getConversation = async (socket: any, channelId: number) => {
           },
         },
       });
-      if (user) {
+      // if (user) {
         socket.emit(`conversation`, {
           channelDetails: channelDetails,
           messages: messages,
         });
-      }
+      // }
     }
   } catch (error) {
     console.log(error);
   }
 };
+// const singleGameChat = async (socket: any, newMessageRecieved: any) => {
+//   try {
+//     const { message } = newMessageRecieved;
+
+//     if (message.channelId) {
+//       const user = getCurrentUser(message.channelId, socket.id);
+//       console.log("user", user)
+//       if (user) {
+//         const newMessage = await prisma.message.create({
+//           include: {
+//             user: {
+//               select: {
+//                 userName: true,
+//                 id: true,
+//                 firstName: true,
+//                 lastName: true,
+//                 profileImage: true,
+//               },
+//             },
+//           },
+//           data: {
+//             ...message,
+//             userId: Number(user.userId),
+//           },
+//         });
+//         console.log(newMessage);
+//         io.to(user.channelId).emit(`message`, newMessage);
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+
 const singleGameChat = async (socket: any, newMessageRecieved: any) => {
   try {
     const { message } = newMessageRecieved;
 
-    if (message.channelId) {
-      const user = getCurrentUser(message.channelId, socket.id);
-      console.log("user", user)
-      if (user) {
-        const newMessage = await prisma.message.create({
-          include: {
-            user: {
-              select: {
-                userName: true,
-                id: true,
-                firstName: true,
-                lastName: true,
-                profileImage: true,
-              },
+    if (message.channelId && message.userId) {
+      const newMessage = await prisma.message.create({
+        include: {
+          user: {
+            select: {
+              userName: true,
+              id: true,
+              firstName: true,
+              lastName: true,
+              profileImage: true,
             },
           },
-          data: {
-            ...message,
-            userId: Number(user.userId),
-          },
-        });
-        console.log(newMessage);
-        io.to(user.channelId).emit(`message`, newMessage);
-      }
+        },
+        data: {
+          ...message,
+          userId: Number(message.userId),
+        },
+      });
+      console.log(newMessage);
+      io.to(message.channelId).emit(`message`, newMessage);
     }
   } catch (error) {
     console.log(error);
