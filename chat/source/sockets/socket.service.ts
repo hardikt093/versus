@@ -1,295 +1,25 @@
 const { PrismaClient } = require("@prisma/client");
-
 import { io } from "../server";
 const prisma = new PrismaClient();
-// const onlineUsers = new Set();
 const users: any = [];
-// old code
-
-// const connection = async (userId: any, socket: any) => {
-//   if (userId > 0) {
-//     onlineUsers.set(+userId, { socketRef: socket.id });
-//     await prisma.contactTry.updateMany({
-//       where: {
-//         userId,
-//       },
-//       data: {
-//         status: "online",
-//       },
-//     });
-//     io.emit("onlineUsers", Array.from(onlineUsers));
-//   } else {
-//     return;
-//   }
-// };
-
-// const disconnect = async (userId: HandshakeUserId, socket: any) => {
-//   if (userId) {
-//     onlineUsers.delete(+userId);
-//     await prisma.contactTry.updateMany({
-//       where: {
-//         userId,
-//       },
-//       data: {
-//         status: "offline",
-//       },
-//     });
-//     socket.disconnect();
-//     io.emit("onlineUsers", Array.from(onlineUsers));
-//   }
-// };
-
-// const myMessage = async (
-//   message: IMessage,
-//   conversation: IConversation,
-//   myUserId: number
-// ) => {
-//   const myUser = await prisma.user.findUnique({ where: { id: myUserId } });
-//   const newMessage = await prisma.message.create({
-//     include: {
-//       from: { select: { userName: true, id: true } },
-//       to: { select: { userName: true, id: true } },
-//       reaction: {
-//         select: {
-//           reaction: true,
-//           from: { select: { userName: true, id: true } },
-//         },
-//       },
-//       threads: {
-//         select: {
-//           text: true,
-//           from: { select: { userName: true, id: true } },
-//           filePath: true,
-//         },
-//       },
-//     },
-//     data: { ...message },
-//   });
-//   const filteredMyUserId = conversation.participants.filter(
-//     (id) => id !== myUserId
-//   );
-//   const otherUserId = filteredMyUserId[0];
-
-//   const relatedUser = await prisma.user.findUnique({
-//     where: { id: otherUserId },
-//   });
-//   const isRelatedUserOnline = onlineUsers.has(relatedUser?.id);
-//   const isContactExists = await prisma.contactTry.findFirst({
-//     where: { userId: otherUserId, contactUserId: myUser?.id },
-//   });
-
-//   if (!isContactExists) {
-//     if (!relatedUser || !myUser) {
-//       return;
-//     }
-
-//     const newContact = await prisma.contactTry.create({
-//       data: {
-//         contactUserId: myUserId,
-//         conversationId: conversation.id,
-//         userId: relatedUser.id,
-//         unreadMessages: 1,
-//       },
-//     });
-
-//     if (isRelatedUserOnline) {
-//       io.to(onlineUsers.get(otherUserId)?.socketRef).emit(
-//         "newContact",
-//         newContact
-//       );
-//     }
-//   }
-//   if (isContactExists) {
-//     const prevUnreadMessages = isContactExists.unreadMessages;
-//     const contactId = isContactExists.id;
-//     let updatedUnreadMessagesCount = prevUnreadMessages;
-//     const onlineUser = onlineUsers.get(otherUserId);
-//     if (
-//       onlineUser?.conversationId !== message.conversationId &&
-//       !!onlineUser?.conversationId
-//     ) {
-//       updatedUnreadMessagesCount = prevUnreadMessages + 1;
-//     }
-
-//     const updatedContact = await prisma.contactTry.update({
-//       include: {
-//         contactUser: {
-//           select: { userName: true, id: true },
-//         },
-//       },
-
-//       where: { id: contactId },
-//       data: {
-//         unreadMessages: updatedUnreadMessagesCount,
-//       },
-//     });
-
-//     if (isRelatedUserOnline) {
-//       io.to(onlineUsers.get(otherUserId)?.socketRef).emit(
-//         "newMessage",
-//         newMessage
-//       );
-//       io.to(onlineUsers.get(otherUserId)?.socketRef).emit(
-//         "updateContactValues",
-//         updatedContact
-//       );
-//     }
-//   }
-//   // this flow is going to run at the end of the message event dosent matter on any condition
-//   // send message to myself
-//   io.to(onlineUsers.get(myUserId)?.socketRef).emit("selfMessage", newMessage);
-// };
-
-// const editMessage = async (
-//   myUserId: number,
-//   text: string,
-//   conversationId: number,
-//   messageId: number
-// ) => {
-//   const conversation = await prisma.conversation.findUnique({
-//     where: {
-//       id: conversationId,
-//     },
-//   });
-
-//   if (!conversation) {
-//     return;
-//   }
-
-//   const updateMessage = await prisma.message.updateMany({
-//     where: {
-//       AND: [{ id: messageId }, { fromId: myUserId }],
-//     },
-//     data: {
-//       text,
-//     },
-//   });
-
-//   io.emit("newMessage", updateMessage);
-//   return updateMessage;
-// };
-
-// const deleteMessage = async (conversationId: number, messageId: number) => {
-//   const conversation = await prisma.conversation.findUnique({
-//     where: {
-//       id: conversationId,
-//     },
-//   });
-
-//   if (!conversation) {
-//     return;
-//   }
-
-//   const deleteMessage = await prisma.message.delete({
-//     where: {
-//       id: messageId,
-//     },
-//   });
-//   io.emit("newMessage", deleteMessage);
-//   return deleteMessage;
-// };
-
-// const messageReaction = async (
-//   reaction: string,
-//   conversationId: number,
-//   messageId: number,
-//   myUserId: number
-// ) => {
-//   const conversation = await prisma.conversation.findUnique({
-//     where: {
-//       id: conversationId,
-//     },
-//   });
-
-//   if (!conversation) {
-//     return;
-//   }
-
-//   const newReaction = await prisma.messageReaction.create({
-//     data: { messageId, reaction, fromId: myUserId },
-//     include: {
-//       from: { select: { userName: true, id: true } },
-//     },
-//   });
-//   io.emit("newMessage", newReaction);
-//   return newReaction;
-// };
-
-// const messageThread = async (
-//   text: string,
-//   messageId: number,
-//   myUserId: number,
-//   conversationId: number
-// ) => {
-//   const conversation = await prisma.conversation.findUnique({
-//     where: {
-//       id: conversationId,
-//     },
-//   });
-
-//   if (!conversation) {
-//     return;
-//   }
-
-//   const newThread = await prisma.threads.create({
-//     data: { messageId, text, fromId: myUserId },
-//     include: {
-//       from: { select: { userName: true, id: true } },
-//     },
-//   });
-//   io.emit("newMessage", newThread);
-//   return newThread;
-// };
-// const conversationChange = async (
-//   conversationId: number,
-//   myUserId: number,
-//   socket: any
-// ) => {
-//   try {
-//     onlineUsers.set(myUserId, {
-//       socketRef: socket.id,
-//       conversationId: conversationId || null,
-//     });
-//     const contact = await prisma.contactTry.findFirst({
-//       where: { userId: myUserId, conversationId },
-//     });
-//     if (!contact) {
-//       return;
-//     }
-//     const updatedContact = await prisma.contactTry.update({
-//       include: {
-//         contactUser: {
-//           select: { userName: true, id: true },
-//         },
-//       },
-//       where: { id: contact.id },
-//       data: {
-//         unreadMessages: 0,
-//       },
-//     });
-//     io.emit("updateMyContact", updatedContact);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
 function userJoin(id: string, channelId: number, userId: number) {
   const user = { id, userId, channelId };
   const index = users.findIndex(
-    (object: any) => object.userId === userId && object.channelId === channelId
+    (object: any) =>
+      object.userId === userId && object.channelId === channelId
   );
   if (index === -1) {
     users.push(user);
     return user;
   } else {
-    const user = users.filter(
+    const existingUser = users.filter(
       (item: any) => item.userId === userId && item.channelId === channelId
     );
-    return user[0];
+    return existingUser[0];
   }
 }
-
-// Get current user
 function getCurrentUser(channelId: number, id: any) {
+  console.log(users)
   return users.find(
     (user: any) => user.channelId === channelId && id === user.id
   );
@@ -333,19 +63,19 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
             `${joinUser.channelUser.userName} has joined the group`
           );
       }
+    } else {
+      // Handle the case when the channel doesn't exist
+      socket.emit("message", "The specified channel does not exist");
     }
   } catch (error) {
     console.log(error);
   }
 };
-
 const getConversation = async (socket: any, channelId: number) => {
   try {
     const user = getCurrentUser(channelId, socket.id);
     const channelDetails = await prisma.channel.findUnique({
-      where: {
-        id: channelId,
-      },
+      where: { id: channelId },
       include: {
         channelUser: {
           include: {
@@ -362,7 +92,7 @@ const getConversation = async (socket: any, channelId: number) => {
         },
       },
     });
-    const getMessage = await prisma.message.findMany({
+    const messages = await prisma.message.findMany({
       where: { channelId },
       include: {
         user: {
@@ -377,21 +107,19 @@ const getConversation = async (socket: any, channelId: number) => {
       },
     });
     if (user) {
-      io.to(user.channelId).emit(`conversation: ${user.channelId}`, {
+      socket.emit(`conversation:${user.channelId}`, {
         channelDetails: channelDetails,
-        messages: getMessage,
+        messages: messages,
       });
     }
   } catch (error) {
     console.log(error);
   }
 };
-
 const singleGameChat = async (socket: any, newMessageRecieved: any) => {
   try {
     const { message } = newMessageRecieved;
     const user = getCurrentUser(message.channelId, socket.id);
-
     if (user) {
       const newMessage = await prisma.message.create({
         include: {
@@ -416,78 +144,17 @@ const singleGameChat = async (socket: any, newMessageRecieved: any) => {
     console.log(error);
   }
 };
-
-const disconnectUser = () => {
-  io.emit("message", "A user has left the chat");
+const disconnectUser = (socket: any) => {
+  const user = users.find((user: any) => user.id === socket.id);
+  if (user) {
+    users.splice(users.indexOf(user), 1);
+    io.emit("message", `${user.userName} has left the chat`);
+  }
 };
-// const groupMessageThread = async (socket: any, newThreadMessage: any) => {
-//   const user = getCurrentUser(socket.id);
-//   const { message } = newThreadMessage;
-//   const findMessage = await prisma.message.findUnique({
-//     where: {
-//       id: message.messageId,
-//     },
-//   });
-//   if (!findMessage) {
-//     return;
-//   } else {
-//     const newThread = await prisma.threads.create({
-//       data: message,
-//       include: {
-//         from: { select: { userName: true, id: true } },
-//       },
-//     });
-//     io.to(user.room).emit("message", newThread);
-//   }
-// };
-// const messageReaction = async (
-//   reaction: string,
-//   conversationId: number,
-//   messageId: number,
-//   myUserId: number
-// ) => {
-//   const conversation = await prisma.conversation.findUnique({
-//     where: {
-//       id: conversationId,
-//     },
-//   });
-
-//   if (!conversation) {
-//     return;
-//   }
-
-//   const newReaction = await prisma.messageReaction.create({
-//     data: { messageId, reaction, fromId: myUserId },
-//     include: {
-//       from: { select: { userName: true, id: true } },
-//     },
-//   });
-//   io.emit("newMessage", newReaction);
-//   return newReaction;
-// };
 export {
-  // conversationChange,
-  // messageThread,
-  // messageReaction,
-  // connection,
-  // myMessage,
-  // editMessage,
-  // deleteMessage,
-  // disconnect,
-
-  // new
+  connection,
   joinChat,
+  getConversation,
   singleGameChat,
   disconnectUser,
-  // groupMessageThread,
-  connection,
-  getConversation,
-  // conversationChange,
-  // messageThread,
-  // messageReaction,
-  // connection,
-  // myMessage,
-  // editMessage,
-  // deleteMessage,
-  // disconnect,
 };
