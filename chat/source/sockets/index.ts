@@ -73,13 +73,14 @@ export default (socket: any) => {
   connection();
   socket.on("joinChat", (room: {channelId:number}) => {
     joinChat(socket,room.channelId,myId);
-    socket.on(`groupMessage:${room.channelId}`, (newMessageRecieved:any) => {
-      singleGameChat(socket,newMessageRecieved,)
-    })
-    socket.on(`getConversation:${room.channelId}`, (channelId:number) => {
-      getConversation(socket,channelId)
-    })
+   
   });
+  socket.on(`groupMessage`, (newMessageRecieved:any) => {
+    singleGameChat(socket,newMessageRecieved,)
+  })
+  socket.on(`getConversation`, (channelId:number) => {
+    getConversation(socket,channelId)
+  })
   // disconnectUser()
 
   // const myId = socket.handshake.query.userId
