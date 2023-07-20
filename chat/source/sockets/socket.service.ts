@@ -74,6 +74,7 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 const getConversation = async (socket: any, channelId: number) => {
   try {
     if (channelId) {
+      // socket.join(channelId);
       // const user = getCurrentUser(channelId, socket.id);
       const channelDetails = await prisma.channel.findUnique({
         where: { id: channelId },
@@ -108,10 +109,10 @@ const getConversation = async (socket: any, channelId: number) => {
         },
       });
       // if (user) {
-        socket.emit(`conversation`, {
-          channelDetails: channelDetails,
-          messages: messages,
-        });
+      socket.emit(`conversation:${channelId}`, {
+        channelDetails: channelDetails,
+        messages: messages,
+      });
       // }
     }
   } catch (error) {
@@ -174,8 +175,8 @@ const singleGameChat = async (socket: any, newMessageRecieved: any) => {
           userId: Number(message.userId),
         },
       });
-      console.log(newMessage);
-      io.to(message.channelId).emit(`message`, newMessage);
+      console.log("newMessage", newMessage);
+      io.to(message.channelId).emit(`message:${message.channelId}`, newMessage);
     }
   } catch (error) {
     console.log(error);
