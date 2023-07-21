@@ -1,7 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 import { io } from "../server";
-import { IChannelData } from "../interfaces/input";
-
 const prisma = new PrismaClient();
 const users: any = [];
 function userJoin(id: string, channelId: number, userId: number) {
@@ -19,111 +17,13 @@ function userJoin(id: string, channelId: number, userId: number) {
     return existingUser[0];
   }
 }
-const createPrivateChannel = async (
-  socket: any,
-  channelData: IChannelData,
-  userId: number
-) => {
-  const createChannel = await prisma.channel.create({
-    data: {
-      ...channelData,
-    },
-  });
-  if (createChannel) {
-    const checkUserExist = await prisma.channelUser.findFirst({
-      where: {
-        channelId: createChannel.channelId,
-        userId: Number(userId),
-        channelType: createChannel.channelType,
-      },
-    });
-    if (!checkUserExist) {
-      const user = userJoin(socket.id, createChannel.id, userId);
-      socket.join(user.channelId);
-      await prisma.channelUser.create({
-        data: {
-          channelId: createChannel.id,
-          userId: Number(user.userId),
-          channelType: createChannel.channelType,
-          isAdmin: true,
-          isCreatedChannel: true,
-        },
-      });
-      await prisma.message.create({
-        include: {
-          user: {
-            select: {
-              userName: true,
-              id: true,
-              firstName: true,
-              lastName: true,
-              profileImage: true,
-            },
-          },
-        },
-        data: {
-          text: `Joined ${createChannel.channelName}`,
-          createdAt: new Date(),
-          messageType: "Text",
-          channelId: user.channelId,
-          userId: Number(user.userId),
-        },
-      });
-
-      getConversation(socket, createChannel.id);
-    }
-  }
-};
-
-const addUserToPrivateChannel = async (
-  socket: any,
-  channelId: number,
-  userId: number[]
-) => {
-  const findChannel: { id: number; channelType: string; channelName: string } =
-    await prisma.channel.findUnique({
-      where: { id: channelId },
-    });
-  if (findChannel) {
-    let data: IChannelData[] = [];
-    const checkUserExist = await prisma.channelUser.findFirst({
-      where: {
-        channelId: findChannel.id,
-        userId: Number(userId),
-        channelType: findChannel.channelType,
-      },
-    });
-    if (!checkUserExist) {
-      userId.map((item: number) => {
-        const obj: IChannelData = {
-          userId: item,
-          channelId: findChannel.id,
-          channelType: findChannel.channelType,
-        };
-        data.push(obj);
-      });
-      const users = await prisma.channelUser.createMany({
-        data,
-      });
-      if (users) {
-        let data: any = [];
-        userId.map((item: number) => {
-          const obj: any = {
-            text: `added to ${findChannel.channelName}`,
-            createdAt: new Date(),
-            messageType: "Text",
-            channelId: findChannel.id,
-            userId: Number(item),
-          };
-          data.push(obj);
-        });
-        await prisma.message.createMany({
-          data,
-        });
-      }
-      getConversation(socket, channelId);
-    }
-  }
+function getCurrentUser(channelId: number, id: any) {
+  return users.find(
+    (user: any) => user.channelId === channelId && id === user.id
+  );
+}
+const connection = async () => {
+  console.log("Connected to socket.io");
 };
 const joinChat = async (socket: any, channelId: number, userId: number) => {
   try {
@@ -132,7 +32,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
       const findChannel = await prisma.channel.findUnique({
         where: { id: channelId },
       });
-      socket.leaveAll();
       socket.join(user.channelId);
       if (findChannel) {
         const checkUserExist = await prisma.channelUser.findFirst({
@@ -220,8 +119,41 @@ const getConversation = async (socket: any, channelId: number) => {
     console.log(error);
   }
 };
+// const singleGameChat = async (socket: any, newMessageRecieved: any) => {
+//   try {
+//     const { message } = newMessageRecieved;
 
-const privateGroupChat = async (newMessageRecieved: any) => {
+//     if (message.channelId) {
+//       const user = getCurrentUser(message.channelId, socket.id);
+//       console.log("user", user)
+//       if (user) {
+//         const newMessage = await prisma.message.create({
+//           include: {
+//             user: {
+//               select: {
+//                 userName: true,
+//                 id: true,
+//                 firstName: true,
+//                 lastName: true,
+//                 profileImage: true,
+//               },
+//             },
+//           },
+//           data: {
+//             ...message,
+//             userId: Number(user.userId),
+//           },
+//         });
+//         console.log(newMessage);
+//         io.to(user.channelId).emit(`message`, newMessage);
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+
+const singleGameChat = async (socket: any, newMessageRecieved: any) => {
   try {
     const { message } = newMessageRecieved;
 
@@ -249,10 +181,17 @@ const privateGroupChat = async (newMessageRecieved: any) => {
     console.log(error);
   }
 };
-
+const disconnectUser = (socket: any) => {
+  const user = users.find((user: any) => user.id === socket.id);
+  if (user) {
+    users.splice(users.indexOf(user), 1);
+    io.emit("message", `${user.userName} has left the chat`);
+  }
+};
 export {
+  connection,
   joinChat,
-  createPrivateChannel,
-  addUserToPrivateChannel,
-  privateGroupChat,
+  getConversation,
+  singleGameChat,
+  disconnectUser,
 };

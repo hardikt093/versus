@@ -30,6 +30,7 @@ export default (socket: any) => {
     singleGameChat(socket, newMessageRecieved);
   });
   socket.on(`getConversation`, (channelId: number) => {
+    console.log("");
     getConversation(socket, channelId);
   });
   // disconnectUser()

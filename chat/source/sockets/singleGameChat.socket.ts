@@ -32,6 +32,7 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
       const findChannel = await prisma.channel.findUnique({
         where: { id: channelId },
       });
+      socket.leaveAll();
       socket.join(user.channelId);
       if (findChannel) {
         const checkUserExist = await prisma.channelUser.findFirst({
@@ -175,7 +176,6 @@ const singleGameChat = async (socket: any, newMessageRecieved: any) => {
           userId: Number(message.userId),
         },
       });
-      console.log("newMessage", newMessage);
       io.to(message.channelId).emit(`message:${message.channelId}`, newMessage);
     }
   } catch (error) {
