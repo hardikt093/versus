@@ -1,9 +1,25 @@
 const { PrismaClient } = require("@prisma/client");
 
 import { IChannelData } from "../interfaces/input";
+import { getConversation } from "./singleGameChat.socket";
 
 const prisma = new PrismaClient();
-
+const users: any = [];
+function userJoin(id: string, channelId: number, userId: number) {
+  const user = { id, userId, channelId };
+  const index = users.findIndex(
+    (object: any) => object.userId === userId && object.channelId === channelId
+  );
+  if (index === -1) {
+    users.push(user);
+    return user;
+  } else {
+    const existingUser = users.filter(
+      (item: any) => item.userId === userId && item.channelId === channelId
+    );
+    return existingUser[0];
+  }
+}
 const createPrivateChannel = async (
   socket: any,
   channelData: IChannelData,
