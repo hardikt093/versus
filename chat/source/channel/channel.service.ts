@@ -11,13 +11,13 @@ const prisma = new PrismaClient();
 const getMatchPublicChannelConversation = async (data: any) => {
   const conversation = await prisma.channel.findFirst({
     where: {
-      isDeleted: false, 
+      isDeleted: false,
       goalServeMatchId: data.goalServeMatchId,
       goalServeLeagueId: data.goalServeLeagueId,
     },
   });
   if (conversation) {
-    let status = 'Not Started'
+    let status = "Not Started";
     const startMoment = moment.utc(conversation.channelStartAt);
     let endMoment = moment.utc();
     if (!conversation.channelExpiredAt) {
@@ -26,12 +26,15 @@ const getMatchPublicChannelConversation = async (data: any) => {
       endMoment = moment.utc(conversation.channelExpiredAt);
     }
     const currentTime = moment().utc();
-    if (currentTime.isSameOrAfter(startMoment) && currentTime.isSameOrBefore(endMoment)) {
-      status = "Started"
+    if (
+      currentTime.isSameOrAfter(startMoment) &&
+      currentTime.isSameOrBefore(endMoment)
+    ) {
+      status = "Started";
     } else if (currentTime.isSameOrAfter(endMoment)) {
-      status = "Expired"
+      status = "Expired";
     }
-    return {status, ...conversation};
+    return { status, ...conversation };
   } else {
     return null;
   }
@@ -68,20 +71,16 @@ const addFinalMatchChannel = async () => {
           let month = date[1] ?? moment(utcDate).format("M");
           let awayTeamNameSplit = match.awayTeam.awayTeamName.split(" ").pop();
           let homeTeamNameSplit = match.homeTeam.homeTeamName.split(" ").pop();
-          const chatName = `#${
-            awayTeamNameSplit
-          }@${
-            homeTeamNameSplit
-          }-${day}/${month}`;
+          const chatName = `#${awayTeamNameSplit}@${homeTeamNameSplit}-${day}/${month}`;
           const createdChannelDetail = await prisma.channel.create({
             data: {
               goalServeMatchId: match.goalServeMatchId,
               goalServeLeagueId: match.goalServeLeagueId,
-              channelType : 'matchChannel',
+              channelType: "matchChannel",
               matchChannelName: chatName,
-              matchStartAt : matchStartAt,
-              channelStartAt : channelStartAt,
-              channelExpiredAt: matchEndAt
+              matchStartAt: matchStartAt,
+              channelStartAt: channelStartAt,
+              channelExpiredAt: matchEndAt,
             },
           });
           const resp = await axiosPostMicro(
@@ -104,5 +103,5 @@ const addFinalMatchChannel = async () => {
 };
 export default {
   getMatchPublicChannelConversation,
-  addFinalMatchChannel
+  addFinalMatchChannel,
 };
