@@ -32,7 +32,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
       const findChannel = await prisma.channel.findUnique({
         where: { id: channelId },
       });
-      socket.leaveAll();
       socket.join(user.channelId);
       if (findChannel) {
         const checkUserExist = await prisma.channelUser.findFirst({

@@ -330,11 +330,15 @@ const resetPassword = async (data: IResetPassword) => {
  */
 
 const socialLogin = async (data: any) => {
+  if (data.email == "mike@versus-social.com") {
+    console.log("data.email", data)
+  }
   const checkEmail = await prisma.user.findUnique({
     where: {
       email: data.toLowerCase(),
     },
   });
+  console.log("checkEmail", checkEmail)
   if (checkEmail) {
     if (checkEmail.isSignUp == "PENDING") {
       return {
@@ -354,6 +358,7 @@ const socialLogin = async (data: any) => {
         userName: checkEmail.userName,
         phone:checkEmail.phone
       };
+      console.log("user", user)
       return user;
     }
   } else {

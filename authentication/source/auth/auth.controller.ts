@@ -25,10 +25,11 @@ const signIn = async (req: Request, res: Response) => {
           req.body.googleCode
         );
         const login = await authService.socialLogin(JWTpayload.jwt.email.toLowerCase());
-        if (login.email == "mike@versus-social.com") {
-          console.log("login", login)
-        }
+
         if (login) {
+          if (login.id == 9) {
+          console.log("login", login)
+          }
           if (login.isBirthDateAvailable == false) {
             createResponse(res, httpStatus.OK, "", {
               isBirthDateAvailable: false,

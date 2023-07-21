@@ -22,7 +22,7 @@ import {
   getConversation,
   joinChat,
   singleGameChat,
-} from "./socket.service";
+} from "./socket2.service";
 
 // export default (socket: any) => {
 //   const myId = socket.handshake.query.userId
