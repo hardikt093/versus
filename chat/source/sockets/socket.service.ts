@@ -176,7 +176,6 @@ const singleGameChat = async (socket: any, newMessageRecieved: any) => {
           userId: Number(message.userId),
         },
       });
-      console.log("newMessage", newMessage);
       io.to(message.channelId).emit(`message:${message.channelId}`, newMessage);
     }
   } catch (error) {
