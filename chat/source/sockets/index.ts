@@ -1,9 +1,4 @@
-import { IChannelData, IMessage } from "../interfaces/input";
-import {
-  addUserToPrivateChannel,
-  createPrivateChannel,
-
-} from "./privateChat.socket";
+import { privateGroupChat } from "./privateChat.socket";
 import {
   connection,
   getConversation,
@@ -17,12 +12,6 @@ export default (socket: any) => {
     : 0;
   connection();
 
-  socket.on("createPrivateChannel", (channelData: IChannelData) => {
-    createPrivateChannel(socket, channelData, myId);
-  });
-  socket.on("addPeople", (channelId: number, userId: number[]) => {
-    addUserToPrivateChannel(socket, channelId, userId);
-  });
   socket.on("joinChat", (room: { channelId: number; userId: number }) => {
     joinChat(socket, room.channelId, room.userId);
   });
@@ -30,8 +19,10 @@ export default (socket: any) => {
     singleGameChat(socket, newMessageRecieved);
   });
   socket.on(`getConversation`, (channelId: number) => {
-    console.log("");
     getConversation(socket, channelId);
+  });
+  socket.on(`privateGroupChat`, (newMessageRecieved: any) => {
+    privateGroupChat(newMessageRecieved);
   });
   // disconnectUser()
 };
