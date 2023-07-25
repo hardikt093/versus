@@ -58,8 +58,35 @@ export default class ConversationDbCronServiceClass {
               ""
             );
           }
-
-
+          else{
+            const utcDate = moment.utc(match.datetime_utc, "DD.MM.YYYY HH:mm");
+            const startDate = moment(utcDate).subtract(20, "hours");
+            const matchStartAt = utcDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+            const channelStartAt = startDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+            let matchDate = match.date ? match.date : match.datetime_utc;
+            const date = matchDate.split(".");
+            let day = date[0] ?? moment(utcDate).format("D");
+            let month = date[1] ?? moment(utcDate).format("M");
+            let awayTeamNameSplit = match.awayTeam.awayTeamName.split(" ").pop();
+            let homeTeamNameSplit = match.homeTeam.homeTeamName.split(" ").pop();
+            const chatName = `#${
+              awayTeamNameSplit
+            }@${
+              homeTeamNameSplit
+            }-${day}/${month}`;
+            const createdChannelDetail = await prisma.channel.updateMany({
+              where:{
+                goalServeMatchId:match.goalServeMatchId,
+                goalServeLeagueId: match.goalServeLeagueId,
+              },
+              data: {
+                channelType : 'matchChannel',
+                matchChannelName: chatName,
+                matchStartAt : matchStartAt,
+                channelStartAt : channelStartAt
+              },
+            });
+          }
         }
       }
       return true;
@@ -106,4 +133,50 @@ export default class ConversationDbCronServiceClass {
       console.log("error", error);
     }
   };
+
+  public getDashboadChannel = async () => {
+    let curruntDay = moment().startOf("day").utc().toISOString();
+    let subtractOneDay = moment(curruntDay)
+      .subtract(24, "hours")
+      .utc()
+      .toISOString();
+    let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
+
+    const conversation = await prisma.channel.findMany({
+      where: {
+        isDeleted: false,
+        matchStartAt:{
+          gte: subtractOneDay,
+          lte: addOneDay,
+        },
+      },
+    });
+    if (conversation) {
+      const getChannels = await conversation.map((data:any)=>{
+        let status = "Not Started";
+        const startMoment = moment.utc(data.channelStartAt);
+        let endMoment = moment.utc();
+        if (!data.channelExpiredAt) {
+          endMoment = moment.utc(data.matchStartAt).add(12, "hours");
+        } else {
+          endMoment = moment.utc(data.channelExpiredAt);
+        }
+        const currentTime = moment().utc();
+        if (
+          currentTime.isSameOrAfter(startMoment) &&
+          currentTime.isSameOrBefore(endMoment)
+        ) {
+          status = "Started";
+        } else if (currentTime.isSameOrAfter(endMoment)) {
+          status = "Expired";
+        }
+        // socket code
+        return { status, data };
+      } )
+      return getChannels
+      }
+      else {
+        return null;
+      }
+  }
 }

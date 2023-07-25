@@ -33,6 +33,7 @@ export interface IMatchModel extends Document {
   awayTeamError: string | undefined;
   inningsId: string | undefined;
   run: string | undefined;
+  channelExpireTime:Date | undefined | string;
   awayTeamInnings: [
     {
       hits: string;
