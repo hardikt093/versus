@@ -2,7 +2,7 @@ import Joi from "@hapi/joi";
 
 const createPrivateChannel = {
   body: Joi.object().keys({
-    channelName: Joi.string().required(),
+    channelName: Joi.string().max(30).required(),
     channelType: Joi.string().required(),
   }),
 };
