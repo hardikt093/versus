@@ -56,7 +56,7 @@ const createPrivateChannel = async (
           createdAt: new Date(),
           messageType: "USERADDED",
           channelId: createChannel.id,
-          userId: channelData.userId,
+          userId: userId,
         },
       });
     }
@@ -180,7 +180,7 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
         const obj: any = {
           text: `removed from the ${findChannel.channelName}`,
           createdAt: new Date(),
-          messageType: "Text",
+          messageType: "TEXT",
           channelId: findChannel.id,
           userId: Number(item),
         };
