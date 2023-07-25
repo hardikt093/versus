@@ -32,6 +32,7 @@ router.get(
   router.put(
     "/updateChannelDetails",
     auth,
+    validate(privateChannelvalidation.updatePrivateChannel),
     privateChannelController.updateChannelDetails
   );
 export = router;
