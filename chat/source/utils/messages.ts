@@ -20,5 +20,7 @@ class Messages {
   static INVALID_CONVERSATION_ID = "Conversation id is not a number.";
   static ACCESS_DENIED_CONVERSATION = "No access to this conversation";
   static CONVERSATION_NOT_FOUND = "Could not find the conversation";
+  static CHANNEL_NOT_FOUND = "Could not find the channel";
+  static CHANNEL_UPDATE = "Channel successfully updated";
 }
 export default Messages;
