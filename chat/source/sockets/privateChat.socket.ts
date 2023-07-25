@@ -1,12 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 import { io } from "../server";
-import { IChannelData } from "../interfaces/input";
-
 const prisma = new PrismaClient();
 const users: any = [];
 function userJoin(id: string, channelId: number, userId: number) {
   const user = { id, userId, channelId };
-  console.log(user)
+  console.log(user);
   const index = users.findIndex(
     (object: any) => object.userId === userId && object.channelId === channelId
   );
@@ -69,9 +67,7 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
   }
 };
 
-
 const privateGroupChat = async (newMessageRecieved: any) => {
-  console.log(newMessageRecieved)
   try {
     const { message } = newMessageRecieved;
 
@@ -103,7 +99,4 @@ const privateGroupChat = async (newMessageRecieved: any) => {
   }
 };
 
-export {
-  joinChat,
-  privateGroupChat,
-};
+export { joinChat, privateGroupChat };

@@ -24,4 +24,14 @@ router.get(
     auth,
     privateChannelController.getUsersChannel
   );
+  router.delete(
+    "/removeUserFromPrivateChannel",
+    auth,
+    privateChannelController.removeUserFromChannel
+  );
+  router.put(
+    "/updateChannelDetails",
+    auth,
+    privateChannelController.updateChannelDetails
+  );
 export = router;

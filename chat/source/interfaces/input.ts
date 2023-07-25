@@ -60,6 +60,7 @@ export interface IMessage {
   };
 }
 export interface IChannelData {
+  description?:string,
   userId?:number,
   channelId?:number
   channelName?: string;

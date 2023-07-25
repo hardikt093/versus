@@ -33,7 +33,7 @@ const createPrivateChannel = async (
       await prisma.channelUser.create({
         data: {
           channelId: createChannel.id,
-          userId: channelData.userId,
+          userId,
           channelType,
           isAdmin: true,
           isCreatedChannel: true,
@@ -70,43 +70,35 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
     });
   if (findChannel) {
     let data: IChannelData[] = [];
-    const checkUserExist = await prisma.channelUser.findFirst({
-      where: {
+
+    userId.map((item: number) => {
+      const obj: Partial<IChannelData> = {
+        userId: item,
         channelId: findChannel.id,
-        userId: Number(userId),
         channelType: findChannel.channelType,
-      },
+      };
+      data.push(obj);
     });
-    if (!checkUserExist) {
+    const users = await prisma.channelUser.createMany({
+      data,
+    });
+    if (users) {
+      let data: any = [];
       userId.map((item: number) => {
-        const obj: IChannelData = {
-          userId: item,
+        const obj: any = {
+          text: `added to ${findChannel.channelName}`,
+          createdAt: new Date(),
+          messageType: "Text",
           channelId: findChannel.id,
-          channelType: findChannel.channelType,
+          userId: Number(item),
         };
         data.push(obj);
       });
-      const users = await prisma.channelUser.createMany({
+      await prisma.message.createMany({
         data,
       });
-      if (users) {
-        let data: any = [];
-        userId.map((item: number) => {
-          const obj: any = {
-            text: `added to ${findChannel.channelName}`,
-            createdAt: new Date(),
-            messageType: "Text",
-            channelId: findChannel.id,
-            userId: Number(item),
-          };
-          data.push(obj);
-        });
-        await prisma.message.createMany({
-          data,
-        });
-      }
-      return users;
     }
+    return users;
   } else {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
@@ -134,8 +126,87 @@ const getAllUsersChannel = async (userId: number, search: string) => {
   });
   return getChannels;
 };
+const removeUserFromChannel = async (channelId: number, userId: number[]) => {
+  const findChannel: { id: number; channelType: string; channelName: string } =
+    await prisma.channel.findUnique({
+      where: { id: channelId },
+    });
+  if (findChannel) {
+    const users = prisma.channelUser.deleteMany({
+      where: {
+        channelId: channelId,
+        userId: {
+          in: userId,
+        },
+      },
+    });
+    if (users) {
+      let data: any = [];
+      userId.map((item: number) => {
+        const obj: any = {
+          text: `removed from the ${findChannel.channelName}`,
+          createdAt: new Date(),
+          messageType: "Text",
+          channelId: findChannel.id,
+          userId: Number(item),
+        };
+        data.push(obj);
+      });
+      await prisma.message.createMany({
+        data,
+      });
+    }
+    return users;
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.CHANNEL_NOT_FOUND
+    );
+  }
+};
+
+const updateChannelDetails = async (
+  loggedInUser: number,
+  data: {
+    channelId: number;
+    channelData: IChannelData;
+  }
+) => {
+  const { channelId, channelData } = data;
+
+  const findChannel: { id: number; channelType: string; channelName: string } =
+    await prisma.channel.findUnique({
+      where: { id: channelId },
+    });
+  if (findChannel) {
+    if (channelData) {
+      if (channelData?.channelName)
+        channelData.channelName = channelData?.channelName?.toLowerCase();
+      const updateChannel = await prisma.channel.update({
+        where: {
+          id: channelId,
+        },
+        data: {
+          ...channelData,
+        },
+        select: {
+          channelType: true,
+          channelName: true,
+          id: true,
+        },
+      });
+    }
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.CHANNEL_NOT_FOUND
+    );
+  }
+};
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
   getAllUsersChannel,
+  updateChannelDetails,
+  removeUserFromChannel,
 };
