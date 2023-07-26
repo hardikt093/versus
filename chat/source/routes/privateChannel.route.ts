@@ -35,4 +35,10 @@ router.get(
     validate(privateChannelvalidation.updatePrivateChannel),
     privateChannelController.updateChannelDetails
   );
+  router.get(
+    "/getConversation",
+    auth,
+ 
+    privateChannelController.getConversation
+  );
 export = router;

@@ -18,10 +18,11 @@ const createPrivateChannnel = async (req: Request, res: Response) => {
 
 const addUserToPrivateChannel = async (req: Request, res: Response) => {
   try {
-    const privateChannelUser = await privateChannelService.addUserToPrivateChannel(
-      req.body.channelId,
-      req.body.userId
-    );
+    const privateChannelUser =
+      await privateChannelService.addUserToPrivateChannel(
+        req.body.channelId,
+        req.body.userId
+      );
     createResponse(res, httpStatus.OK, "", privateChannelUser);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -43,10 +44,10 @@ const getUsersChannel = async (req: Request, res: Response) => {
 const updateChannelDetails = async (req: Request, res: Response) => {
   try {
     const updateChannel = await privateChannelService.updateChannelDetails(
-        req.loggedInUser.id,
-        req.body,
+      req.loggedInUser.id,
+      req.body
     );
-    createResponse(res, httpStatus.OK,Messages.CHANNEL_UPDATE, updateChannel);
+    createResponse(res, httpStatus.OK, Messages.CHANNEL_UPDATE, updateChannel);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -54,10 +55,20 @@ const updateChannelDetails = async (req: Request, res: Response) => {
 const removeUserFromChannel = async (req: Request, res: Response) => {
   try {
     const removeUser = await privateChannelService.removeUserFromChannel(
-        req.body.channelId,
-        req.body.userId
+      req.body.channelId,
+      req.body.userId
     );
     createResponse(res, httpStatus.OK, "", removeUser);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+const getConversation = async (req: Request, res: Response) => {
+  try {
+    const conversation = await privateChannelService.getConversation(
+      req.body.channelId
+    );
+    createResponse(res, httpStatus.OK, "", conversation);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -67,5 +78,6 @@ export default {
   addUserToPrivateChannel,
   getUsersChannel,
   updateChannelDetails,
-  removeUserFromChannel
+  removeUserFromChannel,
+  getConversation
 };

@@ -54,9 +54,9 @@ const createPrivateChannel = async (
         data: {
           text: `Joined ${createChannel.channelName}`,
           createdAt: new Date(),
-          messageType: "Text",
+          messageType: "USERADDED",
           channelId: createChannel.id,
-          userId: channelData.userId,
+          userId: userId,
         },
       });
     }
@@ -82,19 +82,53 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
     const users = await prisma.channelUser.createMany({
       data,
     });
+
     if (users) {
-      let data: any = [];
-      userId.map((item: number) => {
-        const obj: any = {
-          text: `added to ${findChannel.channelName}`,
-          createdAt: new Date(),
-          messageType: "Text",
-          channelId: findChannel.id,
-          userId: Number(item),
-        };
-        data.push(obj);
-      });
-      await prisma.message.createMany({
+      let data: any = {};
+      switch (users.count) {
+        case 1:
+          data = {
+            text: `added to ${findChannel.channelName}.`,
+            createdAt: new Date(),
+            messageType: "USERADDED",
+            channelId: findChannel.id,
+            userId: userId[0],
+          };
+
+          break;
+        case 2:
+          const user2 = await prisma.user.findUnique({
+            where: { id: userId[1] },
+          });
+          data = {
+            text: `added to ${findChannel.channelName}. Also ${user2.userName}  joined.`,
+            createdAt: new Date(),
+            messageType: "USERADDED",
+            channelId: findChannel.id,
+            userId: userId[0],
+          };
+          break;
+        default:
+          const getAllusers = await prisma.user.findMany({
+            where: { id: { in: userId } },
+          });
+          const remainingUsers = getAllusers
+            .slice(1, getAllusers.length - 1)
+            .map((user: any) => `${user.userName}`)
+            .join(", ");
+
+          const lastUser = getAllusers[getAllusers.length - 1].userName;
+          data = {
+            text: `added to ${findChannel.channelName}. Also, ${remainingUsers} and ${lastUser} joined.`,
+            createdAt: new Date(),
+            messageType: "USERADDED",
+            channelId: findChannel.id,
+            userId: userId[0],
+          };
+          break;
+      }
+
+      await prisma.message.create({
         data,
       });
     }
@@ -146,7 +180,7 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
         const obj: any = {
           text: `removed from the ${findChannel.channelName}`,
           createdAt: new Date(),
-          messageType: "Text",
+          messageType: "TEXT",
           channelId: findChannel.id,
           userId: Number(item),
         };
@@ -203,10 +237,60 @@ const updateChannelDetails = async (
     );
   }
 };
+
+const getConversation = async (channelId: number) => {
+  const findChannel: any = await prisma.channel.findUnique({
+    where: { id: channelId },
+    include: {
+      channelUser: {
+        include: {
+          channelUser: {
+            select: {
+              userName: true,
+              id: true,
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (findChannel) {
+    const messages = await prisma.message.findMany({
+      where: { channelId },
+      include: {
+        user: {
+          select: {
+            userName: true,
+            id: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+          },
+        },
+      },
+    });
+    return {
+      channelDetails: findChannel,
+      adminUser: findChannel.channelUser.filter(
+        (item: any) => item.isAdmin == true
+      ),
+      messages: messages,
+    };
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.CHANNEL_NOT_FOUND
+    );
+  }
+};
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
   getAllUsersChannel,
   updateChannelDetails,
   removeUserFromChannel,
+  getConversation,
 };
