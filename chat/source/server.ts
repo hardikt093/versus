@@ -9,6 +9,7 @@ import routes from "./routes/";
 import logger from "./config/logger";
 import { Server } from "socket.io";
 import sockets from "./sockets";
+import cron from "./utils/crons/socketCron/index"
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -65,7 +66,7 @@ io.on("connection", sockets);
 httpServer.listen(PORT, () =>
   console.info(`The server is running on port ${PORT}`)
 );
-
+cron
 const exitHandler = () => {
   if (httpServer) {
     httpServer.close(() => {
