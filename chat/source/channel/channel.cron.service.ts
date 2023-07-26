@@ -58,8 +58,35 @@ export default class ConversationDbCronServiceClass {
               ""
             );
           }
-
-
+          else{
+            const utcDate = moment.utc(match.datetime_utc, "DD.MM.YYYY HH:mm");
+            const startDate = moment(utcDate).subtract(20, "hours");
+            const matchStartAt = utcDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+            const channelStartAt = startDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
+            let matchDate = match.date ? match.date : match.datetime_utc;
+            const date = matchDate.split(".");
+            let day = date[0] ?? moment(utcDate).format("D");
+            let month = date[1] ?? moment(utcDate).format("M");
+            let awayTeamNameSplit = match.awayTeam.awayTeamName.split(" ").pop();
+            let homeTeamNameSplit = match.homeTeam.homeTeamName.split(" ").pop();
+            const chatName = `#${
+              awayTeamNameSplit
+            }@${
+              homeTeamNameSplit
+            }-${day}/${month}`;
+            const createdChannelDetail = await prisma.channel.updateMany({
+              where:{
+                goalServeMatchId:match.goalServeMatchId,
+                goalServeLeagueId: match.goalServeLeagueId,
+              },
+              data: {
+                channelType : 'matchChannel',
+                matchChannelName: chatName,
+                matchStartAt : matchStartAt,
+                channelStartAt : channelStartAt
+              },
+            });
+          }
         }
       }
       return true;

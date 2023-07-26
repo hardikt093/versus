@@ -12,6 +12,8 @@ var matchSchema = new Schema(
     goalServeHomeTeamId: { type: Number, required: true, index: true },
     chatChannelId: Number,
     chatChannelName: String,
+    channelStartTime: Date,
+    channelExpireTime: Date,
     date: String,
     dateTimeUtc: String,
     eventId: { type: Schema.Types.ObjectId, ref: "event" },
