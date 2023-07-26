@@ -41,4 +41,9 @@ router.get(
  
     privateChannelController.getConversation
   );
+
+  router.post(
+    "/updateHeader",validate(privateChannelvalidation.updateHeader),privateChannelController.updateHearder
+  )
+  
 export = router;

@@ -22,8 +22,21 @@ const updatePrivateChannel = {
     },
   }),
 };
+
+const updateHeader = {
+  body: Joi.object().keys({
+    channelHeader:{ 
+      goalServeMatchId:Joi.number().required(),
+      goalServeLeagueId:Joi.number().required(),
+      dateTimeUtc:Joi.string().required(),
+      leagueType:Joi.string().required()
+    },
+    id:Joi.number().required()
+  })
+}
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
   updatePrivateChannel,
+  updateHeader
 };

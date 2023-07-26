@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import { IChannelData } from "../interfaces/input";
 import AppError from "../utils/AppError";
 import Messages from "../utils/messages";
+import { axiosGetMicro } from "../services/axios.service";
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -258,6 +259,7 @@ const getConversation = async (channelId: number) => {
     },
   });
   if (findChannel) {
+    var matchData = {}
     const messages = await prisma.message.findMany({
       where: { channelId },
       include: {
@@ -272,12 +274,29 @@ const getConversation = async (channelId: number) => {
         },
       },
     });
+    if(findChannel.channelHeader != null){
+      if(findChannel.channelHeader.leagueType == "MLB"){
+      console.log(findChannel?.channelHeader?.goalServeMatchId)
+        const resp = await axiosGetMicro(
+          `${process.env.LEAGUE_SERVER}/league/mlb/getSingleMlbGame`,
+          {
+            goalServeMatchId:findChannel?.channelHeader?.goalServeMatchId
+          },
+          ""
+        );
+        matchData = resp?.data?.data
+      }else if(findChannel.channelHeader.leagueType == "NHL"){
+
+      }else if(findChannel.channelHeader.leagueType == "NBA"){
+      }
+    }
     return {
       channelDetails: findChannel,
       adminUser: findChannel.channelUser.filter(
         (item: any) => item.isAdmin == true
       ),
       messages: messages,
+      channelHeader:matchData
     };
   } else {
     throw new AppError(
@@ -286,6 +305,18 @@ const getConversation = async (channelId: number) => {
     );
   }
 };
+
+const updateChannelHeader = async (data: any) => {
+  const updateChannelHeader = await prisma.channel.update({
+    where: {
+      id: data.id,
+    },
+    data: {
+      channelHeader: data.channelHeader,
+    },
+  });
+  return await getConversation(updateChannelHeader.id)
+};
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
@@ -293,4 +324,5 @@ export default {
   updateChannelDetails,
   removeUserFromChannel,
   getConversation,
+  updateChannelHeader,
 };
