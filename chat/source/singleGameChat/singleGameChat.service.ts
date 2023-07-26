@@ -6,6 +6,7 @@ import Messages from "../utils/messages";
 import { IUser } from "../interfaces/input";
 import moment from "moment";
 import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
+import { io } from "../server";
 const prisma = new PrismaClient();
 
 const getMatchPublicChannelConversation = async (data: any) => {
@@ -189,9 +190,57 @@ const getConversation = async (channelId: string) => {
     console.log("error", error);
   }
 };
+const getDashboardChannelsSocket = async () =>{
+    let curruntDay = moment().startOf("day").utc().toISOString();
+    let subtractOneDay = moment(curruntDay)
+      .subtract(24, "hours")
+      .utc()
+      .toISOString();
+    let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
+
+    const conversation = await prisma.channel.findMany({
+      where: {
+        isDeleted: false,
+        matchStartAt:{
+          gte: subtractOneDay,
+          lte: addOneDay,
+        },
+      },
+    });
+    if (conversation) {
+      const getChannels = await conversation.map((data:any)=>{
+        let status = "Not Started";
+        const startMoment = moment.utc(data.channelStartAt);
+        let endMoment = moment.utc();
+        if (!data.channelExpiredAt) {
+          endMoment = moment.utc(data.matchStartAt).add(12, "hours");
+        } else {
+          endMoment = moment.utc(data.channelExpiredAt);
+        }
+        const currentTime = moment().utc();
+        if (
+          currentTime.isSameOrAfter(startMoment) &&
+          currentTime.isSameOrBefore(endMoment)
+        ) {
+          status = "Started";
+        } else if (currentTime.isSameOrAfter(endMoment)) {
+          status = "Expired";
+        }
+        // socket code
+        io.emit("getDashboardChannelsSocket",{status, data})
+        return { status, data };
+      } )
+      return getChannels
+      }
+      else {
+        return null;
+      }
+  }
+
 export default {
   getChannelForDashboard,
   getMatchPublicChannelConversation,
   addFinalMatchChannel,
   getConversation,
+  getDashboardChannelsSocket
 };

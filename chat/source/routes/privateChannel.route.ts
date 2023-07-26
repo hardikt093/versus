@@ -31,15 +31,29 @@ router.put(
   validate(privateChannelvalidation.updatePrivateChannel),
   privateChannelController.updateChannelDetails
 );
+router.get("/privateChannels", auth, privateChannelController.getUsersChannel);
+router.delete(
+  "/removeUserFromPrivateChannel",
+  auth,
+  privateChannelController.removeUserFromChannel
+);
+router.put(
+  "/updateChannelDetails",
+  auth,
+  validate(privateChannelvalidation.updatePrivateChannel),
+  privateChannelController.updateChannelDetails
+);
 router.get(
   "/getConversation",
   auth,
 
   privateChannelController.getConversation
 );
-router.get(
-  "/getChannelDetails",
-  auth,
-  privateChannelController.getChannelDetails
+
+router.post(
+  "/updateHeader",
+  validate(privateChannelvalidation.updateHeader),
+  privateChannelController.updateHearder
 );
+
 export = router;

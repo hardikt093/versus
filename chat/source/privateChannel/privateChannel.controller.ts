@@ -84,6 +84,14 @@ const getChannelDetails = async (req: Request, res: Response) => {
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
+}
+const updateHearder = async (req: Request, res: Response) => {
+  try {
+    const updateChannelHeader = await privateChannelService.updateChannelHeader(req.body)
+    createResponse(res, httpStatus.OK, "", updateChannelHeader);
+  } catch (error:any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
 };
 export default {
   createPrivateChannnel,
@@ -92,5 +100,6 @@ export default {
   updateChannelDetails,
   removeUserFromChannel,
   getConversation,
-  getChannelDetails
+  getChannelDetails,
+  updateHearder
 };

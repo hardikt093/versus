@@ -2,6 +2,7 @@ import httpStatus from "http-status";
 import { Request, Response } from "express";
 import createResponse from "../../utils/response";
 import goalserveService from "./mlb.service";
+import mlbService from "./mlb.service";
 
 const baseballStandings = async (req: Request, res: Response) => {
   try {
@@ -14,7 +15,9 @@ const baseballStandings = async (req: Request, res: Response) => {
 
 const mlbScoreWithDate = async (req: Request, res: Response) => {
   try {
-    const mlbScoreWithDate = await goalserveService.mlbScoreWithDate(req.query.date1 as string);
+    const mlbScoreWithDate = await goalserveService.mlbScoreWithDate(
+      req.query.date1 as string
+    );
     createResponse(res, httpStatus.OK, "", mlbScoreWithDate);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -108,7 +111,6 @@ const singleGameBoxScoreUpcomming = async (req: Request, res: Response) => {
   }
 };
 
- 
 const statsTeam = async (req: Request, res: Response) => {
   try {
     const teamStats = await goalserveService.teamStats();
@@ -118,29 +120,34 @@ const statsTeam = async (req: Request, res: Response) => {
   }
 };
 
-
 const mlbGetTeam = async (req: Request, res: Response) => {
   try {
-    const mlbGetTeam = await goalserveService.mlbGetTeam(req.query.goalServeTeamId as string)
+    const mlbGetTeam = await goalserveService.mlbGetTeam(
+      req.query.goalServeTeamId as string
+    );
     createResponse(res, httpStatus.OK, "", mlbGetTeam);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
-}
+};
 const mlbSingleGameBoxScoreLive = async (req: Request, res: Response) => {
   try {
-    const mlbSingleGanbaGetTeammeBoxScoreLive = await goalserveService.mlbSingleGameBoxScoreLive(req.query.goalServeMatchId as string)
+    const mlbSingleGanbaGetTeammeBoxScoreLive =
+      await goalserveService.mlbSingleGameBoxScoreLive(
+        req.query.goalServeMatchId as string
+      );
     createResponse(res, httpStatus.OK, "", mlbSingleGanbaGetTeammeBoxScoreLive);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
-}
+};
 
 const get2DaysUpcomingDataFromMongodb = async (req: Request, res: Response) => {
   try {
-    const scoreWithCurrentDate = await goalserveService.get2DaysUpcomingDataFromMongodb(
-      req.query.date1 as string
-    );
+    const scoreWithCurrentDate =
+      await goalserveService.get2DaysUpcomingDataFromMongodb(
+        req.query.date1 as string
+      );
     createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -155,7 +162,6 @@ const get20HoursUpcomingGameData = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-
 
 const getAllUpcomingGameData = async (req: Request, res: Response) => {
   try {
@@ -191,6 +197,15 @@ const getAllFinalGameData = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const getSingleMlbGame = async (req: Request, res: Response) => {
+  try {
+    const getSingleMlbGame = await mlbService.getSingleMlbGame(req.query as {goalServeMatchId:string | number});
+    createResponse(res, httpStatus.OK, "", ...getSingleMlbGame);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   baseballStandings,
   mlbScoreWithDate,
@@ -211,5 +226,6 @@ export default {
   getAllUpcomingGameData,
   get24HoursFinalGameData,
   addChatDetailInMatch,
-  getAllFinalGameData
+  getAllFinalGameData,
+  getSingleMlbGame,
 };

@@ -135,4 +135,5 @@ router.get(
   mlbController.mlbSingleGameBoxScoreLive
 );
 router.get("/get-team", mlbController.mlbGetTeam);
+router.get("/getSingleMlbGame", mlbController.getSingleMlbGame);
 export default router;
