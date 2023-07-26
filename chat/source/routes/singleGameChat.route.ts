@@ -1,9 +1,9 @@
 import express from "express";
 
 import auth from "../middlewares/auth";
-import channelController from "../channel/channel.controller";
+import channelController from "../singleGameChat/singleGameChat.controller";
 import validate from "../middlewares/validate";
-import channelValidation from "../channel/channel.validation";
+import channelValidation from "../singleGameChat/singleGameChat.controller";
 
 const router = express.Router();
 
@@ -20,5 +20,7 @@ router.post(
 );
 
 router.get("/getChannelForDashboard",channelController.getChannelForDashboard)
+router.get("/getConversation/:id",channelController.getConversation)
+
 
 export = router;

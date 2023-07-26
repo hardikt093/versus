@@ -84,51 +84,18 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
     });
 
     if (users) {
-      let data: any = {};
-      switch (users.count) {
-        case 1:
-          data = {
-            text: `added to ${findChannel.channelName}.`,
-            createdAt: new Date(),
-            messageType: "USERADDED",
-            channelId: findChannel.id,
-            userId: userId[0],
-          };
-
-          break;
-        case 2:
-          const user2 = await prisma.user.findUnique({
-            where: { id: userId[1] },
-          });
-          data = {
-            text: `added to ${findChannel.channelName}. Also ${user2.userName}  joined.`,
-            createdAt: new Date(),
-            messageType: "USERADDED",
-            channelId: findChannel.id,
-            userId: userId[0],
-          };
-          break;
-        default:
-          const getAllusers = await prisma.user.findMany({
-            where: { id: { in: userId } },
-          });
-          const remainingUsers = getAllusers
-            .slice(1, getAllusers.length - 1)
-            .map((user: any) => `${user.userName}`)
-            .join(", ");
-
-          const lastUser = getAllusers[getAllusers.length - 1].userName;
-          data = {
-            text: `added to ${findChannel.channelName}. Also, ${remainingUsers} and ${lastUser} joined.`,
-            createdAt: new Date(),
-            messageType: "USERADDED",
-            channelId: findChannel.id,
-            userId: userId[0],
-          };
-          break;
-      }
-
-      await prisma.message.create({
+      let data: any = [];
+      userId.map((item: number) => {
+        const obj: any = {
+          text: `added to ${findChannel.channelName}`,
+          createdAt: new Date(),
+          messageType: "Text",
+          channelId: findChannel.id,
+          userId: Number(item),
+        };
+        data.push(obj);
+      });
+      await prisma.message.createMany({
         data,
       });
     }
@@ -201,16 +168,16 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
 
 const updateChannelDetails = async (
   loggedInUser: number,
+  channelId: string,
   data: {
-    channelId: number;
     channelData: IChannelData;
   }
 ) => {
-  const { channelId, channelData } = data;
+  const { channelData } = data;
 
   const findChannel: { id: number; channelType: string; channelName: string } =
     await prisma.channel.findUnique({
-      where: { id: channelId },
+      where: { id: Number(channelId) },
     });
   if (findChannel) {
     if (channelData) {
@@ -218,7 +185,7 @@ const updateChannelDetails = async (
         channelData.channelName = channelData?.channelName?.toLowerCase();
       const updateChannel = await prisma.channel.update({
         where: {
-          id: channelId,
+          id: Number(channelId),
         },
         data: {
           ...channelData,
@@ -286,6 +253,38 @@ const getConversation = async (channelId: number) => {
     );
   }
 };
+
+const getChannelDetails = async (channelId: number, search: string) => {
+  const findChannel: any = await prisma.channel.findUnique({
+    where: { id: channelId },
+    select: {
+      channelName: true,
+      description: true,
+      channelType: true,
+      channelUser: {
+        select: {
+          channelUser: {
+            select: {
+              userName: true,
+              id: true,
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+          isAdmin: true,
+        },
+      },
+    },
+  });
+  findChannel.channelUser = findChannel.channelUser.filter(
+    (channelUser: any) => {
+      return channelUser.channelUser.userName.includes(search);
+    }
+  );
+  return findChannel;
+};
+
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
@@ -293,4 +292,5 @@ export default {
   updateChannelDetails,
   removeUserFromChannel,
   getConversation,
+  getChannelDetails,
 };

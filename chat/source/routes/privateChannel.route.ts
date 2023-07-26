@@ -19,26 +19,27 @@ router.post(
   validate(privateChannelvalidation.addUserToPrivateChannel),
   privateChannelController.addUserToPrivateChannel
 );
+router.get("/privateChannels", auth, privateChannelController.getUsersChannel);
+router.delete(
+  "/removeUserFromPrivateChannel",
+  auth,
+  privateChannelController.removeUserFromChannel
+);
+router.put(
+  "/updateChannelDetails/:id",
+  auth,
+  validate(privateChannelvalidation.updatePrivateChannel),
+  privateChannelController.updateChannelDetails
+);
 router.get(
-    "/privateChannels",
-    auth,
-    privateChannelController.getUsersChannel
-  );
-  router.delete(
-    "/removeUserFromPrivateChannel",
-    auth,
-    privateChannelController.removeUserFromChannel
-  );
-  router.put(
-    "/updateChannelDetails",
-    auth,
-    validate(privateChannelvalidation.updatePrivateChannel),
-    privateChannelController.updateChannelDetails
-  );
-  router.get(
-    "/getConversation",
-    auth,
- 
-    privateChannelController.getConversation
-  );
+  "/getConversation",
+  auth,
+
+  privateChannelController.getConversation
+);
+router.get(
+  "/getChannelDetails",
+  auth,
+  privateChannelController.getChannelDetails
+);
 export = router;

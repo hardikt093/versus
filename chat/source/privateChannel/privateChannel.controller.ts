@@ -45,6 +45,7 @@ const updateChannelDetails = async (req: Request, res: Response) => {
   try {
     const updateChannel = await privateChannelService.updateChannelDetails(
       req.loggedInUser.id,
+      req.params.id,
       req.body
     );
     createResponse(res, httpStatus.OK, Messages.CHANNEL_UPDATE, updateChannel);
@@ -73,11 +74,23 @@ const getConversation = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const getChannelDetails = async (req: Request, res: Response) => {
+  try {
+    const channelDetails = await privateChannelService.getChannelDetails(
+      req.body.channelId,
+      req.query.search as string,
+    );
+    createResponse(res, httpStatus.OK, "", channelDetails);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   createPrivateChannnel,
   addUserToPrivateChannel,
   getUsersChannel,
   updateChannelDetails,
   removeUserFromChannel,
-  getConversation
+  getConversation,
+  getChannelDetails
 };
