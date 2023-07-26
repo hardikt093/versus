@@ -4,7 +4,6 @@ const prisma = new PrismaClient();
 const users: any = [];
 function userJoin(id: string, channelId: number, userId: number) {
   const user = { id, userId, channelId };
-  console.log(user);
   const index = users.findIndex(
     (object: any) => object.userId === userId && object.channelId === channelId
   );
