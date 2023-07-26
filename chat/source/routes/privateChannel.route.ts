@@ -46,7 +46,6 @@ router.put(
 router.get(
   "/getConversation",
   auth,
-
   privateChannelController.getConversation
 );
 

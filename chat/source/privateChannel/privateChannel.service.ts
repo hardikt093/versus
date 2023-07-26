@@ -115,7 +115,7 @@ const getAllUsersChannel = async (userId: number, search: string) => {
       channelUser: {
         some: { userId: userId, isCreatedChannel: true },
       },
-
+   
       OR: [
         {
           channelName: {
@@ -124,6 +124,12 @@ const getAllUsersChannel = async (userId: number, search: string) => {
           },
         },
       ],
+    },
+    select: {
+      id: true,
+      channelType: true,
+      channelName: true,
+      description:true
     },
   });
   return getChannels;
@@ -226,7 +232,7 @@ const getConversation = async (channelId: number) => {
     },
   });
   if (findChannel) {
-    var matchData = {}
+    var matchData = {};
     const messages = await prisma.message.findMany({
       where: { channelId },
       include: {
@@ -241,20 +247,19 @@ const getConversation = async (channelId: number) => {
         },
       },
     });
-    if(findChannel.channelHeader != null){
-      if(findChannel.channelHeader.leagueType == "MLB"){
-      console.log(findChannel?.channelHeader?.goalServeMatchId)
+    if (findChannel.channelHeader != null) {
+      if (findChannel.channelHeader.leagueType == "MLB") {
+        console.log(findChannel?.channelHeader?.goalServeMatchId);
         const resp = await axiosGetMicro(
           `${process.env.LEAGUE_SERVER}/league/mlb/getSingleMlbGame`,
           {
-            goalServeMatchId:findChannel?.channelHeader?.goalServeMatchId
+            goalServeMatchId: findChannel?.channelHeader?.goalServeMatchId,
           },
           ""
         );
-        matchData = resp?.data?.data
-      }else if(findChannel.channelHeader.leagueType == "NHL"){
-
-      }else if(findChannel.channelHeader.leagueType == "NBA"){
+        matchData = resp?.data?.data;
+      } else if (findChannel.channelHeader.leagueType == "NHL") {
+      } else if (findChannel.channelHeader.leagueType == "NBA") {
       }
     }
     return {
@@ -263,7 +268,7 @@ const getConversation = async (channelId: number) => {
         (item: any) => item.isAdmin == true
       ),
       messages: messages,
-      channelHeader:matchData
+      channelHeader: matchData,
     };
   } else {
     throw new AppError(
@@ -313,7 +318,7 @@ const updateChannelHeader = async (data: any) => {
       channelHeader: data.channelHeader,
     },
   });
-  return await getConversation(updateChannelHeader.id)
+  return await getConversation(updateChannelHeader.id);
 };
 export default {
   createPrivateChannel,
