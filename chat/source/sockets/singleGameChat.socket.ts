@@ -72,87 +72,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
     console.log(error);
   }
 };
-const getConversation = async (socket: any, channelId: number) => {
-  try {
-    if (channelId) {
-      // socket.join(channelId);
-      // const user = getCurrentUser(channelId, socket.id);
-      const channelDetails = await prisma.channel.findUnique({
-        where: { id: channelId },
-        include: {
-          channelUser: {
-            include: {
-              channelUser: {
-                select: {
-                  userName: true,
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  profileImage: true,
-                },
-              },
-            },
-          },
-        },
-      });
-      const messages = await prisma.message.findMany({
-        where: { channelId },
-        include: {
-          user: {
-            select: {
-              userName: true,
-              id: true,
-              firstName: true,
-              lastName: true,
-              profileImage: true,
-            },
-          },
-        },
-      });
-      // if (user) {
-      socket.emit(`conversation:${channelId}`, {
-        channelDetails: channelDetails,
-        messages: messages,
-      });
-      // }
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-// const singleGameChat = async (socket: any, newMessageRecieved: any) => {
-//   try {
-//     const { message } = newMessageRecieved;
-
-//     if (message.channelId) {
-//       const user = getCurrentUser(message.channelId, socket.id);
-//       console.log("user", user)
-//       if (user) {
-//         const newMessage = await prisma.message.create({
-//           include: {
-//             user: {
-//               select: {
-//                 userName: true,
-//                 id: true,
-//                 firstName: true,
-//                 lastName: true,
-//                 profileImage: true,
-//               },
-//             },
-//           },
-//           data: {
-//             ...message,
-//             userId: Number(user.userId),
-//           },
-//         });
-//         console.log(newMessage);
-//         io.to(user.channelId).emit(`message`, newMessage);
-//       }
-//     }
-//   } catch (error) {
-//     console.log(error);
-//   }
-// };
 
 const singleGameChat = async (socket: any, newMessageRecieved: any) => {
   try {
@@ -192,7 +111,6 @@ const disconnectUser = (socket: any) => {
 export {
   connection,
   joinChat,
-  getConversation,
   singleGameChat,
   disconnectUser,
 };

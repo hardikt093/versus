@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import channelService from "../../../channel/channel.service";
+import channelService from "../../../singleGameChat/singleGameChat.service";
 
 let getDashboardChannels: boolean = false;
 const getDashboardChannelsSocket = cron.schedule("*/5 * * * * *", async () => {

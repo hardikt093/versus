@@ -43,42 +43,40 @@ const getMatchPublicChannelConversation = async (data: any) => {
 
 const getChannelForDashboard = async (data: any) => {
   const date2 = moment(data.date1).add(24, "hours").utc().toISOString();
-    const conversation = await prisma.channel.findMany({
-      where: {
-        isDeleted: false,
-        matchStartAt:{
-          gte: data.date1,
-          lte: date2,
-        },
+  const conversation = await prisma.channel.findMany({
+    where: {
+      isDeleted: false,
+      matchStartAt: {
+        gte: data.date1,
+        lte: date2,
       },
+    },
+  });
+  if (conversation) {
+    const getChannels = await conversation.map((data: any) => {
+      let status = "Not Started";
+      const startMoment = moment.utc(data.channelStartAt);
+      let endMoment = moment.utc();
+      if (!data.channelExpiredAt) {
+        endMoment = moment.utc(data.matchStartAt).add(12, "hours");
+      } else {
+        endMoment = moment.utc(data.channelExpiredAt);
+      }
+      const currentTime = moment().utc();
+      if (
+        currentTime.isSameOrAfter(startMoment) &&
+        currentTime.isSameOrBefore(endMoment)
+      ) {
+        status = "Started";
+      } else if (currentTime.isSameOrAfter(endMoment)) {
+        status = "Expired";
+      }
+      return { status, data };
     });
-    if (conversation) {
-      const getChannels = await conversation.map((data:any)=>{
-        let status = "Not Started";
-        const startMoment = moment.utc(data.channelStartAt);
-        let endMoment = moment.utc();
-        if (!data.channelExpiredAt) {
-          endMoment = moment.utc(data.matchStartAt).add(12, "hours");
-        } else {
-          endMoment = moment.utc(data.channelExpiredAt);
-        }
-        const currentTime = moment().utc();
-        if (
-          currentTime.isSameOrAfter(startMoment) &&
-          currentTime.isSameOrBefore(endMoment)
-        ) {
-          status = "Started";
-        } else if (currentTime.isSameOrAfter(endMoment)) {
-          status = "Expired";
-        }
-        return { status, data };
-      } )
-      return getChannels
-      }
-      else {
-        return null;
-      }
-     
+    return getChannels;
+  } else {
+    return null;
+  }
 };
 
 const addFinalMatchChannel = async () => {
@@ -143,6 +141,55 @@ const addFinalMatchChannel = async () => {
   }
 };
 
+const getConversation = async (channelId: string) => {
+  try {
+    const findChannel: any = await prisma.channel.findUnique({
+      where: { id: Number(channelId)},
+      include: {
+        channelUser: {
+          include: {
+            channelUser: {
+              select: {
+                userName: true,
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    if (findChannel) {
+      const messages = await prisma.message.findMany({
+        where: { channelId: Number(channelId) },
+        include: {
+          user: {
+            select: {
+              userName: true,
+              id: true,
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+        },
+      });
+      return {
+        channelDetails: findChannel,
+        messages: messages,
+      };
+    } else {
+      throw new AppError(
+        httpStatus.UNPROCESSABLE_ENTITY,
+        Messages.CHANNEL_NOT_FOUND
+      );
+    }
+  } catch (error) {
+    console.log("error", error);
+  }
+};
 const getDashboardChannelsSocket = async () =>{
     let curruntDay = moment().startOf("day").utc().toISOString();
     let subtractOneDay = moment(curruntDay)
@@ -194,5 +241,6 @@ export default {
   getChannelForDashboard,
   getMatchPublicChannelConversation,
   addFinalMatchChannel,
+  getConversation,
   getDashboardChannelsSocket
 };
