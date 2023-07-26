@@ -19,4 +19,6 @@ router.post(
   channelController.addFinalMatchChannel
 );
 
+router.get("/getChannelForDashboard",channelController.getChannelForDashboard)
+
 export = router;

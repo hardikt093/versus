@@ -15,6 +15,17 @@ const getMatchPublicChannelConversation = async (req: Request, res: Response) =>
   }
 };
 
+const getChannelForDashboard = async (req: Request, res: Response) => {
+  try {
+    const getConversation = await conversationService.getChannelForDashboard(
+      req.body,
+    );
+    createResponse(res, httpStatus.OK, "", getConversation);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 const addFinalMatchChannel = async (req: Request, res: Response) => {
   try {
     const getConversation = await conversationService.addFinalMatchChannel();
@@ -24,4 +35,4 @@ const addFinalMatchChannel = async (req: Request, res: Response) => {
   }
 };
 
-export default { getMatchPublicChannelConversation, addFinalMatchChannel };
+export default { getMatchPublicChannelConversation, addFinalMatchChannel,getChannelForDashboard };

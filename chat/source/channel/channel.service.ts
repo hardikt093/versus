@@ -40,6 +40,46 @@ const getMatchPublicChannelConversation = async (data: any) => {
   }
 };
 
+const getChannelForDashboard = async (data: any) => {
+  const date2 = moment(data.date1).add(24, "hours").utc().toISOString();
+    const conversation = await prisma.channel.findMany({
+      where: {
+        isDeleted: false,
+        matchStartAt:{
+          gte: data.date1,
+          lte: date2,
+        },
+      },
+    });
+    if (conversation) {
+      const getChannels = await conversation.map((data:any)=>{
+        let status = "Not Started";
+        const startMoment = moment.utc(data.channelStartAt);
+        let endMoment = moment.utc();
+        if (!data.channelExpiredAt) {
+          endMoment = moment.utc(data.matchStartAt).add(12, "hours");
+        } else {
+          endMoment = moment.utc(data.channelExpiredAt);
+        }
+        const currentTime = moment().utc();
+        if (
+          currentTime.isSameOrAfter(startMoment) &&
+          currentTime.isSameOrBefore(endMoment)
+        ) {
+          status = "Started";
+        } else if (currentTime.isSameOrAfter(endMoment)) {
+          status = "Expired";
+        }
+        return { status, data };
+      } )
+      return getChannels
+      }
+      else {
+        return null;
+      }
+     
+};
+
 const addFinalMatchChannel = async () => {
   try {
     const resp = await axiosGetMicro(
@@ -102,6 +142,7 @@ const addFinalMatchChannel = async () => {
   }
 };
 export default {
+  getChannelForDashboard,
   getMatchPublicChannelConversation,
   addFinalMatchChannel,
 };
