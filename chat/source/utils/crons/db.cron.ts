@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import ChannelDbCronService from "../../channel/channel.cron.service";
+import ChannelDbCronService from "../../singleGameChat/singleGameChat.cron.service";
 
 class DBCronJob {
   private iscreateSingleGameChatRunning = false;

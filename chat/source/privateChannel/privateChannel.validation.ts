@@ -13,8 +13,8 @@ const addUserToPrivateChannel = {
   }),
 };
 const updatePrivateChannel = {
+  params: { id: Joi.number().required() },
   body: Joi.object().keys({
-    channelId: Joi.number().required(),
     channelData: {
       channelName: Joi.string().min(5).max(30),
       channelType: Joi.string(),
@@ -22,8 +22,21 @@ const updatePrivateChannel = {
     },
   }),
 };
+
+const updateHeader = {
+  body: Joi.object().keys({
+    channelHeader: {
+      goalServeMatchId: Joi.number().required(),
+      goalServeLeagueId: Joi.number().required(),
+      dateTimeUtc: Joi.string().required(),
+      leagueType: Joi.string().required(),
+    },
+    id: Joi.number().required(),
+  }),
+};
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
   updatePrivateChannel,
+  updateHeader,
 };
