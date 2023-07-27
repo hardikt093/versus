@@ -26,36 +26,9 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
         where: { id: channelId },
       });
       socket.leaveAll();
-      socket.join(user.channelId);
+
       if (findChannel) {
-        const checkUserExist = await prisma.channelUser.findFirst({
-          where: {
-            channelId: channelId,
-            userId: Number(userId),
-            channelType: findChannel.channelType,
-          },
-        });
-        if (!checkUserExist) {
-          const joinUser = await prisma.channelUser.create({
-            data: {
-              channelId,
-              userId: Number(userId),
-              channelType: findChannel.channelType,
-            },
-            include: {
-              channelUser: {
-                select: { userName: true },
-              },
-            },
-          });
-          socket.emit("message", `Welcome to ${findChannel.matchChannelName}!`);
-          socket.broadcast
-            .to(user.channelId)
-            .emit(
-              "message",
-              `${joinUser.channelUser.userName} has joined the group`
-            );
-        }
+        socket.join(user.channelId);
       } else {
         // Handle the case when the channel doesn't exist
         socket.emit("message", "The specified channel does not exist");
@@ -69,7 +42,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 const privateGroupChat = async (newMessageRecieved: any) => {
   try {
     const { message } = newMessageRecieved;
-
     if (message.channelId && message.userId) {
       const newMessage = await prisma.message.create({
         include: {

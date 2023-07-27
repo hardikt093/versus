@@ -17,55 +17,19 @@ function userJoin(id: string, channelId: number, userId: number) {
     return existingUser[0];
   }
 }
-function getCurrentUser(channelId: number, id: any) {
-  return users.find(
-    (user: any) => user.channelId === channelId && id === user.id
-  );
-}
 const connection = async () => {
   console.log("Connected to socket.io");
 };
 const joinChat = async (socket: any, channelId: number, userId: number) => {
   try {
     if (channelId && userId) {
-      const user = userJoin(socket.id, channelId, userId);
       const findChannel = await prisma.channel.findUnique({
         where: { id: channelId },
       });
       socket.leaveAll();
-      socket.join(user.channelId);
       if (findChannel) {
-        const checkUserExist = await prisma.channelUser.findFirst({
-          where: {
-            channelId: channelId,
-            userId: Number(userId),
-            channelType: findChannel.channelType,
-          },
-        });
-        if (!checkUserExist) {
-          const joinUser = await prisma.channelUser.create({
-            data: {
-              channelId,
-              userId: Number(userId),
-              channelType: findChannel.channelType,
-            },
-            include: {
-              channelUser: {
-                select: { userName: true },
-              },
-            },
-          });
-          socket.emit("message", `Welcome to ${findChannel.matchChannelName}!`);
-          socket.broadcast
-            .to(user.channelId)
-            .emit(
-              "message",
-              `${joinUser.channelUser.userName} has joined the group`
-            );
-        }
-      } else {
-        // Handle the case when the channel doesn't exist
-        socket.emit("message", "The specified channel does not exist");
+        const user = userJoin(socket.id, channelId, userId);
+        socket.join(user.channelId);
       }
     }
   } catch (error) {
@@ -76,7 +40,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 const singleGameChat = async (socket: any, newMessageRecieved: any) => {
   try {
     const { message } = newMessageRecieved;
-
     if (message.channelId && message.userId) {
       const newMessage = await prisma.message.create({
         include: {
@@ -108,9 +71,4 @@ const disconnectUser = (socket: any) => {
     io.emit("message", `${user.userName} has left the chat`);
   }
 };
-export {
-  connection,
-  joinChat,
-  singleGameChat,
-  disconnectUser,
-};
+export { connection, joinChat, singleGameChat, disconnectUser };
