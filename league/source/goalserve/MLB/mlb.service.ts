@@ -1247,6 +1247,7 @@ const getFinalMatch = async () => {
           status: true,
           datetime_utc: "$dateTimeUtc",
           time: true,
+          channelExpireTime:true,
           goalServeMatchId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
@@ -2753,6 +2754,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
           time: true,
           goalServeMatchId: true,
           goalServeLeagueId: true,
+          channelExpireTime:true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
