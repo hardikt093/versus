@@ -19,7 +19,7 @@ const getMatchPublicChannelConversation = async (req: Request, res: Response) =>
 const getChannelForDashboard = async (req: Request, res: Response) => {
   try {
     const getConversation = await conversationService.getChannelForDashboard(
-      req.body,
+      req.query,
     );
     createResponse(res, httpStatus.OK, "", getConversation);
   } catch (error: any) {

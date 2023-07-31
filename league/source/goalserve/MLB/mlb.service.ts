@@ -857,6 +857,11 @@ const getUpcomingMatch = async () => {
           },
         },
       },
+      {
+        $sort: {
+          dateTimeUtc: 1,
+        },
+      },
 
       {
         $project: {
@@ -1241,12 +1246,18 @@ const getFinalMatch = async () => {
         },
       },
       {
+        $sort: {
+          dateTimeUtc: 1,
+        },
+      },
+      {
         $project: {
           id: true,
           date: true,
           status: true,
           datetime_utc: "$dateTimeUtc",
           time: true,
+          channelExpireTime:true,
           goalServeMatchId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
@@ -1521,7 +1532,7 @@ const getLiveMatch = async () => {
       },
       {
         $sort: {
-          datetime_utc: 1,
+          dateTimeUtc: 1,
         },
       },
       {
@@ -2753,6 +2764,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
           time: true,
           goalServeMatchId: true,
           goalServeLeagueId: true,
+          channelExpireTime:true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
