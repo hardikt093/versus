@@ -26,36 +26,8 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
         where: { id: channelId },
       });
       socket.leaveAll();
-      socket.join(user.channelId);
       if (findChannel) {
-        const checkUserExist = await prisma.channelUser.findFirst({
-          where: {
-            channelId: channelId,
-            userId: Number(userId),
-            channelType: findChannel.channelType,
-          },
-        });
-        if (!checkUserExist) {
-          const joinUser = await prisma.channelUser.create({
-            data: {
-              channelId,
-              userId: Number(userId),
-              channelType: findChannel.channelType,
-            },
-            include: {
-              channelUser: {
-                select: { userName: true },
-              },
-            },
-          });
-          socket.emit("message", `Welcome to ${findChannel.matchChannelName}!`);
-          socket.broadcast
-            .to(user.channelId)
-            .emit(
-              "message",
-              `${joinUser.channelUser.userName} has joined the group`
-            );
-        }
+        socket.join(user.channelId);
       } else {
         // Handle the case when the channel doesn't exist
         socket.emit("message", "The specified channel does not exist");
@@ -69,7 +41,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
 const privateGroupChat = async (newMessageRecieved: any) => {
   try {
     const { message } = newMessageRecieved;
-
     if (message.channelId && message.userId) {
       const newMessage = await prisma.message.create({
         include: {
@@ -88,10 +59,56 @@ const privateGroupChat = async (newMessageRecieved: any) => {
           userId: Number(message.userId),
         },
       });
+
       io.to(message.channelId).emit(
         `privateChatMessage:${message.channelId}`,
         newMessage
       );
+      const channelsWithLastMessage = await prisma.channel.findMany({
+        where: {
+          channelType: "privateChannel",
+          channelUser: {
+            some: { userId: Number(message.userId) },
+          },
+        },
+        select: {
+          id: true,
+          channelName: true,
+          message: {
+            select: {
+              id: true,
+              createdAt: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1, // To get only the last message for each channel
+          },
+        },
+      });
+      function compareMessagesByDate(a: any, b: any) {
+        if (a.length && b.length) {
+          return (
+            new Date(b[0].createdAt).valueOf() -
+            new Date(a[0].createdAt).valueOf()
+          );
+        } else if (a.length) {
+          return -1;
+        } else if (b.length) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+      channelsWithLastMessage.sort((channelA: any, channelB: any) => {
+        const lastMessageA: any = channelA.message;
+        const lastMessageB: any = channelB.message;
+
+        return compareMessagesByDate(lastMessageA, lastMessageB);
+      });
+      io.to(message.channelId).emit(`getUserChannels`, {
+        channelsWithLastMessage,
+      });
     }
   } catch (error) {
     console.log(error);

@@ -43,11 +43,15 @@ router.put(
   privateChannelController.updateChannelDetails
 );
 router.get(
-  "/getConversation",
+  "/getConversation/:channelId",
   auth,
   privateChannelController.getConversation
 );
-
+router.get(
+  "/getChannelDetails",
+  auth,
+  privateChannelController.getChannelDetails
+);
 router.post(
   "/updateHeader",
   validate(privateChannelvalidation.updateHeader),

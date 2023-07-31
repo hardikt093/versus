@@ -67,7 +67,7 @@ const removeUserFromChannel = async (req: Request, res: Response) => {
 const getConversation = async (req: Request, res: Response) => {
   try {
     const conversation = await privateChannelService.getConversation(
-      req.body.channelId
+      req.params.channelId as string
     );
     createResponse(res, httpStatus.OK, "", conversation);
   } catch (error: any) {
@@ -77,7 +77,7 @@ const getConversation = async (req: Request, res: Response) => {
 const getChannelDetails = async (req: Request, res: Response) => {
   try {
     const channelDetails = await privateChannelService.getChannelDetails(
-      req.body.channelId,
+      req.query.channelId as string,
       req.query.search as string,
     );
     createResponse(res, httpStatus.OK, "", channelDetails);

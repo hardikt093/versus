@@ -13,5 +13,6 @@ export default (socket: any) => {
   socket.on(`privateGroupChat`, (newMessageRecieved: any) => {
     privateGroupChat(newMessageRecieved);
   });
+
   // disconnectUser()
 };
