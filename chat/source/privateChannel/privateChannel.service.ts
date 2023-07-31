@@ -3,6 +3,7 @@ import { IChannelData } from "../interfaces/input";
 import AppError from "../utils/AppError";
 import Messages from "../utils/messages";
 import { axiosGetMicro } from "../services/axios.service";
+import { encryptedMessage } from "../services/crypto.service";
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
@@ -53,7 +54,7 @@ const createPrivateChannel = async (
           },
         },
         data: {
-          text: `Joined ${createChannel.channelName}`,
+          text: encryptedMessage(`Joined ${createChannel.channelName}`),
           createdAt: new Date(),
           messageType: "USERADDED",
           channelId: createChannel.id,
@@ -88,9 +89,9 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
       let data: any = [];
       userId.map((item: number) => {
         const obj: any = {
-          text: `added to ${findChannel.channelName}`,
+          text: encryptedMessage(`added to ${findChannel.channelName}`),
           createdAt: new Date(),
-          messageType: "Text",
+          messageType: "USERADDED",
           channelId: findChannel.id,
           userId: Number(item),
         };
@@ -113,9 +114,9 @@ const getAllUsersChannel = async (userId: number, search: string) => {
   const getChannels = await prisma.channel.findMany({
     where: {
       channelUser: {
-        some: { userId: userId, isCreatedChannel: true },
+        some: { userId: userId },
       },
-   
+
       OR: [
         {
           channelName: {
@@ -129,7 +130,7 @@ const getAllUsersChannel = async (userId: number, search: string) => {
       id: true,
       channelType: true,
       channelName: true,
-      description:true
+      description: true,
     },
   });
   return getChannels;
@@ -152,7 +153,7 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
       let data: any = [];
       userId.map((item: number) => {
         const obj: any = {
-          text: `removed from the ${findChannel.channelName}`,
+          text: encryptedMessage(`removed from the ${findChannel.channelName}`),
           createdAt: new Date(),
           messageType: "TEXT",
           channelId: findChannel.id,
@@ -212,9 +213,9 @@ const updateChannelDetails = async (
   }
 };
 
-const getConversation = async (channelId: number) => {
+const getConversation = async (channelId: string) => {
   const findChannel: any = await prisma.channel.findUnique({
-    where: { id: channelId },
+    where: { id: Number(channelId) },
     include: {
       channelUser: {
         include: {
@@ -234,7 +235,7 @@ const getConversation = async (channelId: number) => {
   if (findChannel) {
     var matchData = {};
     const messages = await prisma.message.findMany({
-      where: { channelId },
+      where: { channelId: Number(channelId) },
       include: {
         user: {
           select: {
@@ -278,10 +279,11 @@ const getConversation = async (channelId: number) => {
   }
 };
 
-const getChannelDetails = async (channelId: number, search: string) => {
+const getChannelDetails = async (channelId: string, search: string) => {
   const findChannel: any = await prisma.channel.findUnique({
-    where: { id: channelId },
+    where: { id: Number(channelId) },
     select: {
+      id: true,
       channelName: true,
       description: true,
       channelType: true,
