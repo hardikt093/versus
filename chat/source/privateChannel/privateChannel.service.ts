@@ -113,9 +113,9 @@ const getAllUsersChannel = async (userId: number, search: string) => {
   const getChannels = await prisma.channel.findMany({
     where: {
       channelUser: {
-        some: { userId: userId, isCreatedChannel: true },
+        some: { userId: userId },
       },
-   
+
       OR: [
         {
           channelName: {
@@ -129,7 +129,7 @@ const getAllUsersChannel = async (userId: number, search: string) => {
       id: true,
       channelType: true,
       channelName: true,
-      description:true
+      description: true,
     },
   });
   return getChannels;
@@ -212,9 +212,9 @@ const updateChannelDetails = async (
   }
 };
 
-const getConversation = async (channelId: number) => {
+const getConversation = async (channelId: string) => {
   const findChannel: any = await prisma.channel.findUnique({
-    where: { id: channelId },
+    where: { id: Number(channelId) },
     include: {
       channelUser: {
         include: {
@@ -234,7 +234,7 @@ const getConversation = async (channelId: number) => {
   if (findChannel) {
     var matchData = {};
     const messages = await prisma.message.findMany({
-      where: { channelId },
+      where: {channelId:  Number(channelId) },
       include: {
         user: {
           select: {
@@ -278,9 +278,9 @@ const getConversation = async (channelId: number) => {
   }
 };
 
-const getChannelDetails = async (channelId: number, search: string) => {
+const getChannelDetails = async (channelId: string, search: string) => {
   const findChannel: any = await prisma.channel.findUnique({
-    where: { id: channelId },
+    where: { id: Number(channelId) },
     select: {
       channelName: true,
       description: true,

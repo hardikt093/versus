@@ -64,6 +64,51 @@ const privateGroupChat = async (newMessageRecieved: any) => {
         `privateChatMessage:${message.channelId}`,
         newMessage
       );
+      const channelsWithLastMessage = await prisma.channel.findMany({
+        where: {
+          channelType: "privateChannel",
+          channelUser: {
+            some: { userId: Number(message.userId) },
+          },
+        },
+        select: {
+          id: true,
+          channelName: true,
+          message: {
+            select: {
+              id: true,
+              createdAt: true,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1, // To get only the last message for each channel
+          },
+        },
+      });
+      function compareMessagesByDate(a: any, b: any) {
+        if (a.length && b.length) {
+          return (
+            new Date(b[0].createdAt).valueOf() -
+            new Date(a[0].createdAt).valueOf()
+          );
+        } else if (a.length) {
+          return -1;
+        } else if (b.length) {
+          return 1;
+        } else {
+          return 0;
+        }
+      }
+      channelsWithLastMessage.sort((channelA: any, channelB: any) => {
+        const lastMessageA: any = channelA.message;
+        const lastMessageB: any = channelB.message;
+
+        return compareMessagesByDate(lastMessageA, lastMessageB);
+      });
+      io.to(message.channelId).emit(`getUserChannels`, {
+        channelsWithLastMessage,
+      });
     }
   } catch (error) {
     console.log(error);
