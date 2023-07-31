@@ -31,7 +31,6 @@ router.put(
   validate(privateChannelvalidation.updatePrivateChannel),
   privateChannelController.updateChannelDetails
 );
-router.get("/privateChannels", auth, privateChannelController.getUsersChannel);
 router.delete(
   "/removeUserFromPrivateChannel",
   auth,

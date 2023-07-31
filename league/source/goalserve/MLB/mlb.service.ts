@@ -857,6 +857,11 @@ const getUpcomingMatch = async () => {
           },
         },
       },
+      {
+        $sort: {
+          dateTimeUtc: 1,
+        },
+      },
 
       {
         $project: {
@@ -1241,6 +1246,11 @@ const getFinalMatch = async () => {
         },
       },
       {
+        $sort: {
+          dateTimeUtc: 1,
+        },
+      },
+      {
         $project: {
           id: true,
           date: true,
@@ -1522,7 +1532,7 @@ const getLiveMatch = async () => {
       },
       {
         $sort: {
-          datetime_utc: 1,
+          dateTimeUtc: 1,
         },
       },
       {
