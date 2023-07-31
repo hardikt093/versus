@@ -234,7 +234,7 @@ const getConversation = async (channelId: string) => {
   if (findChannel) {
     var matchData = {};
     const messages = await prisma.message.findMany({
-      where: {channelId:  Number(channelId) },
+      where: { channelId: Number(channelId) },
       include: {
         user: {
           select: {
@@ -282,6 +282,7 @@ const getChannelDetails = async (channelId: string, search: string) => {
   const findChannel: any = await prisma.channel.findUnique({
     where: { id: Number(channelId) },
     select: {
+      id: true,
       channelName: true,
       description: true,
       channelType: true,
