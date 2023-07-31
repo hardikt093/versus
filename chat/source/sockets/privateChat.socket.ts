@@ -26,7 +26,6 @@ const joinChat = async (socket: any, channelId: number, userId: number) => {
         where: { id: channelId },
       });
       socket.leaveAll();
-
       if (findChannel) {
         socket.join(user.channelId);
       } else {
@@ -60,6 +59,7 @@ const privateGroupChat = async (newMessageRecieved: any) => {
           userId: Number(message.userId),
         },
       });
+
       io.to(message.channelId).emit(
         `privateChatMessage:${message.channelId}`,
         newMessage
