@@ -21,9 +21,9 @@ function userJoin(id: string, channelId: number, userId: number) {
 const joinChat = async (socket: any, channelId: number, userId: number) => {
   try {
     if (channelId && userId) {
-      const user = userJoin(socket.id, channelId, userId);
+      const user = userJoin(socket.id, Number(channelId), Number(userId));
       const findChannel = await prisma.channel.findUnique({
-        where: { id: channelId },
+        where: { id: Number(channelId) },
       });
       socket.leaveAll();
       if (findChannel) {
