@@ -7,11 +7,35 @@ import { encryptedMessage } from "../services/crypto.service";
 
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+
+function compareMessagesByDate(lastMessageA: any, lastMessageB: any) {
+  if (lastMessageA.length && lastMessageB.length) {
+    return (
+      new Date(lastMessageB[0].createdAt).valueOf() - new Date(lastMessageA[0].createdAt).valueOf()
+    );
+  } else if (lastMessageA.length) {
+    return -1;
+  } else if (lastMessageB.length) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 const createPrivateChannel = async (
   userId: number,
   channelData: IChannelData
 ) => {
   const { channelName, channelType } = channelData;
+  const findChannel: { id: number; channelName: string } =
+    await prisma.channel.findUnique({
+      where: { channelName },
+    });
+  if (findChannel) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.CHANNELNAME_ALREADY_EXIST
+    );
+  }
   const createChannel = await prisma.channel.create({
     data: {
       channelName: channelName?.toLowerCase(),
@@ -71,8 +95,21 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
       where: { id: channelId },
     });
   if (findChannel) {
+    const usersExists = await prisma.channelUser.findMany({
+      where: {
+        channelId,
+        userId: {
+          in: userId,
+        },
+      },
+    });
+    if (usersExists.length) {
+      throw new AppError(
+        httpStatus.UNPROCESSABLE_ENTITY,
+        Messages.USER_ALREADY_EXIST
+      );
+    }
     let data: IChannelData[] = [];
-
     userId.map((item: number) => {
       const obj: Partial<IChannelData> = {
         userId: item,
@@ -111,15 +148,20 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
 };
 
 const getAllUsersChannel = async (userId: number, search: string) => {
-  const getChannels = await prisma.channel.findMany({
+  const query = {
     where: {
       channelUser: {
         some: { userId: userId },
       },
-
       OR: [
         {
           channelName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          description: {
             contains: search,
             mode: "insensitive",
           },
@@ -131,9 +173,31 @@ const getAllUsersChannel = async (userId: number, search: string) => {
       channelType: true,
       channelName: true,
       description: true,
+      message: true,
+      _count: {
+        select: {
+          channelUser: true,
+        },
+      },
     },
+  };
+  const [channels, count] = await prisma.$transaction([
+    prisma.channel.findMany(query),
+    prisma.channel.count({ where: query.where }),
+  ]);
+
+  channels.sort((channelA: IChannelData, channelB: IChannelData) => {
+    const lastMessageA: any = channelA.message;
+    const lastMessageB: any = channelB.message;
+    return compareMessagesByDate(lastMessageA, lastMessageB);
   });
-  return getChannels;
+  return {
+    totalChannels: count,
+    channels: channels.map((item: any) => {
+      delete item.message;
+      return item;
+    }),
+  };
 };
 const removeUserFromChannel = async (channelId: number, userId: number[]) => {
   const findChannel: { id: number; channelType: string; channelName: string } =
@@ -187,30 +251,38 @@ const updateChannelDetails = async (
     await prisma.channel.findUnique({
       where: { id: Number(channelId) },
     });
-  if (findChannel) {
-    if (channelData) {
-      if (channelData?.channelName)
-        channelData.channelName = channelData?.channelName?.toLowerCase();
-      const updateChannel = await prisma.channel.update({
-        where: {
-          id: Number(channelId),
-        },
-        data: {
-          ...channelData,
-        },
-        select: {
-          channelType: true,
-          channelName: true,
-          id: true,
-        },
-      });
-    }
-  } else {
+  const findChannelByName: { id: number; channelName: string } =
+    await prisma.channel.findUnique({
+      where: { channelName: channelData.channelName },
+    });
+  if (!findChannel) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.CHANNEL_NOT_FOUND
     );
   }
+  if (findChannelByName && findChannelByName.id != findChannel.id) {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.CHANNELNAME_ALREADY_EXIST
+    );
+  }
+
+  if (channelData?.channelName)
+    channelData.channelName = channelData?.channelName?.toLowerCase();
+  await prisma.channel.update({
+    where: {
+      id: Number(channelId),
+    },
+    data: {
+      ...channelData,
+    },
+    select: {
+      channelType: true,
+      channelName: true,
+      id: true,
+    },
+  });
 };
 
 const getConversation = async (channelId: string) => {

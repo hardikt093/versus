@@ -56,7 +56,7 @@ model Token {
 model Channel {
   id                Int           @id @default(autoincrement())
   channelType       ChannelType
-  channelName       String?       
+  channelName       String?       @unique
   matchChannelName  String?
   description       String?
   goalServeMatchId  Int?
