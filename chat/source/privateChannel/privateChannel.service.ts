@@ -8,14 +8,14 @@ import { encryptedMessage } from "../services/crypto.service";
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-function compareMessagesByDate(a: any, b: any) {
-  if (a.length && b.length) {
+function compareMessagesByDate(lastMessageA: any, lastMessageB: any) {
+  if (lastMessageA.length && lastMessageB.length) {
     return (
-      new Date(b[0].createdAt).valueOf() - new Date(a[0].createdAt).valueOf()
+      new Date(lastMessageB[0].createdAt).valueOf() - new Date(lastMessageA[0].createdAt).valueOf()
     );
-  } else if (a.length) {
+  } else if (lastMessageA.length) {
     return -1;
-  } else if (b.length) {
+  } else if (lastMessageB.length) {
     return 1;
   } else {
     return 0;
@@ -186,7 +186,7 @@ const getAllUsersChannel = async (userId: number, search: string) => {
     prisma.channel.count({ where: query.where }),
   ]);
 
-  channels.sort((channelA: any, channelB: any) => {
+  channels.sort((channelA: IChannelData, channelB: IChannelData) => {
     const lastMessageA: any = channelA.message;
     const lastMessageB: any = channelB.message;
     return compareMessagesByDate(lastMessageA, lastMessageB);
