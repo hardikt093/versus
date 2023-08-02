@@ -31,17 +31,6 @@ router.put(
   validate(privateChannelvalidation.updatePrivateChannel),
   privateChannelController.updateChannelDetails
 );
-router.delete(
-  "/removeUserFromPrivateChannel",
-  auth,
-  privateChannelController.removeUserFromChannel
-);
-router.put(
-  "/updateChannelDetails",
-  auth,
-  validate(privateChannelvalidation.updatePrivateChannel),
-  privateChannelController.updateChannelDetails
-);
 router.get(
   "/getConversation/:channelId",
   auth,
@@ -57,5 +46,9 @@ router.post(
   validate(privateChannelvalidation.updateHeader),
   privateChannelController.updateHearder
 );
-router.get("/channelUsers/:channelId", auth, privateChannelController.getChannelUsers);
+router.get(
+  "/channelUsers/:channelId",
+  auth,
+  privateChannelController.getChannelUsers
+);
 export = router;
