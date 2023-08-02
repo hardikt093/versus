@@ -57,5 +57,5 @@ router.post(
   validate(privateChannelvalidation.updateHeader),
   privateChannelController.updateHearder
 );
-
+router.get("/channelUsers/:channelId", auth, privateChannelController.getChannelUsers);
 export = router;

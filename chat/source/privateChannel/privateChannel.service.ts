@@ -11,7 +11,8 @@ const prisma = new PrismaClient();
 function compareMessagesByDate(lastMessageA: any, lastMessageB: any) {
   if (lastMessageA.length && lastMessageB.length) {
     return (
-      new Date(lastMessageB[0].createdAt).valueOf() - new Date(lastMessageA[0].createdAt).valueOf()
+      new Date(lastMessageB[0].createdAt).valueOf() -
+      new Date(lastMessageA[0].createdAt).valueOf()
     );
   } else if (lastMessageA.length) {
     return -1;
@@ -309,7 +310,7 @@ const getConversation = async (channelId: string) => {
     const messages = await prisma.message.findMany({
       where: { channelId: Number(channelId) },
       orderBy: {
-        createdAt: 'asc',
+        createdAt: "asc",
       },
       include: {
         user: {
@@ -322,7 +323,6 @@ const getConversation = async (channelId: string) => {
           },
         },
       },
-
     });
     if (findChannel.channelHeader != null) {
       if (findChannel.channelHeader.leagueType == "MLB") {
@@ -398,6 +398,27 @@ const updateChannelHeader = async (data: any) => {
   });
   return await getConversation(updateChannelHeader.id);
 };
+
+const getChannelUsers = async (channelId: string) => {
+  const users = await prisma.channelUser.findMany({
+    where: {
+      channelId: Number(channelId),
+      channelType:"privateChannel"
+    },
+    include: {
+      channelUser: {
+        select: {
+          userName: true,
+          id: true,
+          firstName: true,
+          lastName: true,
+          profileImage: true,
+        },
+      },
+    },
+  });
+  return users
+};
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
@@ -407,4 +428,5 @@ export default {
   getConversation,
   getChannelDetails,
   updateChannelHeader,
+  getChannelUsers,
 };
