@@ -240,7 +240,6 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
 };
 
 const updateChannelDetails = async (
-  loggedInUser: number,
   channelId: string,
   data: {
     channelData: IChannelData;
@@ -274,9 +273,7 @@ const updateChannelDetails = async (
     channelData.channelName = channelData?.channelName?.toLowerCase();
   }
 
- 
-    
-  await prisma.channel.update({
+  const updatedChannel = await prisma.channel.update({
     where: {
       id: Number(channelId),
     },
@@ -284,11 +281,12 @@ const updateChannelDetails = async (
       ...channelData,
     },
     select: {
-      channelType: true,
-      channelName: true,
       id: true,
+      channelName: true,
+      description: true,
     },
   });
+  return updatedChannel;
 };
 
 const getConversation = async (channelId: string) => {
