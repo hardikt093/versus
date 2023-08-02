@@ -308,6 +308,9 @@ const getConversation = async (channelId: string) => {
     var matchData = {};
     const messages = await prisma.message.findMany({
       where: { channelId: Number(channelId) },
+      orderBy: {
+        createdAt: 'asc',
+      },
       include: {
         user: {
           select: {
@@ -319,6 +322,7 @@ const getConversation = async (channelId: string) => {
           },
         },
       },
+
     });
     if (findChannel.channelHeader != null) {
       if (findChannel.channelHeader.leagueType == "MLB") {

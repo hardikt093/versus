@@ -164,6 +164,9 @@ const getConversation = async (channelId: string) => {
     if (findChannel) {
       const messages = await prisma.message.findMany({
         where: { channelId: Number(channelId) },
+        orderBy: {
+          createdAt: 'asc',
+        },
         include: {
           user: {
             select: {
