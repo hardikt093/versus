@@ -252,25 +252,30 @@ const updateChannelDetails = async (
     await prisma.channel.findUnique({
       where: { id: Number(channelId) },
     });
-  const findChannelByName: { id: number; channelName: string } =
-    await prisma.channel.findUnique({
-      where: { channelName: channelData.channelName },
-    });
+
   if (!findChannel) {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.CHANNEL_NOT_FOUND
     );
   }
-  if (findChannelByName && findChannelByName.id != findChannel.id) {
-    throw new AppError(
-      httpStatus.UNPROCESSABLE_ENTITY,
-      Messages.CHANNELNAME_ALREADY_EXIST
-    );
+
+  if (channelData.channelName) {
+    const findChannelByName: { id: number; channelName: string } =
+      await prisma.channel.findUnique({
+        where: { channelName: channelData.channelName },
+      });
+    if (findChannelByName && findChannelByName.id != findChannel.id) {
+      throw new AppError(
+        httpStatus.UNPROCESSABLE_ENTITY,
+        Messages.CHANNELNAME_ALREADY_EXIST
+      );
+    }
+    channelData.channelName = channelData?.channelName?.toLowerCase();
   }
 
-  if (channelData?.channelName)
-    channelData.channelName = channelData?.channelName?.toLowerCase();
+ 
+    
   await prisma.channel.update({
     where: {
       id: Number(channelId),
@@ -403,7 +408,7 @@ const getChannelUsers = async (channelId: string) => {
   const users = await prisma.channelUser.findMany({
     where: {
       channelId: Number(channelId),
-      channelType:"privateChannel"
+      channelType: "privateChannel",
     },
     include: {
       channelUser: {
@@ -417,7 +422,7 @@ const getChannelUsers = async (channelId: string) => {
       },
     },
   });
-  return users
+  return users;
 };
 export default {
   createPrivateChannel,
