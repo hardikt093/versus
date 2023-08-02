@@ -9,6 +9,8 @@ class Messages {
   static USER_UPDATE_SUCCESS = "User update successfully";
   static USERNAME_ALREADY_EXIST =
     "Entered user name is already register with us please use another user name.";
+    static CHANNELNAME_ALREADY_EXIST =
+    "Entered channel name already exists.";
   static FORGOT_PASSWORD_SUCCESS = "";
   static EMAIL_NOT_FOUND_FORGOTPASSWORD =
     "Entered email address is not register with us";
@@ -22,5 +24,6 @@ class Messages {
   static CONVERSATION_NOT_FOUND = "Could not find the conversation";
   static CHANNEL_NOT_FOUND = "Could not find the channel";
   static CHANNEL_UPDATE = "Channel successfully updated";
+  static USER_ALREADY_EXIST = "Users already exist";
 }
 export default Messages;

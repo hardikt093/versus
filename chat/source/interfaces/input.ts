@@ -65,4 +65,5 @@ export interface IChannelData {
   channelId?:number
   channelName?: string;
   channelType?: string;
+  message?:[]
 }

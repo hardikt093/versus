@@ -1,7 +1,22 @@
 const { PrismaClient } = require("@prisma/client");
+import { IChannelData } from "../interfaces/input";
 import { io } from "../server";
 const prisma = new PrismaClient();
 const users: any = [];
+function compareMessagesByDate(lastMessageA: any, lastMessageB: any) {
+  if (lastMessageA.length && lastMessageB.length) {
+    return (
+      new Date(lastMessageB[0].createdAt).valueOf() -
+      new Date(lastMessageA[0].createdAt).valueOf()
+    );
+  } else if (lastMessageA.length) {
+    return -1;
+  } else if (lastMessageB.length) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 function userJoin(id: string, channelId: number, userId: number) {
   const user = { id, userId, channelId };
   const index = users.findIndex(
@@ -21,9 +36,9 @@ function userJoin(id: string, channelId: number, userId: number) {
 const joinChat = async (socket: any, channelId: number, userId: number) => {
   try {
     if (channelId && userId) {
-      const user = userJoin(socket.id, channelId, userId);
+      const user = userJoin(socket.id, Number(channelId), Number(userId));
       const findChannel = await prisma.channel.findUnique({
-        where: { id: channelId },
+        where: { id: Number(channelId) },
       });
       socket.leaveAll();
       if (findChannel) {
@@ -86,21 +101,8 @@ const privateGroupChat = async (newMessageRecieved: any) => {
           },
         },
       });
-      function compareMessagesByDate(a: any, b: any) {
-        if (a.length && b.length) {
-          return (
-            new Date(b[0].createdAt).valueOf() -
-            new Date(a[0].createdAt).valueOf()
-          );
-        } else if (a.length) {
-          return -1;
-        } else if (b.length) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }
-      channelsWithLastMessage.sort((channelA: any, channelB: any) => {
+   
+      channelsWithLastMessage.sort((channelA: IChannelData, channelB: IChannelData) => {
         const lastMessageA: any = channelA.message;
         const lastMessageB: any = channelB.message;
 
