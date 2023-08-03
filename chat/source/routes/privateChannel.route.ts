@@ -51,4 +51,10 @@ router.get(
   auth,
   privateChannelController.getChannelUsers
 );
+
+router.get(
+  "/users/:channelId",
+  auth,
+  privateChannelController.getUsersExceptchannelUsers
+);
 export = router;

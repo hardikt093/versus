@@ -96,9 +96,25 @@ const updateHearder = async (req: Request, res: Response) => {
 const getChannelUsers = async (req: Request, res: Response) => {
   try {
     const getchannelUsers = await privateChannelService.getChannelUsers(
-      req.params.channelId
+      req.params.channelId,
+      req.query.search as string,
+      req.query.page as string
     );
     createResponse(res, httpStatus.OK, "", getchannelUsers);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const getUsersExceptchannelUsers = async (req: Request, res: Response) => {
+  try {
+    const getUsersExceptchannelUsers = await privateChannelService.getUsersExceptchannelUsers(
+      req.params.channelId,
+      req.query.search as string,
+      req.query.page as string
+
+    );
+    createResponse(res, httpStatus.OK, "", getUsersExceptchannelUsers);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -113,5 +129,6 @@ export default {
   getConversation,
   getChannelDetails,
   updateHearder,
-  getChannelUsers
+  getChannelUsers,
+  getUsersExceptchannelUsers
 };
