@@ -29,9 +29,10 @@ type TBet = {
   opponentUserBetAmount: number
   requestUserBetAmount: number
   betTotalAmount: number
-  requestUserGoalServeOdd: number
-  opponentUserGoalServeOdd: number
+  requestUserGoalServeOdd: string
+  opponentUserGoalServeOdd: string
   isDuplicate? : boolean
+  oddType?:string
 }
 export default interface IBetModel extends TBet, Document {}
 export enum betStatus {
