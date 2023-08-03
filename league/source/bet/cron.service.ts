@@ -11,7 +11,6 @@ export default class BetDbCronServiceClass {
         status: "RESULT_DECLARED",
         paymentStatus: "PENDING",
       });
-console.log("betData",betData)
       for (let i = 0; i < betData.length; i++) {
         const bet = betData[i];
 
