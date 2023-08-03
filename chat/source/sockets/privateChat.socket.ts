@@ -79,38 +79,48 @@ const privateGroupChat = async (newMessageRecieved: any) => {
         `privateChatMessage:${message.channelId}`,
         newMessage
       );
-      const channelsWithLastMessage = await prisma.channel.findMany({
-        where: {
-          channelType: "privateChannel",
-          channelUser: {
-            some: { userId: Number(message.userId) },
-          },
-        },
-        select: {
-          id: true,
-          channelName: true,
-          message: {
-            select: {
-              id: true,
-              createdAt: true,
-            },
-            orderBy: {
-              createdAt: "desc",
-            },
-            take: 1, // To get only the last message for each channel
-          },
-        },
-      });
-   
-      channelsWithLastMessage.sort((channelA: IChannelData, channelB: IChannelData) => {
-        const lastMessageA: any = channelA.message;
-        const lastMessageB: any = channelB.message;
+      // const channelsWithLastMessage = await prisma.channel.findMany({
+      //   where: {
+      //     channelType: "privateChannel",
+      //     channelUser: {
+      //       some: { userId: Number(message.userId) },
+      //     },
+      //   },
+      //   select: {
+      //     id: true,
+      //     channelName: true,
+      //     _count: {
+      //       select: {
+      //         channelUser: true,
+      //       },
+      //     },
+      //     message: {
+      //       select: {
+      //         id: true,
+      //         createdAt: true,
+      //       },
+      //       orderBy: {
+      //         createdAt: "desc",
+      //       },
+      //       take: 1, // To get only the last message for each channel
+      //     },
+      //   },
+      // });
 
-        return compareMessagesByDate(lastMessageA, lastMessageB);
-      });
-      io.to(message.channelId).emit(`getUserChannels`, {
-        channelsWithLastMessage,
-      });
+      // channelsWithLastMessage.sort(
+      //   (channelA: IChannelData, channelB: IChannelData) => {
+      //     const lastMessageA: any = channelA.message;
+      //     const lastMessageB: any = channelB.message;
+
+      //     return compareMessagesByDate(lastMessageA, lastMessageB);
+      //   }
+      // );
+      // io.to(message.channelId).emit(`getUserChannels`, {
+      //   channels: channelsWithLastMessage.map((item: any) => {
+      //     delete item.message;
+      //     return item;
+      //   }),
+      // });
     }
   } catch (error) {
     console.log(error);
