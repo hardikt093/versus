@@ -18,7 +18,7 @@ const updatePrivateChannel = {
     channelData: {
       channelName: Joi.string().min(5).max(30),
       channelType: Joi.string(),
-      description: Joi.string(),
+      description: Joi.string().min(5).max(100),
     },
   }),
 };
