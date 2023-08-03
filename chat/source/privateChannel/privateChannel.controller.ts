@@ -44,6 +44,7 @@ const getUsersChannel = async (req: Request, res: Response) => {
 const updateChannelDetails = async (req: Request, res: Response) => {
   try {
     const updateChannel = await privateChannelService.updateChannelDetails(
+      req.loggedInUser.id,
       req.params.id,
       req.body
     );

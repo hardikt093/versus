@@ -4,24 +4,24 @@ import AppError from "../utils/AppError";
 import Messages from "../utils/messages";
 import { axiosGetMicro } from "../services/axios.service";
 import { encryptedMessage } from "../services/crypto.service";
-
+import { io } from "../server";
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-function compareMessagesByDate(lastMessageA: any, lastMessageB: any) {
-  if (lastMessageA.length && lastMessageB.length) {
-    return (
-      new Date(lastMessageB[0].createdAt).valueOf() -
-      new Date(lastMessageA[0].createdAt).valueOf()
-    );
-  } else if (lastMessageA.length) {
-    return -1;
-  } else if (lastMessageB.length) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
+// function compareMessagesByDate(lastMessageA: any, lastMessageB: any) {
+//   if (lastMessageA.length && lastMessageB.length) {
+//     return (
+//       new Date(lastMessageB[0].createdAt).valueOf() -
+//       new Date(lastMessageA[0].createdAt).valueOf()
+//     );
+//   } else if (lastMessageA.length) {
+//     return -1;
+//   } else if (lastMessageB.length) {
+//     return 1;
+//   } else {
+//     return 0;
+//   }
+// }
 const createPrivateChannel = async (
   userId: number,
   channelData: IChannelData
@@ -85,6 +85,10 @@ const createPrivateChannel = async (
           channelId: createChannel.id,
           userId: userId,
         },
+      });
+      const getChannel = await getAllUsersChannel(userId, "");
+      io.to(createChannel.id).emit(`getUserChannels`, {
+        getChannel,
       });
     }
   }
@@ -174,30 +178,30 @@ const getAllUsersChannel = async (userId: number, search: string) => {
       channelType: true,
       channelName: true,
       description: true,
-      message: true,
+      // message: true,
       _count: {
         select: {
           channelUser: true,
         },
       },
     },
+    orderBy:{
+      createdAt:"desc"
+    }
   };
   const [channels, count] = await prisma.$transaction([
     prisma.channel.findMany(query),
     prisma.channel.count({ where: query.where }),
   ]);
 
-  channels.sort((channelA: IChannelData, channelB: IChannelData) => {
-    const lastMessageA: any = channelA.message;
-    const lastMessageB: any = channelB.message;
-    return compareMessagesByDate(lastMessageA, lastMessageB);
-  });
+  // channels.sort((channelA: IChannelData, channelB: IChannelData) => {
+  //   const lastMessageA: any = channelA.message;
+  //   const lastMessageB: any = channelB.message;
+  //   return compareMessagesByDate(lastMessageA, lastMessageB);
+  // });
   return {
     totalChannels: count,
-    channels: channels.map((item: any) => {
-      delete item.message;
-      return item;
-    }),
+    channels: channels,
   };
 };
 const removeUserFromChannel = async (channelId: number, userId: number[]) => {
@@ -240,6 +244,7 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
 };
 
 const updateChannelDetails = async (
+  userId: number,
   channelId: string,
   data: {
     channelData: IChannelData;
@@ -285,6 +290,10 @@ const updateChannelDetails = async (
       channelName: true,
       description: true,
     },
+  });
+  const getChannel = await getAllUsersChannel(userId, "");
+  io.to(channelId).emit(`getUserChannels`, {
+    getChannel,
   });
   return updatedChannel;
 };
