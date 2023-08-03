@@ -185,9 +185,9 @@ const getAllUsersChannel = async (userId: number, search: string) => {
         },
       },
     },
-    orderBy:{
-      createdAt:"desc"
-    }
+    orderBy: {
+      createdAt: "desc",
+    },
   };
   const [channels, count] = await prisma.$transaction([
     prisma.channel.findMany(query),
@@ -411,11 +411,42 @@ const updateChannelHeader = async (data: any) => {
   return await getConversation(updateChannelHeader.id);
 };
 
-const getChannelUsers = async (channelId: string) => {
+const getChannelUsers = async (
+  channelId: string,
+  search: string,
+  page: string
+) => {
+  const pages = parseInt(page) || 1;
+  const limit = 10;
+  const startIndex = (pages - 1) * limit;
   const users = await prisma.channelUser.findMany({
+    take: limit,
+    skip: startIndex,
     where: {
       channelId: Number(channelId),
       channelType: "privateChannel",
+      channelUser: {
+        OR: [
+          {
+            userName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            firstName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            lastName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
     },
     include: {
       channelUser: {
@@ -431,6 +462,85 @@ const getChannelUsers = async (channelId: string) => {
   });
   return users;
 };
+
+const getUsersExceptchannelUsers = async (
+  channelId: string,
+  search: string,
+  page: string
+) => {
+  const findChannel: any = await prisma.channel.findUnique({
+    where: {
+      id: Number(channelId),
+    },
+    select: {
+      channelUser: {
+        select: {
+          channelUser: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  let ids: number[] = [];
+
+  findChannel.channelUser.map((item: any) => {
+    ids = [...ids, item.channelUser.id];
+  });
+  if (findChannel) {
+    const pages = parseInt(page) || 1;
+    const limit = 10;
+    const startIndex = (pages - 1) * limit;
+
+    const getUserList = await prisma.user.findMany({
+      take: limit,
+      skip: startIndex,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        userName: true,
+        profileImage: true,
+        email: true,
+      },
+      where: {
+        OR: [
+          {
+            userName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            firstName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            lastName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ],
+        id: {
+          notIn: ids,
+        },
+      },
+    });
+
+    return getUserList;
+  } else {
+    throw new AppError(
+      httpStatus.UNPROCESSABLE_ENTITY,
+      Messages.CHANNEL_NOT_FOUND
+    );
+  }
+};
 export default {
   createPrivateChannel,
   addUserToPrivateChannel,
@@ -441,4 +551,5 @@ export default {
   getChannelDetails,
   updateChannelHeader,
   getChannelUsers,
+  getUsersExceptchannelUsers,
 };
