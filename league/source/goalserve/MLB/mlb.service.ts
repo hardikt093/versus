@@ -5364,7 +5364,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
             },
           },
           awayTeam: {
-            awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
             abbreviation: { $arrayElemAt: ["$teams.awayTeam.abbreviation", 0] },
             awayTeamId: "$awayTeam._id",
             awayTeamRun: "$awayTeamTotalScore",
@@ -5391,7 +5391,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
           },
           homeTeam: {
             abbreviation: { $arrayElemAt: ["$teams.homeTeam.abbreviation", 0] },
-            homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
             homeTeamId: "$homeTeam._id",
             homeTeamRun: "$homeTeamTotalScore",
             homeTeamHit: "$homeTeamHit",
