@@ -243,7 +243,7 @@ const getFriendList = async (
       },
       OR: [
         {
-          email: {
+          userName: {
             contains: search,
             mode: "insensitive",
           },
@@ -283,7 +283,7 @@ const getFriendList = async (
       },
       OR: [
         {
-          email: {
+          userName: {
             contains: search,
             mode: "insensitive",
           },
