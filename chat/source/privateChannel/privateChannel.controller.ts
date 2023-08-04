@@ -67,7 +67,8 @@ const removeUserFromChannel = async (req: Request, res: Response) => {
 const getConversation = async (req: Request, res: Response) => {
   try {
     const conversation = await privateChannelService.getConversation(
-      req.params.channelId as string
+      req.params.channelId as string,
+      req.query.page as string
     );
     createResponse(res, httpStatus.OK, "", conversation);
   } catch (error: any) {
