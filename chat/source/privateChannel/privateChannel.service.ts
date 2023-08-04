@@ -289,6 +289,21 @@ const updateChannelDetails = async (
       id: true,
       channelName: true,
       description: true,
+      channelType: true,
+      channelUser: {
+        select: {
+          channelUser: {
+            select: {
+              userName: true,
+              id: true,
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+          isAdmin: true,
+        },
+      },
     },
   });
   const getChannel = await getAllUsersChannel(userId, "");
