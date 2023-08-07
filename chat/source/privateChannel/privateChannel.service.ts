@@ -22,6 +22,13 @@ const prisma = new PrismaClient();
 //     return 0;
 //   }
 // }
+ const emitChannels = async (id: string, userId: number) => {
+  const getChannel = await getAllUsersChannel(userId, "");
+
+  io.to(id).emit(`getUserChannels`, {
+    getChannel,
+  });
+};
 const createPrivateChannel = async (
   userId: number,
   channelData: IChannelData
@@ -85,10 +92,6 @@ const createPrivateChannel = async (
           channelId: createChannel.id,
           userId: userId,
         },
-      });
-      const getChannel = await getAllUsersChannel(userId, "");
-      io.emit(`getUserChannels`, {
-        getChannel,
       });
     }
   }
@@ -316,7 +319,7 @@ const updateChannelDetails = async (
   return updatedChannel;
 };
 
-const getConversation = async (channelId: string,  page: string) => {
+const getConversation = async (channelId: string, page: string) => {
   const pages = parseInt(page) || 1;
   const limit = 10;
   const startIndex = (pages - 1) * limit;
@@ -431,7 +434,7 @@ const updateChannelHeader = async (data: any) => {
       channelHeader: data.channelHeader,
     },
   });
-  return await getConversation(updateChannelHeader.id,"1");
+  return await getConversation(updateChannelHeader.id, "1");
 };
 
 const getChannelUsers = async (
@@ -565,6 +568,7 @@ const getUsersExceptchannelUsers = async (
   }
 };
 export default {
+  emitChannels,
   createPrivateChannel,
   addUserToPrivateChannel,
   getAllUsersChannel,

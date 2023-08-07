@@ -63,6 +63,7 @@ export const io = new Server(httpServer, {
   },
 });
 io.on("connection", sockets);
+
 httpServer.listen(PORT, () =>
   console.info(`The server is running on port ${PORT}`)
 );
