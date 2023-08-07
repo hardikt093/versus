@@ -1,12 +1,10 @@
-import { model, Schema } from "mongoose";
-import INflMatchModel from "../../interfaces/nflMatch.interface";
-var nflMatchSchema = new Schema(
-  {
-    goalServeLeagueId: { type: Number, required: true },
-    goalServeMatchId: { type: Number, required: true },
+import { Document } from "mongoose";
+export interface INflMatchModel extends Document {
+    goalServeLeagueId: number| undefined,
+    goalServeMatchId: number| undefined,
     attendance: Number,
-    goalServeAwayTeamId: { type: Number, required: true },
-    goalServeHomeTeamId: { type: Number, required: true },
+    goalServeAwayTeamId: number| undefined,
+    goalServeHomeTeamId: number| undefined,
     date: String,
     dateTimeUtc: String,
     formattedDate: String,
@@ -355,11 +353,5 @@ var nflMatchSchema = new Schema(
         yards: String,
       },
     ],
-  },
-  {
-    timestamps: true,
-  }
-);
-const NbaMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
-
-export default NbaMatch;
+}
+export default INflMatchModel;
