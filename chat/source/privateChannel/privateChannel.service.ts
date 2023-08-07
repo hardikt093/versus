@@ -161,11 +161,15 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
           })
         )
       );
-      allMessage.map((item: any) => {
+      allMessage.map(async (item: any) => {
         io.to(item.channelId).emit(
           `privateChatMessage:${item.channelId}`,
           item
         );
+        const getChannel = await getAllUsersChannel(item.userId, "");
+        io.to(`${item.userId}`).emit(`getUserChannels`, {
+          getChannel,
+        });
       });
     }
     return users;
