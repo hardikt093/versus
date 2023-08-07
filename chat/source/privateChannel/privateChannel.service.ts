@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 //     return 0;
 //   }
 // }
- const emitChannels = async (id: string, userId: number) => {
+const emitChannels = async (id: string, userId: number) => {
   const getChannel = await getAllUsersChannel(userId, "");
 
   io.to(id).emit(`getUserChannels`, {
@@ -142,8 +142,30 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
         };
         data.push(obj);
       });
-      await prisma.message.createMany({
-        data,
+
+      const allMessage = await prisma.$transaction(
+        data.map((message: any) =>
+          prisma.message.create({
+            data: message,
+            include: {
+              user: {
+                select: {
+                  userName: true,
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImage: true,
+                },
+              },
+            },
+          })
+        )
+      );
+      allMessage.map((item: any) => {
+        io.to(item.channelId).emit(
+          `privateChatMessage:${item.channelId}`,
+          item
+        );
       });
     }
     return users;
