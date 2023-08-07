@@ -167,7 +167,7 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
           item
         );
         const getChannel = await getAllUsersChannel(item.userId, "");
-        io.to(`${item.userId}`).emit(`getUserChannels`, {
+        io.to(item.channelId).emit(`getUserChannels`, {
           getChannel,
         });
       });
