@@ -1,4 +1,4 @@
-import { privateGroupChat } from "./privateChat.socket";
+import { emitChannels, privateGroupChat } from "./privateChat.socket";
 import { connection, joinChat, singleGameChat } from "./singleGameChat.socket";
 
 export default (socket: any) => {
@@ -12,6 +12,9 @@ export default (socket: any) => {
   });
   socket.on(`privateGroupChat`, (newMessageRecieved: any) => {
     privateGroupChat(newMessageRecieved);
+  });
+  socket.on("getChannels", (userId: number) => {
+    emitChannels(socket, userId);
   });
 
   // disconnectUser()

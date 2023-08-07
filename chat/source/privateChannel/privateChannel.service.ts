@@ -22,6 +22,13 @@ const prisma = new PrismaClient();
 //     return 0;
 //   }
 // }
+const emitChannels = async (id: string, userId: number) => {
+  const getChannel = await getAllUsersChannel(userId, "");
+
+  io.to(id).emit(`getUserChannels`, {
+    getChannel,
+  });
+};
 const createPrivateChannel = async (
   userId: number,
   channelData: IChannelData
@@ -86,10 +93,6 @@ const createPrivateChannel = async (
           userId: userId,
         },
       });
-      const getChannel = await getAllUsersChannel(userId, "");
-      io.to(createChannel.id).emit(`getUserChannels`, {
-        getChannel,
-      });
     }
   }
   return createChannel;
@@ -139,8 +142,30 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
         };
         data.push(obj);
       });
-      await prisma.message.createMany({
-        data,
+
+      const allMessage = await prisma.$transaction(
+        data.map((message: any) =>
+          prisma.message.create({
+            data: message,
+            include: {
+              user: {
+                select: {
+                  userName: true,
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImage: true,
+                },
+              },
+            },
+          })
+        )
+      );
+      allMessage.map((item: any) => {
+        io.to(item.channelId).emit(
+          `privateChatMessage:${item.channelId}`,
+          item
+        );
       });
     }
     return users;
@@ -289,16 +314,37 @@ const updateChannelDetails = async (
       id: true,
       channelName: true,
       description: true,
+      channelType: true,
+      channelUser: {
+        select: {
+          channelUser: {
+            select: {
+              userName: true,
+              id: true,
+              firstName: true,
+              lastName: true,
+              profileImage: true,
+            },
+          },
+          isAdmin: true,
+        },
+      },
     },
   });
   const getChannel = await getAllUsersChannel(userId, "");
   io.to(channelId).emit(`getUserChannels`, {
     getChannel,
   });
+  io.to(channelId).emit(`channelDetailsUpdate:${channelId}`, {
+    updatedChannel,
+  });
   return updatedChannel;
 };
 
-const getConversation = async (channelId: string) => {
+const getConversation = async (channelId: string, page: string) => {
+  const pages = parseInt(page) || 1;
+  const limit = 10;
+  const startIndex = (pages - 1) * limit;
   const findChannel: any = await prisma.channel.findUnique({
     where: { id: Number(channelId) },
     include: {
@@ -320,6 +366,8 @@ const getConversation = async (channelId: string) => {
   if (findChannel) {
     var matchData = {};
     const messages = await prisma.message.findMany({
+      take: limit,
+      skip: startIndex,
       where: { channelId: Number(channelId) },
       orderBy: {
         createdAt: "asc",
@@ -408,7 +456,7 @@ const updateChannelHeader = async (data: any) => {
       channelHeader: data.channelHeader,
     },
   });
-  return await getConversation(updateChannelHeader.id);
+  return await getConversation(updateChannelHeader.id, "1");
 };
 
 const getChannelUsers = async (
@@ -542,6 +590,7 @@ const getUsersExceptchannelUsers = async (
   }
 };
 export default {
+  emitChannels,
   createPrivateChannel,
   addUserToPrivateChannel,
   getAllUsersChannel,

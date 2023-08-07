@@ -127,4 +127,62 @@ const privateGroupChat = async (newMessageRecieved: any) => {
   }
 };
 
-export { joinChat, privateGroupChat };
+const getAllUsersChannel = async (userId: number, search: string) => {
+  const query = {
+    where: {
+      channelUser: {
+        some: { userId: Number(userId) },
+      },
+      OR: [
+        {
+          channelName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          description: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      channelType: true,
+      channelName: true,
+      description: true,
+      // message: true,
+      _count: {
+        select: {
+          channelUser: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  };
+  const [channels, count] = await prisma.$transaction([
+    prisma.channel.findMany(query),
+    prisma.channel.count({ where: query.where }),
+  ]);
+
+  // channels.sort((channelA: IChannelData, channelB: IChannelData) => {
+  //   const lastMessageA: any = channelA.message;
+  //   const lastMessageB: any = channelB.message;
+  //   return compareMessagesByDate(lastMessageA, lastMessageB);
+  // });
+  return {
+    totalChannels: count,
+    channels: channels,
+  };
+};
+const emitChannels = async (socket: any, userId: number) => {
+  const getChannel = await getAllUsersChannel(userId, "");
+  socket.emit(`getUserChannels`, {
+    getChannel,
+  });
+};
+export { joinChat, privateGroupChat, emitChannels };
