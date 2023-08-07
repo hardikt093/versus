@@ -181,8 +181,14 @@ const getAllUsersChannel = async (userId: number, search: string) => {
 };
 const emitChannels = async (socket: any, userId: number) => {
   const getChannel = await getAllUsersChannel(userId, "");
-  socket.emit(`getUserChannels`, {
-    getChannel,
-  });
+  // if (channelId) {
+  //   io.in(channelId).emit(`getUserChannels`, {
+  //     getChannel,
+  //   });
+  // } else {
+    socket.emit(`getUserChannels`, {
+      getChannel,
+    });
+  // }
 };
 export { joinChat, privateGroupChat, emitChannels };
