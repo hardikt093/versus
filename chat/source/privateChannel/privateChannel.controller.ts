@@ -33,7 +33,7 @@ const getUsersChannel = async (req: Request, res: Response) => {
   try {
     const getChannel = await privateChannelService.getAllUsersChannel(
       req.loggedInUser.id,
-      req.query.search as string
+      req.query.search as string,
     );
     createResponse(res, httpStatus.OK, "", getChannel);
   } catch (error: any) {

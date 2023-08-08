@@ -186,7 +186,7 @@ const getAllUsersChannel = async (userId: number, search: string) => {
   const query = {
     where: {
       channelUser: {
-        some: { userId: userId },
+        some: { userId: userId, userExist: true },
       },
       OR: [
         {
@@ -281,11 +281,15 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
           })
         )
       );
-      allMessage.map((item: any) => {
+      allMessage.map(async (item: any) => {
         io.to(item.channelId).emit(
           `privateChatMessage:${item.channelId}`,
           item
         );
+        const getChannel = await getAllUsersChannel(item.userId, "");
+        io.emit(`getUserChannels:${item.userId}`, {
+          getChannel,
+        });
       });
     }
     return users;
