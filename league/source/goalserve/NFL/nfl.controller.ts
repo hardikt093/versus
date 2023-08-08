@@ -8,4 +8,9 @@ const addTeam = async (req: Request, res: Response) => {
     createResponse(res,httpStatus.OK,"",addTeam)
 };
 
-export default {addTeam};
+const addStanding = async (req: Request, res: Response) => {
+    const addStanding = await nflService.addStanding()
+    createResponse(res,httpStatus.OK,"",addStanding)
+};
+
+export default {addTeam,addStanding};
