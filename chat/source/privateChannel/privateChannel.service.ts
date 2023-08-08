@@ -167,7 +167,8 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
           item
         );
         const getChannel = await getAllUsersChannel(item.userId, "");
-        io.to(item.channelId).emit(`getUserChannels`, {
+
+        io.emit(`getUserChannels:${item.userId}`, {
           getChannel,
         });
       });
@@ -239,13 +240,15 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
       where: { id: channelId },
     });
   if (findChannel) {
-    const users = prisma.channelUser.deleteMany({
+    const users = prisma.channelUser.updateMany({
       where: {
         channelId: channelId,
         userId: {
           in: userId,
         },
       },
+
+      data: { userExist: false },
     });
     if (users) {
       let data: any = [];
@@ -259,9 +262,6 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
         };
         data.push(obj);
       });
-      // await prisma.message.createMany({
-      //   data,
-      // });
 
       const allMessage = await prisma.$transaction(
         data.map((message: any) =>
