@@ -259,8 +259,33 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
         };
         data.push(obj);
       });
-      await prisma.message.createMany({
-        data,
+      // await prisma.message.createMany({
+      //   data,
+      // });
+
+      const allMessage = await prisma.$transaction(
+        data.map((message: any) =>
+          prisma.message.create({
+            data: message,
+            include: {
+              user: {
+                select: {
+                  userName: true,
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  profileImage: true,
+                },
+              },
+            },
+          })
+        )
+      );
+      allMessage.map((item: any) => {
+        io.to(item.channelId).emit(
+          `privateChatMessage:${item.channelId}`,
+          item
+        );
       });
     }
     return users;
@@ -370,8 +395,8 @@ const getConversation = async (channelId: string, page: string) => {
   if (findChannel) {
     var matchData = {};
     const messages = await prisma.message.findMany({
-      take: limit,
-      skip: startIndex,
+      // take: limit,
+      // skip: startIndex,
       where: { channelId: Number(channelId) },
       orderBy: {
         createdAt: "asc",
