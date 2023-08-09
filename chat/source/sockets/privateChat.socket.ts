@@ -181,7 +181,7 @@ const getAllUsersChannel = async (userId: number, search: string) => {
 };
 const emitChannels = async (socket: any, userId: number) => {
   const getChannel = await getAllUsersChannel(userId, "");
-  socket.emit(`getUserChannels`, {
+  socket.emit(`getUserChannels:${userId}`, {
     getChannel,
   });
 };

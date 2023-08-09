@@ -88,16 +88,17 @@ model Message {
 
 model channelUser {
   id               Int         @id @default(autoincrement())
-  userId           Int?
-  adminAccessId    Int?
   channelType      ChannelType
-  permisionGranted String?
-  channelId        Int?
+  channelUser      User?       @relation(name: "channelUser", fields: [userId], references: [id])
+  userExist        Boolean     @default(true)
+  userId           Int?
   isAdmin          Boolean     @default(false)
   isCreatedChannel Boolean     @default(false)
-  adminAccess      User?       @relation("adminAccess", fields: [adminAccessId], references: [id])
+  adminAccess      User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
+  adminAccessId    Int?
   channel          Channel?    @relation(fields: [channelId], references: [id])
-  channelUser      User?       @relation("channelUser", fields: [userId], references: [id])
+  channelId        Int?
+  permisionGranted String?
 }
 
 model reportUser {

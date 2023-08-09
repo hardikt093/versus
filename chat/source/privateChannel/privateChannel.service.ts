@@ -97,15 +97,15 @@ const createPrivateChannel = async (
   }
   return createChannel;
 };
-const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
+const addUserToPrivateChannel = async (channelId: string, userId: number[]) => {
   const findChannel: { id: number; channelType: string; channelName: string } =
     await prisma.channel.findUnique({
-      where: { id: channelId },
+      where: { id: Number(channelId) },
     });
   if (findChannel) {
     const usersExists = await prisma.channelUser.findMany({
       where: {
-        channelId,
+        channelId: Number(channelId),
         userId: {
           in: userId,
         },
@@ -161,13 +161,22 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
           })
         )
       );
-      allMessage.map((item: any) => {
+      allMessage.map(async (item: any) => {
         io.to(item.channelId).emit(
           `privateChatMessage:${item.channelId}`,
           item
         );
+        const getChannel = await getAllUsersChannel(item.userId, "");
+
+        io.emit(`getUserChannels:${item.userId}`, {
+          getChannel,
+        });
       });
     }
+    const getChannels = getChannelDetails(channelId, "");
+    io.to(`${channelId}`).emit(`channelDetailsUpdate:${channelId}`, {
+      getChannels,
+    });
     return users;
   } else {
     throw new AppError(
@@ -178,10 +187,25 @@ const addUserToPrivateChannel = async (channelId: number, userId: number[]) => {
 };
 
 const getAllUsersChannel = async (userId: number, search: string) => {
+  // const validChannelIds = await prisma.channelUser.findMany({
+  //   where: {
+  //     AND: [
+  //       { userId: userId },
+  //       { userExist: true }
+  //     ]
+  //   },
+  //   select: {
+  //     channelId: true
+  //   }
+  // });
+
+  // const validChannelIdsList = validChannelIds.map((item: any) => item.channelId);
+  // console.log("validChannelIdsList",validChannelIdsList)
   const query = {
     where: {
+      // id: { in: validChannelIdsList.map((user : number) => user) },
       channelUser: {
-        some: { userId: userId },
+        some: { userId: userId, userExist: true },
       },
       OR: [
         {
@@ -229,13 +253,22 @@ const getAllUsersChannel = async (userId: number, search: string) => {
     channels: channels,
   };
 };
-const removeUserFromChannel = async (channelId: number, userId: number[]) => {
-  const findChannel: { id: number; channelType: string; channelName: string } =
-    await prisma.channel.findUnique({
-      where: { id: channelId },
-    });
+const removeUserFromChannel = async (channelId: string, userId: number[]) => {
+  const findChannel = await prisma.channel.findUnique({
+    where: { id: Number(channelId) },
+  });
+
   if (findChannel) {
-    const users = prisma.channelUser.deleteMany({
+    // await prisma.channelUser.updateMany({
+    //   where: {
+    //     channelId: Number(channelId),
+    //     userId: {
+    //       in: userId,
+    //     },
+    //   },
+    //   data: { userExist: false },
+    // });
+    const users1 = await prisma.channelUser.deleteMany({
       where: {
         channelId: channelId,
         userId: {
@@ -243,22 +276,65 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
         },
       },
     });
-    if (users) {
-      let data: any = [];
-      userId.map((item: number) => {
-        const obj: any = {
-          text: encryptedMessage(`removed from the ${findChannel.channelName}`),
-          createdAt: new Date(),
-          messageType: "TEXT",
-          channelId: findChannel.id,
-          userId: Number(item),
-        };
-        data.push(obj);
+
+    const users = await prisma.channelUser.findMany({
+      where: {
+        channelId: Number(channelId),
+        userId: {
+          in: userId,
+        },
+      },
+    });
+
+    let data: any = [];
+    userId.map((item: number) => {
+      const obj: any = {
+        text: encryptedMessage(`removed from the ${findChannel.channelName}`),
+        createdAt: new Date(),
+        messageType: "TEXT",
+        channelId: findChannel.id,
+        userId: Number(item),
+      };
+      data.push(obj);
+    });
+
+    const allMessage = await prisma.$transaction(
+      data.map((message: any) =>
+        prisma.message.create({
+          data: message,
+          include: {
+            user: {
+              select: {
+                userName: true,
+                id: true,
+                firstName: true,
+                lastName: true,
+                profileImage: true,
+              },
+            },
+          },
+        })
+      )
+    );
+
+    await Promise.all(allMessage.map(async (item: any) => {
+      io.to(item.channelId).emit(`privateChatMessage:${item.channelId}`, item);
+
+      const getChannel = await getAllUsersChannel(item.userId, "");
+      io.emit(`getUserChannels:${item.userId}`, {
+        getChannel,
       });
-      await prisma.message.createMany({
-        data,
+      const getChannels = await getChannelDetails(channelId, "");
+      io.to(`${channelId}`).emit(`channelDetailsUpdate:${channelId}`, {
+        getChannels,
       });
-    }
+    }));
+
+    // const getChannels = await getChannelDetails(channelId, "");
+    // io.to(`${channelId}`).emit(`channelDetailsUpdate:${channelId}`, {
+    //   getChannels,
+    // });
+
     return users;
   } else {
     throw new AppError(
@@ -267,6 +343,7 @@ const removeUserFromChannel = async (channelId: number, userId: number[]) => {
     );
   }
 };
+
 
 const updateChannelDetails = async (
   userId: number,
@@ -366,8 +443,8 @@ const getConversation = async (channelId: string, page: string) => {
   if (findChannel) {
     var matchData = {};
     const messages = await prisma.message.findMany({
-      take: limit,
-      skip: startIndex,
+      // take: limit,
+      // skip: startIndex,
       where: { channelId: Number(channelId) },
       orderBy: {
         createdAt: "asc",
@@ -434,6 +511,7 @@ const getChannelDetails = async (channelId: string, search: string) => {
               profileImage: true,
             },
           },
+          userExist: true,
           isAdmin: true,
         },
       },
@@ -441,7 +519,10 @@ const getChannelDetails = async (channelId: string, search: string) => {
   });
   findChannel.channelUser = findChannel.channelUser.filter(
     (channelUser: any) => {
-      return channelUser.channelUser.userName.includes(search);
+      return (
+        channelUser.channelUser.userName.includes(search) &&
+        channelUser.userExist
+      );
     }
   );
   return findChannel;
@@ -473,6 +554,7 @@ const getChannelUsers = async (
     where: {
       channelId: Number(channelId),
       channelType: "privateChannel",
+      userExist: true,
       channelUser: {
         OR: [
           {
