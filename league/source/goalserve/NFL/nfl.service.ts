@@ -47,7 +47,7 @@ const addStanding = async () => {
                 goalServeLeagueId: getstanding?.data?.standings?.category?.id,
                 division: div?.name,
                 goalServeTeamId: team?.id,
-                divisionName:div.name,
+                divisionName: div.name,
                 conference_record: team.conference_record,
                 division_record: team.division_record,
                 difference: team.difference,
@@ -60,8 +60,8 @@ const addStanding = async () => {
                 road_record: team.road_record,
                 streak: team.streak,
                 won: team.won,
-                ties:team.ties,
-                win_percentage:team.win_percentage
+                ties: team.ties,
+                win_percentage: team.win_percentage,
               };
               // console.log(data);
               await NflStandings.findOneAndUpdate(
@@ -77,4 +77,128 @@ const addStanding = async () => {
   );
 };
 
-export default { addTeam,addStanding };
+const getStandings = async () => {
+  const getStandingData = await NflStandings.aggregate([
+    // {
+    //   $lookup: {
+    //     from: "nhlteamimages",
+    //     localField: "goalServeTeamId",
+    //     foreignField: "goalServeTeamId",
+    //     as: "images",
+    //   },
+    // },
+    // {
+    //   $unwind: {
+    //     path: "$images",
+    //     preserveNullAndEmptyArrays: true,
+    //   },
+    // },
+    {
+      $group: {
+        _id: { leagueType: "$leagueType", division: "$division" },
+        teams: {
+          $push: {
+            id: { $toString: "$goalServeTeamId" },
+            won: "$won",
+            lost: "$lost",
+            ties: "$ties",
+            win_percentage: "$win_percentage",
+            home_record: "$home_record",
+            road_record: "$road_record",
+            division_record: "$division_record",
+            conference_record: "$conference_record",
+            points_against: "$points_against",
+            points_for: "$points_for",
+            difference: {
+              $subtract: [
+                { $toInt: "$points_for" },
+                {
+                  $toInt: "$points_against",
+                },
+              ],
+            },
+            streak: "$streak",
+          },
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: null,
+        conference: {
+          $push: {
+            name: {
+              $let: {
+                vars: {
+                  words: { $split: ["$_id.leagueType", " "] },
+                },
+
+                in: {
+                  $reduce: {
+                    input: "$$words",
+                    initialValue: "",
+                    in: {
+                      $concat: [
+                        "$$value",
+                        { $toUpper: { $substrCP: ["$$this", 0, 1] } },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+            teams: "$teams",
+          },
+        },
+        division: {
+          $push: {
+            name: {
+              $concat: [
+                {
+                  $reduce: {
+                    input: { $split: ["$_id.leagueType", " "] },
+                    initialValue: "",
+                    in: {
+                      $concat: [
+                        "$$value",
+                        { $toUpper: { $substrCP: ["$$this", 0, 1] } },
+                      ],
+                    },
+                  },
+                },
+                " ",
+                { $toUpper: "$_id.division" },
+              ],
+            },
+            teams: "$teams",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        conference: 1,
+        division: 1,
+      },
+    },
+  ]);
+
+  const mergedObject: any = getStandingData[0].conference.reduce(
+    (result: any, current: any) => {
+      if (result[current.name]) {
+        result[current.name].teams.push(...current.teams);
+      } else {
+        result[current.name] = current;
+      }
+      return result;
+    },
+    {}
+  );
+  getStandingData[0].conference = Object.values(mergedObject);
+
+  return getStandingData[0];
+};
+
+export default { addTeam, addStanding, getStandings };
