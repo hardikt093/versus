@@ -1,4 +1,3 @@
-
 import NflStandings from "../../models/documents/NFL/standings.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
@@ -91,14 +90,16 @@ const getStandings = async () => {
             conference_record: "$conference_record",
             points_against: "$points_against",
             points_for: "$points_for",
-            name:"$name",
+            name: "$name",
             difference: {
-              $subtract: [
-                { $toInt: "$points_for" },
-                {
-                  $toInt: "$points_against",
-                },
-              ],
+              $toString: {
+                $subtract: [
+                  { $toInt: "$points_for" },
+                  {
+                    $toInt: "$points_against",
+                  },
+                ],
+              },
             },
             streak: "$streak",
           },
