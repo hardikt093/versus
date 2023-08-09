@@ -6,11 +6,11 @@ import privateChannelService from "./privateChannel.service";
 import Messages from "../utils/messages";
 const createPrivateChannnel = async (req: Request, res: Response) => {
   try {
-    const getConversation = await privateChannelService.createPrivateChannel(
+    const createdChannel = await privateChannelService.createPrivateChannel(
       req.loggedInUser.id,
       req.body
     );
-    createResponse(res, httpStatus.OK, "", getConversation);
+    createResponse(res, httpStatus.OK, "", createdChannel);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
@@ -33,7 +33,7 @@ const getUsersChannel = async (req: Request, res: Response) => {
   try {
     const getChannel = await privateChannelService.getAllUsersChannel(
       req.loggedInUser.id,
-      req.query.search as string
+      req.query.search as string,
     );
     createResponse(res, httpStatus.OK, "", getChannel);
   } catch (error: any) {
@@ -67,7 +67,8 @@ const removeUserFromChannel = async (req: Request, res: Response) => {
 const getConversation = async (req: Request, res: Response) => {
   try {
     const conversation = await privateChannelService.getConversation(
-      req.params.channelId as string
+      req.params.channelId as string,
+      req.query.page as string
     );
     createResponse(res, httpStatus.OK, "", conversation);
   } catch (error: any) {
@@ -78,18 +79,20 @@ const getChannelDetails = async (req: Request, res: Response) => {
   try {
     const channelDetails = await privateChannelService.getChannelDetails(
       req.query.channelId as string,
-      req.query.search as string,
+      req.query.search as string
     );
     createResponse(res, httpStatus.OK, "", channelDetails);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
-}
+};
 const updateHearder = async (req: Request, res: Response) => {
   try {
-    const updateChannelHeader = await privateChannelService.updateChannelHeader(req.body)
+    const updateChannelHeader = await privateChannelService.updateChannelHeader(
+      req.body
+    );
     createResponse(res, httpStatus.OK, "", updateChannelHeader);
-  } catch (error:any) {
+  } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
@@ -108,12 +111,12 @@ const getChannelUsers = async (req: Request, res: Response) => {
 
 const getUsersExceptchannelUsers = async (req: Request, res: Response) => {
   try {
-    const getUsersExceptchannelUsers = await privateChannelService.getUsersExceptchannelUsers(
-      req.params.channelId,
-      req.query.search as string,
-      req.query.page as string
-
-    );
+    const getUsersExceptchannelUsers =
+      await privateChannelService.getUsersExceptchannelUsers(
+        req.params.channelId,
+        req.query.search as string,
+        req.query.page as string
+      );
     createResponse(res, httpStatus.OK, "", getUsersExceptchannelUsers);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -130,5 +133,5 @@ export default {
   getChannelDetails,
   updateHearder,
   getChannelUsers,
-  getUsersExceptchannelUsers
+  getUsersExceptchannelUsers,
 };

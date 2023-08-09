@@ -113,6 +113,7 @@ model channelUser {
   id               Int         @id @default(autoincrement())
   channelType      ChannelType
   channelUser      User?       @relation(name: "channelUser", fields: [userId], references: [id])
+  userExist        Boolean     @default(true)
   userId           Int?
   isAdmin          Boolean     @default(false)
   isCreatedChannel Boolean     @default(false)
