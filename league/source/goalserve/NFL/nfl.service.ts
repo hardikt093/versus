@@ -1,26 +1,8 @@
+
 import NflStandings from "../../models/documents/NFL/standings.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import { goalserveApi } from "../../services/goalserve.service";
-
-const addTeam = async () => {
-  let data = {
-    json: true,
-  };
-  const getStandings = await goalserveApi(
-    "https://www.goalserve.com/getfeed",
-    data,
-    `football/nfl-standings`
-  );
-
-  //   console.log("getAwayTeamImage", getStandings.data.standings.category.league);
-  const getData = await getStandings.data.standings.category.league.map(
-    (item: any) => {
-      console.log("item=====>", item);
-    }
-  );
-  return getStandings.data;
-};
 
 const addStanding = async () => {
   let data = {
@@ -81,7 +63,7 @@ const getStandings = async () => {
   const getStandingData = await NflStandings.aggregate([
     // {
     //   $lookup: {
-    //     from: "nhlteamimages",
+    //     from: "nflteamimages",
     //     localField: "goalServeTeamId",
     //     foreignField: "goalServeTeamId",
     //     as: "images",
@@ -202,4 +184,4 @@ const getStandings = async () => {
   return getStandingData[0];
 };
 
-export default { addTeam, addStanding, getStandings };
+export default { addStanding, getStandings };
