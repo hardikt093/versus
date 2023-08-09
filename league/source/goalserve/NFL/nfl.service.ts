@@ -63,7 +63,7 @@ const getStandings = async () => {
   const getStandingData = await NflStandings.aggregate([
     // {
     //   $lookup: {
-    //     from: "nhlteamimages",
+    //     from: "nflteamimages",
     //     localField: "goalServeTeamId",
     //     foreignField: "goalServeTeamId",
     //     as: "images",
