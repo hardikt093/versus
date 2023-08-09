@@ -109,6 +109,7 @@ const getStandings = async () => {
             conference_record: "$conference_record",
             points_against: "$points_against",
             points_for: "$points_for",
+            name:"$name",
             difference: {
               $subtract: [
                 { $toInt: "$points_for" },
