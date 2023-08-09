@@ -360,6 +360,6 @@ var nflMatchSchema = new Schema(
     timestamps: true,
   }
 );
-const NbaMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
+const NflMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
 
-export default NbaMatch;
+export default NflMatch;
