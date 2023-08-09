@@ -187,22 +187,26 @@ const addUserToPrivateChannel = async (channelId: string, userId: number[]) => {
 };
 
 const getAllUsersChannel = async (userId: number, search: string) => {
-  const validChannelIds = await prisma.channelUser.findMany({
-    where: {
-      AND: [
-        { userId: userId },
-        { userExist: true }
-      ]
-    },
-    select: {
-      channelId: true
-    }
-  });
+  // const validChannelIds = await prisma.channelUser.findMany({
+  //   where: {
+  //     AND: [
+  //       { userId: userId },
+  //       { userExist: true }
+  //     ]
+  //   },
+  //   select: {
+  //     channelId: true
+  //   }
+  // });
 
-  const validChannelIdsList = validChannelIds.map((item: any) => item.channelId);
+  // const validChannelIdsList = validChannelIds.map((item: any) => item.channelId);
+  // console.log("validChannelIdsList",validChannelIdsList)
   const query = {
     where: {
-      id: { in: validChannelIdsList },
+      // id: { in: validChannelIdsList.map((user : number) => user) },
+      channelUser: {
+        some: { userId: userId, userExist: true },
+      },
       OR: [
         {
           channelName: {
