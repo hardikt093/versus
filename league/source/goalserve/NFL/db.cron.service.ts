@@ -192,8 +192,8 @@ export default class NFLDbCronServiceClass {
                     : "",
                 };
                 // console.log("data", data);
-                  const matchData = new NflMatch(data);
-                  await matchData.save();
+                const matchData = new NflMatch(data);
+                await matchData.save();
               }
             }
           }
