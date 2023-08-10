@@ -26,7 +26,6 @@ const updatePlayersNfl = cron.schedule("*/10 * * * * *", async () => {
   }
   isupdatePlayersNflRunning = true;
   try {
-    // console.info("inside score cron updatePlayersNba");
     await nflService.addPlayers();
   } catch (error) {
     console.log(error);
