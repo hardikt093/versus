@@ -139,75 +139,87 @@ export default class NFLDbCronServiceClass {
           data,
           `football/${team.goalServeTeamId}_player_stats`
         );
-        const allPassingPlayer: any = [];
-        const allRushingPlayer: any = [];
+        const allPassingPlayer = [];
+        const allRushingPlayer = [];
+        const allReceivingPlayer = [];
+        const allDefencePlayer = [];
+        const allScoringPlayer = [];
+        const allReturningPlayer = [];
+        const allPuntingPlayer = [];
+        const allKickingPlayer = [];
         if (statsApi?.data?.statistic?.category.length) {
-          if (statsApi?.data?.statistic?.category[0].player.length) {
-            const passingPlayers: any =
-              statsApi?.data?.statistic?.category[0].player;
-            for (let k = 0; k < passingPlayers.length; k++) {
-              const passingPlayer = passingPlayers[k];
-              const playerData = {
-                isPassingPlayer: true,
-                passing: {
-                  ...passingPlayer,
-                },
-                teamId: team.id,
-                goalServeTeamId: team.goalServeTeamId,
-                goalServePlayerId: passingPlayer.id,
-              };
-              allPassingPlayer.push(playerData);
-            }
-          } else {
-            const passingPlayer: any =
-              statsApi?.data?.statistic?.category[0].player;
-            const playerData = {
-              isPassingPlayer: true,
-              passing: {
-                ...passingPlayer,
-              },
-              teamId: team.id,
-              goalServeTeamId: team.goalServeTeamId,
-              goalServePlayerId: passingPlayer.id,
-            };
-            allPassingPlayer.push(playerData);
-          }
+          const categories = statsApi.data.statistic.category;
+          for (let i = 0; i < categories.length; i++) {
+            const category = categories[i];
+            const categoryName = categories[i].name;
+            if (category.player.length) {
+              const players = category.player;
+              for (let j = 0; j < players.length; j++) {
+                const player = players[j];
+                const playerData: any = {
+                  teamId: team.id,
+                  goalServeTeamId: team.goalServeTeamId,
+                  goalServePlayerId: player.id,
+                };
+                switch (categoryName) {
+                  case "Passing":
+                    playerData.isPassingPlayer = true;
+                    playerData.passing = { ...player };
+                    allPassingPlayer.push(playerData);
+                    break;
+                  case "Rushing":
+                    playerData.isRushingPlayer = true;
+                    playerData.rushing = { ...player };
+                    allRushingPlayer.push(playerData);
+                    break;
+                  case "Receiving":
+                    playerData.isReceivingPlayer = true;
+                    playerData.receiving = { ...player };
+                    allReceivingPlayer.push(playerData);
+                    break;
+                  case "Defense":
+                    playerData.isDefensePlayer = true;
+                    playerData.defence = { ...player };
+                    allDefencePlayer.push(playerData);
+                    break;
+                  case "Scoring":
+                    playerData.isScoringPlayer = true;
+                    playerData.scoring = { ...player };
+                    allScoringPlayer.push(playerData);
+                    break;
+                  case "Returning":
+                    playerData.isReturningPlayer = true;
+                    playerData.returning = { ...player };
+                    allReturningPlayer.push(playerData);
+                    break;
+                  case "Kicking":
+                    playerData.isKickingPlayer = true;
+                    playerData.kicking = { ...player };
+                    allKickingPlayer.push(playerData);
+                    break;
+                  case "Punting":
+                    playerData.isPuntingPlayer = true;
+                    playerData.punting = { ...player };
+                    allPuntingPlayer.push(playerData);
+                    break;
 
-          if (statsApi?.data?.statistic?.category[1].player.length) {
-            const rushingPlayers: any =
-              statsApi?.data?.statistic?.category[1].player;
-            for (let l = 0; l < rushingPlayers.length; l++) {
-              const rushingPlayer = rushingPlayers[l];
-              const playerData = {
-                isRushingPlayer: true,
-                rushing: {
-                 ...rushingPlayer
-                },
-                teamId: team.id,
-                goalServeTeamId: team.goalServeTeamId,
-                goalServePlayerId: rushingPlayer.id,
-              };
-              allRushingPlayer.push(playerData);
+                  default:
+                    break;
+                }
+              }
             }
-          } else {
-            const rushingPlayer: any =
-              statsApi?.data?.statistic?.category[1].player;
-            const playerData = {
-              isRushingPlayer: true,
-              shooting: {
-               ...rushingPlayer
-              },
-              teamId: team.id,
-              goalServeTeamId: team.goalServeTeamId,
-              goalServePlayerId: rushingPlayer.id,
-            };
-            allRushingPlayer.push(playerData);
           }
         }
         const mergedArray: INflPlayerModel[] | null = await mergeByPlayerId(
           allRosterPlayers,
           allPassingPlayer,
-          allRushingPlayer
+          allRushingPlayer,
+          allPuntingPlayer,
+          allKickingPlayer,
+          allReturningPlayer,
+          allScoringPlayer,
+          allDefencePlayer,
+          allReceivingPlayer
         );
         for (let k = 0; k < mergedArray?.length; k++) {
           const player = mergedArray[k];

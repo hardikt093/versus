@@ -1,5 +1,4 @@
 import NflStandings from "../../models/documents/NFL/standings.model";
-import TeamImageNFL from "../../models/documents/NFL/teamImage.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import { goalserveApi } from "../../services/goalserve.service";
@@ -45,7 +44,6 @@ const addStanding = async () => {
                 ties: team.ties,
                 win_percentage: team.win_percentage,
               };
-              // console.log(data);
               await NflStandings.findOneAndUpdate(
                 { goalServeTeamId: team?.id },
                 { $set: data },
