@@ -16,6 +16,21 @@ const updateStandingRecord = cron.schedule("0 0 */1 * * *", async () => {
     isupdateStandingRecordRunning = false;
   }
 });
+let isUpdateNflUpcommingMatch: boolean = false;
+
+const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
+  if (isupdateStandingRecordRunning) {
+    return;
+  }
+  isUpdateNflUpcommingMatch = true;
+  try {
+    await nflService.updateNbaMatch();
+  } catch (error) {
+  } finally {
+    isupdateStandingRecordRunning = false;
+  }
+});
 export default {
   updateStandingRecord,
+  updateNflUpcommingMatch
 };

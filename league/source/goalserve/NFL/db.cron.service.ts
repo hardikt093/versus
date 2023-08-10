@@ -16,7 +16,7 @@ export default class NFLDbCronServiceClass {
       data,
       `football/nfl-standings`
     );
-  
+
     const league: ILeagueModel | null = await League.findOne({
       goalServeLeagueId: getstanding?.data?.standings?.category?.id,
     });
@@ -67,119 +67,147 @@ export default class NFLDbCronServiceClass {
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-shedule`,
         { json: true }
       );
-      let matchesNeedToRemove = await NflMatch.find({
-        goalServeLeagueId: getMatch?.data?.shedules?.id,
-        status: "Not Started",
-      }).lean();
-      const matchArray = await getMatch?.data?.shedules?.matches;
+      //   let matchesNeedToRemove = await NflMatch.find({
+      //     goalServeLeagueId: getMatch?.data?.shedules?.id,
+      //     status: "Not Started",
+      //   }).lean();
+      const matchArray = await getMatch?.data?.shedules?.tournament;
+      //   console.log("matchArray",matchArray)
       const league: ILeagueModel | null = await League.findOne({
         goalServeLeagueId: getMatch?.data?.shedules?.id,
       });
       for (let i = 0; i < matchArray?.length; i++) {
-        for (let j = 0; j < matchArray[i]?.match?.length; j++) {
-        //   matchesNeedToRemove = await removeByAttr(
-        //     matchesNeedToRemove,
-        //     "goalServerMatchId",
-        //     Number(matchArray[i]?.match[j]?.id)
-        //   );
-          const match: INflMatchModel | null = await NflMatch.findOne({
-            goalServeMatchId: matchArray[i]?.match[j]?.id,
-          });
-          if (!match) {
-            const data: Partial<INflMatchModel> = {
-              goalServeLeagueId: league?.goalServeLeagueId,
-              goalServeMatchId: matchArray[i]?.match[j].id,
-              attendance: matchArray[i]?.match[j].attendance,
-              goalServeHomeTeamId: matchArray[i]?.match[j].hometeam.id,
-              goalServeAwayTeamId: matchArray[i]?.match[j].awayteam.id,
-              
-              date: matchArray[i]?.match[j].date,
-              dateTimeUtc: matchArray[i]?.match[j].datetime_utc,
-              formattedDate: matchArray[i]?.match[j].formatted_date,
-              status: matchArray[i]?.match[j].status,
-              time: matchArray[i]?.match[j].time,
-              timezone: matchArray[i]?.match[j].timezone,
-              goalServeVenueId: matchArray[i]?.match[j].venue_id,
-              venueName: matchArray[i]?.match[j].venue_name,
-              homeTeamTotalScore: matchArray[i]?.match[j].hometeam.totalscore,
-              awayTeamTotalScore: matchArray[i]?.match[j].awayteam.totalscore,
-             
-              // new entries
-              timer: matchArray[i]?.match[j]?.timer
-                ? matchArray[i]?.match[j]?.timer
-                : "",
-              awayTeamOt: matchArray[i]?.match[j].awayteam.ot,
-              awayTeamQ1: matchArray[i]?.match[j].awayteam.q1,
-              awayTeamQ2: matchArray[i]?.match[j].awayteam.q2,
-              awayTeamQ3: matchArray[i]?.match[j].awayteam.q3,
-              awayTeamQ4: matchArray[i]?.match[j].awayteam.q4,
-              awayTeamPosession: matchArray[i]?.match[j].awayteam.posession,
-
-              homeTeamOt: matchArray[i]?.match[j].hometeam.ot,
-              homeTeamQ1: matchArray[i]?.match[j].hometeam.q1,
-              homeTeamQ2: matchArray[i]?.match[j].hometeam.q2,
-              homeTeamQ3: matchArray[i]?.match[j].hometeam.q3,
-              homeTeamQ4: matchArray[i]?.match[j].hometeam.q4,
-              homeTeamPosession: matchArray[i]?.match[j].hometeam.posession,
-
-              teamStatsHomeTeam: matchArray[i]?.match[j]?.team_stats?.hometeam
-                ? matchArray[i]?.match[j]?.team_stats?.hometeam
-                : {},
-              teamStatsAwayTeam: matchArray[i]?.match[j]?.team_stats?.awayteam
-                ? matchArray[i]?.match[j]?.team_stats?.awayteam
-                : {},
-
-              playerStatsBenchAwayTeam: matchArray[i]?.match[j]?.player_stats
-                ?.awayteam?.bench?.player
-                ? matchArray[i]?.match[j]?.player_stats?.awayteam?.bench?.player
-                : [],
-              playerStatsBenchHomeTeam: matchArray[i]?.match[j]?.player_stats
-                ?.hometeam?.bench?.player
-                ? matchArray[i]?.match[j]?.player_stats?.hometeam?.bench?.player
-                : [],
-              playerStatsStartersAwayTeam: matchArray[i]?.match[j]?.player_stats
-                ?.awayteam?.starters?.player
-                ? matchArray[i]?.match[j]?.player_stats?.awayteam?.starters
-                    ?.player
-                : [],
-              playerStatsStartersHomeTeam: matchArray[i]?.match[j]?.player_stats
-                ?.hometeam?.starters?.player
-                ? matchArray[i]?.match[j]?.player_stats?.hometeam?.starters
-                    ?.player
-                : [],
-            };
-            const teamIdAway: ITeamNBAModel | null | undefined =
-              await TeamNBA.findOne({
-                goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
+        // console.log("matchArray[i]", matchArray[i]);
+        // take season name
+        for (let j = 0; j < matchArray[i]?.week?.length; j++) {
+          // console.log("matchArray[i]?.match[j]",matchArray[i]?.week[j])
+          // take week name
+          for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
+            // console.log(
+            //   "matchArray[i]?.week[j].matches",
+            //   typeof matchArray[i]?.week[j].matches[k].match
+            // );
+            // add dates
+            for (
+              let l = 0;
+              l < matchArray[i]?.week[j].matches[k].match.length;
+              l++
+            ) {
+              //   console.log(
+              //     "matchArray[i]?.week[j].matches[k].match[l]",
+              //     matchArray[i]?.week[j].matches[k].match[l]
+              //   );
+              //   matchesNeedToRemove = await removeByAttr(
+              //     matchesNeedToRemove,
+              //     "goalServerMatchId",
+              //     Number(matchArray[i]?.match[j]?.id)
+              //   );
+              const match: INflMatchModel | null = await NflMatch.findOne({
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
               });
+              if (!match) {
+                // console.log("matchArray[i]?.week[j]?.matches[k]?.match[l]?",matchArray[i]?.week[j]?.matches[k]?.match[l])
+                const data: Partial<INflMatchModel> = {
+                  goalServeLeagueId: league?.goalServeLeagueId,
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                  attendance:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.attendance,
+                  goalServeHomeTeamId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.id,
+                  goalServeAwayTeamId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.id,
 
-            data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
-              ? teamIdAway.goalServeTeamId
-              : 1;
+                  date: matchArray[i]?.week[j]?.matches[k]?.date,
+                  dateTimeUtc:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.datetime_utc,
+                  formattedDate:
+                    matchArray[i]?.week[j]?.matches[k]?.formatted_date,
+                  status: matchArray[i]?.week[j]?.matches[k]?.match[l]?.status,
+                  time: matchArray[i]?.week[j]?.matches[k]?.match[l]?.time,
+                  timezone: matchArray[i]?.week[j]?.matches[k]?.timezone,
+                  goalServeVenueId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue_id,
+                  venueName:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue,
+                  homeTeamTotalScore:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
+                      .totalscore,
+                  awayTeamTotalScore:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                      .totalscore,
 
-            const teamIdHome: ITeamNBAModel | null | undefined =
-              await TeamNBA.findOne({
-                goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
-              });
+                  // new entries
+                  weekName: matchArray[i]?.week[j]?.name,
+                  seasonName: matchArray[i]?.name,
 
-            data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
-              ? teamIdHome.goalServeTeamId
-              : 1;
-            const matchData = new NbaMatch(data);
-            await matchData.save();
+                  // timer: matchArray[i]?.match[j]?.timer
+                  //   ? matchArray[i]?.match[j]?.timer
+                  //   : "",
+                  awayTeamOt:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.ot,
+                  awayTeamQ1:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q1,
+                  awayTeamQ2:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q2,
+                  awayTeamQ3:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q3,
+                  awayTeamQ4:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q4,
+                  awayTeamBallOn:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                      .ball_on,
+                  awayTeamDrive:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                      .drive,
+                  awayTeamNumber:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                      .number,
+
+                  homeTeamOt:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.ot,
+                  homeTeamQ1:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q1,
+                  homeTeamQ2:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q2,
+                  homeTeamQ3:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q3,
+                  homeTeamQ4:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q4,
+                  homeTeamBallOn: matchArray[i]?.week[j]?.matches[k]?.match[l]
+                    ?.awayteam.ball_on
+                    ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                        .ball_on
+                    : "",
+                  homeTeamDrive: matchArray[i]?.week[j]?.matches[k]?.match[l]
+                    ?.hometeam.drive
+                    ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
+                        .drive
+                    : "",
+                  homeTeamNumber: matchArray[i]?.week[j]?.matches[k]?.match[l]
+                    ?.hometeam.number
+                    ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
+                        .number
+                    : "",
+                };
+                // console.log("data", data);
+                  const matchData = new NflMatch(data);
+                  await matchData.save();
+              }
+            }
           }
         }
       }
-    //   for (let k = 0; k < matchesNeedToRemove.length; k++) {
-    //     const match = matchesNeedToRemove[k];
-    //     await NbaMatch.deleteOne({
-    //       goalServeMatchId: match.goalServeMatchId,
-    //     });
-    //   }
+      //   for (let k = 0; k < matchesNeedToRemove.length; k++) {
+      //     const match = matchesNeedToRemove[k];
+      //     await NbaMatch.deleteOne({
+      //       goalServeMatchId: match.goalServeMatchId,
+      //     });
+
       return true;
     } catch (error: any) {
       console.log("error", error);
     }
   };
-
 }

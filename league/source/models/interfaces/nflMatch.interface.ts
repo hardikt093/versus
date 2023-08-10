@@ -18,6 +18,8 @@ export interface INflMatchModel extends Document {
 
     // new
     timer: String,
+    weekName:String,
+    seasonName:String,
     awayTeamOt: String,
     awayTeamQ1: String,
     awayTeamQ2: String,
