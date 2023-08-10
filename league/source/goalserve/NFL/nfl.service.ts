@@ -1,3 +1,4 @@
+import NflMatch from "../../models/documents/NFL/match.model";
 import NflStandings from "../../models/documents/NFL/standings.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
@@ -185,4 +186,38 @@ const getStandings = async () => {
   return getStandingData[0];
 };
 
-export default { addStanding, getStandings };
+const getCalendar = async () => {
+  const getCalendar = await NflMatch.aggregate([
+    {
+      $group: {
+        _id: {
+          weekName: "$weekName",
+          seasonName: "$seasonName",
+        },
+        dates: {
+          $push: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$_id.seasonName",
+        weekItem: {
+          $push: {
+            title: "$_id.weekName",
+            dates: "$dates",
+          },
+        },
+      },
+    },
+  ]);
+  return await Promise.all(
+    getCalendar.map(async (item: any) => {
+      return { [item._id]: { weekItem: item.weekItem } };
+    })
+  );
+};
+
+// const scoreWithDate = async (data: any) => {};
+
+export default { addStanding, getStandings, getCalendar };
