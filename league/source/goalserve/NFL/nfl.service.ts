@@ -213,7 +213,9 @@ const getCalendar = async () => {
   ]);
   return await Promise.all(
     getCalendar.map(async (item: any) => {
-      return { [item._id]: { weekItem: item.weekItem } };
+      const keyName =
+        item._id.charAt(0).toLowerCase() + item._id.slice(1).replace(" ", "");
+      return { [keyName]: { title: item._id, weekItem: item.weekItem } };
     })
   );
 };
