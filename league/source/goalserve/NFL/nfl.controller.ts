@@ -23,7 +23,7 @@ const getCalendar = async (req: Request, res: Response) => {
       res,
       httpStatus.OK,
       "",
-      data
+      data.reduce((obj, item) => Object.assign(obj, item), {})
       // data.reduce((obj, item) => Object.assign(obj, item), {})
     );
   } catch (error: any) {
