@@ -16,6 +16,24 @@ const updateStandingRecord = cron.schedule("0 0 */1 * * *", async () => {
     isupdateStandingRecordRunning = false;
   }
 });
+
+let isupdatePlayersNflRunning: boolean = false;
+const updatePlayersNfl = cron.schedule("*/10 * * * * *", async () => {
+  console.log("updatePlayersnfl Skip");
+  if (isupdatePlayersNflRunning) {
+
+    return;
+  }
+  isupdatePlayersNflRunning = true;
+  try {
+    await nflService.addPlayers();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdatePlayersNflRunning = false;
+  }
+});
 export default {
   updateStandingRecord,
+  updatePlayersNfl
 };
