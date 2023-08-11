@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import nflService from "./nfl.service";
 import createResponse from "../../utils/response";
 import httpStatus from "http-status";
-import TeamNFL from "../../models/documents/NFL/team.model";
 
 const addStanding = async (req: Request, res: Response) => {
   const addStanding = await nflService.addStanding();

@@ -9,6 +9,7 @@ import PlayersNFL from "../../models/documents/NFL/player.model";
 import { INflPlayerModel } from "../../models/interfaces/nflPlayer.interface";
 import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
 import { goalserveApi } from "../../services/goalserve.service";
+import TeamNFL from "../../models/documents/NFL/team.model";
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
 
@@ -305,7 +306,7 @@ export default class NFLDbCronServiceClass {
   };
 
   public addPlayers = async () => {
-    const teams = await NflStandings.find();
+    const teams = await TeamNFL.find();
     let data = {
       json: true,
     };
@@ -464,7 +465,7 @@ export default class NFLDbCronServiceClass {
   };
 
   public addTeamStats = async () => {
-    const teams = await NflStandings.find();
+    const teams = await TeamNFL.find();
     let data = {
       json: true,
     };

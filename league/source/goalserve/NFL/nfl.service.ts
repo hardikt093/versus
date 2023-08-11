@@ -1,12 +1,10 @@
 import moment from "moment";
 import NflMatch from "../../models/documents/NFL/match.model";
 import NflStandings from "../../models/documents/NFL/standings.model";
-import TeamNFL from "../../models/documents/NFL/team.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import { axiosGet } from "../../services/axios.service";
 import { goalserveApi } from "../../services/goalserve.service";
-import INflMatchModel from "../../models/interfaces/nflMatch.interface";
 
 const addStanding = async () => {
   let data = {
