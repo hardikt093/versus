@@ -3,7 +3,7 @@ import IStatsTeamModel from "../../interfaces/teamStats.interface";
 
 var statsTeamSchema = new Schema(
   {
-    teamId: { required: true, type: Schema.Types.ObjectId, ref: "team" },
+    teamId: { required: true, type: Schema.Types.ObjectId, ref: "nflteam" },
     goalServeTeamId: Number,
     passingOpponent: {
       completion_pc: String,

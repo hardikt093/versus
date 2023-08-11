@@ -1,5 +1,6 @@
 import PlayersNFL from "../../models/documents/NFL/player.model";
 import NflStandings from "../../models/documents/NFL/standings.model";
+import TeamNFL from "../../models/documents/NFL/team.model";
 import StatsTeamNFL from "../../models/documents/NFL/teamStats.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
@@ -80,7 +81,7 @@ export default class NFLDbCronServiceClass {
   };
 
   public addPlayers = async () => {
-    const teams = await NflStandings.find();
+    const teams = await TeamNFL.find();
     let data = {
       json: true,
     };
@@ -239,7 +240,7 @@ export default class NFLDbCronServiceClass {
   };
 
   public addTeamStats = async () => {
-    const teams = await NflStandings.find();
+    const teams = await TeamNFL.find();
     let data = {
       json: true,
     };
