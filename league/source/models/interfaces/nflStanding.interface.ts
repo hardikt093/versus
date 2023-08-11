@@ -2,6 +2,7 @@ import { Document } from "mongoose";
 export interface INflStandingModel extends Document {
   leagueId: String;
   leagueType: String;
+  goalServeTeamId:String;
   goalServeLeagueId: Number;
   division: String;
   divisionName: String;

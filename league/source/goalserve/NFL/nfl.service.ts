@@ -45,7 +45,6 @@ const addStanding = async () => {
                 ties: team.ties,
                 win_percentage: team.win_percentage,
               };
-              // console.log(data);
               await NflStandings.findOneAndUpdate(
                 { goalServeTeamId: team?.id },
                 { $set: data },
@@ -61,6 +60,7 @@ const addStanding = async () => {
 
 const getStandings = async () => {
   const getStandingData = await NflStandings.aggregate([
+<<<<<<< HEAD
     // {
     //   $lookup: {
     //     from: "nflteamimages",
@@ -75,6 +75,22 @@ const getStandings = async () => {
     //     preserveNullAndEmptyArrays: true,
     //   },
     // },
+=======
+    {
+      $lookup: {
+        from: "nflteamimages",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "images",
+      },
+    },
+    {
+      $unwind: {
+        path: "$images",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+>>>>>>> daily/11-08-23
     {
       $group: {
         _id: { leagueType: "$leagueType", division: "$division" },
@@ -86,6 +102,7 @@ const getStandings = async () => {
             ties: "$ties",
             win_percentage: "$win_percentage",
             home_record: "$home_record",
+            teamImage: "$images.image",
             road_record: "$road_record",
             division_record: "$division_record",
             conference_record: "$conference_record",
@@ -181,8 +198,27 @@ const getStandings = async () => {
     },
     {}
   );
+  for (const conferenceName in mergedObject) {
+    mergedObject[conferenceName].teams.sort(
+      (team1: any, team2: any) =>
+        Number(team1.win_percentage) - Number(team2.win_percentage)
+    );
+  }
   getStandingData[0].conference = Object.values(mergedObject);
-
+  const sortedDivisions = getStandingData[0].division.map((division: any) => {
+    const sortedTeams = division.teams.sort(
+      (team1: any, team2: any) =>
+        Number(team1.win_percentage) - Number(team2.win_percentage)
+    );
+    return {
+      name: division.name,
+      teams: sortedTeams,
+    };
+  });
+  const sortedMergedObject = Object.values(sortedDivisions).sort(
+    (team1: any, team2: any) => team1.name.localeCompare(team2.name)
+  );
+  getStandingData[0].division = sortedMergedObject;
   return getStandingData[0];
 };
 
