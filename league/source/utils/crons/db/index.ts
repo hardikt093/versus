@@ -4,6 +4,7 @@ import mlbCron from './mlb.cron';
 import betCron from './bet.cron';
 import config from "../../../config/config";
 import mongoose from "mongoose";
+import nflCron from './nfl.cron';
 
 async function main() {
     await mongoose.connect(config.mongoose.url).then((result: any) => {
@@ -13,5 +14,6 @@ async function main() {
     nhlCron;
     mlbCron;
     betCron;
+    nflCron
 }
 main();
