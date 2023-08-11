@@ -1,9 +1,15 @@
-import PlayersNFL from "../../models/documents/NFL/player.model";
+import NflMatch from "../../models/documents/NFL/match.model";
 import NflStandings from "../../models/documents/NFL/standings.model";
+import StatsTeamNFL from "../../models/documents/NFL/teamStats.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
+import INflMatchModel from "../../models/interfaces/nflMatch.interface";
+import { axiosGet } from "../../services/axios.service";
+import PlayersNFL from "../../models/documents/NFL/player.model";
 import { INflPlayerModel } from "../../models/interfaces/nflPlayer.interface";
+import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
 import { goalserveApi } from "../../services/goalserve.service";
+import TeamNFL from "../../models/documents/NFL/team.model";
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
 
@@ -77,8 +83,230 @@ export default class NFLDbCronServiceClass {
     );
   };
 
+  public updateNflMatch = async () => {
+    try {
+      const getMatch = await axiosGet(
+        `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-shedule`,
+        { json: true }
+      );
+      const matchArray = await getMatch?.data?.shedules?.tournament;
+      const league: ILeagueModel | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.shedules?.id,
+      });
+      for (let i = 0; i < matchArray?.length; i++) {
+        for (let j = 0; j < matchArray[i]?.week?.length; j++) {
+          if (matchArray[i]?.week[j]?.matches.length > 0) {
+            for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
+              for (
+                let l = 0;
+                l < matchArray[i]?.week[j].matches[k].match.length;
+                l++
+              ) {
+                const match: INflMatchModel | null = await NflMatch.findOne({
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                });
+                if (!match) {
+                  const data: Partial<INflMatchModel> = {
+                    goalServeLeagueId: league?.goalServeLeagueId,
+                    goalServeMatchId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                    attendance:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.attendance,
+                    goalServeHomeTeamId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.id,
+                    goalServeAwayTeamId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.id,
+
+                    date: matchArray[i]?.week[j]?.matches[k]?.date,
+                    dateTimeUtc:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]
+                        ?.datetime_utc,
+                    formattedDate:
+                      matchArray[i]?.week[j]?.matches[k]?.formatted_date,
+                    status:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.status,
+                    time: matchArray[i]?.week[j]?.matches[k]?.match[l]?.time,
+                    timezone: matchArray[i]?.week[j]?.matches[k]?.timezone,
+                    goalServeVenueId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue_id,
+                    venueName:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue,
+                    homeTeamTotalScore:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
+                        .totalscore,
+                    awayTeamTotalScore:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                        .totalscore,
+
+                    // new entries
+                    weekName: matchArray[i]?.week[j]?.name,
+                    seasonName: matchArray[i]?.name,
+
+                    // timer: matchArray[i]?.match[j]?.timer
+                    //   ? matchArray[i]?.match[j]?.timer
+                    //   : "",
+                    awayTeamOt:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.ot,
+                    awayTeamQ1:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q1,
+                    awayTeamQ2:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q2,
+                    awayTeamQ3:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q3,
+                    awayTeamQ4:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q4,
+                    awayTeamBallOn:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                        .ball_on,
+                    awayTeamDrive:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                        .drive,
+                    awayTeamNumber:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                        .number,
+
+                    homeTeamOt:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.ot,
+                    homeTeamQ1:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q1,
+                    homeTeamQ2:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q2,
+                    homeTeamQ3:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q3,
+                    homeTeamQ4:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q4,
+                    homeTeamBallOn: matchArray[i]?.week[j]?.matches[k]?.match[l]
+                      ?.awayteam.ball_on
+                      ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
+                          .ball_on
+                      : "",
+                    homeTeamDrive: matchArray[i]?.week[j]?.matches[k]?.match[l]
+                      ?.hometeam.drive
+                      ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
+                          .drive
+                      : "",
+                    homeTeamNumber: matchArray[i]?.week[j]?.matches[k]?.match[l]
+                      ?.hometeam.number
+                      ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
+                          .number
+                      : "",
+                  };
+                  // console.log("data", data);
+                  const matchData = new NflMatch(data);
+                  await matchData.save();
+                }
+              }
+            }
+          } else {
+            for (
+              let l = 0;
+              l < matchArray[i]?.week[j].matches?.match.length;
+              l++
+            ) {
+              const match: INflMatchModel | null = await NflMatch.findOne({
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[l]?.contestID,
+              });
+              if (!match) {
+                const data: Partial<INflMatchModel> = {
+                  goalServeLeagueId: league?.goalServeLeagueId,
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.contestID,
+                  attendance:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.attendance,
+                  goalServeHomeTeamId:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.id,
+                  goalServeAwayTeamId:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.id,
+
+                  date: matchArray[i]?.week[j]?.matches?.date,
+                  dateTimeUtc:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.datetime_utc,
+                  formattedDate:
+                    matchArray[i]?.week[j]?.matches?.formatted_date,
+                  status: matchArray[i]?.week[j]?.matches?.match[l]?.status,
+                  time: matchArray[i]?.week[j]?.matches?.match[l]?.time,
+                  timezone: matchArray[i]?.week[j]?.matches?.timezone,
+                  goalServeVenueId:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.venue_id,
+                  venueName: matchArray[i]?.week[j]?.matches?.match[l]?.venue,
+                  homeTeamTotalScore:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.hometeam
+                      .totalscore,
+                  awayTeamTotalScore:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam
+                      .totalscore,
+
+                  // new entries
+                  weekName: matchArray[i]?.week[j]?.name,
+                  seasonName: matchArray[i]?.name,
+
+                  // timer: matchArray[i]?.match[j]?.timer
+                  //   ? matchArray[i]?.match[j]?.timer
+                  //   : "",
+                  awayTeamOt:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.ot,
+                  awayTeamQ1:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.q1,
+                  awayTeamQ2:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.q2,
+                  awayTeamQ3:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.q3,
+                  awayTeamQ4:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.q4,
+                  awayTeamBallOn:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.ball_on,
+                  awayTeamDrive:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.drive,
+                  awayTeamNumber:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.awayteam.number,
+
+                  homeTeamOt:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.ot,
+                  homeTeamQ1:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.q1,
+                  homeTeamQ2:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.q2,
+                  homeTeamQ3:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.q3,
+                  homeTeamQ4:
+                    matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.q4,
+                  homeTeamBallOn: matchArray[i]?.week[j]?.matches?.match[l]
+                    ?.awayteam.ball_on
+                    ? matchArray[i]?.week[j]?.matches?.match[l]?.awayteam
+                        .ball_on
+                    : "",
+                  homeTeamDrive: matchArray[i]?.week[j]?.matches?.match[l]
+                    ?.hometeam.drive
+                    ? matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.drive
+                    : "",
+                  homeTeamNumber: matchArray[i]?.week[j]?.matches?.match[l]
+                    ?.hometeam.number
+                    ? matchArray[i]?.week[j]?.matches?.match[l]?.hometeam.number
+                    : "",
+                };
+                const matchData = new NflMatch(data);
+                await matchData.save();
+              }
+            }
+          }
+        }
+        //   for (let k = 0; k < matchesNeedToRemove.length; k++) {
+        //     const match = matchesNeedToRemove[k];
+        //     await NbaMatch.deleteOne({
+        //       goalServeMatchId: match.goalServeMatchId,
+        //     });
+
+        return true;
+      }
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+
   public addPlayers = async () => {
-    const teams = await NflStandings.find();
+    const teams = await TeamNFL.find();
     let data = {
       json: true,
     };
@@ -232,6 +460,62 @@ export default class NFLDbCronServiceClass {
             { upsert: true }
           );
         }
+      }
+    }
+  };
+
+  public addTeamStats = async () => {
+    const teams = await TeamNFL.find();
+    let data = {
+      json: true,
+    };
+    if (teams.length > 0) {
+      for (let i = 0; i < teams.length; i++) {
+        const team = teams[i];
+        const teamstats = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          data,
+          `football/${team.goalServeTeamId}_team_stats`
+        );
+        let stats: Partial<INFLStatsTeamModel> = {};
+        let category = teamstats?.data?.statistic?.category;
+        for (let j = 0; j < category.length; j++) {
+          let categoryName = category[j].name;
+          switch (categoryName) {
+            case "Passing":
+              stats.passingOpponent = category[j].opponents;
+              stats.passingTeam = category[j].team;
+              break;
+            case "Rushing":
+              stats.rushingOpponent = category[j].opponents;
+              stats.rushingTeam = category[j].team;
+              break;
+            case "Downs":
+              stats.downsOpponent = category[j].opponents;
+              stats.downsTeam = category[j].team;
+              break;
+            case "Returning":
+              stats.returningOpponent = category[j].opponents;
+              stats.returningTeam = category[j].team;
+              break;
+            case "Kicking":
+              stats.kickingOpponent = category[j].opponents;
+              stats.kickingTeam = category[j].team;
+
+              break;
+
+            default:
+              break;
+          }
+        }
+        await StatsTeamNFL.updateOne(
+          {
+            teamId: team.id,
+            goalServeTeamId: teamstats?.data?.statistic.id,
+          },
+          { $set: stats },
+          { upsert: true }
+        );
       }
     }
   };

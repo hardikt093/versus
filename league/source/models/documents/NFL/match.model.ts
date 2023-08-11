@@ -19,6 +19,8 @@ var nflMatchSchema = new Schema(
     homeTeamTotalScore: String,
 
     // new
+    weekName:String,
+    seasonName:String,
     timer: String,
     awayTeamOt: String,
     awayTeamQ1: String,
@@ -360,6 +362,6 @@ var nflMatchSchema = new Schema(
     timestamps: true,
   }
 );
-const NbaMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
+const NflMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
 
-export default NbaMatch;
+export default NflMatch;

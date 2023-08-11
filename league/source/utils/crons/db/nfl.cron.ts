@@ -16,6 +16,21 @@ const updateStandingRecord = cron.schedule("0 0 */1 * * *", async () => {
     isupdateStandingRecordRunning = false;
   }
 });
+let isUpdateNflUpcommingMatch: boolean = false;
+
+const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
+  if (isupdateStandingRecordRunning) {
+    return;
+  }
+  isUpdateNflUpcommingMatch = true;
+  try {
+    await nflService.updateNflMatch();
+  } catch (error) {
+    console.log(error);
+  }  finally {
+    isupdateStandingRecordRunning = false;
+  }
+})
 
 let isupdatePlayersNflRunning: boolean = false;
 const updatePlayersNfl = cron.schedule("*/10 * * * * *", async () => {
@@ -33,7 +48,25 @@ const updatePlayersNfl = cron.schedule("*/10 * * * * *", async () => {
     isupdatePlayersNflRunning = false;
   }
 });
+let isupdateTeamStatsNflRunning: boolean = false;
+const updateTeamStatsNfl = cron.schedule("*/10 * * * * *", async () => {
+  console.log("isupdateTeamStatsNflRunning Skip");
+  if (isupdateTeamStatsNflRunning) {
+
+    return;
+  }
+  isupdateTeamStatsNflRunning = true;
+  try {
+    await nflService.addTeamStats();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateTeamStatsNflRunning = false;
+  }
+});
 export default {
   updateStandingRecord,
-  updatePlayersNfl
+  updateNflUpcommingMatch,
+  updatePlayersNfl,
+  updateTeamStatsNfl
 };

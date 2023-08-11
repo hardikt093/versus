@@ -1,7 +1,7 @@
 import { Document } from "mongoose";
 
 export interface INflPlayerModel extends Document {
-  goalServeTeamId: String;
+  goalServeTeamId: Number;
   goalServePlayerId: { type: Number };
   age: String;
   experience_years: String;

@@ -11,6 +11,6 @@ var nflImageSchema = new Schema(
         timestamps: true,
     }
 );
-const TeamImageNFL = model<ITeamImagesModel>("NFlTeamImage", nflImageSchema);
+const TeamImageNFL = model<ITeamImagesModel>("NflTeamImage", nflImageSchema);
 
 export default TeamImageNFL;
