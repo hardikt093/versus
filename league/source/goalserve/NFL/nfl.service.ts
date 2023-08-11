@@ -1,4 +1,5 @@
 import NflStandings from "../../models/documents/NFL/standings.model";
+import TeamNFL from "../../models/documents/NFL/team.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import { goalserveApi } from "../../services/goalserve.service";
@@ -204,4 +205,9 @@ const getStandings = async () => {
   return getStandingData[0];
 };
 
-export default { addStanding, getStandings };
+const addTeam = async (data:any) => {
+ 
+  const teamData = new TeamNFL(data);
+  await teamData.save();
+};
+export default { addStanding, getStandings,addTeam };
