@@ -24,10 +24,13 @@ const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
   }
   isUpdateNflUpcommingMatch = true;
   try {
-    await nflService.updateNbaMatch();
+    await nflService.updateNflMatch();
   } catch (error) {
-  } finally {
+    console.log(error);
+  }  finally {
     isupdateStandingRecordRunning = false;
+  }
+})
 
 let isupdatePlayersNflRunning: boolean = false;
 const updatePlayersNfl = cron.schedule("*/10 * * * * *", async () => {

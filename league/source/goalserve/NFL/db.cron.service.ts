@@ -80,53 +80,29 @@ export default class NFLDbCronServiceClass {
     );
   };
 
-  public updateNbaMatch = async () => {
+  public updateNflMatch = async () => {
     try {
       const getMatch = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-shedule`,
         { json: true }
       );
-      //   let matchesNeedToRemove = await NflMatch.find({
-      //     goalServeLeagueId: getMatch?.data?.shedules?.id,
-      //     status: "Not Started",
-      //   }).lean();
       const matchArray = await getMatch?.data?.shedules?.tournament;
-      //   console.log("matchArray",matchArray)
       const league: ILeagueModel | null = await League.findOne({
         goalServeLeagueId: getMatch?.data?.shedules?.id,
       });
       for (let i = 0; i < matchArray?.length; i++) {
-        // console.log("matchArray[i]", matchArray[i]);
-        // take season name
         for (let j = 0; j < matchArray[i]?.week?.length; j++) {
-          // console.log("matchArray[i]?.match[j]",matchArray[i]?.week[j])
-          // take week name
           for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
-            // console.log(
-            //   "matchArray[i]?.week[j].matches",
-            //   typeof matchArray[i]?.week[j].matches[k].match
-            // );
-            // add dates
             for (
               let l = 0;
               l < matchArray[i]?.week[j].matches[k].match.length;
               l++
             ) {
-              //   console.log(
-              //     "matchArray[i]?.week[j].matches[k].match[l]",
-              //     matchArray[i]?.week[j].matches[k].match[l]
-              //   );
-              //   matchesNeedToRemove = await removeByAttr(
-              //     matchesNeedToRemove,
-              //     "goalServerMatchId",
-              //     Number(matchArray[i]?.match[j]?.id)
-              //   );
               const match: INflMatchModel | null = await NflMatch.findOne({
                 goalServeMatchId:
                   matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
               });
               if (!match) {
-                // console.log("matchArray[i]?.week[j]?.matches[k]?.match[l]?",matchArray[i]?.week[j]?.matches[k]?.match[l])
                 const data: Partial<INflMatchModel> = {
                   goalServeLeagueId: league?.goalServeLeagueId,
                   goalServeMatchId:

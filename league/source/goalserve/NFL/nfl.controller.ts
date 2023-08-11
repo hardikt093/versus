@@ -16,7 +16,6 @@ const getNflStandings = async (req: Request, res: Response) => {
   }
 };
 
-<<<<<<< HEAD
 const getCalendar = async (req: Request, res: Response) => {
   try {
     const data = await nflService.getCalendar();
@@ -41,7 +40,19 @@ const nflScoreWithDate = async (req: Request, res: Response) => {
   }
 };
 
-export default { addStanding, getNflStandings, getCalendar,nflScoreWithDate };
-=======
-export default { addStanding, getNflStandings };
->>>>>>> daily/11-08-23
+const addFinalMatch = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.addFinalMatch(req.query);
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+export default {
+  addStanding,
+  getNflStandings,
+  getCalendar,
+  nflScoreWithDate,
+  addFinalMatch,
+};
