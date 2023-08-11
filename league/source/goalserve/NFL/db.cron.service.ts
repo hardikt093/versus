@@ -1,11 +1,13 @@
 import NflMatch from "../../models/documents/NFL/match.model";
 import NflStandings from "../../models/documents/NFL/standings.model";
+import StatsTeamNFL from "../../models/documents/NFL/teamStats.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import INflMatchModel from "../../models/interfaces/nflMatch.interface";
 import { axiosGet } from "../../services/axios.service";
 import PlayersNFL from "../../models/documents/NFL/player.model";
 import { INflPlayerModel } from "../../models/interfaces/nflPlayer.interface";
+import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
 import { goalserveApi } from "../../services/goalserve.service";
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
@@ -361,6 +363,62 @@ export default class NFLDbCronServiceClass {
             { upsert: true }
           );
         }
+      }
+    }
+  };
+
+  public addTeamStats = async () => {
+    const teams = await NflStandings.find();
+    let data = {
+      json: true,
+    };
+    if (teams.length > 0) {
+      for (let i = 0; i < teams.length; i++) {
+        const team = teams[i];
+        const teamstats = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          data,
+          `football/${team.goalServeTeamId}_team_stats`
+        );
+        let stats: Partial<INFLStatsTeamModel> = {};
+        let category = teamstats?.data?.statistic?.category;
+        for (let j = 0; j < category.length; j++) {
+          let categoryName = category[j].name;
+          switch (categoryName) {
+            case "Passing":
+              stats.passingOpponent = category[j].opponents;
+              stats.passingTeam = category[j].team;
+              break;
+            case "Rushing":
+              stats.rushingOpponent = category[j].opponents;
+              stats.rushingTeam = category[j].team;
+              break;
+            case "Downs":
+              stats.downsOpponent = category[j].opponents;
+              stats.downsTeam = category[j].team;
+              break;
+            case "Returning":
+              stats.returningOpponent = category[j].opponents;
+              stats.returningTeam = category[j].team;
+              break;
+            case "Kicking":
+              stats.kickingOpponent = category[j].opponents;
+              stats.kickingTeam = category[j].team;
+
+              break;
+
+            default:
+              break;
+          }
+        }
+        await StatsTeamNFL.updateOne(
+          {
+            teamId: team.id,
+            goalServeTeamId: teamstats?.data?.statistic.id,
+          },
+          { $set: stats },
+          { upsert: true }
+        );
       }
     }
   };
