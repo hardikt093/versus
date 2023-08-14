@@ -7,6 +7,7 @@ router.get("/getStandings", nflController.getNflStandings);
 router.get("/getCalendar", nflController.getCalendar);
 router.get("/scoreWithDate", nflController.nflScoreWithDate)
 router.get("/addFinalMatch", nflController.addFinalMatch)
+router.get("/single-game-boxscore-upcomming", nflController.nflUpcomming)
 
 
 export = router;
