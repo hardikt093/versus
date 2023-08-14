@@ -228,6 +228,13 @@ const getCalendar = async () => {
       },
     },
     {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
+    },
+    {
       $group: {
         _id: {
           weekName: "$weekName",
@@ -235,6 +242,9 @@ const getCalendar = async () => {
         },
         dates: {
           $push: "$dateTimeUtc",
+        },
+        dateInString: {
+          $push: "$dateInString",
         },
       },
     },
@@ -245,6 +255,20 @@ const getCalendar = async () => {
           $push: {
             title: "$_id.weekName",
             dates: "$dates",
+            dateInString: "$dateInString",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        weekItem: {
+          $sortArray: {
+            input: "$weekItem",
+            sortBy: {
+              dateInString: 1,
+            },
           },
         },
       },
