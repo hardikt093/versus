@@ -40,20 +40,9 @@ const nflScoreWithDate = async (req: Request, res: Response) => {
   }
 };
 
-const addFinalMatch = async (req: Request, res: Response) => {
-  try {
-    const data = await nflService.addFinalMatch(req.query);
-     createResponse(res, httpStatus.OK, "", data);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-   
-};
-
 export default {
   addStanding,
   getNflStandings,
   getCalendar,
   nflScoreWithDate,
-  addFinalMatch,
 };
