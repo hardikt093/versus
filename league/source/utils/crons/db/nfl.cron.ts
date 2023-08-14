@@ -72,7 +72,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   isUpdateLiveMatch = true;
   try {
     console.log("here");
-    await nflService.addFinalMatch();
+    await nflService.updateLiveMatch();
   } catch (error) {
     console.log(error);
   } finally {

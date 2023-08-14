@@ -525,7 +525,7 @@ export default class NFLDbCronServiceClass {
     }
   };
 
-  public addFinalMatch = async () => {
+  public updateLiveMatch = async () => {
     try {
       const getMatch: any = await axiosGet(
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-scores`,
