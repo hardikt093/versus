@@ -5,6 +5,7 @@ import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import { axiosGet } from "../../services/axios.service";
 import { goalserveApi } from "../../services/goalserve.service";
+import INflMatchModel from "../../models/interfaces/nflMatch.interface";
 
 const addStanding = async () => {
   let data = {
@@ -227,6 +228,13 @@ const getCalendar = async () => {
       },
     },
     {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
+    },
+    {
       $group: {
         _id: {
           weekName: "$weekName",
@@ -234,6 +242,9 @@ const getCalendar = async () => {
         },
         dates: {
           $push: "$dateTimeUtc",
+        },
+        dateInString: {
+          $push: "$dateInString",
         },
       },
     },
@@ -244,6 +255,20 @@ const getCalendar = async () => {
           $push: {
             title: "$_id.weekName",
             dates: "$dates",
+            dateInString: "$dateInString",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        weekItem: {
+          $sortArray: {
+            input: "$weekItem",
+            sortBy: {
+              dateInString: 1,
+            },
           },
         },
       },
@@ -601,6 +626,7 @@ const scoreWithDate = async (data: any) => {
       },
     },
   ]);
+
   if (data.type) {
     if (data.type == "final") {
       return getFinalMatch;
@@ -608,134 +634,259 @@ const scoreWithDate = async (data: any) => {
       return getUpcomingMatch;
     }
   } else {
-    return { getUpcomingMatch, getFinalMatch };
+    return {
+      getUpcomingMatch,
+      getFinalMatch,
+      getLiveDataOfNfl: await getLiveDataOfNfl(data),
+    };
   }
 };
 
-const addFinalMatch = async (date: any) => {
-  var getDaysArray = function (start: Date, end: Date) {
-    for (
-      var arr = [], dt = new Date(start);
-      dt <= new Date(end);
-      dt.setDate(dt.getDate() + 1)
-    ) {
-      let day = moment(dt).format("DD");
-      let month = moment(dt).format("MM");
-      let year = moment(dt).format("YYYY");
-      let date = `${day}.${month}.${year}`;
-      arr.push(date);
-    }
-    return arr;
-  };
-  var daylist = getDaysArray(new Date("2023-08-03"), new Date("2023-08-10"));
-
-  for (let i = 0; i < daylist?.length; i++) {
-    const getMatch = await axiosGet(
-      `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-scores`,
-      { json: true, date: daylist[i] }
-    );
-    const matchArray = await getMatch?.data?.scores?.category?.match;
-    const league: ILeagueModel | undefined | null = await League.findOne({
-      goalServeLeagueId: getMatch?.data?.scores?.category?.id,
-    });
-    if (matchArray?.length > 0 && matchArray) {
-      for (let j = 0; j < matchArray?.length; j++) {
-        // const data: Partial<INflMatchModel> = {
-        //   goalServeLeagueId: league?.goalServeLeagueId,
-        //   goalServeMatchId:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
-        //   attendance:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.attendance,
-        //   goalServeHomeTeamId:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.id,
-        //   goalServeAwayTeamId:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.id,
-  
-        //   date: matchArray[i]?.week[j]?.matches[k]?.date,
-        //   dateTimeUtc:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.datetime_utc,
-        //   formattedDate:
-        //     matchArray[i]?.week[j]?.matches[k]?.formatted_date,
-        //   status: matchArray[i]?.week[j]?.matches[k]?.match[l]?.status,
-        //   time: matchArray[i]?.week[j]?.matches[k]?.match[l]?.time,
-        //   timezone: matchArray[i]?.week[j]?.matches[k]?.timezone,
-        //   goalServeVenueId:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue_id,
-        //   venueName:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue,
-        //   homeTeamTotalScore:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
-        //       .totalscore,
-        //   awayTeamTotalScore:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
-        //       .totalscore,
-  
-        //   // new entries
-        //   weekName: matchArray[i]?.week[j]?.name,
-        //   seasonName: matchArray[i]?.name,
-  
-        //   // timer: matchArray[i]?.match[j]?.timer
-        //   //   ? matchArray[i]?.match[j]?.timer
-        //   //   : "",
-        //   awayTeamOt:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.ot,
-        //   awayTeamQ1:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q1,
-        //   awayTeamQ2:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q2,
-        //   awayTeamQ3:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q3,
-        //   awayTeamQ4:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.q4,
-        //   awayTeamBallOn:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
-        //       .ball_on,
-        //   awayTeamDrive:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
-        //       .drive,
-        //   awayTeamNumber:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
-        //       .number,
-  
-        //   homeTeamOt:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.ot,
-        //   homeTeamQ1:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q1,
-        //   homeTeamQ2:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q2,
-        //   homeTeamQ3:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q3,
-        //   homeTeamQ4:
-        //     matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.q4,
-        //   homeTeamBallOn: matchArray[i]?.week[j]?.matches[k]?.match[l]
-        //     ?.awayteam.ball_on
-        //     ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam
-        //         .ball_on
-        //     : "",
-        //   homeTeamDrive: matchArray[i]?.week[j]?.matches[k]?.match[l]
-        //     ?.hometeam.drive
-        //     ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
-        //         .drive
-        //     : "",
-        //   homeTeamNumber: matchArray[i]?.week[j]?.matches[k]?.match[l]
-        //     ?.hometeam.number
-        //     ? matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam
-        //         .number
-        //     : "",
-        // };
-        // console.log("data", data);
-        // const matchData = new NflMatch(data);
-        // await matchData.save();
-      }
-     
-    }
-    else{
-      if(matchArray){
-
-      }
-    }
-
-  }
+const getLiveDataOfNfl = async (data: any) => {
+  return await NflMatch.aggregate([
+    {
+      $match: {
+        $and: [
+          {
+            status: {
+              $ne: "Not Started",
+            },
+          },
+          {
+            status: {
+              $ne: "Final",
+            },
+          },
+          {
+            status: {
+              $ne: "Final/OT",
+            },
+          },
+          {
+            status: {
+              $ne: "Final/2OT",
+            },
+          },
+          {
+            status: {
+              $not: {
+                $regex: "^Final",
+                $options: "i",
+              },
+            },
+          },
+          {
+            status: {
+              $ne: "Postponed",
+            },
+          },
+          {
+            status: {
+              $ne: "Canceled",
+            },
+          },
+          {
+            status: {
+              $ne: "Suspended",
+            },
+          },
+        ],
+      },
+    },
+    // {
+    //   $addFields: {
+    //     spliteTime: {
+    //       $split: ["$dateTimeUtc", " "],
+    //     },
+    //   },
+    // },
+    // {
+    //   $addFields: {
+    //     dateutc: {
+    //       $toDate: "$dateTimeUtc",
+    //     },
+    //   },
+    // },
+    // {
+    //   $addFields: {
+    //     dateInString: {
+    //       $toString: "$dateutc",
+    //     },
+    //   },
+    // },
+    {
+      $match: {
+        seasonName: data.seasonName,
+        weekName: data.weekName,
+      },
+    },
+    {
+      $lookup: {
+        from: "nflteams",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeam",
+      },
+    },
+    {
+      $lookup: {
+        from: "nflteams",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nflstandings",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nflstandings",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamStandings",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamStandings",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nflteamimages",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "nflteamimages",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeamImage",
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeamImage",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        awayTeamTotalScoreInNumber: {
+          $convert: {
+            input: "$awayTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
+        },
+        homeTeamTotalScoreInNumber: {
+          $convert: {
+            input: "$homeTeamTotalScore",
+            to: "int",
+            onError: 0, // Default value when conversion fails
+          },
+        },
+      },
+    },
+    {
+      $sort: {
+        datetime_utc: 1,
+      },
+    },
+    {
+      $project: {
+        id: true,
+        date: true,
+        status: "$status",
+        datetime_utc: "$dateTimeUtc",
+        time: true,
+        goalServeMatchId: true,
+        timer: "$timer",
+        awayTeam: {
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          awayTeamRun: "$awayTeamTotalScore",
+          won: "$awayTeamStandings.won",
+          lose: "$awayTeamStandings.lost",
+          teamImage: "$awayTeamImage.image",
+          goalServeAwayTeamId: "$goalServeAwayTeamId",
+          isWinner: {
+            $cond: {
+              if: {
+                $gte: [
+                  "$awayTeamTotalScoreInNumber",
+                  "$homeTeamTotalScoreInNumber",
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+        homeTeam: {
+          homeTeamName: "$homeTeam.name",
+          homeTeamId: "$homeTeam._id",
+          homeTeamRun: "$homeTeamTotalScore",
+          won: "$homeTeamStandings.won",
+          lose: "$homeTeamStandings.lost",
+          teamImage: "$homeTeamImage.image",
+          goalServeHomeTeamId: "$goalServeHomeTeamId",
+          isWinner: {
+            $cond: {
+              if: {
+                $gte: [
+                  "$homeTeamTotalScoreInNumber",
+                  "$awayTeamTotalScoreInNumber",
+                ],
+              },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+    },
+  ]);
 };
 
 export default {
@@ -743,5 +894,5 @@ export default {
   getStandings,
   getCalendar,
   scoreWithDate,
-  addFinalMatch,
+  getLiveDataOfNfl,
 };
