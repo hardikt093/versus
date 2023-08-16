@@ -705,148 +705,150 @@ export default class NFLDbCronServiceClass {
         }
       } else {
         if (matchArray) {
-          console.log("here in else");
           const match: INflMatchModel | null = await NflMatch.findOne({
             goalServeMatchId: matchArray?.contestID,
           });
-          const data: Partial<INflMatchModel> = {
-            attendance: matchArray?.attendance,
-            goalServeHomeTeamId: matchArray?.hometeam.id,
-            goalServeAwayTeamId: matchArray?.awayteam.id,
-
-            date: matchArray?.date,
-            dateTimeUtc: matchArray?.datetime_utc,
-            formattedDate: matchArray?.formatted_date,
-            status: matchArray?.status,
-            time: matchArray?.time,
-            timezone: matchArray?.timezone,
-            goalServeVenueId: matchArray?.venue_id,
-            venueName: matchArray?.venue,
-            homeTeamTotalScore: matchArray?.hometeam.totalscore,
-            awayTeamTotalScore: matchArray?.awayteam.totalscore,
-
-            timer: matchArray?.timer ? matchArray?.timer : "",
-            awayTeamOt: matchArray?.awayteam.ot ? matchArray?.awayteam.ot : "",
-            awayTeamQ1: matchArray?.awayteam.q1 ? matchArray?.awayteam.q1 : "",
-            awayTeamQ2: matchArray?.awayteam.q2 ? matchArray?.awayteam.q2 : "",
-            awayTeamQ3: matchArray?.awayteam.q3 ? matchArray?.awayteam.q3 : "",
-            awayTeamQ4: matchArray?.awayteam.q4 ? matchArray?.awayteam.q4 : "",
-            awayTeamBallOn: matchArray?.awayteam.ball_on
-              ? matchArray?.awayteam.ball_on
-              : "",
-            awayTeamDrive: matchArray?.awayteam.drive
-              ? matchArray?.awayteam.drive
-              : "",
-            awayTeamNumber: matchArray?.awayteam.number
-              ? matchArray?.awayteam.number
-              : "",
-
-            homeTeamOt: matchArray?.hometeam.ot ? matchArray?.hometeam.ot : "",
-            homeTeamQ1: matchArray?.hometeam.q1 ? matchArray?.hometeam.q1 : "",
-            homeTeamQ2: matchArray?.hometeam.q2 ? matchArray?.hometeam.q2 : "",
-            homeTeamQ3: matchArray?.hometeam.q3 ? matchArray?.hometeam.q3 : "",
-            homeTeamQ4: matchArray?.hometeam.q4 ? matchArray?.hometeam.q4 : "",
-            homeTeamBallOn: matchArray?.awayteam.ball_on
-              ? matchArray?.awayteam.ball_on
-              : "",
-            homeTeamDrive: matchArray?.hometeam.drive
-              ? matchArray?.hometeam.drive
-              : "",
-            homeTeamNumber: matchArray?.hometeam.number
-              ? matchArray?.hometeam.number
-              : "",
-            awayTeamDefensive: matchArray?.defensive?.awayteam?.player
-              ? matchArray?.defensive?.awayteam?.player
-              : [],
-            homeTeamDefensive: matchArray?.defensive?.hometeam?.player
-              ? matchArray?.defensive?.hometeam?.player
-              : [],
-
-            firstQuarterEvent: matchArray?.events?.firstquarter?.event
-              ? matchArray?.events?.firstquarter?.event
-              : [],
-            fourthQuarterEvent: matchArray?.events?.fourthquarter?.event
-              ? matchArray?.events?.fourthquarter?.event
-              : [],
-            overtimeEvent: matchArray?.events?.overtime?.event
-              ? matchArray?.events?.overtime?.event
-              : [],
-            secondQuarterEvent: matchArray?.events?.secondquarter?.event
-              ? matchArray?.events?.secondquarter?.event
-              : [],
-            thirdQuarterEvent:
-              matchArray?.events?.thirdquarter?.event != null
-                ? matchArray?.events?.thirdquarter?.event
+          if (match) {
+            const data: Partial<INflMatchModel> = {
+              attendance: matchArray?.attendance,
+              goalServeHomeTeamId: matchArray?.hometeam.id,
+              goalServeAwayTeamId: matchArray?.awayteam.id,
+  
+              date: matchArray?.date,
+              dateTimeUtc: matchArray?.datetime_utc,
+              formattedDate: matchArray?.formatted_date,
+              status: matchArray?.status,
+              time: matchArray?.time,
+              timezone: matchArray?.timezone,
+              goalServeVenueId: matchArray?.venue_id,
+              venueName: matchArray?.venue,
+              homeTeamTotalScore: matchArray?.hometeam.totalscore,
+              awayTeamTotalScore: matchArray?.awayteam.totalscore,
+  
+              timer: matchArray?.timer ? matchArray?.timer : "",
+              awayTeamOt: matchArray?.awayteam.ot ? matchArray?.awayteam.ot : "",
+              awayTeamQ1: matchArray?.awayteam.q1 ? matchArray?.awayteam.q1 : "",
+              awayTeamQ2: matchArray?.awayteam.q2 ? matchArray?.awayteam.q2 : "",
+              awayTeamQ3: matchArray?.awayteam.q3 ? matchArray?.awayteam.q3 : "",
+              awayTeamQ4: matchArray?.awayteam.q4 ? matchArray?.awayteam.q4 : "",
+              awayTeamBallOn: matchArray?.awayteam.ball_on
+                ? matchArray?.awayteam.ball_on
+                : "",
+              awayTeamDrive: matchArray?.awayteam.drive
+                ? matchArray?.awayteam.drive
+                : "",
+              awayTeamNumber: matchArray?.awayteam.number
+                ? matchArray?.awayteam.number
+                : "",
+  
+              homeTeamOt: matchArray?.hometeam.ot ? matchArray?.hometeam.ot : "",
+              homeTeamQ1: matchArray?.hometeam.q1 ? matchArray?.hometeam.q1 : "",
+              homeTeamQ2: matchArray?.hometeam.q2 ? matchArray?.hometeam.q2 : "",
+              homeTeamQ3: matchArray?.hometeam.q3 ? matchArray?.hometeam.q3 : "",
+              homeTeamQ4: matchArray?.hometeam.q4 ? matchArray?.hometeam.q4 : "",
+              homeTeamBallOn: matchArray?.awayteam.ball_on
+                ? matchArray?.awayteam.ball_on
+                : "",
+              homeTeamDrive: matchArray?.hometeam.drive
+                ? matchArray?.hometeam.drive
+                : "",
+              homeTeamNumber: matchArray?.hometeam.number
+                ? matchArray?.hometeam.number
+                : "",
+              awayTeamDefensive: matchArray?.defensive?.awayteam?.player
+                ? matchArray?.defensive?.awayteam?.player
                 : [],
-
-            awayTeamFumbles: matchArray?.fumbles?.awayteam?.player
-              ? matchArray?.fumbles?.awayteam?.player
-              : [],
-            homeTeamFumbles: matchArray?.fumbles?.hometeam?.player
-              ? matchArray?.fumbles?.hometeam?.player
-              : [],
-
-            awayTeamInterceptions: matchArray?.interceptions?.awayteam?.player
-              ? matchArray?.interceptions?.awayteam?.player
-              : [],
-            homeTeamInterceptions: matchArray?.interceptions?.hometeam?.player
-              ? matchArray?.interceptions?.hometeam?.player
-              : [],
-
-            awayTeamKickReturn: matchArray?.kick_returns?.awayteam?.player
-              ? matchArray?.kick_returns?.awayteam?.player
-              : [],
-            homeTeamKickReturn: matchArray?.kick_returns?.hometeam?.player
-              ? matchArray?.kick_returns?.hometeam?.player
-              : [],
-
-            awayTeamKick: matchArray?.kicking?.awayteam?.player
-              ? matchArray?.kicking?.awayteam?.player
-              : {},
-            homeTeamKick: matchArray?.kicking?.hometeam?.player
-              ? matchArray?.kicking?.hometeam?.player
-              : {},
-
-            awayTeamPassing: matchArray?.passing?.awayteam?.player
-              ? matchArray?.passing?.awayteam?.player
-              : [],
-            homeTeamPassing: matchArray?.passing?.hometeam?.player
-              ? matchArray?.passing?.hometeam?.player
-              : [],
-
-            awayTeamPuntReturns: matchArray?.punt_returns?.awayteam?.player
-              ? matchArray?.punt_returns?.awayteam?.player
-              : [],
-            homeTeamPuntReturns: matchArray?.punt_returns?.hometeam?.player
-              ? matchArray?.punt_returns?.hometeam?.player
-              : [],
-
-            awayTeamPunting: matchArray?.punting?.awayteam?.player
-              ? matchArray?.punting?.awayteam?.player
-              : [],
-            homeTeamPunting: matchArray?.punting?.hometeam?.player
-              ? matchArray?.punting?.hometeam?.player
-              : [],
-
-            awayTeamReceiving: matchArray?.receiving?.awayteam?.player
-              ? matchArray?.receiving?.awayteam?.player
-              : [],
-            homeTeamReceiving: matchArray?.receiving?.hometeam?.player
-              ? matchArray?.receiving?.hometeam?.player
-              : [],
-
-            awayTeamRushing: matchArray?.rushing?.awayteam?.player
-              ? matchArray?.rushing?.awayteam?.player
-              : [],
-            homeTeamRushing: matchArray?.rushing?.hometeam?.player
-              ? matchArray?.rushing?.hometeam?.player
-              : [],
-          };
-          const dataUpdate = await NflMatch.findOneAndUpdate(
-            { goalServeMatchId: matchArray?.contestID },
-            { $set: data },
-            { new: true }
-          );
+              homeTeamDefensive: matchArray?.defensive?.hometeam?.player
+                ? matchArray?.defensive?.hometeam?.player
+                : [],
+  
+              firstQuarterEvent: matchArray?.events?.firstquarter?.event
+                ? matchArray?.events?.firstquarter?.event
+                : [],
+              fourthQuarterEvent: matchArray?.events?.fourthquarter?.event
+                ? matchArray?.events?.fourthquarter?.event
+                : [],
+              overtimeEvent: matchArray?.events?.overtime?.event
+                ? matchArray?.events?.overtime?.event
+                : [],
+              secondQuarterEvent: matchArray?.events?.secondquarter?.event
+                ? matchArray?.events?.secondquarter?.event
+                : [],
+              thirdQuarterEvent:
+                matchArray?.events?.thirdquarter?.event != null
+                  ? matchArray?.events?.thirdquarter?.event
+                  : [],
+  
+              awayTeamFumbles: matchArray?.fumbles?.awayteam?.player
+                ? matchArray?.fumbles?.awayteam?.player
+                : [],
+              homeTeamFumbles: matchArray?.fumbles?.hometeam?.player
+                ? matchArray?.fumbles?.hometeam?.player
+                : [],
+  
+              awayTeamInterceptions: matchArray?.interceptions?.awayteam?.player
+                ? matchArray?.interceptions?.awayteam?.player
+                : [],
+              homeTeamInterceptions: matchArray?.interceptions?.hometeam?.player
+                ? matchArray?.interceptions?.hometeam?.player
+                : [],
+  
+              awayTeamKickReturn: matchArray?.kick_returns?.awayteam?.player
+                ? matchArray?.kick_returns?.awayteam?.player
+                : [],
+              homeTeamKickReturn: matchArray?.kick_returns?.hometeam?.player
+                ? matchArray?.kick_returns?.hometeam?.player
+                : [],
+  
+              awayTeamKick: matchArray?.kicking?.awayteam?.player
+                ? matchArray?.kicking?.awayteam?.player
+                : {},
+              homeTeamKick: matchArray?.kicking?.hometeam?.player
+                ? matchArray?.kicking?.hometeam?.player
+                : {},
+  
+              awayTeamPassing: matchArray?.passing?.awayteam?.player
+                ? matchArray?.passing?.awayteam?.player
+                : [],
+              homeTeamPassing: matchArray?.passing?.hometeam?.player
+                ? matchArray?.passing?.hometeam?.player
+                : [],
+  
+              awayTeamPuntReturns: matchArray?.punt_returns?.awayteam?.player
+                ? matchArray?.punt_returns?.awayteam?.player
+                : [],
+              homeTeamPuntReturns: matchArray?.punt_returns?.hometeam?.player
+                ? matchArray?.punt_returns?.hometeam?.player
+                : [],
+  
+              awayTeamPunting: matchArray?.punting?.awayteam?.player
+                ? matchArray?.punting?.awayteam?.player
+                : [],
+              homeTeamPunting: matchArray?.punting?.hometeam?.player
+                ? matchArray?.punting?.hometeam?.player
+                : [],
+  
+              awayTeamReceiving: matchArray?.receiving?.awayteam?.player
+                ? matchArray?.receiving?.awayteam?.player
+                : [],
+              homeTeamReceiving: matchArray?.receiving?.hometeam?.player
+                ? matchArray?.receiving?.hometeam?.player
+                : [],
+  
+              awayTeamRushing: matchArray?.rushing?.awayteam?.player
+                ? matchArray?.rushing?.awayteam?.player
+                : [],
+              homeTeamRushing: matchArray?.rushing?.hometeam?.player
+                ? matchArray?.rushing?.hometeam?.player
+                : [],
+            };
+            const dataUpdate = await NflMatch.findOneAndUpdate(
+              { goalServeMatchId: matchArray?.contestID },
+              { $set: data },
+              { new: true }
+            );
+          }
+          
         }
       }
     } catch (error) {

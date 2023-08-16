@@ -392,8 +392,9 @@ const scoreWithDate = async (data: any) => {
     // },
     {
       $sort: {
-        formattedDate: 1,
-        time: 1,
+        // formattedDate: 1,
+        // time: 1,
+        dateTimeUtc: 1,
       },
     },
     // {
@@ -569,8 +570,9 @@ const scoreWithDate = async (data: any) => {
     },
     {
       $sort: {
-        formattedDate: 1,
-        time: 1,
+        // formattedDate: 1,
+        // time: 1,
+        dateTimeUtc: 1,
       },
     },
     {
@@ -830,7 +832,9 @@ const getLiveDataOfNfl = async (data: any) => {
     },
     {
       $sort: {
-        datetime_utc: 1,
+        // formattedDate: 1,
+        // time: 1,
+        dateTimeUtc: 1,
       },
     },
     {
