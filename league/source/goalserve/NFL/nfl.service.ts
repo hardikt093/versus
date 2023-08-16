@@ -972,7 +972,7 @@ const nflUpcomming = async (goalServeMatchId: string) => {
           // statsTeams: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
-          
+
           awayTeamAbbreviation: {
             $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
           },
@@ -1888,6 +1888,13 @@ const nflFinal = async (goalServeMatchId: string) => {
                 score: "$homeTeamTotalScore",
               },
             ],
+          },
+          scoringSummaries: {
+            firstQuarter: "$firstQuarterEvent",
+            secondQuarter: "$secondQuarterEvent",
+            thirdQuarter: "$thirdQuarterEvent",
+            fourthQuarter: "$fourthQuarterEvent",
+            overtime: "$overtimeEvent",
           },
         },
       },
