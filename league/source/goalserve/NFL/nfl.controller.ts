@@ -40,9 +40,52 @@ const nflScoreWithDate = async (req: Request, res: Response) => {
   }
 };
 
+const addFinalMatch = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.addFinalMatch(req.query);
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+const nflUpcomming = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.nflUpcomming(
+      req.query.goalServeMatchId as string
+    );
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const nflFinal = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.nflFinal(
+      req.query.goalServeMatchId as string
+    );
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+const nflLive = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.nflLive(
+      req.query.goalServeMatchId as string
+    );
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   addStanding,
   getNflStandings,
   getCalendar,
   nflScoreWithDate,
+  addFinalMatch,
+  nflUpcomming,
+  nflFinal,
+  nflLive
 };
