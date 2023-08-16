@@ -390,12 +390,12 @@ const scoreWithDate = async (data: any) => {
     //     as: "odds",
     //   },
     // },
-    // {
-    //   $sort: {
-    //     formattedDate: 1,
-    //     time: 1,
-    //   },
-    // },
+    {
+      $sort: {
+        formattedDate: 1,
+        time: 1,
+      },
+    },
     // {
     //   $unwind: {
     //     path: "$odds",
