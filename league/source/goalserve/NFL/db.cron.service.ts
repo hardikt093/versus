@@ -1027,7 +1027,6 @@ export default class NFLDbCronServiceClass {
             goalServeMatchId: matchArray[i]?.contestID,
           });
           if (match) {
-            console.log("matchArray", matchArray[i].playbyplay.drive[0]);
             const data: any = {
               drive: matchArray[i].playbyplay.drive[0].play[0].down
                 ? matchArray[i].playbyplay.drive[0].play[0].down
@@ -1046,7 +1045,6 @@ export default class NFLDbCronServiceClass {
             goalServeMatchId: matchArray?.contestID,
           });
           if (match) {
-            console.log("matchArray", matchArray.playbyplay.drive[0]);
             const data: any = {
               drive: matchArray.playbyplay.drive[0].play[0].down
                 ? matchArray.playbyplay.drive[0].play[0].down
@@ -1098,7 +1096,6 @@ export default class NFLDbCronServiceClass {
       });
       for (let i = 0; i < matchArray?.length; i++) {
         for (let j = 0; j < matchArray[i]?.week?.length; j++) {
-          // console.log("matchArray[i]?.week", matchArray[i]?.week[j]);
           if (matchArray[i]?.week[j]?.matches?.length > 0) {
             for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
               for (
@@ -1107,10 +1104,12 @@ export default class NFLDbCronServiceClass {
                 l++
               ) {
                 const findOdd = await NflOdds.find({
-                  goalServeMatchId: matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
                 });
                 const findMatch = await NflMatch.findOne({
-                  goalServeMatchId: matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
                 });
                 const getMoneyLine: any = await getOdds(
                   "Home/Away",
@@ -1119,7 +1118,6 @@ export default class NFLDbCronServiceClass {
                 const awayTeamMoneyline = getMoneyLine
                   ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
                   : undefined;
-                // console.log("awayTeamMoneyline", awayTeamMoneyline);
                 const homeTeamMoneyline = getMoneyLine
                   ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
                   : undefined;
@@ -1145,8 +1143,7 @@ export default class NFLDbCronServiceClass {
                 );
                 const totalValues = await getTotalValues(total);
 
-                // console.log("awayTeamMoneyline",awayTeamMoneyline)
-               const data = {
+                const data = {
                   status: matchArray[i]?.week[j]?.matches[k]?.match[l]?.status,
                   goalServerLeagueId: league?.goalServeLeagueId,
                   goalServeMatchId:
@@ -1183,12 +1180,15 @@ export default class NFLDbCronServiceClass {
                 if (findOdd?.length == 0) {
                   const oddsData = new NflOdds(data);
                   const savedOddsData = await oddsData.save();
-                }
-                else if (findOdd?.length > 0) {
+                } else if (findOdd?.length > 0) {
                   if (findMatch?.status == "Not Started") {
                     data.status = findMatch?.status;
                     await NflOdds.findOneAndUpdate(
-                      { goalServeMatchId: matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID},
+                      {
+                        goalServeMatchId:
+                          matchArray[i]?.week[j]?.matches[k]?.match[l]
+                            ?.contestID,
+                      },
                       { $set: data },
                       { new: true }
                     );
@@ -1202,7 +1202,9 @@ export default class NFLDbCronServiceClass {
                     data.status = findMatch?.status;
                     await NflOdds.updateOne(
                       {
-                        goalServeMatchId: matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                        goalServeMatchId:
+                          matchArray[i]?.week[j]?.matches[k]?.match[l]
+                            ?.contestID,
                         status: findMatch?.status,
                       },
                       { $set: data },
@@ -1210,7 +1212,8 @@ export default class NFLDbCronServiceClass {
                     );
                   } else {
                     const findOddWithStatus = await NflOdds.find({
-                      goalServeMatchId: matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
                       status: findMatch?.status,
                     });
                     if (findOddWithStatus.length > 0) {
@@ -1234,129 +1237,128 @@ export default class NFLDbCronServiceClass {
               m++
             ) {
               const findOdd = await NflOdds.find({
-                goalServeMatchId: matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
               });
               const findMatch = await NflMatch.findOne({
-                goalServeMatchId: matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
               });
-                const getMoneyLine: any = await getOdds(
-                  "Home/Away",
-                  matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
-                );
-                const awayTeamMoneyline = getMoneyLine
-                  ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
-                  : undefined;
-                const homeTeamMoneyline = getMoneyLine
-                  ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
-                  : undefined;
-                // getSpread
-                const getSpread = await getOdds(
-                  "Handicap",
-                  matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
-                );
-                const getAwayTeamRunLine = (await getSpread)
-                  ? getSpread?.handicap?.odd?.find(
-                      (item: any) => item?.name === "2"
-                    )
-                  : {};
-                const getHomeTeamRunLine = (await getSpread)
-                  ? getSpread?.handicap?.odd?.find(
-                      (item: any) => item?.name === "1"
-                    )
-                  : {};
-                const total = await getTotal(
-                  "Over/Under",
-                  matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
-                );
-                const totalValues = await getTotalValues(total);
-              const  data = {
-                  status:matchArray[i]?.week[j]?.matches?.match[m]?.status,
-                  goalServerLeagueId: league?.goalServeLeagueId,
-                  goalServeMatchId:
-                    matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
-                  goalServeHomeTeamId:
-                    matchArray[i]?.week[j]?.matches?.match[m]?.hometeam?.id,
-                  goalServeAwayTeamId:
-                    matchArray[i]?.week[j]?.matches?.match[m]?.awayteam?.id,
-                  // homeTeamSpread: homeTeamSpread,
-                  ...(getHomeTeamRunLine && {
-                    homeTeamSpread: getHomeTeamRunLine,
-                  }),
-                  ...(getHomeTeamRunLine?.us && {
-                    homeTeamSpreadUs: getHomeTeamRunLine?.us,
-                  }),
-                  // homeTeamTotal: totalValues,
-                  ...(totalValues && { homeTeamTotal: totalValues }),
-                  // awayTeamSpread: awayTeamSpread,
-                  ...(getAwayTeamRunLine && {
-                    awayTeamSpread: getAwayTeamRunLine,
-                  }),
-                  ...(getAwayTeamRunLine?.us && {
-                    awayTeamSpreadUs: getAwayTeamRunLine?.us,
-                  }),
-                  // awayTeamTotal: totalValues,
-                  ...(totalValues && { awayTeamTotal: totalValues }),
-                  ...(awayTeamMoneyline && {
-                    awayTeamMoneyline: awayTeamMoneyline,
-                  }),
-                  ...(homeTeamMoneyline && {
-                    homeTeamMoneyline: homeTeamMoneyline,
-                  }),
-                };
-                console.log("data====>", data);
-                if (findOdd?.length == 0) {
-                  const oddsData = new NflOdds(data);
-                  const savedOddsData = await oddsData.save();
-                }
-                else if (findOdd?.length > 0) {
-                  if (findMatch?.status == "Not Started") {
-                    data.status = findMatch?.status;
-                    await NflOdds.findOneAndUpdate(
-                      { goalServeMatchId: matchArray[i]?.week[j]?.matches?.match[m]?.contestID},
-                      { $set: data },
-                      { new: true }
-                    );
-                  } else if (
-                    findMatch?.status != "Not Started" &&
-                    findMatch?.status != "Final" &&
-                    findMatch?.status != "Postponed" &&
-                    findMatch?.status != "Canceled" &&
-                    findMatch?.status != "Suspended"
-                  ) {
-                    data.status = findMatch?.status;
-                    await NflOdds.updateOne(
-                      {
-                        goalServeMatchId: matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
-                        status: findMatch?.status,
-                      },
-                      { $set: data },
-                      { upsert: true }
-                    );
-                  } else {
-                    const findOddWithStatus = await NflOdds.find({
-                      goalServeMatchId: matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+              const getMoneyLine: any = await getOdds(
+                "Home/Away",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const awayTeamMoneyline = getMoneyLine
+                ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
+                : undefined;
+              const homeTeamMoneyline = getMoneyLine
+                ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
+                : undefined;
+              // getSpread
+              const getSpread = await getOdds(
+                "Handicap",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const getAwayTeamRunLine = (await getSpread)
+                ? getSpread?.handicap?.odd?.find(
+                    (item: any) => item?.name === "2"
+                  )
+                : {};
+              const getHomeTeamRunLine = (await getSpread)
+                ? getSpread?.handicap?.odd?.find(
+                    (item: any) => item?.name === "1"
+                  )
+                : {};
+              const total = await getTotal(
+                "Over/Under",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const totalValues = await getTotalValues(total);
+              const data = {
+                status: matchArray[i]?.week[j]?.matches?.match[m]?.status,
+                goalServerLeagueId: league?.goalServeLeagueId,
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                goalServeHomeTeamId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.hometeam?.id,
+                goalServeAwayTeamId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.awayteam?.id,
+                // homeTeamSpread: homeTeamSpread,
+                ...(getHomeTeamRunLine && {
+                  homeTeamSpread: getHomeTeamRunLine,
+                }),
+                ...(getHomeTeamRunLine?.us && {
+                  homeTeamSpreadUs: getHomeTeamRunLine?.us,
+                }),
+                // homeTeamTotal: totalValues,
+                ...(totalValues && { homeTeamTotal: totalValues }),
+                // awayTeamSpread: awayTeamSpread,
+                ...(getAwayTeamRunLine && {
+                  awayTeamSpread: getAwayTeamRunLine,
+                }),
+                ...(getAwayTeamRunLine?.us && {
+                  awayTeamSpreadUs: getAwayTeamRunLine?.us,
+                }),
+                // awayTeamTotal: totalValues,
+                ...(totalValues && { awayTeamTotal: totalValues }),
+                ...(awayTeamMoneyline && {
+                  awayTeamMoneyline: awayTeamMoneyline,
+                }),
+                ...(homeTeamMoneyline && {
+                  homeTeamMoneyline: homeTeamMoneyline,
+                }),
+              };
+              if (findOdd?.length == 0) {
+                const oddsData = new NflOdds(data);
+                const savedOddsData = await oddsData.save();
+              } else if (findOdd?.length > 0) {
+                if (findMatch?.status == "Not Started") {
+                  data.status = findMatch?.status;
+                  await NflOdds.findOneAndUpdate(
+                    {
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                    },
+                    { $set: data },
+                    { new: true }
+                  );
+                } else if (
+                  findMatch?.status != "Not Started" &&
+                  findMatch?.status != "Final" &&
+                  findMatch?.status != "Postponed" &&
+                  findMatch?.status != "Canceled" &&
+                  findMatch?.status != "Suspended"
+                ) {
+                  data.status = findMatch?.status;
+                  await NflOdds.updateOne(
+                    {
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
                       status: findMatch?.status,
-                    });
-                    if (findOddWithStatus.length > 0) {
-                      return;
-                    } else {
-                      data.status = findMatch?.status;
-                      const oddsData = new NflOdds(data);
-                      const savedOddsData = await oddsData.save();
-                    }
+                    },
+                    { $set: data },
+                    { upsert: true }
+                  );
+                } else {
+                  const findOddWithStatus = await NflOdds.find({
+                    goalServeMatchId:
+                      matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                    status: findMatch?.status,
+                  });
+                  if (findOddWithStatus.length > 0) {
+                    return;
+                  } else {
+                    data.status = findMatch?.status;
+                    const oddsData = new NflOdds(data);
+                    const savedOddsData = await oddsData.save();
                   }
                 }
-              
+              }
             }
             continue;
           }
         }
         continue;
-        //   for (let k = 0; k < matchesNeedToRemove.length; k++) {
-        //     const match = matchesNeedToRemove[k];
-        //     await NbaMatch.deleteOne({
-        //       goalServeMatchId: match.goalServeMatchId,
-        //     });
 
         return true;
       }
@@ -1364,155 +1366,4 @@ export default class NFLDbCronServiceClass {
       console.log("error", error);
     }
   };
-  // public createOrUpdateOdds = async () => {
-  //   let subDate = moment()
-  //     .startOf("day")
-  //     .subtract(24, "hours")
-  //     .utc()
-  //     .toISOString();
-  //   let addDate = moment().add(30, "days").utc().toISOString();
-  //   let day1 = moment(subDate).format("D");
-  //   let month1 = moment(subDate).format("MM");
-  //   let year1 = moment(subDate).format("YYYY");
-  //   let date1 = `${day1}.${month1}.${year1}`;
-
-  //   let day2 = moment(addDate).format("D");
-  //   let month2 = moment(addDate).format("MM");
-  //   let year2 = moment(addDate).format("YYYY");
-  //   let date2 = `${day2}.${month2}.${year2}`;
-
-  //   try {
-  //     let data = {
-  //       json: true,
-  //       date1: date1,
-  //       date2: date2,
-  //       showodds: "1",
-  //       bm: "455,451",
-  //     };
-  //     const getScore = await goalserveApi(
-  //       "https://www.goalserve.com/getfeed",
-  //       data,
-  //       "baseball/mlb_shedule"
-  //     );
-  //     var matchData = getScore?.data?.fixtures?.category?.matches;
-  //     if (matchData?.length > 0) {
-  //       let data: Partial<IOddModel>;
-  //       for (let i = 0; i < matchData?.length; i++) {
-  //         for (let j = 0; j < matchData[i]?.match?.length; j++) {
-  //           const findOdd = await Odd.find({
-  //             goalServeMatchId: matchData[i]?.match[j].id,
-  //           });
-  //           const findMatch = await Match.findOne({
-  //             goalServeMatchId: matchData[i]?.match[j].id,
-  //           });
-  //           const league: ILeagueModel | undefined | null =
-  //             await League.findOne({
-  //               goalServeLeagueId: getScore?.data.fixtures?.category?.id,
-  //             });
-  //           const getMoneyLine: any = await getOdds(
-  //             "Home/Away",
-  //             matchData[i]?.match[j]?.odds?.type
-  //           );
-  //           const awayTeamMoneyline = getMoneyLine
-  //             ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
-  //             : undefined;
-  //           const homeTeamMoneyline = getMoneyLine
-  //             ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
-  //             : undefined;
-  //           // getSpread
-  //           const getSpread = await getOdds(
-  //             "Run Line",
-  //             matchData[i]?.match[j]?.odds?.type
-  //           );
-  //           const getAwayTeamRunLine = await getRunLine(
-  //             matchData[i]?.match[j]?.awayteam?.name,
-  //             getSpread?.odd
-  //           );
-  //           const getHomeTeamRunLine = await getRunLine(
-  //             matchData[i]?.match[j]?.hometeam?.name,
-  //             getSpread?.odd
-  //           );
-  //           const awayTeamSpread = getAwayTeamRunLine
-  //             ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-  //             : "";
-
-  //           const homeTeamSpread = getHomeTeamRunLine
-  //             ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-  //             : "";
-  //           const total = await getTotal(
-  //             "Over/Under",
-  //             matchData[i]?.match[j]?.odds?.type
-  //           );
-  //           const totalValues = await getTotalValues(total);
-  //           data = {
-  //             goalServerLeagueId: league?.goalServeLeagueId,
-  //             goalServeMatchId: matchData[i]?.match[j]?.id,
-  //             goalServeHomeTeamId: matchData[i]?.match[j]?.hometeam?.id,
-  //             goalServeAwayTeamId: matchData[i]?.match[j]?.awayteam?.id,
-  //             // homeTeamSpread: homeTeamSpread,
-  //             ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
-  //             ...(getHomeTeamRunLine?.us && {
-  //               homeTeamSpreadUs: getHomeTeamRunLine?.us,
-  //             }),
-  //             // homeTeamTotal: totalValues,
-  //             ...(totalValues && { homeTeamTotal: totalValues }),
-  //             // awayTeamSpread: awayTeamSpread,
-  //             ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
-  //             ...(getAwayTeamRunLine?.us && {
-  //               awayTeamSpreadUs: getAwayTeamRunLine?.us,
-  //             }),
-  //             // awayTeamTotal: totalValues,
-  //             ...(totalValues && { awayTeamTotal: totalValues }),
-  //             ...(awayTeamMoneyline && {
-  //               awayTeamMoneyline: awayTeamMoneyline,
-  //             }),
-  //             ...(homeTeamMoneyline && {
-  //               homeTeamMoneyline: homeTeamMoneyline,
-  //             }),
-  //           };
-  //           if (findOdd?.length > 0) {
-  //             if (findMatch?.status == "Not Started") {
-  //               data.status = findMatch?.status;
-  //               await Odd.findOneAndUpdate(
-  //                 { goalServeMatchId: matchData[i]?.match[j].id },
-  //                 { $set: data },
-  //                 { new: true }
-  //               );
-  //             } else if (
-  //               findMatch?.status != "Not Started" &&
-  //               findMatch?.status != "Final" &&
-  //               findMatch?.status != "Postponed" &&
-  //               findMatch?.status != "Canceled" &&
-  //               findMatch?.status != "Suspended"
-  //             ) {
-  //               data.status = findMatch?.status;
-  //               await Odd.updateOne(
-  //                 {
-  //                   goalServeMatchId: matchData[i]?.match[j].id,
-  //                   status: findMatch?.status,
-  //                 },
-  //                 { $set: data },
-  //                 { upsert: true }
-  //               );
-  //             } else {
-  //               const findOddWithStatus = await Odd.find({
-  //                 goalServeMatchId: matchData[i]?.match[j].id,
-  //                 status: findMatch?.status,
-  //               });
-  //               if (findOddWithStatus.length > 0) {
-  //                 return;
-  //               } else {
-  //                 data.status = findMatch?.status;
-  //                 const oddsData = new Odd(data);
-  //                 const savedOddsData = await oddsData.save();
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   } catch (error: any) {
-  //     console.log("error", error);
-  //   }
-  // };
 }
