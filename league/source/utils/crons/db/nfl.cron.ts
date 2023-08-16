@@ -71,8 +71,8 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   }
   isUpdateLiveMatch = true;
   try {
-    console.log("here");
     await nflService.updateLiveMatch();
+    await nflService.addOrUpdateDriveInLive()
   } catch (error) {
     console.log(error);
   } finally {
@@ -95,11 +95,27 @@ const updateInjuredPlayerNFL = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 
+let isOddAdded: boolean = false;
+const oddAdded = cron.schedule("*/10 * * * * *", async () => {
+  console.log("isOddAdded Skip");
+  if (isupdateTeamStatsNflRunning) {
+    return;
+  }
+  isOddAdded = true;
+  try {
+    await nflService.createOdds();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isOddAdded = false;
+  }
+});
 export default {
   updateStandingRecord,
   updateNflUpcommingMatch,
   updatePlayersNfl,
   updateTeamStatsNfl,
   updateLiveMatch,
-  updateInjuredPlayerNFL
+  updateInjuredPlayerNFL,
+  oddAdded
 };

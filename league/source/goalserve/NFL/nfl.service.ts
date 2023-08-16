@@ -312,36 +312,36 @@ const scoreWithDate = async (data: any) => {
         status: "Not Started",
       },
     },
-    // {
-    //   $lookup: {
-    //     from: "nhlteams",
-    //     localField: "goalServeAwayTeamId",
-    //     foreignField: "goalServeTeamId",
-    //     as: "awayTeam",
-    //   },
-    // },
-    // {
-    //   $lookup: {
-    //     from: "nhlteams",
-    //     localField: "goalServeHomeTeamId",
-    //     foreignField: "goalServeTeamId",
-    //     as: "homeTeam",
-    //   },
-    // },
-    // {
-    //   $unwind: {
-    //     path: "$awayTeam",
-    //     includeArrayIndex: "string",
-    //     preserveNullAndEmptyArrays: true,
-    //   },
-    // },
-    // {
-    //   $unwind: {
-    //     path: "$homeTeam",
-    //     includeArrayIndex: "string",
-    //     preserveNullAndEmptyArrays: true,
-    //   },
-    // },
+    {
+      $lookup: {
+        from: "nflteams",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeam",
+      },
+    },
+    {
+      $lookup: {
+        from: "nflteams",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
     {
       $lookup: {
         from: "nflstandings",
@@ -402,14 +402,14 @@ const scoreWithDate = async (data: any) => {
         preserveNullAndEmptyArrays: true,
       },
     },
-    // {
-    //   $lookup: {
-    //     from: "nhlodds",
-    //     localField: "goalServeMatchId",
-    //     foreignField: "goalServeMatchId",
-    //     as: "odds",
-    //   },
-    // },
+    {
+      $lookup: {
+        from: "nflodds",
+        localField: "goalServeMatchId",
+        foreignField: "goalServeMatchId",
+        as: "odds",
+      },
+    },
     {
       $sort: {
         // formattedDate: 1,
@@ -417,13 +417,13 @@ const scoreWithDate = async (data: any) => {
         dateTimeUtc: 1,
       },
     },
-    // {
-    //   $unwind: {
-    //     path: "$odds",
-    //     includeArrayIndex: "string",
-    //     preserveNullAndEmptyArrays: true,
-    //   },
-    // },
+    {
+      $unwind: {
+        path: "$odds",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
     {
       $project: {
         id: true,
@@ -433,8 +433,8 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         awayTeam: {
-          awayTeamName: "$awayTeamStandings.name",
-          awayTeamId: "$awayTeamStandings._id",
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
           goalServeAwayTeamId: "$awayTeamStandings.goalServeTeamId",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
@@ -446,12 +446,12 @@ const scoreWithDate = async (data: any) => {
               "$odds.awayTeamMoneyline.us",
             ],
           },
-          spread: "$odds.awayTeamSpread",
+          spread: "$odds.awayTeamSpread.handicap",
           total: "$odds.awayTeamTotal",
         },
         homeTeam: {
-          homeTeamName: "$homeTeamStandings.name",
-          homeTeamId: "$homeTeamStandings._id",
+          homeTeamName: "$homeTeam.name",
+          homeTeamId: "$homeTeam._id",
           goalServeHomeTeamId: "$homeTeamStandings.goalServeTeamId",
           homeTeamErrors: "$homeTeamError",
           won: "$homeTeamStandings.won",
@@ -465,7 +465,7 @@ const scoreWithDate = async (data: any) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          spread: "$odds.homeTeamSpread",
+          spread: "$odds.homeTeamSpread.handicap",
 
           total: "$odds.homeTeamTotal",
         },
