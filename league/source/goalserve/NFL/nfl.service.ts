@@ -97,15 +97,35 @@ const getStandings = async () => {
             points_for: "$points_for",
             name: "$name",
             difference: {
-              $toString: {
-                $subtract: [
-                  { $toInt: "$points_for" },
-                  {
-                    $toInt: "$points_against",
+              $concat: [
+                {
+                  $cond: {
+                    if: {
+                      $gt: [
+                        {
+                          $subtract: [
+                            { $toInt: "$points_for" },
+                            { $toInt: "$points_against" },
+                          ],
+                        },
+                        0,
+                      ],
+                    },
+                    then: "+",
+                    else: "",
                   },
-                ],
-              },
+                },
+                {
+                  $toString: {
+                    $subtract: [
+                      { $toInt: "$points_for" },
+                      { $toInt: "$points_against" },
+                    ],
+                  },
+                },
+              ],
             },
+
             streak: "$streak",
           },
         },
