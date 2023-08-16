@@ -10,6 +10,7 @@ import { INflPlayerModel } from "../../models/interfaces/nflPlayer.interface";
 import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
 import { goalserveApi } from "../../services/goalserve.service";
 import TeamNFL from "../../models/documents/NFL/team.model";
+import NflInjury from "../../models/documents/NFL/injury.model";
 
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
@@ -854,5 +855,100 @@ export default class NFLDbCronServiceClass {
     } catch (error) {
       console.log("error", error);
     }
+  };
+  public addInjuredPlayer = async () => {
+    const team = await TeamNFL.find();
+    await Promise.all(
+      team.map(async (item) => {
+        let data = {
+          json: true,
+        };
+        const injuryApi = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          data,
+          `football//${item?.goalServeTeamId}_injuries`
+        );
+        const injuryArray1 = injuryApi?.data?.team;
+        const existingPlayers = await NflInjury.find({
+          goalServeTeamId: item?.goalServeTeamId,
+        });
+        if (injuryArray1?.report && injuryArray1?.report?.length > 0) {
+          // Find the extra entries in the existingPlayers array
+          const extraEntries = existingPlayers.filter((player) => {
+            const playerExists = injuryArray1?.report?.some(
+              (val: any) => val?.player_id === player.goalServePlayerId
+            );
+            return !playerExists;
+          });
+          await NflInjury.deleteMany({
+            _id: { $in: extraEntries.map((player) => player._id) },
+          });
+
+          await Promise.all(
+            injuryArray1?.report?.map(async (val: any) => {
+              const player = await PlayersNFL.findOne({
+                goalServePlayerId: val?.player_id,
+              }).lean();
+
+              const data = {
+                date: val?.date,
+                description: val?.description,
+                goalServePlayerId: val?.player_id,
+                playerName: val?.player_name,
+                playerId: player?.id,
+                status: val?.status,
+                goalServeTeamId: injuryApi?.data?.team?.id,
+                teamId: item?._id,
+              };
+              await NflInjury.updateOne(
+                {
+                  goalServeTeamId: data?.goalServeTeamId,
+                  goalServePlayerId: data?.goalServePlayerId,
+                },
+                { $set: data },
+                { upsert: true }
+              );
+            })
+          );
+        } else if (injuryArray1?.report) {
+          const extraEntries = existingPlayers.filter((player) => {
+            const playerExists = Array(injuryArray1?.report)?.some(
+              (val: any) => val?.player_id === player.goalServePlayerId
+            );
+            return !playerExists;
+          });
+          await NflInjury.deleteMany({
+            _id: { $in: extraEntries.map((player) => player._id) },
+          });
+          const val = injuryArray1?.report;
+          const player = await PlayersNFL.findOne({
+            goalServePlayerId: val?.player_id,
+          }).lean();
+
+          const data = {
+            date: val?.date,
+            description: val?.description,
+            goalServePlayerId: val?.player_id,
+            playerName: val?.player_name,
+            status: val?.status,
+            goalServeTeamId: injuryArray1?.id,
+            teamId: item?.id,
+            playerId: player?._id,
+          };
+          await NflInjury.updateOne(
+            {
+              goalServeTeamId: data?.goalServeTeamId,
+              goalServePlayerId: data?.goalServePlayerId,
+            },
+            { $set: data },
+            { upsert: true }
+          );
+        } else {
+          await NflInjury.deleteMany({
+            _id: { $in: existingPlayers.map((player) => player._id) },
+          });
+        }
+      })
+    );
   };
 }

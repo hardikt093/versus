@@ -79,10 +79,29 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
     isUpdateLiveMatch = false;
   }
 });
+
+let isupdateInjuredPlayernflRunning: boolean = false;
+const updateInjuredPlayerNFL = cron.schedule("*/10 * * * * *", async () => {
+  if (isupdateInjuredPlayernflRunning) {
+    // console.log("updateInjuredPlayerNBA Skip");
+    return;
+  }
+  isupdateInjuredPlayernflRunning = true;
+  try {
+    console.info("inside score cron updateInjuredPlayerNBA");
+    await nflService.addInjuredPlayer();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateInjuredPlayernflRunning = false;
+  }
+});
+
 export default {
   updateStandingRecord,
   updateNflUpcommingMatch,
   updatePlayersNfl,
   updateTeamStatsNfl,
   updateLiveMatch,
+  updateInjuredPlayerNFL
 };

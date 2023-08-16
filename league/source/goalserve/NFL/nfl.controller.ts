@@ -58,6 +58,27 @@ const nflUpcomming = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const nflFinal = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.nflFinal(
+      req.query.goalServeMatchId as string
+    );
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+const nflLive = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.nflLive(
+      req.query.goalServeMatchId as string
+    );
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   addStanding,
   getNflStandings,
@@ -65,4 +86,6 @@ export default {
   nflScoreWithDate,
   addFinalMatch,
   nflUpcomming,
+  nflFinal,
+  nflLive
 };
