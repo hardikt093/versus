@@ -19,6 +19,8 @@ var nflMatchSchema = new Schema(
     homeTeamTotalScore: String,
 
     // new
+    weekName: String,
+    seasonName: String,
     timer: String,
     awayTeamOt: String,
     awayTeamQ1: String,
@@ -82,7 +84,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        type: String,
+        // type: String,
       },
     ],
     fourthQuarterEvent: [
@@ -94,7 +96,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        type: String,
+        // type: String,
       },
     ],
     overtimeEvent: [
@@ -106,7 +108,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        type: String,
+        // type: String,
       },
     ],
     secondQuarterEvent: [
@@ -118,7 +120,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        type: String,
+        // type: String,
       },
     ],
     thirdQuarterEvent: [
@@ -130,7 +132,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        type: String,
+        // type: String,
       },
     ],
     awayTeamFumbles: [
@@ -204,13 +206,18 @@ var nflMatchSchema = new Schema(
           yards: String,
         },
       ],
-      extraPoint: String,
-      fieldGoals: String,
-      fieldGoalsFrom119Yards: String,
-      fieldGoalsFrom2029Yards: String,
-      fieldGoalsFrom3039Yards: String,
-      fieldGoalsFrom4049Yards: String,
-      fieldGoalsFrom50Yards: String,
+      extra_point: String,
+      field_goals: String,
+      field_goals_from_1_19_yards: String,
+      field_goals_from_20_29_yards: String,
+      field_goals_from_30_39_yards: String,
+      field_goals_from_40_49_yards: String,
+      field_goals_from_50_yards: String,
+      id: String,
+      long: String,
+      name: String,
+      pct: String,
+      points: String,
     },
     homeTeamKick: {
       attempt: [
@@ -219,13 +226,18 @@ var nflMatchSchema = new Schema(
           yards: String,
         },
       ],
-      extraPoint: String,
-      fieldGoals: String,
-      fieldGoalsFrom119Yards: String,
-      fieldGoalsFrom2029Yards: String,
-      fieldGoalsFrom3039Yards: String,
-      fieldGoalsFrom4049Yards: String,
-      fieldGoalsFrom50Yards: String,
+      extra_point: String,
+      field_goals: String,
+      field_goals_from_1_19_yards: String,
+      field_goals_from_20_29_yards: String,
+      field_goals_from_30_39_yards: String,
+      field_goals_from_40_49_yards: String,
+      field_goals_from_50_yards: String,
+      id: String,
+      long: String,
+      name: String,
+      pct: String,
+      points: String,
     },
     awayTeamPassing: [
       {
@@ -360,6 +372,6 @@ var nflMatchSchema = new Schema(
     timestamps: true,
   }
 );
-const NbaMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
+const NflMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
 
-export default NbaMatch;
+export default NflMatch;

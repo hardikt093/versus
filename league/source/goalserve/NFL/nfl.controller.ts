@@ -16,4 +16,33 @@ const getNflStandings = async (req: Request, res: Response) => {
   }
 };
 
-export default { addStanding, getNflStandings };
+const getCalendar = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.getCalendar();
+    createResponse(
+      res,
+      httpStatus.OK,
+      "",
+      data.reduce((obj, item) => Object.assign(obj, item), {})
+      // data.reduce((obj, item) => Object.assign(obj, item), {})
+    );
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const nflScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    const data = await nflService.scoreWithDate(req.query);
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+export default {
+  addStanding,
+  getNflStandings,
+  getCalendar,
+  nflScoreWithDate,
+};
