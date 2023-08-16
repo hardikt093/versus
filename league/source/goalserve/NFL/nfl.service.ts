@@ -97,15 +97,35 @@ const getStandings = async () => {
             points_for: "$points_for",
             name: "$name",
             difference: {
-              $toString: {
-                $subtract: [
-                  { $toInt: "$points_for" },
-                  {
-                    $toInt: "$points_against",
+              $concat: [
+                {
+                  $cond: {
+                    if: {
+                      $gt: [
+                        {
+                          $subtract: [
+                            { $toInt: "$points_for" },
+                            { $toInt: "$points_against" },
+                          ],
+                        },
+                        0,
+                      ],
+                    },
+                    then: "+",
+                    else: "",
                   },
-                ],
-              },
+                },
+                {
+                  $toString: {
+                    $subtract: [
+                      { $toInt: "$points_for" },
+                      { $toInt: "$points_against" },
+                    ],
+                  },
+                },
+              ],
             },
+
             streak: "$streak",
           },
         },
@@ -185,14 +205,14 @@ const getStandings = async () => {
   for (const conferenceName in mergedObject) {
     mergedObject[conferenceName].teams.sort(
       (team1: any, team2: any) =>
-        Number(team1.win_percentage) - Number(team2.win_percentage)
+        Number(team2.win_percentage) - Number(team1.win_percentage)
     );
   }
   getStandingData[0].conference = Object.values(mergedObject);
   const sortedDivisions = getStandingData[0].division.map((division: any) => {
     const sortedTeams = division.teams.sort(
       (team1: any, team2: any) =>
-        Number(team1.win_percentage) - Number(team2.win_percentage)
+        Number(team2.win_percentage) - Number(team1.win_percentage)
     );
     return {
       name: division.name,
