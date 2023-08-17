@@ -1330,6 +1330,8 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                     $project: {
                       goalServeTeamId: 1,
                       won: 1,
+                      points_for: 1,
+                      points_against: 1,
                       lost: 1,
                     },
                   },
@@ -1346,6 +1348,8 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                     $project: {
                       goalServeTeamId: 1,
                       won: 1,
+                      points_for: 1,
+                      points_against: 1,
                       lost: 1,
                     },
                   },
@@ -1458,6 +1462,64 @@ const nflUpcomming = async (goalServeMatchId: string) => {
         },
       },
       {
+        $lookup: {
+          from: "nflstatsteams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      passingTeam: 1,
+                      rushingTeam: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      passingTeam: 1,
+                      rushingTeam: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "statsTeams",
+        },
+      },
+      {
         $project: {
           id: true,
           attendance: true,
@@ -1468,7 +1530,6 @@ const nflUpcomming = async (goalServeMatchId: string) => {
           datetime_utc: "$dateTimeUtc",
           weekName: "$weekName",
           seasonName: "$seasonName",
-          // statsTeams: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
 
@@ -1574,7 +1635,11 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                         yards_per_game: "$$player.passing.yards_per_game",
                         yards: "$$player.passing.yards",
                         completions_by_Attempts: {
-                          $concat: ["$$player.passing.completions","/", "$$player.passing.passing_attempts"],
+                          $concat: [
+                            "$$player.passing.completions",
+                            "/",
+                            "$$player.passing.passing_attempts",
+                          ],
                         },
                       },
                     ],
@@ -1658,9 +1723,12 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                         playerName: "$$player.name",
                         goalServePlayerId: "$$player.goalServePlayerId",
                         goalServeTeamId: "$$player.goalServeTeamId",
-                        receiving_targets: "$$player.receiving.receiving_targets",
-                        longest_reception: "$$player.receiving.longest_reception",
-                        receiving_touchdowns: "$$player.receiving.receiving_touchdowns",
+                        receiving_targets:
+                          "$$player.receiving.receiving_targets",
+                        longest_reception:
+                          "$$player.receiving.longest_reception",
+                        receiving_touchdowns:
+                          "$$player.receiving.receiving_touchdowns",
                         yards_per_game: "$$player.receiving.yards_per_game",
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
@@ -1713,7 +1781,11 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                         yards_per_game: "$$player.passing.yards_per_game",
                         yards: "$$player.passing.yards",
                         completions_by_Attempts: {
-                          $concat: ["$$player.passing.completions","/","$$player.passing.passing_attempts"],
+                          $concat: [
+                            "$$player.passing.completions",
+                            "/",
+                            "$$player.passing.passing_attempts",
+                          ],
                         },
                       },
                     ],
@@ -1797,9 +1869,12 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                         playerName: "$$player.name",
                         goalServePlayerId: "$$player.goalServePlayerId",
                         goalServeTeamId: "$$player.goalServeTeamId",
-                        receiving_targets: "$$player.receiving.receiving_targets",
-                        longest_reception: "$$player.receiving.longest_reception",
-                        receiving_touchdowns: "$$player.receiving.receiving_touchdowns",
+                        receiving_targets:
+                          "$$player.receiving.receiving_targets",
+                        longest_reception:
+                          "$$player.receiving.longest_reception",
+                        receiving_touchdowns:
+                          "$$player.receiving.receiving_touchdowns",
                         yards_per_game: "$$player.receiving.yards_per_game",
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
@@ -1810,6 +1885,74 @@ const nflUpcomming = async (goalServeMatchId: string) => {
               },
             },
           },
+
+          teamStatistics: [
+            {
+              title: "Points Scored",
+              homeTeam: { $arrayElemAt: ["$standings.homeTeam.points_for", 0] },
+              awayTeam: { $arrayElemAt: ["$standings.awayTeam.points_for", 0] },
+              total: {
+                $add: [
+                  {
+                    $toInt: {
+                      $arrayElemAt: ["$standings.homeTeam.points_for", 0],
+                    },
+                  },
+                  {
+                    $toInt: {
+                      $arrayElemAt: ["$standings.awayTeam.points_for", 0],
+                    },
+                  },
+                ],
+              },
+            },
+
+            {
+              title: "Points Against",
+              homeTeam:  { $arrayElemAt: ["$standings.homeTeam.points_against", 0] },
+              awayTeam: { $arrayElemAt: ["$standings.awayTeam.points_against", 0] },
+              total: {
+                $add: [
+                  {
+                    $toDouble:  { $arrayElemAt: ["$standings.homeTeam.points_against", 0] },
+                  },
+                  {
+                    $toDouble: { $arrayElemAt: ["$standings.awayTeam.points_against", 0] },
+                  },
+                ],
+              },
+            },
+            {
+              title: "Passing Yards",
+              homeTeam: { $arrayElemAt: ["$statsTeams.homeTeam.passingTeam.yards_per_game", 0] },
+              awayTeam:{ $arrayElemAt: ["$statsTeams.awayTeam.passingTeam.yards_per_game", 0] },
+              total: {
+                $add: [
+                  {
+                    $toDouble: { $arrayElemAt: ["$statsTeams.homeTeam.passingTeam.yards_per_game", 0] },
+                  },
+                  {
+                    $toDouble: { $arrayElemAt: ["$statsTeams.awayTeam.passingTeam.yards_per_game", 0] },
+                  },
+                ],
+              },
+            },
+            {
+              title: "Rushing Yards",
+              homeTeam: { $arrayElemAt: ["$statsTeams.homeTeam.rushingTeam.yards_per_game", 0] },
+              awayTeam:{ $arrayElemAt: ["$statsTeams.awayTeam.rushingTeam.yards_per_game", 0] },
+              total: {
+                $add: [
+                  {
+                    $toDouble: { $arrayElemAt: ["$statsTeams.homeTeam.rushingTeam.yards_per_game", 0] },
+                  },
+                  {
+                    $toDouble: { $arrayElemAt: ["$statsTeams.awayTeam.rushingTeam.yards_per_game", 0] },
+                  },
+                ],
+              },
+            },
+          ],
         },
       },
     ]);
