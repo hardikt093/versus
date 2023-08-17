@@ -81,7 +81,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateInjuredPlayernflRunning: boolean = false;
-const updateInjuredPlayerNFL = cron.schedule("*/10 * * * * *", async () => {
+const updateInjuredPlayerNFL = cron.schedule("0 0 */1 * * *", async () => {
   if (isupdateInjuredPlayernflRunning) {
     return;
   }
@@ -112,7 +112,7 @@ const oddAdded = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateMatchStats: boolean = false;
-const updateMatchStatsNFL = cron.schedule("*/10 * * * * *", async () => {
+const updateMatchStatsNFL = cron.schedule("0 0 */1 * * *", async () => {
   if (isupdateMatchStats) {
     return;
   }
@@ -125,10 +125,6 @@ const updateMatchStatsNFL = cron.schedule("*/10 * * * * *", async () => {
     isupdateMatchStats = false;
   }
 });
-
-
-
-
 
 
 export default {
