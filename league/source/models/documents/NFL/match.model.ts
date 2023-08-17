@@ -19,6 +19,7 @@ var nflMatchSchema = new Schema(
     homeTeamTotalScore: String,
 
     // new
+    drive: String,
     weekName: String,
     seasonName: String,
     timer: String,
