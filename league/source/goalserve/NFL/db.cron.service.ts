@@ -379,7 +379,6 @@ export default class NFLDbCronServiceClass {
                   age: player.age,
                   college: player.college,
                   height: player.height,
-                  name: player.name,
                   number: player.number,
                   position: player.position,
                   salarycap: player.salarycap,
@@ -437,41 +436,49 @@ export default class NFLDbCronServiceClass {
                 };
                 switch (categoryName) {
                   case "Passing":
+                    playerData.name = player.name;
                     playerData.isPassingPlayer = true;
                     playerData.passing = { ...player };
                     allPassingPlayer.push(playerData);
                     break;
                   case "Rushing":
+                    playerData.name = player.name;
                     playerData.isRushingPlayer = true;
                     playerData.rushing = { ...player };
                     allRushingPlayer.push(playerData);
                     break;
                   case "Receiving":
+                    playerData.name = player.name;
                     playerData.isReceivingPlayer = true;
                     playerData.receiving = { ...player };
                     allReceivingPlayer.push(playerData);
                     break;
                   case "Defense":
+                    playerData.name = player.name;
                     playerData.isDefensePlayer = true;
                     playerData.defence = { ...player };
                     allDefencePlayer.push(playerData);
                     break;
                   case "Scoring":
+                    playerData.name = player.name;
                     playerData.isScoringPlayer = true;
                     playerData.scoring = { ...player };
                     allScoringPlayer.push(playerData);
                     break;
                   case "Returning":
+                    playerData.name = player.name;
                     playerData.isReturningPlayer = true;
                     playerData.returning = { ...player };
                     allReturningPlayer.push(playerData);
                     break;
                   case "Kicking":
+                    playerData.name = player.name;
                     playerData.isKickingPlayer = true;
                     playerData.kicking = { ...player };
                     allKickingPlayer.push(playerData);
                     break;
                   case "Punting":
+                    playerData.name = player.name;
                     playerData.isPuntingPlayer = true;
                     playerData.punting = { ...player };
                     allPuntingPlayer.push(playerData);
