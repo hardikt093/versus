@@ -110,6 +110,27 @@ const oddAdded = cron.schedule("*/10 * * * * *", async () => {
     isOddAdded = false;
   }
 });
+
+let isupdateMatchStats: boolean = false;
+const updateMatchStatsNFL = cron.schedule("*/10 * * * * *", async () => {
+  if (isupdateMatchStats) {
+    return;
+  }
+  isupdateMatchStats = true;
+  try {
+    await nflService.addMatchTeamStats();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateMatchStats = false;
+  }
+});
+
+
+
+
+
+
 export default {
   updateStandingRecord,
   updateNflUpcommingMatch,
@@ -117,5 +138,6 @@ export default {
   updateTeamStatsNfl,
   updateLiveMatch,
   updateInjuredPlayerNFL,
-  oddAdded
+  oddAdded,
+  updateMatchStatsNFL
 };

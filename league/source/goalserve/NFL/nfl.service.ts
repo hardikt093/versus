@@ -1631,6 +1631,17 @@ const nflFinal = async (goalServeMatchId: string) => {
         },
       },
       {
+        $lookup: {
+          from: "nflmatchstatsteams",
+          localField: "goalServeMatchId",
+          foreignField: "goalServeMatchId",
+          as: "matchStatsTeams",
+        },
+      },
+      {
+        $unwind:"$matchStatsTeams"
+      },
+      {
         $project: {
           id: true,
           attendance: true,
@@ -1638,6 +1649,32 @@ const nflFinal = async (goalServeMatchId: string) => {
           venueName: true,
           goalServeMatchId: true,
           goalServeLeagueId: true,
+          teamStats: {
+            awayTeam: {
+              total_yards: "$matchStatsTeams.team_stats.awayteam.yards.total",
+              passing_yards: "$matchStatsTeams.team_stats.awayteam.passing.total",
+              rushing_yards: "$matchStatsTeams.team_stats.awayteam.rushing.total",
+              turnover: "$matchStatsTeams.team_stats.awayteam.turnovers.total",
+              panalties: "$matchStatsTeams.team_stats.awayteam.penalties.total",
+              first_downs: "$matchStatsTeams.team_stats.awayteam.first_downs.total",
+              third_down_efficiency:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.third_down_efficiency",
+              fourth_down_efficiency:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.fourth_down_efficiency",
+            },
+            homeTeam: {
+              total_yards: "$matchStatsTeams.matchStatsTeams.team_stats.hometeam.yards.total",
+              passing_yards: "$matchStatsTeams.team_stats.hometeam.passing.total",
+              rushing_yards: "$matchStatsTeams.team_stats.hometeam.rushing.total",
+              turnover: "$matchStatsTeams.team_stats.hometeam.turnovers.total",
+              panalties: "$matchStatsTeams.team_stats.hometeam.penalties.total",
+              first_downs: "$matchStatsTeams.team_stats.hometeam.first_downs.total",
+              third_down_efficiency:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.third_down_efficiency",
+              fourth_down_efficiency:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.fourth_down_efficiency",
+            },
+          },
           datetime_utc: "$dateTimeUtc",
           weekName: "$weekName",
           seasonName: "$seasonName",
