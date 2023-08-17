@@ -19,7 +19,7 @@ const updateStandingRecord = cron.schedule("0 0 */1 * * *", async () => {
 let isUpdateNflUpcommingMatch: boolean = false;
 
 const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
-  if (isupdateStandingRecordRunning) {
+  if (isUpdateNflUpcommingMatch) {
     return;
   }
   isUpdateNflUpcommingMatch = true;
@@ -66,7 +66,7 @@ const updateTeamStatsNfl = cron.schedule("0 0 */1 * * *", async () => {
 let isUpdateLiveMatch: boolean = false;
 const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   console.log("isupdateFinalMatchNfl Skip");
-  if (isupdateTeamStatsNflRunning) {
+  if (isUpdateLiveMatch) {
     return;
   }
   isUpdateLiveMatch = true;
@@ -98,7 +98,7 @@ const updateInjuredPlayerNFL = cron.schedule("*/10 * * * * *", async () => {
 let isOddAdded: boolean = false;
 const oddAdded = cron.schedule("*/10 * * * * *", async () => {
   console.log("isOddAdded Skip");
-  if (isupdateTeamStatsNflRunning) {
+  if (isOddAdded) {
     return;
   }
   isOddAdded = true;
@@ -110,6 +110,9 @@ const oddAdded = cron.schedule("*/10 * * * * *", async () => {
     isOddAdded = false;
   }
 });
+
+
+
 export default {
   updateStandingRecord,
   updateNflUpcommingMatch,
