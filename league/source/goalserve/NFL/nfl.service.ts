@@ -1457,6 +1457,13 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                 },
               },
             },
+            {
+              $sort:{
+                "passing.yards":1,
+                "rushing.yards":1,
+                "receiving.yards":1,
+              }
+            }
           ],
           as: "players",
         },
@@ -3032,6 +3039,33 @@ const nflFinal = async (goalServeMatchId: string) => {
         $unwind: "$matchStatsTeams",
       },
       {
+        $lookup: {
+          from: "nflplayers",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
+                },
+              },
+              
+            },
+            {
+              $sort:{
+                "passing.yards":1,
+                "rushing.yards":1,
+                "receiving.yards":1,
+              }
+            }
+          ],
+          as: "players",
+        },
+      },
+      {
         $project: {
           id: true,
           attendance: true,
@@ -3108,53 +3142,28 @@ const nflFinal = async (goalServeMatchId: string) => {
             awayTeam: {
               passing: {
                 $map: {
-                  input: "$awayTeamPassing",
-                  as: "player",
-                  in: {
-                    $cond: [
-                      { $eq: ["$$player", []] },
-                      [],
+                  input: {
+                    $slice: [
                       {
-                        playerName: "$$player.name",
-                        goalServePlayerId: "$$player.id",
-                        comp_att: "$$player.comp_att",
-                        interceptions: "$$player.interceptions",
-                        yards: "$$player.yards",
-                        average: "$$player.average",
-                        sacks: "$$player.sacks",
-                        rating: "$$player.rating",
-                        passing_touchdowns: "$$player.passing_touch_downs",
+                        $filter: {
+                          input: "$players",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeAwayTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.passing", false] },
+                            ],
+                          },
+                        },
                       },
+                      0,
+                      2,
                     ],
                   },
-                },
-              },
-              rushing: {
-                $map: {
-                  input: "$awayTeamRushing",
-                  as: "player",
-                  in: {
-                    $cond: [
-                      { $eq: ["$$player", []] },
-                      [],
-                      {
-                        playerName: "$$player.name",
-                        goalServePlayerId: "$$player.goalServePlayerId",
-
-                        total_rushes: "$$player.total_rushes",
-                        yards: "$$player.yards",
-                        average: "$$player.average",
-                        longest_rush: "$$player.longest_rush",
-                        rushing_touch_downs: "$$player.rushing_touch_downs",
-                      },
-                    ],
-                  },
-                },
-              },
-              receiving: {
-                $map: {
-                  input: "$awayTeamReceiving",
-
                   as: "player",
                   in: {
                     $cond: [
@@ -3164,12 +3173,112 @@ const nflFinal = async (goalServeMatchId: string) => {
                         playerName: "$$player.name",
                         goalServePlayerId: "$$player.goalServePlayerId",
                         goalServeTeamId: "$$player.goalServeTeamId",
-                        total_receptions: "$$player.total_receptions",
-                        yards: "$$player.yards",
-                        average: "$$player.average",
-                        receiving_touch_downs: "$$player.receiving_touch_downs",
-                        longest_reception: "$$player.longest_reception",
-                        targets: "$$player.targets",
+                        interceptions: "$$player.passing.interceptions",
+                        sacks: "$$player.passing.sacks",
+                        quarterback_rating:
+                          "$$player.passing.quarterback_rating",
+                        passing_touchdowns:
+                          "$$player.passing.passing_touchdowns",
+                        yards_per_game: "$$player.passing.yards_per_game",
+                        yards: "$$player.passing.yards",
+                        completions_by_Attempts: {
+                          $concat: [
+                            "$$player.passing.completions",
+                            "/",
+                            "$$player.passing.passing_attempts",
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+              rushing: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$players",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.rushing", false] },
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      3,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        yards: "$$player.rushing.yards",
+                        longest_rush: "$$player.rushing.longest_rush",
+                        rushing_touchdowns:
+                          "$$player.rushing.rushing_touchdowns",
+                        yards_per_game: "$$player.rushing.yards_per_game",
+                        rushing_attempts: "$$player.rushing.rushing_attempts",
+                      },
+                    ],
+                  },
+                },
+              },
+              receiving: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$players",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeAwayTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.receiving", false] }, // Check if passing object exists
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      4,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        receiving_targets:
+                          "$$player.receiving.receiving_targets",
+                        longest_reception:
+                          "$$player.receiving.longest_reception",
+                        receiving_touchdowns:
+                          "$$player.receiving.receiving_touchdowns",
+                        yards_per_game: "$$player.receiving.yards_per_game",
+                        receiving_yards: "$$player.receiving.receiving_yards",
+                        receptions: "$$player.receiving.receptions",
                       },
                     ],
                   },
@@ -3179,53 +3288,28 @@ const nflFinal = async (goalServeMatchId: string) => {
             homeTeam: {
               passing: {
                 $map: {
-                  input: "$homeTeamPassing",
-                  as: "player",
-                  in: {
-                    $cond: [
-                      { $eq: ["$$player", []] },
-                      [],
+                  input: {
+                    $slice: [
                       {
-                        playerName: "$$player.name",
-                        goalServePlayerId: "$$player.id",
-                        comp_att: "$$player.comp_att",
-                        interceptions: "$$player.interceptions",
-                        yards: "$$player.yards",
-                        average: "$$player.average",
-                        sacks: "$$player.sacks",
-                        rating: "$$player.rating",
-                        passing_touchdowns: "$$player.passing_touch_downs",
+                        $filter: {
+                          input: "$players",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.passing", false] },
+                            ],
+                          },
+                        },
                       },
+                      0,
+                      2,
                     ],
                   },
-                },
-              },
-              rushing: {
-                $map: {
-                  input: "$homeTeamRushing",
-                  as: "player",
-                  in: {
-                    $cond: [
-                      { $eq: ["$$player", []] },
-                      [],
-                      {
-                        playerName: "$$player.name",
-                        goalServePlayerId: "$$player.goalServePlayerId",
-
-                        total_rushes: "$$player.total_rushes",
-                        yards: "$$player.yards",
-                        average: "$$player.average",
-                        longest_rush: "$$player.longest_rush",
-                        rushing_touch_downs: "$$player.rushing_touch_downs",
-                      },
-                    ],
-                  },
-                },
-              },
-              receiving: {
-                $map: {
-                  input: "$homeTeamReceiving",
-
                   as: "player",
                   in: {
                     $cond: [
@@ -3235,12 +3319,112 @@ const nflFinal = async (goalServeMatchId: string) => {
                         playerName: "$$player.name",
                         goalServePlayerId: "$$player.goalServePlayerId",
                         goalServeTeamId: "$$player.goalServeTeamId",
-                        total_receptions: "$$player.total_receptions",
-                        yards: "$$player.yards",
-                        average: "$$player.average",
-                        receiving_touch_downs: "$$player.receiving_touch_downs",
-                        longest_reception: "$$player.longest_reception",
-                        targets: "$$player.targets",
+                        interceptions: "$$player.passing.interceptions",
+                        sacks: "$$player.passing.sacks",
+                        quarterback_rating:
+                          "$$player.passing.quarterback_rating",
+                        passing_touchdowns:
+                          "$$player.passing.passing_touchdowns",
+                        yards_per_game: "$$player.passing.yards_per_game",
+                        yards: "$$player.passing.yards",
+                        completions_by_Attempts: {
+                          $concat: [
+                            "$$player.passing.completions",
+                            "/",
+                            "$$player.passing.passing_attempts",
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+              rushing: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$players",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.rushing", false] },
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      3,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        yards: "$$player.rushing.yards",
+                        longest_rush: "$$player.rushing.longest_rush",
+                        rushing_touchdowns:
+                          "$$player.rushing.rushing_touchdowns",
+                        yards_per_game: "$$player.rushing.yards_per_game",
+                        rushing_attempts: "$$player.rushing.rushing_attempts",
+                      },
+                    ],
+                  },
+                },
+              },
+              receiving: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$players",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.receiving", false] }, // Check if passing object exists
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      4,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        receiving_targets:
+                          "$$player.receiving.receiving_targets",
+                        longest_reception:
+                          "$$player.receiving.longest_reception",
+                        receiving_touchdowns:
+                          "$$player.receiving.receiving_touchdowns",
+                        yards_per_game: "$$player.receiving.yards_per_game",
+                        receiving_yards: "$$player.receiving.receiving_yards",
+                        receptions: "$$player.receiving.receptions",
                       },
                     ],
                   },
