@@ -1104,6 +1104,7 @@ export default class NFLDbCronServiceClass {
             );
           }
         }
+        
       } else {
         if (matchArray) {
           const match: INflMatchModel | null = await NflMatch.findOne({
