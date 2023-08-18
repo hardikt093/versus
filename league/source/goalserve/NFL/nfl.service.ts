@@ -2418,6 +2418,124 @@ const nflUpcomming = async (goalServeMatchId: string) => {
               },
             },
           ],
+          closingOddsAndOutcome: {
+            awayTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "away"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            awayTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "home"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            homeTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$odds.homeTeamSpread.handicap",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpreadUs"] },
+                  "$odds.homeTeamSpreadUs",
+                ],
+              },
+            },
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$odds.awayTeamSpread.handicap",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpreadUs"] },
+                  "$odds.awayTeamSpreadUs",
+                ],
+              },
+            },
+            homeTeamTotal: "$odds.homeTeamTotal",
+            awayTeamTotal: "$odds.awayTeamTotal",
+          },
         },
       },
     ]);
