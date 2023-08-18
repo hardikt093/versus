@@ -2374,45 +2374,93 @@ const nflUpcomming = async (goalServeMatchId: string) => {
 
             {
               title: "Points Against",
-              homeTeam:  { $arrayElemAt: ["$standings.homeTeam.points_against", 0] },
-              awayTeam: { $arrayElemAt: ["$standings.awayTeam.points_against", 0] },
+              homeTeam: {
+                $arrayElemAt: ["$standings.homeTeam.points_against", 0],
+              },
+              awayTeam: {
+                $arrayElemAt: ["$standings.awayTeam.points_against", 0],
+              },
               total: {
                 $add: [
                   {
-                    $toDouble:  { $arrayElemAt: ["$standings.homeTeam.points_against", 0] },
+                    $toDouble: {
+                      $arrayElemAt: ["$standings.homeTeam.points_against", 0],
+                    },
                   },
                   {
-                    $toDouble: { $arrayElemAt: ["$standings.awayTeam.points_against", 0] },
+                    $toDouble: {
+                      $arrayElemAt: ["$standings.awayTeam.points_against", 0],
+                    },
                   },
                 ],
               },
             },
             {
               title: "Passing Yards",
-              homeTeam: { $arrayElemAt: ["$statsTeams.homeTeam.passingTeam.yards_per_game", 0] },
-              awayTeam:{ $arrayElemAt: ["$statsTeams.awayTeam.passingTeam.yards_per_game", 0] },
+              homeTeam: {
+                $arrayElemAt: [
+                  "$statsTeams.homeTeam.passingTeam.yards_per_game",
+                  0,
+                ],
+              },
+              awayTeam: {
+                $arrayElemAt: [
+                  "$statsTeams.awayTeam.passingTeam.yards_per_game",
+                  0,
+                ],
+              },
               total: {
                 $add: [
                   {
-                    $toDouble: { $arrayElemAt: ["$statsTeams.homeTeam.passingTeam.yards_per_game", 0] },
+                    $toDouble: {
+                      $arrayElemAt: [
+                        "$statsTeams.homeTeam.passingTeam.yards_per_game",
+                        0,
+                      ],
+                    },
                   },
                   {
-                    $toDouble: { $arrayElemAt: ["$statsTeams.awayTeam.passingTeam.yards_per_game", 0] },
+                    $toDouble: {
+                      $arrayElemAt: [
+                        "$statsTeams.awayTeam.passingTeam.yards_per_game",
+                        0,
+                      ],
+                    },
                   },
                 ],
               },
             },
             {
               title: "Rushing Yards",
-              homeTeam: { $arrayElemAt: ["$statsTeams.homeTeam.rushingTeam.yards_per_game", 0] },
-              awayTeam:{ $arrayElemAt: ["$statsTeams.awayTeam.rushingTeam.yards_per_game", 0] },
+              homeTeam: {
+                $arrayElemAt: [
+                  "$statsTeams.homeTeam.rushingTeam.yards_per_game",
+                  0,
+                ],
+              },
+              awayTeam: {
+                $arrayElemAt: [
+                  "$statsTeams.awayTeam.rushingTeam.yards_per_game",
+                  0,
+                ],
+              },
               total: {
                 $add: [
                   {
-                    $toDouble: { $arrayElemAt: ["$statsTeams.homeTeam.rushingTeam.yards_per_game", 0] },
+                    $toDouble: {
+                      $arrayElemAt: [
+                        "$statsTeams.homeTeam.rushingTeam.yards_per_game",
+                        0,
+                      ],
+                    },
                   },
                   {
-                    $toDouble: { $arrayElemAt: ["$statsTeams.awayTeam.rushingTeam.yards_per_game", 0] },
+                    $toDouble: {
+                      $arrayElemAt: [
+                        "$statsTeams.awayTeam.rushingTeam.yards_per_game",
+                        0,
+                      ],
+                    },
                   },
                 ],
               },
@@ -2740,7 +2788,7 @@ const getLiveDataOfNfl = async (data: any) => {
         id: true,
         date: true,
         status: "$status",
-        drive:true,
+        drive: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
         goalServeMatchId: true,
@@ -3094,9 +3142,9 @@ const nflFinal = async (goalServeMatchId: string) => {
                         goalServePlayerId: "$$player.goalServePlayerId",
 
                         total_rushes: "$$player.total_rushes",
-                        yards: "$$player.rushing.yards",
-                        average: "$$player.rushing.average",
-                        longest_rush: "$$player.rushing.longest_rush",
+                        yards: "$$player.yards",
+                        average: "$$player.average",
+                        longest_rush: "$$player.longest_rush",
                         rushing_touch_downs: "$$player.rushing_touch_downs",
                       },
                     ],
@@ -3165,9 +3213,9 @@ const nflFinal = async (goalServeMatchId: string) => {
                         goalServePlayerId: "$$player.goalServePlayerId",
 
                         total_rushes: "$$player.total_rushes",
-                        yards: "$$player.rushing.yards",
-                        average: "$$player.rushing.average",
-                        longest_rush: "$$player.rushing.longest_rush",
+                        yards: "$$player.yards",
+                        average: "$$player.average",
+                        longest_rush: "$$player.longest_rush",
                         rushing_touch_downs: "$$player.rushing_touch_downs",
                       },
                     ],
