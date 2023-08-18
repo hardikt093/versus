@@ -929,6 +929,7 @@ const scoreWithDate = async (data: any) => {
           spread: "$odds.homeTeamSpread.handicap",
           total: "$odds.homeTeamTotal",
         },
+
       },
     },
   ]);
@@ -1458,12 +1459,12 @@ const nflUpcomming = async (goalServeMatchId: string) => {
               },
             },
             {
-              $sort:{
-                "passing.yards":1,
-                "rushing.yards":1,
-                "receiving.yards":1,
-              }
-            }
+              $sort: {
+                "passing.rank": 1,
+                "rushing.rank": 1,
+                "receiving.rank": 1,
+              },
+            },
           ],
           as: "players",
         },
@@ -2572,9 +2573,9 @@ const nflUpcomming = async (goalServeMatchId: string) => {
               homeTeamSpread: "$odds.homeTeamSpread.handicap",
               homeTeamSpreadUs: {
                 $cond: [
-                  { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
-                  { $concat: ["+", "$odds.homeTeamSpreadUs"] },
-                  "$odds.homeTeamSpreadUs",
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpread.us"] },
+                  "$odds.homeTeamSpread.us",
                 ],
               },
             },
@@ -2582,9 +2583,9 @@ const nflUpcomming = async (goalServeMatchId: string) => {
               awayTeamSpread: "$odds.awayTeamSpread.handicap",
               awayTeamSpreadUs: {
                 $cond: [
-                  { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
-                  { $concat: ["+", "$odds.awayTeamSpreadUs"] },
-                  "$odds.awayTeamSpreadUs",
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpread.us"] },
+                  "$odds.awayTeamSpread.us",
                 ],
               },
             },
@@ -3052,15 +3053,14 @@ const nflFinal = async (goalServeMatchId: string) => {
                   $in: ["$goalServeTeamId", ["$$awayTeamId", "$$homeTeamId"]],
                 },
               },
-              
             },
             {
-              $sort:{
-                "passing.yards":1,
-                "rushing.yards":1,
-                "receiving.yards":1,
-              }
-            }
+              $sort: {
+                "passing.rank": 1,
+                "rushing.rank": 1,
+                "receiving.rank": 1,
+              },
+            },
           ],
           as: "players",
         },
@@ -3528,11 +3528,11 @@ const nflFinal = async (goalServeMatchId: string) => {
             ],
           },
           scoringSummaries: [
-            {child: "$firstQuarterEvent",title:"1st Quarter"},
-            {child: "$secondQuarterEvent",title:"2nd Quarter"},
-            {child: "$thirdQuarterEvent",title:"3nd Quarter"},
-            {child: "$fourthQuarterEvent",title:"4nd Quarter"},
-            {child: "$overtimeEvent",title:"Overtime"},
+            { child: "$firstQuarterEvent", title: "1st Quarter" },
+            { child: "$secondQuarterEvent", title: "2nd Quarter" },
+            { child: "$thirdQuarterEvent", title: "3nd Quarter" },
+            { child: "$fourthQuarterEvent", title: "4nd Quarter" },
+            { child: "$overtimeEvent", title: "Overtime" },
           ],
         },
       },
