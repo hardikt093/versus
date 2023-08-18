@@ -14,7 +14,7 @@ import { IUser } from "../interfaces/input";
  * @param res
  */
 const signIn = async (req: Request, res: Response) => {
-  console.log("in signin")
+  console.log("in signin");
   try {
     if (!req.body.provider) {
       const signIn = await authService.signIn(req.body);
@@ -24,24 +24,28 @@ const signIn = async (req: Request, res: Response) => {
         const JWTpayload: any = await googleService.getGoogleToken(
           req.body.googleCode
         );
-        const login = await authService.socialLogin(JWTpayload.jwt.email.toLowerCase());
+        const login = await authService.socialLogin(
+          JWTpayload.jwt.email.toLowerCase()
+        );
 
         if (login) {
-          if (login.id == 9) {
-          console.log("login", login)
-          }
+          console.log("login", login);
           if (login.isBirthDateAvailable == false) {
+            console.log("login.isBirthDateAvailable == false");
             createResponse(res, httpStatus.OK, "", {
               isBirthDateAvailable: false,
               user: login.user,
             });
           } else {
+            console.log("login.isBirthDateAvailable == true");
+            console.log("login.isBirthDateAvailable == true / login", login);
             createResponse(res, httpStatus.OK, "", {
               isBirthDateAvailable: true,
               user: login,
             });
           }
         } else {
+          console.log("in else of login")
           const countAge = await googleService.countAge(
             JWTpayload.getToken.data.access_token
           );
@@ -59,7 +63,9 @@ const signIn = async (req: Request, res: Response) => {
               JWTpayload.jwt.email.indexOf("@")
             ),
             socialLogin: true,
-            birthDate: countAge?.birthday ? new Date(countAge?.birthday) : new Date(),
+            birthDate: countAge?.birthday
+              ? new Date(countAge?.birthday)
+              : new Date(),
             phone: "",
             profileImage: JWTpayload.jwt.picture ? JWTpayload.jwt.picture : "",
             googleAccessToken:
@@ -87,7 +93,9 @@ const signIn = async (req: Request, res: Response) => {
               JWTpayload.getToken.data.access_token
             );
             if (!contactList || contactList.length === 0) {
-              const user = await authService.socialLogin(signUp.email.toLowerCase());
+              const user = await authService.socialLogin(
+                signUp.email.toLowerCase()
+              );
               createResponse(res, httpStatus.OK, "", {
                 user: user,
                 isBirthDateAvailable: true,
@@ -128,7 +136,9 @@ const signIn = async (req: Request, res: Response) => {
             }
           }
           if (signUp.isSignUp == "SUCCESS") {
-            const user = await authService.socialLogin(signUp.email.toLowerCase());
+            const user = await authService.socialLogin(
+              signUp.email.toLowerCase()
+            );
             createResponse(res, httpStatus.OK, "", {
               isBirthDateAvailable: true,
               createContact,
@@ -141,15 +151,13 @@ const signIn = async (req: Request, res: Response) => {
             });
           }
         }
-      }
-      else if (req.body.provider == "meta") {
+      } else if (req.body.provider == "meta") {
         try {
-          const login = await authService.metaLogin(req.body)
-          createResponse(res, httpStatus.OK, "", login)
+          const login = await authService.metaLogin(req.body);
+          createResponse(res, httpStatus.OK, "", login);
         } catch (error: any) {
           createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
         }
-
       }
     }
   } catch (error: any) {
@@ -192,7 +200,9 @@ const signUp = async (req: Request, res: Response) => {
  */
 const forgotPassword = async (req: Request, res: Response) => {
   try {
-    const forgotPassword = await authService.forgotPassword(req.body.email.toLowerCase());
+    const forgotPassword = await authService.forgotPassword(
+      req.body.email.toLowerCase()
+    );
     createResponse(
       res,
       httpStatus.OK,
@@ -222,7 +232,10 @@ const resetPassword = async (req: Request, res: Response) => {
 
 const getContact = async (req: Request, res: Response) => {
   try {
-    const getContacts = await authService.getContact(req.query.text as string, req?.loggedInUser as IUser)
+    const getContacts = await authService.getContact(
+      req.query.text as string,
+      req?.loggedInUser as IUser
+    );
     createResponse(res, httpStatus.OK, "", { createContact: getContacts });
   } catch (error) {
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
@@ -236,7 +249,9 @@ const deleteUser = async (req: Request, res: Response) => {
 const sendInvite = async (req: Request, res: Response) => {
   try {
     const sendInvite = await authService.sendInvite(req.body);
-    createResponse(res, httpStatus.OK, "invite send successfully", { createContact: sendInvite });
+    createResponse(res, httpStatus.OK, "invite send successfully", {
+      createContact: sendInvite,
+    });
   } catch (error) {
     createResponse(res, httpStatus.BAD_REQUEST, "", {});
   }
@@ -266,7 +281,7 @@ const refreshAuthTokens = async (req: Request, res: Response) => {
 };
 const getUser = async (req: Request, res: Response) => {
   try {
-    const user = await authService.getUser(req?.loggedInUser as IUser)
+    const user = await authService.getUser(req?.loggedInUser as IUser);
     createResponse(res, httpStatus.OK, "", user);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -274,7 +289,10 @@ const getUser = async (req: Request, res: Response) => {
 };
 const changePassword = async (req: Request, res: Response) => {
   try {
-    const changePassword = await authService.changePassword(req.loggedInUser, req.body);
+    const changePassword = await authService.changePassword(
+      req.loggedInUser,
+      req.body
+    );
     createResponse(res, httpStatus.OK, "", true);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});

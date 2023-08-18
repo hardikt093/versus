@@ -19,7 +19,7 @@ const updateStandingRecord = cron.schedule("0 0 */1 * * *", async () => {
 let isUpdateNflUpcommingMatch: boolean = false;
 
 const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
-  if (isupdateStandingRecordRunning) {
+  if (isUpdateNflUpcommingMatch) {
     return;
   }
   isUpdateNflUpcommingMatch = true;
@@ -33,7 +33,7 @@ const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
 });
 
 let isupdatePlayersNflRunning: boolean = false;
-const updatePlayersNfl = cron.schedule("0 0 */1 * * *", async () => {
+const updatePlayersNfl = cron.schedule("*/60 * * * * *", async () => {
   console.log("updatePlayersnfl Skip");
   if (isupdatePlayersNflRunning) {
     return;
@@ -64,9 +64,9 @@ const updateTeamStatsNfl = cron.schedule("0 0 */1 * * *", async () => {
 });
 
 let isUpdateLiveMatch: boolean = false;
-const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
+const updateLiveMatch = cron.schedule("*/5 * * * * *", async () => {
   console.log("isupdateFinalMatchNfl Skip");
-  if (isupdateTeamStatsNflRunning) {
+  if (isUpdateLiveMatch) {
     return;
   }
   isUpdateLiveMatch = true;
@@ -81,7 +81,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateInjuredPlayernflRunning: boolean = false;
-const updateInjuredPlayerNFL = cron.schedule("*/10 * * * * *", async () => {
+const updateInjuredPlayerNFL = cron.schedule("0 0 */1 * * *", async () => {
   if (isupdateInjuredPlayernflRunning) {
     return;
   }
@@ -98,7 +98,7 @@ const updateInjuredPlayerNFL = cron.schedule("*/10 * * * * *", async () => {
 let isOddAdded: boolean = false;
 const oddAdded = cron.schedule("*/10 * * * * *", async () => {
   console.log("isOddAdded Skip");
-  if (isupdateTeamStatsNflRunning) {
+  if (isOddAdded) {
     return;
   }
   isOddAdded = true;
@@ -110,6 +110,23 @@ const oddAdded = cron.schedule("*/10 * * * * *", async () => {
     isOddAdded = false;
   }
 });
+
+let isupdateMatchStats: boolean = false;
+const updateMatchStatsNFL = cron.schedule("0 0 */1 * * *", async () => {
+  if (isupdateMatchStats) {
+    return;
+  }
+  isupdateMatchStats = true;
+  try {
+    await nflService.addMatchTeamStats();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateMatchStats = false;
+  }
+});
+
+
 export default {
   updateStandingRecord,
   updateNflUpcommingMatch,
@@ -117,5 +134,6 @@ export default {
   updateTeamStatsNfl,
   updateLiveMatch,
   updateInjuredPlayerNFL,
-  oddAdded
+  oddAdded,
+  updateMatchStatsNFL
 };

@@ -14,7 +14,7 @@ import NflInjury from "../../models/documents/NFL/injury.model";
 import moment from "moment";
 import NflOdds from "../../models/documents/NFL/odds.model";
 import { isArray } from "lodash";
-
+import NFLMatchStatsTeam from "../../models/documents/NFL/matchTeamStats";
 const getOdds = (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
@@ -379,7 +379,6 @@ export default class NFLDbCronServiceClass {
                   age: player.age,
                   college: player.college,
                   height: player.height,
-                  name: player.name,
                   number: player.number,
                   position: player.position,
                   salarycap: player.salarycap,
@@ -437,41 +436,49 @@ export default class NFLDbCronServiceClass {
                 };
                 switch (categoryName) {
                   case "Passing":
+                    playerData.name = player.name;
                     playerData.isPassingPlayer = true;
                     playerData.passing = { ...player };
                     allPassingPlayer.push(playerData);
                     break;
                   case "Rushing":
+                    playerData.name = player.name;
                     playerData.isRushingPlayer = true;
                     playerData.rushing = { ...player };
                     allRushingPlayer.push(playerData);
                     break;
                   case "Receiving":
+                    playerData.name = player.name;
                     playerData.isReceivingPlayer = true;
                     playerData.receiving = { ...player };
                     allReceivingPlayer.push(playerData);
                     break;
                   case "Defense":
+                    playerData.name = player.name;
                     playerData.isDefensePlayer = true;
                     playerData.defence = { ...player };
                     allDefencePlayer.push(playerData);
                     break;
                   case "Scoring":
+                    playerData.name = player.name;
                     playerData.isScoringPlayer = true;
                     playerData.scoring = { ...player };
                     allScoringPlayer.push(playerData);
                     break;
                   case "Returning":
+                    playerData.name = player.name;
                     playerData.isReturningPlayer = true;
                     playerData.returning = { ...player };
                     allReturningPlayer.push(playerData);
                     break;
                   case "Kicking":
+                    playerData.name = player.name;
                     playerData.isKickingPlayer = true;
                     playerData.kicking = { ...player };
                     allKickingPlayer.push(playerData);
                     break;
                   case "Punting":
+                    playerData.name = player.name;
                     playerData.isPuntingPlayer = true;
                     playerData.punting = { ...player };
                     allPuntingPlayer.push(playerData);
@@ -1010,6 +1017,64 @@ export default class NFLDbCronServiceClass {
       })
     );
   };
+  public addMatchTeamStats = async () => {
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-scores`,
+        { json: true, date: "10.08.2023" }
+      );
+
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.scores?.category?.id,
+      });
+
+      if (matchArray?.length > 0 && matchArray) {
+        for (let i = 0; i < matchArray?.length; i++) {
+          const data = {
+            attendance: matchArray[i]?.attendance,
+            goalServeHomeTeamId: matchArray[i]?.hometeam.id,
+            goalServeAwayTeamId: matchArray[i]?.awayteam.id,
+            goalServeMatchId: matchArray[i]?.contestID,
+            date: matchArray[i]?.date,
+            dateTimeUtc: matchArray[i]?.datetime_utc,
+            formattedDate: matchArray[i]?.formatted_date,
+            status: matchArray[i]?.status,
+            time: matchArray[i]?.time,
+            timezone: matchArray[i]?.timezone,
+            team_stats: matchArray[i].team_stats,
+          };
+          await NFLMatchStatsTeam.updateOne(
+            { goalServeMatchId: matchArray[i]?.contestID },
+            { $set: data },
+            { upsert: true }
+          );
+        }
+      } else {
+        if (matchArray) {
+          const data = {
+            goalServeHomeTeamId: matchArray?.hometeam.id,
+            goalServeAwayTeamId: matchArray?.awayteam.id,
+            date: matchArray?.date,
+            goalServeMatchId: matchArray?.contestID,
+            dateTimeUtc: matchArray?.datetime_utc,
+            formattedDate: matchArray?.formatted_date,
+            status: matchArray?.status,
+            time: matchArray?.time,
+            timezone: matchArray?.timezone,
+            team_stats: matchArray?.team_stats,
+          };
+          await NFLMatchStatsTeam.updateOne(
+            { goalServeMatchId: matchArray?.contestID },
+            { $set: data },
+            { upsert: true }
+          );
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
 
   public addOrUpdateDriveInLive = async () => {
     try {
@@ -1039,6 +1104,7 @@ export default class NFLDbCronServiceClass {
             );
           }
         }
+        
       } else {
         if (matchArray) {
           const match: INflMatchModel | null = await NflMatch.findOne({
