@@ -3343,13 +3343,13 @@ const nflFinal = async (goalServeMatchId: string) => {
               },
             ],
           },
-          scoringSummaries: {
-            firstQuarter: "$firstQuarterEvent",
-            secondQuarter: "$secondQuarterEvent",
-            thirdQuarter: "$thirdQuarterEvent",
-            fourthQuarter: "$fourthQuarterEvent",
-            overtime: "$overtimeEvent",
-          },
+          scoringSummaries: [
+            {child: "$firstQuarterEvent",title:"1st Quarter"},
+            {child: "$secondQuarterEvent",title:"2nd Quarter"},
+            {child: "$thirdQuarterEvent",title:"3nd Quarter"},
+            {child: "$fourthQuarterEvent",title:"4nd Quarter"},
+            {child: "$overtimeEvent",title:"Overtime"},
+          ],
         },
       },
     ]);
