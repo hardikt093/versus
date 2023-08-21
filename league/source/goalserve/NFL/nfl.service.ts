@@ -308,13 +308,13 @@ const scoreWithDate = async (data: any) => {
     {
       $match: {
         seasonName: {
-          $in: data.data.map((name:any) => name.seasonName)
+          $in: data.calenderData.map((name: any) => name.seasonName),
         },
         weekName: {
-          $in: data.data.map((name:any) => name.weekName)
+          $in: data.calenderData.map((name: any) => name.weekName),
         },
         status: "Not Started",
-      }
+      },
       // $match: {
       //   seasonName: data.seasonName,
       //   weekName: data.weekName,
@@ -938,7 +938,6 @@ const scoreWithDate = async (data: any) => {
           spread: "$odds.homeTeamSpread.handicap",
           total: "$odds.homeTeamTotal",
         },
-
       },
     },
   ]);
@@ -946,10 +945,10 @@ const scoreWithDate = async (data: any) => {
     {
       $match: {
         seasonName: {
-          $in: data.data.map((name:any) => name.seasonName)
+          $in: data.calenderData.map((name: any) => name.seasonName),
         },
         weekName: {
-          $in: data.data.map((name:any) => name.weekName)
+          $in: data.calenderData.map((name: any) => name.weekName),
         },
         status: "Final",
       },
@@ -2661,10 +2660,10 @@ const getLiveDataOfNfl = async (data: any) => {
           },
         ],
         seasonName: {
-          $in: data.data.map((name:any) => name.seasonName)
+          $in: data.calenderData.map((name: any) => name.seasonName),
         },
         weekName: {
-          $in: data.data.map((name:any) => name.weekName)
+          $in: data.calenderData.map((name: any) => name.weekName),
         },
       },
     },
@@ -4145,7 +4144,7 @@ const scoreWithWeek = async () => {
     //   getWeek
     // );
 
-    const getMatches = await scoreWithDate({data:data})
+    const getMatches = await scoreWithDate({ calenderData: data });
     // console.log("getMatches", getMatches);
   } catch (error: any) {
     console.log("error", error);
