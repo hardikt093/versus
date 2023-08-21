@@ -4519,9 +4519,9 @@ const nflFinal = async (goalServeMatchId: string) => {
               homeTeamSpread: "$odds.homeTeamSpread.handicap",
               homeTeamSpreadUs: {
                 $cond: [
-                  { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs.us" }, 0] },
-                  { $concat: ["+", "$odds.homeTeamSpreadUs.us"] },
-                  "$odds.homeTeamSpreadUs.us",
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpread.us"] },
+                  "$odds.homeTeamSpread.us",
                 ],
               },
             },
@@ -4529,9 +4529,9 @@ const nflFinal = async (goalServeMatchId: string) => {
               awayTeamSpread: "$odds.awayTeamSpread.handicap",
               awayTeamSpreadUs: {
                 $cond: [
-                  { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs.us" }, 0] },
-                  { $concat: ["+", "$odds.awayTeamSpreadUs.us"] },
-                  "$odds.awayTeamSpreadUs.us",
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpread.us"] },
+                  "$odds.awayTeamSpread.us",
                 ],
               },
             },
