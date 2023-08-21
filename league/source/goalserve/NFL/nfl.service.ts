@@ -6,6 +6,7 @@ import ILeagueModel from "../../models/interfaces/league.interface";
 import { axiosGet } from "../../services/axios.service";
 import { goalserveApi } from "../../services/goalserve.service";
 import INflMatchModel from "../../models/interfaces/nflMatch.interface";
+import socketService from "../../services/socket.service";
 
 const addStanding = async () => {
   let data = {
@@ -48,7 +49,6 @@ const addStanding = async () => {
                 ties: team.ties,
                 win_percentage: team.win_percentage,
               };
-              // console.log(data);
               await NflStandings.findOneAndUpdate(
                 { goalServeTeamId: team?.id },
                 { $set: data },
@@ -307,10 +307,19 @@ const scoreWithDate = async (data: any) => {
   const getUpcomingMatch = await NflMatch.aggregate([
     {
       $match: {
-        seasonName: data.seasonName,
-        weekName: data.weekName,
+        seasonName: {
+          $in: data.calenderData.map((name: any) => name.seasonName),
+        },
+        weekName: {
+          $in: data.calenderData.map((name: any) => name.weekName),
+        },
         status: "Not Started",
       },
+      // $match: {
+      //   seasonName: data.seasonName,
+      //   weekName: data.weekName,
+      //   status: "Not Started",
+      // },
     },
     {
       $lookup: {
@@ -935,8 +944,12 @@ const scoreWithDate = async (data: any) => {
   const getFinalMatch = await NflMatch.aggregate([
     {
       $match: {
-        seasonName: data.seasonName,
-        weekName: data.weekName,
+        seasonName: {
+          $in: data.calenderData.map((name: any) => name.seasonName),
+        },
+        weekName: {
+          $in: data.calenderData.map((name: any) => name.weekName),
+        },
         status: "Final",
       },
     },
@@ -1116,6 +1129,11 @@ const scoreWithDate = async (data: any) => {
       return getUpcomingMatch;
     }
   } else {
+    await socketService.socket("nflDashboard", {
+      getUpcomingMatch,
+      getFinalMatch,
+      getLiveDataOfNfl: await getLiveDataOfNfl(data)
+    });
     return {
       getUpcomingMatch,
       getFinalMatch,
@@ -2749,6 +2767,12 @@ const getLiveDataOfNfl = async (data: any) => {
             },
           },
         ],
+        seasonName: {
+          $in: data.calenderData.map((name: any) => name.seasonName),
+        },
+        weekName: {
+          $in: data.calenderData.map((name: any) => name.weekName),
+        },
       },
     },
     // {
@@ -2772,12 +2796,12 @@ const getLiveDataOfNfl = async (data: any) => {
     //     },
     //   },
     // },
-    {
-      $match: {
-        seasonName: data.seasonName,
-        weekName: data.weekName,
-      },
-    },
+    // {
+    //   $match: {
+    //     seasonName: data.seasonName,
+    //     weekName: data.weekName,
+    //   },
+    // },
     {
       $lookup: {
         from: "nflteams",
@@ -5178,9 +5202,49 @@ const scoreWithWeek = async () => {
       .utc()
       .toISOString();
     let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
-    console.log("subtractOneDay", subtractOneDay);
-    console.log("addOneDay", addOneDay);
-    // const getWeek = await NflMatch.aggregate([]);
+    const data = await NflMatch.aggregate([
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$formattedDate",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $match: {
+          dateInString: {
+            $gte: subtractOneDay,
+            $lte: addOneDay,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            weekName: "$weekName",
+            seasonName: "$seasonName",
+          },
+          data: {
+            $push: "$$ROOT",
+          },
+        },
+      },
+      {
+        $project: {
+          weekName: "$_id.weekName",
+          seasonName: "$_id.seasonName",
+        },
+      },
+    ]);
+
+    const getMatches = await scoreWithDate({ calenderData: data });
   } catch (error: any) {
     console.log("error", error);
   }
