@@ -3968,7 +3968,7 @@ const nflFinal = async (goalServeMatchId: string) => {
             },
             homeTeam: {
               total_yards:
-                "$matchStatsTeams.matchStatsTeams.team_stats.hometeam.yards.total",
+                "$matchStatsTeams.team_stats.hometeam.yards.total",
               passing_yards:
                 "$matchStatsTeams.team_stats.hometeam.passing.total",
               rushing_yards:
