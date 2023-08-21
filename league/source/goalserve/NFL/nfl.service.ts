@@ -48,7 +48,6 @@ const addStanding = async () => {
                 ties: team.ties,
                 win_percentage: team.win_percentage,
               };
-              // console.log(data);
               await NflStandings.findOneAndUpdate(
                 { goalServeTeamId: team?.id },
                 { $set: data },
@@ -2688,12 +2687,12 @@ const getLiveDataOfNfl = async (data: any) => {
     //     },
     //   },
     // },
-    {
-      $match: {
-        seasonName: data.seasonName,
-        weekName: data.weekName,
-      },
-    },
+    // {
+    //   $match: {
+    //     seasonName: data.seasonName,
+    //     weekName: data.weekName,
+    //   },
+    // },
     {
       $lookup: {
         from: "nflteams",
@@ -4084,10 +4083,6 @@ const scoreWithWeek = async () => {
       .subtract(24, "hours")
       .utc()
       .toISOString();
-    // let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
-    // console.log("subtractOneDay", subtractOneDay);
-    // console.log("addOneDay", addOneDay);
-    // const getWeek = await NflMatch.aggregate([]);
     let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
     const data = await NflMatch.aggregate([
       {
@@ -4129,23 +4124,9 @@ const scoreWithWeek = async () => {
           seasonName: "$_id.seasonName",
         },
       },
-      // {
-      //   $group: {
-      //     _id: null,
-      //     data: {
-      //       $push: "$$ROOT",
-      //     },
-      //   },
-      // },
     ]);
 
-    // console.log(
-    //   "getWeek[0].data.map",
-    //   getWeek
-    // );
-
     const getMatches = await scoreWithDate({ calenderData: data });
-    // console.log("getMatches", getMatches);
   } catch (error: any) {
     console.log("error", error);
   }
