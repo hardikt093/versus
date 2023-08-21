@@ -2078,7 +2078,6 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                 },
               },
             },
-            
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
