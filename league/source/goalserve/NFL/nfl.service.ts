@@ -3126,6 +3126,8 @@ const nflFinal = async (goalServeMatchId: string) => {
             won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
             lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+            awayTeamTotalScore: "$awayTeamTotalScore",
+            // awayTeamHit: "$awayTeamHit",
           },
           homeTeam: {
             homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
@@ -3135,6 +3137,7 @@ const nflFinal = async (goalServeMatchId: string) => {
             won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
             lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+            homeTeamTotalScore: "$homeTeamTotalScore",
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
