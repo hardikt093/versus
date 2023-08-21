@@ -33,7 +33,7 @@ const getCalendar = async (req: Request, res: Response) => {
 
 const nflScoreWithDate = async (req: Request, res: Response) => {
   try {
-    const data = await nflService.scoreWithDate(req.query);
+    const data = await nflService.scoreWithDate(req.body);
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});

@@ -307,10 +307,19 @@ const scoreWithDate = async (data: any) => {
   const getUpcomingMatch = await NflMatch.aggregate([
     {
       $match: {
-        seasonName: data.seasonName,
-        weekName: data.weekName,
+        seasonName: {
+          $in: data.data.map((name:any) => name.seasonName)
+        },
+        weekName: {
+          $in: data.data.map((name:any) => name.weekName)
+        },
         status: "Not Started",
-      },
+      }
+      // $match: {
+      //   seasonName: data.seasonName,
+      //   weekName: data.weekName,
+      //   status: "Not Started",
+      // },
     },
     {
       $lookup: {
@@ -936,8 +945,12 @@ const scoreWithDate = async (data: any) => {
   const getFinalMatch = await NflMatch.aggregate([
     {
       $match: {
-        seasonName: data.seasonName,
-        weekName: data.weekName,
+        seasonName: {
+          $in: data.data.map((name:any) => name.seasonName)
+        },
+        weekName: {
+          $in: data.data.map((name:any) => name.weekName)
+        },
         status: "Final",
       },
     },
@@ -2647,6 +2660,12 @@ const getLiveDataOfNfl = async (data: any) => {
             },
           },
         ],
+        seasonName: {
+          $in: data.data.map((name:any) => name.seasonName)
+        },
+        weekName: {
+          $in: data.data.map((name:any) => name.weekName)
+        },
       },
     },
     // {
@@ -4066,10 +4085,68 @@ const scoreWithWeek = async () => {
       .subtract(24, "hours")
       .utc()
       .toISOString();
-    let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
-    console.log("subtractOneDay", subtractOneDay);
-    console.log("addOneDay", addOneDay);
+    // let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
+    // console.log("subtractOneDay", subtractOneDay);
+    // console.log("addOneDay", addOneDay);
     // const getWeek = await NflMatch.aggregate([]);
+    let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
+    const data = await NflMatch.aggregate([
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$formattedDate",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $match: {
+          dateInString: {
+            $gte: subtractOneDay,
+            $lte: addOneDay,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            weekName: "$weekName",
+            seasonName: "$seasonName",
+          },
+          data: {
+            $push: "$$ROOT",
+          },
+        },
+      },
+      {
+        $project: {
+          weekName: "$_id.weekName",
+          seasonName: "$_id.seasonName",
+        },
+      },
+      // {
+      //   $group: {
+      //     _id: null,
+      //     data: {
+      //       $push: "$$ROOT",
+      //     },
+      //   },
+      // },
+    ]);
+
+    // console.log(
+    //   "getWeek[0].data.map",
+    //   getWeek
+    // );
+
+    const getMatches = await scoreWithDate({data:data})
+    // console.log("getMatches", getMatches);
   } catch (error: any) {
     console.log("error", error);
   }
