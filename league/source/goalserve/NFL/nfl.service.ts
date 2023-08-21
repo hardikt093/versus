@@ -6,6 +6,7 @@ import ILeagueModel from "../../models/interfaces/league.interface";
 import { axiosGet } from "../../services/axios.service";
 import { goalserveApi } from "../../services/goalserve.service";
 import INflMatchModel from "../../models/interfaces/nflMatch.interface";
+import socketService from "../../services/socket.service";
 
 const addStanding = async () => {
   let data = {
@@ -1128,6 +1129,11 @@ const scoreWithDate = async (data: any) => {
       return getUpcomingMatch;
     }
   } else {
+    await socketService.socket("nflDashboard", {
+      getUpcomingMatch,
+      getFinalMatch,
+      getLiveDataOfNfl: await getLiveDataOfNfl(data)
+    });
     return {
       getUpcomingMatch,
       getFinalMatch,
