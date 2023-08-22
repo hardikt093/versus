@@ -799,6 +799,8 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
+        awayTeamAbbreviation:"$awayTeam.abbreviation",
+        homeTeamAbbreviation:"$homeTeam.abbreviation",
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
@@ -1078,7 +1080,10 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
+        awayTeamAbbreviation:"$awayTeam.abbreviation",
+        homeTeamAbbreviation:"$homeTeam.abbreviation",
         awayTeam: {
+          abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeamStandings.name",
           awayTeamId: "$awayTeamStandings._id",
           goalServeAwayTeamId: "$awayTeamStandings.goalServeTeamId",
@@ -1100,6 +1105,7 @@ const scoreWithDate = async (data: any) => {
           },
         },
         homeTeam: {
+          abbreviation: "$homeTeam.abbreviation",
           homeTeamName: "$homeTeamStandings.name",
           homeTeamId: "$homeTeamStandings._id",
           goalServeHomeTeamId: "$homeTeamStandings.goalServeTeamId",
@@ -2936,6 +2942,7 @@ const getLiveDataOfNfl = async (data: any) => {
         goalServeMatchId: true,
         timer: "$timer",
         awayTeam: {
+          abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           awayTeamRun: "$awayTeamTotalScore",
@@ -2957,6 +2964,7 @@ const getLiveDataOfNfl = async (data: any) => {
           },
         },
         homeTeam: {
+          abbreviation: "$homeTeam.abbreviation",
           homeTeamName: "$homeTeam.name",
           homeTeamId: "$homeTeam._id",
           homeTeamRun: "$homeTeamTotalScore",
@@ -5568,6 +5576,7 @@ const nflLive = async (goalServeMatchId: any) => {
             $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
           },
           awayTeam: {
+            awayTeamTotalScore:"$awayTeamTotalScore",
             awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
@@ -5578,6 +5587,7 @@ const nflLive = async (goalServeMatchId: any) => {
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
           },
           homeTeam: {
+            homeTeamTotalScore:"$homeTeamTotalScore",
             homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
@@ -5588,8 +5598,8 @@ const nflLive = async (goalServeMatchId: any) => {
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-          awayTeamTotalScore:"$awayTeamTotalScore",
-          homeTeamTotalScore:"$homeTeamTotalScore",
+
+       
           injuredPlayers: {
             homeTeam: {
               $map: {
