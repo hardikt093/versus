@@ -23,13 +23,9 @@ var betSchema = new Schema(
     },
     oddType: {
       type: String,
-      enum: [
-        "Moneyline",
-        "Spread",
-        "Total",
-      ],
-      required : true,
-      default : "Moneyline"
+      enum: ["Moneyline", "Spread", "Total"],
+      required: true,
+      default: "Moneyline",
     },
     goalServeLeagueId: {
       type: Number,
@@ -83,12 +79,8 @@ var betSchema = new Schema(
     },
     leagueType: {
       type: String,
-      enum: [
-        "NHL",
-        "MLB",
-        "NBA",
-      ],
-      required : true
+      enum: ["NHL", "MLB", "NBA", "NFL"],
+      required: true,
     },
     status: {
       type: String,
@@ -99,17 +91,13 @@ var betSchema = new Schema(
         "ACTIVE",
         "RESULT_DECLARED",
         "CANCELED",
-        "EXPIRED"
+        "EXPIRED",
       ],
       default: "PENDING",
     },
     paymentStatus: {
       type: String,
-      enum: [
-        "PENDING",
-        "DONE",
-        "REFUNDED",
-      ],
+      enum: ["PENDING", "DONE", "REFUNDED"],
       default: "PENDING",
     },
     isDeleted: { type: Boolean, default: false },
