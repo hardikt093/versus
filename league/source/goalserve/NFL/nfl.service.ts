@@ -4876,6 +4876,17 @@ const nflLive = async (goalServeMatchId: string) => {
         },
       },
       {
+        $lookup: {
+          from: "nflmatchstatsteams",
+          localField: "goalServeMatchId",
+          foreignField: "goalServeMatchId",
+          as: "matchStatsTeams",
+        },
+      },
+      {
+        $unwind: "$matchStatsTeams",
+      },
+      {
         $project: {
           id: true,
           attendance: true,
@@ -4887,7 +4898,7 @@ const nflLive = async (goalServeMatchId: string) => {
           datetime_utc: "$dateTimeUtc",
           weekName: "$weekName",
           seasonName: "$seasonName",
-          statsTeams: true,
+          // statsTeams: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
@@ -5092,101 +5103,134 @@ const nflLive = async (goalServeMatchId: string) => {
               },
             },
           },
-          scoring: {
-            awayTeam: [
-              {
-                title: "Quater 1",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$awayTeamQ1", "0"] },
-                    then: "-",
-                    else: "$awayTeamQ1",
-                  },
-                },
-              },
-              {
-                title: "Quater 2",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$awayTeamQ2", "0"] },
-                    then: "-",
-                    else: "$awayTeamQ2",
-                  },
-                },
-              },
-              {
-                title: "Quater 3",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$awayTeamQ3", "0"] },
-                    then: "-",
-                    else: "$awayTeamQ3",
-                  },
-                },
-              },
-              {
-                title: "Quater 4",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$awayTeamQ4", "0"] },
-                    then: "-",
-                    else: "$awayTeamQ4",
-                  },
-                },
-              },
-              {
-                title: "Total",
-                score: "$awayTeamTotalScore",
-              },
-            ],
+          teamStats:{
+               awayTeam: {
+              total_yards: "$matchStatsTeams.team_stats.awayteam.yards.total",
+              passing_yards:
+                "$matchStatsTeams.team_stats.awayteam.passing.total",
+              rushing_yards:
+                "$matchStatsTeams.team_stats.awayteam.rushings.total",
+              turnover: "$matchStatsTeams.team_stats.awayteam.turnovers.total",
+              panalties: "$matchStatsTeams.team_stats.awayteam.penalties.total",
+              first_downs:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.total",
+              third_down_efficiency:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.third_down_efficiency",
+              fourth_down_efficiency:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.fourth_down_efficiency",
+            },
+            homeTeam: {
+              total_yards:
+                "$matchStatsTeams.team_stats.hometeam.yards.total",
+              passing_yards:
+                "$matchStatsTeams.team_stats.hometeam.passing.total",
+              rushing_yards:
+                "$matchStatsTeams.team_stats.hometeam.rushings.total",
+              turnover: "$matchStatsTeams.team_stats.hometeam.turnovers.total",
+              panalties: "$matchStatsTeams.team_stats.hometeam.penalties.total",
+              first_downs:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.total",
+              third_down_efficiency:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.third_down_efficiency",
+              fourth_down_efficiency:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.fourth_down_efficiency",
+            },
+          }
+          // scoring: {
+          //   awayTeam: [
+          //     {
+          //       title: "Quater 1",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$awayTeamQ1", "0"] },
+          //           then: "-",
+          //           else: "$awayTeamQ1",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Quater 2",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$awayTeamQ2", "0"] },
+          //           then: "-",
+          //           else: "$awayTeamQ2",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Quater 3",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$awayTeamQ3", "0"] },
+          //           then: "-",
+          //           else: "$awayTeamQ3",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Quater 4",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$awayTeamQ4", "0"] },
+          //           then: "-",
+          //           else: "$awayTeamQ4",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Total",
+          //       score: "$awayTeamTotalScore",
+          //     },
+          //   ],
 
-            homeTeam: [
-              {
-                title: "Quater 1",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$homeTeamQ1", "0"] },
-                    then: "-",
-                    else: "$homeTeamQ1",
-                  },
-                },
-              },
-              {
-                title: "Quater 2",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$homeTeamQ2", "0"] },
-                    then: "-",
-                    else: "$homeTeamQ2",
-                  },
-                },
-              },
-              {
-                title: "Quater 3",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$homeTeamQ3", "0"] },
-                    then: "-",
-                    else: "$homeTeamQ3",
-                  },
-                },
-              },
-              {
-                title: "Quater 4",
-                score: {
-                  $cond: {
-                    if: { $eq: ["$homeTeamQ4", "0"] },
-                    then: "-",
-                    else: "$homeTeamQ4",
-                  },
-                },
-              },
-              {
-                title: "Total",
-                score: "$homeTeamTotalScore",
-              },
-            ],
-          },
+          //   homeTeam: [
+          //     {
+          //       title: "Quater 1",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$homeTeamQ1", "0"] },
+          //           then: "-",
+          //           else: "$homeTeamQ1",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Quater 2",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$homeTeamQ2", "0"] },
+          //           then: "-",
+          //           else: "$homeTeamQ2",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Quater 3",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$homeTeamQ3", "0"] },
+          //           then: "-",
+          //           else: "$homeTeamQ3",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Quater 4",
+          //       score: {
+          //         $cond: {
+          //           if: { $eq: ["$homeTeamQ4", "0"] },
+          //           then: "-",
+          //           else: "$homeTeamQ4",
+          //         },
+          //       },
+          //     },
+          //     {
+          //       title: "Total",
+          //       score: "$homeTeamTotalScore",
+          //     },
+          //   ],
+          // },
         },
       },
     ]);
