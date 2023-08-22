@@ -18,10 +18,25 @@ const scoreWithWeek = cron.schedule("*/10 * * * * *", async () => {
     isScoreWithWeek = false;
   }
 });
+let isliveDataOfBoxscore: boolean = false;
+const liveDataOfBoxscore = cron.schedule("*/10 * * * * *", async () => {
+  console.log("liveDataOfBoxscore Skip");
+  if (isliveDataOfBoxscore) {
+    return;
+  }
+  isliveDataOfBoxscore = true;
+  try {
+    await goalserveService.getLiveBoxscoreDataOfNFl();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isScoreWithWeek = false;
+  }
+});
 
 
 
 export default {
     scoreWithWeek,
-  
+    liveDataOfBoxscore
 };
