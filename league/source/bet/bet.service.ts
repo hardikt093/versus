@@ -18,6 +18,7 @@ import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
 import socketService from "../services/socket.service";
 import Notification from "../models/documents/notification.model";
+import NflMatch from "../models/documents/NFL/match.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -118,8 +119,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
-  } else if (data.leagueType === "NHL") {
-    matchData = await NhlMatch.findOne({
+  } else if (data.leagueType === "NFL") {
+    matchData = await NflMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
@@ -1509,7 +1510,9 @@ const readNotification = async (userId: number) => {
         multi: true,
       }
     );
-    await socketService.notficationSocket("notify", userId, { notifications: 0 });
+    await socketService.notficationSocket("notify", userId, {
+      notifications: 0,
+    });
   }
 };
 export default {
