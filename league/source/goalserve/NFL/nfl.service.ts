@@ -4686,7 +4686,7 @@ const nflFinal = async (goalServeMatchId: string) => {
   } catch (error) {}
 };
 
-const nflLive = async (goalServeMatchId: string) => {
+const nflLive = async (goalServeMatchId: any) => {
   try {
     const getMatch = await NflMatch.aggregate([
       {
@@ -6132,6 +6132,9 @@ const nflLive = async (goalServeMatchId: string) => {
         },
       },
     ]);
+    await socketService.socket("nflLiveBoxscore", {
+      getMatch,
+    });
     return getMatch[0];
   } catch (error) {}
 };
