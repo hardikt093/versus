@@ -983,15 +983,15 @@ const listBetsByType = async (
             },
           },
         ],
-        nbaData: [
+        nflData: [
           {
             $match: {
-              leagueType: "NBA",
+              leagueType: "NFL",
             },
           },
           {
             $lookup: {
-              from: "nbamatches",
+              from: "nflmatches",
               let: {
                 matchId: "$goalServeMatchId",
               },
@@ -1005,7 +1005,7 @@ const listBetsByType = async (
                 },
                 {
                   $lookup: {
-                    from: "nbateams",
+                    from: "nflteams",
                     let: {
                       homeTeamId: "$goalServeHomeTeamId",
                     },
@@ -1019,7 +1019,7 @@ const listBetsByType = async (
                       },
                       {
                         $lookup: {
-                          from: "nbateamimages",
+                          from: "nflteamimages",
                           let: {
                             teamId: "$goalServeTeamId",
                           },
@@ -1053,7 +1053,7 @@ const listBetsByType = async (
                 },
                 {
                   $lookup: {
-                    from: "nbateams",
+                    from: "nflteams",
                     let: {
                       awayTeamId: "$goalServeAwayTeamId",
                     },
@@ -1067,7 +1067,7 @@ const listBetsByType = async (
                       },
                       {
                         $lookup: {
-                          from: "nbateamimages",
+                          from: "nflteamimages",
                           let: {
                             teamId: "$goalServeTeamId",
                           },
@@ -1287,7 +1287,7 @@ const listBetsByType = async (
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nhlData", "$nbaData"] },
+        root: { $concatArrays: ["$mlbData", "$nflData", ] },
       },
     },
     { $unwind: "$root" },
