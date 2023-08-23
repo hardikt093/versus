@@ -29,23 +29,18 @@ const signIn = async (req: Request, res: Response) => {
         );
 
         if (login) {
-          console.log("login", login);
           if (login.isBirthDateAvailable == false) {
-            console.log("login.isBirthDateAvailable == false");
             createResponse(res, httpStatus.OK, "", {
               isBirthDateAvailable: false,
               user: login.user,
             });
           } else {
-            console.log("login.isBirthDateAvailable == true");
-            console.log("login.isBirthDateAvailable == true / login", login);
             createResponse(res, httpStatus.OK, "", {
               isBirthDateAvailable: true,
               user: login,
             });
           }
         } else {
-          console.log("in else of login")
           const countAge = await googleService.countAge(
             JWTpayload.getToken.data.access_token
           );
