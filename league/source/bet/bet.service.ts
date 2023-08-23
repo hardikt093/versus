@@ -774,11 +774,7 @@ const listBetsByType = async (
   });
   let count = await Bet.aggregate(countQuery);
   query.push(
-    {
-      $sort: {
-        createdAt: -1,
-      },
-    },
+    
     {
       $skip: skip,
     },
@@ -1296,6 +1292,11 @@ const listBetsByType = async (
       $unwind: {
         path: "$match",
         preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
       },
     },
     {
