@@ -774,6 +774,7 @@ const listBetsByType = async (
   });
   let count = await Bet.aggregate(countQuery);
   query.push(
+    
     {
       $skip: skip,
     },
@@ -1282,7 +1283,7 @@ const listBetsByType = async (
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nflData"] },
+        root: { $concatArrays: ["$mlbData", "$nflData", ] },
       },
     },
     { $unwind: "$root" },
@@ -1291,11 +1292,6 @@ const listBetsByType = async (
       $unwind: {
         path: "$match",
         preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $sort: {
-        createdAt: -1,
       },
     },
     {
@@ -1319,7 +1315,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
-                { $toString: "$requestUserFairOdds" },
+                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
                 { $toString: "$requestUserFairOdds" },
               ],
             },
@@ -1332,7 +1328,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
-                { $toString: "$opponentUserFairOdds" },
+                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
                 { $toString: "$opponentUserFairOdds" },
               ],
             },
@@ -1345,7 +1341,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
-                { $toString: "$requestUserGoalServeOdd" },
+                { $toString: "$requestUserGoalServeOdd"  },
                 { $toString: "$requestUserGoalServeOdd" },
               ],
             },
@@ -1358,7 +1354,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
-                { $toString: "$opponentUserGoalServeOdd" },
+                 { $toString: "$opponentUserGoalServeOdd" },
                 { $toString: "$opponentUserGoalServeOdd" },
               ],
             },
