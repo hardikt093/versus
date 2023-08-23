@@ -233,7 +233,7 @@ const getCalendar = async () => {
         spliteTime: {
           $split: ["$dateTimeUtc", " "],
         },
-      },  
+      },
     },
     {
       $addFields: {
@@ -799,10 +799,10 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
-        awayTeamAbbreviation:"$awayTeam.abbreviation",
-        homeTeamAbbreviation:"$homeTeam.abbreviation",
-        weekName:true,
-        seasonName:true,
+        awayTeamAbbreviation: "$awayTeam.abbreviation",
+        homeTeamAbbreviation: "$homeTeam.abbreviation",
+        weekName: true,
+        seasonName: true,
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
@@ -958,36 +958,36 @@ const scoreWithDate = async (data: any) => {
         status: "Final",
       },
     },
-    // {
-    //   $lookup: {
-    //     from: "nflteams",
-    //     localField: "goalServeAwayTeamId",
-    //     foreignField: "goalServeTeamId",
-    //     as: "awayTeam",
-    //   },
-    // },
-    // {
-    //   $lookup: {
-    //     from: "nhlteams",
-    //     localField: "goalServeHomeTeamId",
-    //     foreignField: "goalServeTeamId",
-    //     as: "homeTeam",
-    //   },
-    // },
-    // {
-    //   $unwind: {
-    //     path: "$awayTeam",
-    //     includeArrayIndex: "string",
-    //     preserveNullAndEmptyArrays: true,
-    //   },
-    // },
-    // {
-    //   $unwind: {
-    //     path: "$homeTeam",
-    //     includeArrayIndex: "string",
-    //     preserveNullAndEmptyArrays: true,
-    //   },
-    // },
+    {
+      $lookup: {
+        from: "nflteams",
+        localField: "goalServeAwayTeamId",
+        foreignField: "goalServeTeamId",
+        as: "awayTeam",
+      },
+    },
+    {
+      $lookup: {
+        from: "nflteams",
+        localField: "goalServeHomeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "homeTeam",
+      },
+    },
+    {
+      $unwind: {
+        path: "$awayTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$homeTeam",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
     {
       $lookup: {
         from: "nflstandings",
@@ -1082,10 +1082,10 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
-        awayTeamAbbreviation:"$awayTeam.abbreviation",
-        homeTeamAbbreviation:"$homeTeam.abbreviation",
-        weekName:true,
-        seasonName:true,
+        awayTeamAbbreviation: "$awayTeam.abbreviation",
+        homeTeamAbbreviation: "$homeTeam.abbreviation",
+        weekName: true,
+        seasonName: true,
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeamStandings.name",
@@ -1101,10 +1101,10 @@ const scoreWithDate = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $gte: [
-                  "$awayTeamTotalScoreInNumber",
-                  "$homeTeamTotalScoreInNumber",
-                ],
+                $regexMatch: {
+                  input: "$drive",
+                  regex: "$awayTeam.abbreviation",
+                },
               },
               then: true,
               else: false,
@@ -1126,10 +1126,10 @@ const scoreWithDate = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $gte: [
-                  "$homeTeamTotalScoreInNumber",
-                  "$awayTeamTotalScoreInNumber",
-                ],
+                $regexMatch: {
+                  input: "$drive",
+                  regex: "$homeTeam.abbreviation",
+                },
               },
               then: true,
               else: false,
@@ -2936,23 +2936,49 @@ const getLiveDataOfNfl = async (data: any) => {
       },
     },
     {
+      $addFields: {
+        status: {
+          $switch: {
+            branches: [
+              {
+                case: {
+                  $gt: [
+                    {
+                      $indexOfArray: [{ $split: ["$status", " "] }, "Quarter"],
+                    },
+                    -1,
+                  ],
+                },
+                then: {
+                  $concat: [
+                    { $arrayElemAt: [{ $split: ["$status", " "] }, 0] },
+                    " Qtr",
+                  ],
+                },
+              },
+              {
+                case: { $eq: ["$status", "End of Period"] },
+                then: "End of Quarter",
+              },
+            ],
+            default: "$status",
+          },
+        },
+      },
+    },
+    {
       $project: {
         id: true,
         date: true,
-        status: {
-          $concat: [
-            { $arrayElemAt: [{ $split: ["$status", " "] }, 0] },
-            " Qtr",
-          ],
-        },
+        status: "$status",
         drive: true,
         datetime_utc: "$dateTimeUtc",
         time: true,
         goalServeLeagueId: true,
         goalServeMatchId: true,
         timer: "$timer",
-        weekName:true,
-        seasonName:true,
+        weekName: true,
+        seasonName: true,
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
@@ -2965,10 +2991,10 @@ const getLiveDataOfNfl = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $gte: [
-                  "$awayTeamTotalScoreInNumber",
-                  "$homeTeamTotalScoreInNumber",
-                ],
+                $regexMatch: {
+                  input: "$drive",
+                  regex: "$awayTeam.abbreviation",
+                },
               },
               then: true,
               else: false,
@@ -2987,10 +3013,10 @@ const getLiveDataOfNfl = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $gte: [
-                  "$homeTeamTotalScoreInNumber",
-                  "$awayTeamTotalScoreInNumber",
-                ],
+                $regexMatch: {
+                  input: "$drive",
+                  regex: "$homeTeam.abbreviation",
+                },
               },
               then: true,
               else: false,
@@ -5565,7 +5591,40 @@ const nflLive = async (goalServeMatchId: any) => {
           },
         },
       },
-
+      {
+        $addFields: {
+          status: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $gt: [
+                      {
+                        $indexOfArray: [
+                          { $split: ["$status", " "] },
+                          "Quarter",
+                        ],
+                      },
+                      -1,
+                    ],
+                  },
+                  then: {
+                    $concat: [
+                      { $arrayElemAt: [{ $split: ["$status", " "] }, 0] },
+                      " Qtr",
+                    ],
+                  },
+                },
+                {
+                  case: { $eq: ["$status", "End of Period"] },
+                  then: "End of Quarter",
+                },
+              ],
+              default: "$status",
+            },
+          },
+        },
+      },
       {
         $project: {
           id: true,
@@ -5577,12 +5636,7 @@ const nflLive = async (goalServeMatchId: any) => {
           datetime_utc: "$dateTimeUtc",
           weekName: "$weekName",
           seasonName: "$seasonName",
-          status: {
-            $concat: [
-              { $arrayElemAt: [{ $split: ["$status", " "] }, 0] },
-              " Qtr",
-            ],
-          },
+          status: "$status",
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
