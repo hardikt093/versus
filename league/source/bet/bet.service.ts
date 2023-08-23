@@ -1345,7 +1345,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
-                { $concat: ["+", { $toString: "$requestUserGoalServeOdd" }] },
+                { $toString: "$requestUserGoalServeOdd" },
                 { $toString: "$requestUserGoalServeOdd" },
               ],
             },
@@ -1358,7 +1358,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
-                { $concat: ["+", { $toString: "$opponentUserGoalServeOdd" }] },
+                { $toString: "$opponentUserGoalServeOdd" },
                 { $toString: "$opponentUserGoalServeOdd" },
               ],
             },
