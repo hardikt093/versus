@@ -774,7 +774,6 @@ const listBetsByType = async (
   });
   let count = await Bet.aggregate(countQuery);
   query.push(
-    
     {
       $skip: skip,
     },
@@ -1283,7 +1282,7 @@ const listBetsByType = async (
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nflData", ] },
+        root: { $concatArrays: ["$mlbData", "$nflData"] },
       },
     },
     { $unwind: "$root" },
@@ -1320,7 +1319,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
-                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
+                { $toString: "$requestUserFairOdds" },
                 { $toString: "$requestUserFairOdds" },
               ],
             },
@@ -1333,7 +1332,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
-                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
+                { $toString: "$opponentUserFairOdds" },
                 { $toString: "$opponentUserFairOdds" },
               ],
             },
