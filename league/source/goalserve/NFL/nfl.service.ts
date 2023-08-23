@@ -233,7 +233,7 @@ const getCalendar = async () => {
         spliteTime: {
           $split: ["$dateTimeUtc", " "],
         },
-      },
+      },  
     },
     {
       $addFields: {
@@ -799,6 +799,10 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
+        awayTeamAbbreviation:"$awayTeam.abbreviation",
+        homeTeamAbbreviation:"$homeTeam.abbreviation",
+        weekName:true,
+        seasonName:true,
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
@@ -1078,6 +1082,10 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
+        awayTeamAbbreviation:"$awayTeam.abbreviation",
+        homeTeamAbbreviation:"$homeTeam.abbreviation",
+        weekName:true,
+        seasonName:true,
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeamStandings.name",
@@ -2943,6 +2951,8 @@ const getLiveDataOfNfl = async (data: any) => {
         goalServeLeagueId: true,
         goalServeMatchId: true,
         timer: "$timer",
+        weekName:true,
+        seasonName:true,
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
           awayTeamName: "$awayTeam.name",
@@ -6158,12 +6168,12 @@ const nflLive = async (goalServeMatchId: any) => {
 
 const scoreWithWeek = async () => {
   try {
-    let curruntDay = moment().startOf("day").utc().toISOString();
-    let subtractOneDay = moment(curruntDay)
-      .subtract(24, "hours")
+    let curruntDay1 = moment().startOf("day").utc().toISOString();
+    let subtractOneDay = moment(curruntDay1)
+      .subtract(2, "weeks")
       .utc()
       .toISOString();
-    let addOneDay = moment(curruntDay).add(48, "hours").utc().toISOString();
+    let addOneDay = moment(curruntDay1).add(2, "weeks").utc().toISOString();
     const data = await NflMatch.aggregate([
       {
         $addFields: {
@@ -6205,7 +6215,6 @@ const scoreWithWeek = async () => {
         },
       },
     ]);
-
     const getMatches = await scoreWithDate({ calenderData: data });
   } catch (error: any) {
     console.log("error", error);
