@@ -109,7 +109,7 @@ export default class NFLDbCronServiceClass {
                   road_record: team.road_record,
                   streak: team.streak,
                   won: team.won,
-                  ties: team.ties,
+                  ties: team.ties ? Number(team.ties) : 0,
                   win_percentage: team.win_percentage,
                 };
                 await NflStandings.findOneAndUpdate(

@@ -71,9 +71,9 @@ const nflFinal = async (req: Request, res: Response) => {
 };
 const nflLive = async (req: Request, res: Response) => {
   try {
-    const data = await nflService.nflLive(
-      req.query.goalServeMatchId as string
-    );
+    const id = [];
+    id.push(Number(req.query.goalServeMatchId));
+    const data = await nflService.nflLive(id);
     createResponse(res, httpStatus.OK, "", data);
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
@@ -87,5 +87,5 @@ export default {
   addFinalMatch,
   nflUpcomming,
   nflFinal,
-  nflLive
+  nflLive,
 };

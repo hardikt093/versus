@@ -18,6 +18,7 @@ import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
 import socketService from "../services/socket.service";
 import Notification from "../models/documents/notification.model";
+import NflMatch from "../models/documents/NFL/match.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -118,8 +119,8 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
-  } else if (data.leagueType === "NHL") {
-    matchData = await NhlMatch.findOne({
+  } else if (data.leagueType === "NFL") {
+    matchData = await NflMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
@@ -773,11 +774,7 @@ const listBetsByType = async (
   });
   let count = await Bet.aggregate(countQuery);
   query.push(
-    {
-      $sort: {
-        updatedAt: -1,
-      },
-    },
+    
     {
       $skip: skip,
     },
@@ -982,15 +979,15 @@ const listBetsByType = async (
             },
           },
         ],
-        nbaData: [
+        nflData: [
           {
             $match: {
-              leagueType: "NBA",
+              leagueType: "NFL",
             },
           },
           {
             $lookup: {
-              from: "nbamatches",
+              from: "nflmatches",
               let: {
                 matchId: "$goalServeMatchId",
               },
@@ -1004,7 +1001,7 @@ const listBetsByType = async (
                 },
                 {
                   $lookup: {
-                    from: "nbateams",
+                    from: "nflteams",
                     let: {
                       homeTeamId: "$goalServeHomeTeamId",
                     },
@@ -1018,7 +1015,7 @@ const listBetsByType = async (
                       },
                       {
                         $lookup: {
-                          from: "nbateamimages",
+                          from: "nflteamimages",
                           let: {
                             teamId: "$goalServeTeamId",
                           },
@@ -1052,7 +1049,7 @@ const listBetsByType = async (
                 },
                 {
                   $lookup: {
-                    from: "nbateams",
+                    from: "nflteams",
                     let: {
                       awayTeamId: "$goalServeAwayTeamId",
                     },
@@ -1066,7 +1063,7 @@ const listBetsByType = async (
                       },
                       {
                         $lookup: {
-                          from: "nbateamimages",
+                          from: "nflteamimages",
                           let: {
                             teamId: "$goalServeTeamId",
                           },
@@ -1286,7 +1283,7 @@ const listBetsByType = async (
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nhlData", "$nbaData"] },
+        root: { $concatArrays: ["$mlbData", "$nflData", ] },
       },
     },
     { $unwind: "$root" },
@@ -1344,7 +1341,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
-                { $concat: ["+", { $toString: "$requestUserGoalServeOdd" }] },
+                { $toString: "$requestUserGoalServeOdd"  },
                 { $toString: "$requestUserGoalServeOdd" },
               ],
             },
@@ -1357,7 +1354,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
-                { $concat: ["+", { $toString: "$opponentUserGoalServeOdd" }] },
+                 { $toString: "$opponentUserGoalServeOdd" },
                 { $toString: "$opponentUserGoalServeOdd" },
               ],
             },
@@ -1509,7 +1506,9 @@ const readNotification = async (userId: number) => {
         multi: true,
       }
     );
-    await socketService.notficationSocket("notify", userId, { notifications: 0 });
+    await socketService.notficationSocket("notify", userId, {
+      notifications: 0,
+    });
   }
 };
 export default {
