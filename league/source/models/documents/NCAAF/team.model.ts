@@ -2,15 +2,15 @@ import { model, Schema } from "mongoose";
 import ITeamModel from "../../interfaces/team.interface";
 var teamSchema = new Schema(
   {
-    goalServeTeamId: { type: Number, required: true },
-    name: { type: String, required: true },
-    teamName: { type: String, required: true },
-    leagueId: { type: Schema.Types.ObjectId, required: true, ref: "league" },
-    leagueName: { type: String, required: true },
-    division: { type: String, required: true },
-    locality: { type: String, required: true },
+    goalServeTeamId: { type: Number },
+    name: { type: String },
+    teamName: { type: String },
+    leagueId: { type: Schema.Types.ObjectId, ref: "league" },
+    leagueName: { type: String },
+    division: { type: String },
+    locality: { type: String },
     isDeleted: { type: Boolean, default: false },
-    goalServeLeagueId: { type: Number, required: true },
+    goalServeLeagueId: { type: Number },
     conference: String,
     conferenceName: String,
     conferenceId: String,
