@@ -243,6 +243,7 @@ const signIn = async (data: ISignIn) => {
       accessToken: tokens.access.token,
       phone: signIn[0].phone,
       refreshToken: tokens.refresh.token,
+      email: signIn[0].email,
     };
     return { user };
   } else {
@@ -330,15 +331,12 @@ const resetPassword = async (data: IResetPassword) => {
  */
 
 const socialLogin = async (data: any) => {
-  if (data.email == "mike@versus-social.com") {
-    console.log("data.email", data)
-  }
+  
   const checkEmail = await prisma.user.findUnique({
     where: {
       email: data.toLowerCase(),
     },
   });
-  console.log("checkEmail", checkEmail)
   if (checkEmail) {
     if (checkEmail.isSignUp == "PENDING") {
       return {
@@ -356,9 +354,9 @@ const socialLogin = async (data: any) => {
         accessToken: tokens.access.token,
         refreshToken: tokens.refresh.token,
         userName: checkEmail.userName,
-        phone:checkEmail.phone
+        phone:checkEmail.phone,
+        email:checkEmail.email
       };
-      console.log("user", user)
       return user;
     }
   } else {

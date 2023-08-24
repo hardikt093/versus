@@ -109,7 +109,7 @@ export default class NFLDbCronServiceClass {
                   road_record: team.road_record,
                   streak: team.streak,
                   won: team.won,
-                  ties: team.ties,
+                  ties: team.ties ? Number(team.ties) : 0,
                   win_percentage: team.win_percentage,
                 };
                 await NflStandings.findOneAndUpdate(
@@ -1021,7 +1021,7 @@ export default class NFLDbCronServiceClass {
     try {
       const getMatch: any = await axiosGet(
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-scores`,
-        { json: true, date: "10.08.2023" }
+        { json: true }
       );
 
       const matchArray = await getMatch?.data?.scores?.category?.match;
@@ -1104,7 +1104,6 @@ export default class NFLDbCronServiceClass {
             );
           }
         }
-        
       } else {
         if (matchArray) {
           const match: INflMatchModel | null = await NflMatch.findOne({

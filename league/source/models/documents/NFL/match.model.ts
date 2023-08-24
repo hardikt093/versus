@@ -85,7 +85,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        // type: String,
+        type: { type: String },
       },
     ],
     fourthQuarterEvent: [
@@ -97,7 +97,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        // type: String,
+        type: { type: String },
       },
     ],
     overtimeEvent: [
@@ -109,7 +109,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        // type: String,
+        type: { type: String },
       },
     ],
     secondQuarterEvent: [
@@ -121,7 +121,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        // type: String,
+        type: { type: String },
       },
     ],
     thirdQuarterEvent: [
@@ -133,7 +133,7 @@ var nflMatchSchema = new Schema(
         player: String,
         player_id: String,
         team: String,
-        // type: String,
+        type: { type: String },
       },
     ],
     awayTeamFumbles: [
@@ -369,8 +369,10 @@ var nflMatchSchema = new Schema(
       },
     ],
   },
+  // { typeKey: '$type' },
   {
     timestamps: true,
+    // typeKey: '$type'
   }
 );
 const NflMatch = model<INflMatchModel>("NflMatch", nflMatchSchema);
