@@ -5637,6 +5637,7 @@ const nflLive = async (goalServeMatchId: any) => {
           weekName: "$weekName",
           seasonName: "$seasonName",
           status: "$status",
+          timer:true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
