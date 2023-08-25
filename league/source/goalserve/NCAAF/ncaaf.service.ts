@@ -1,3 +1,4 @@
+import NcaafMatch from "../../models/documents/NCAAF/match.model";
 import TeamNCAAF from "../../models/documents/NCAAF/team.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
@@ -35,6 +36,82 @@ const addTeam = async (data: any) => {
     });
 };
 
+const getCalendar = async () => {
+  const getCalendar = await NcaafMatch.aggregate([
+    {
+      $addFields: {
+        spliteTime: {
+          $split: ["$dateTimeUtc", " "],
+        },
+      },
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateutc: 1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          weekName: "$weekName",
+        },
+        dates: {
+          $push: "$dateTimeUtc",
+        },
+        dateInString: {
+          $push: "$dateInString",
+        },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        weekItem: {
+          $push: {
+            title: "$_id.weekName",
+            dates: "$dates",
+            dateInString: "$dateInString",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: false,
+        weekItem: {
+          $sortArray: {
+            input: "$weekItem",
+            sortBy: {
+              dateInString: 1,
+            },
+          },
+        },
+      },
+    },
+  ]);
+  return await Promise.all(
+    getCalendar.map(async (item: any) => {
+      return item
+    })
+  );
+};
+
+
 export default {
   addTeam,
+  getCalendar
 };
