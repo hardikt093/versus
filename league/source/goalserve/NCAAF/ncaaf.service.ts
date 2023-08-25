@@ -1,8 +1,10 @@
+import moment from "moment";
 import NcaafMatch from "../../models/documents/NCAAF/match.model";
 import TeamNCAAF from "../../models/documents/NCAAF/team.model";
 import TeamImageNCAAF from "../../models/documents/NCAAF/teamImage.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
+import socketService from "../../services/socket.service";
 var csv = require("csvtojson");
 
 const addTeam = async (data: any) => {
@@ -949,11 +951,11 @@ const scoreWithDate = async (data: any) => {
       return getUpcomingMatch;
     }
   } else {
-    // await socketService.socket("nflDashboard", {
-    //   getUpcomingMatch,
-    //   getFinalMatch,
-    //   getLiveDataOfNfl: await getLiveDataOfNfl(data),
-    // });
+    await socketService.socket("ncaafDashboard", {
+      getUpcomingMatch,
+      getFinalMatch,
+      getLiveDataOfNfl: await getLiveDataOfNfl(data),
+    });
     return {
       getUpcomingMatch,
       getFinalMatch,
@@ -1254,11 +1256,66 @@ const getLiveDataOfNfl = async (data: any) => {
   ]);
 };
 
+const scoreWithWeek = async () => {
+  try {
+    let curruntDay1 = moment().startOf("day").utc().toISOString();
+    let subtractOneDay = moment(curruntDay1)
+      .subtract(2, "weeks")
+      .utc()
+      .toISOString();
+    let addOneDay = moment(curruntDay1).add(2, "weeks").utc().toISOString();
+    const data = await NcaafMatch.aggregate([
+      {
+        $addFields: {
+          dateutc: {
+            $toDate: "$formattedDate",
+          },
+        },
+      },
+      {
+        $addFields: {
+          dateInString: {
+            $toString: "$dateutc",
+          },
+        },
+      },
+      {
+        $match: {
+          dateInString: {
+            $gte: subtractOneDay,
+            $lte: addOneDay,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            weekName: "$weekName",
+            // seasonName: "$seasonName",
+          },
+          data: {
+            $push: "$$ROOT",
+          },
+        },
+      },
+      {
+        $project: {
+          weekName: "$_id.weekName",
+          // seasonName: "$_id.seasonName",
+        },
+      },
+    ]);
+    const getMatches = await scoreWithDate({ calenderData: data });
+  } catch (error: any) {
+    console.log("error", error);
+  }
+};
 
 export default {
   addTeam,
   getCalendar,
   addTeamImage,
   scoreWithDate,
-  getLiveDataOfNfl
+  getLiveDataOfNfl,
+  scoreWithWeek
 }
