@@ -4,18 +4,18 @@ import mlbCron from "./mlb.cron";
 import betCron from "./bet.cron";
 import config from "../../../config/config";
 import mongoose from "mongoose";
-import nflCron from "./nfl.cron";
-import ncaafCron from "./ncaaf.cron";
+import nflCron from './nfl.cron';
+import ncaafCron from './ncaaf.cron';
 
 async function main() {
-  await mongoose.connect(config.mongoose.url).then((result: any) => {
-    console.info(`Connected to MongoDB -${config.mongoose.url}`);
-  });
-  nbaCron;
-  nhlCron;
-  mlbCron;
-  betCron;
-  nflCron;
-  ncaafCron;
+    await mongoose.connect(config.mongoose.url).then((result: any) => {
+        console.info(`Connected to MongoDB -${config.mongoose.url}`);
+    });
+    nbaCron;
+    nhlCron;
+    mlbCron;
+    betCron;
+    nflCron;
+    ncaafCron
 }
 main();
