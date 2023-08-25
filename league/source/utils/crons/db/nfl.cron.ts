@@ -112,7 +112,7 @@ const oddAdded = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateMatchStats: boolean = false;
-const updateMatchStatsNFL = cron.schedule("0 0 */1 * * *", async () => {
+const updateMatchStatsNFL = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateMatchStats) {
     return;
   }

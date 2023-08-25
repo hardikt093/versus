@@ -1,4 +1,5 @@
 import TeamNCAAF from "../../models/documents/NCAAF/team.model";
+import TeamImageNCAAF from "../../models/documents/NCAAF/teamImage.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 var csv = require("csvtojson");
@@ -34,7 +35,11 @@ const addTeam = async (data: any) => {
       console.log(error);
     });
 };
-
+const addTeamImage = async (data: any) => {
+  const teamImage = new TeamImageNCAAF(data);
+  const saved = await teamImage.save();
+};
 export default {
   addTeam,
+  addTeamImage
 };
