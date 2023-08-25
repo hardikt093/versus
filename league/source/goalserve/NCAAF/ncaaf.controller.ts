@@ -8,6 +8,13 @@ const addTeamNCAAF = async (req: Request, res: Response) => {
   createResponse(res, httpStatus.OK, "", addTeam);
 };
 
+
+const addTeamNCAAFImage = async (req: Request, res: Response) => {
+  const addTeam = await ncaafService.addTeamImage(req.body);
+  createResponse(res, httpStatus.OK, "", addTeam);
+};
+
 export default {
   addTeamNCAAF,
+  addTeamNCAAFImage
 };
