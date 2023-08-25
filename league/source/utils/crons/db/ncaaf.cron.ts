@@ -48,15 +48,24 @@ const updateLiveMatch = cron.schedule("*/5 * * * * *", async () => {
   } finally {
     isUpdateLiveMatch = false;
   }
-}
-)
+});
 
-
+let isupdatePlayerRecordRunning: boolean = false;
+const updatePlayerRecord = cron.schedule("*/10 * * * * *", async () => {
+  if (isupdatePlayerRecordRunning) {
+    return;
+  }
+  isupdatePlayerRecordRunning = true;
+  try {
+    await ncaafService.addPlayers();
+  } catch (error) {
+  } finally {
+    isupdatePlayerRecordRunning = false;
+  }
+});
 export default {
-    // updateStandingRecord,
-    updateNflUpcommingMatch,
-    updateLiveMatch,
-  };
-  
-  
-
+  // updateStandingRecord,
+  updatePlayerRecord,
+  updateNflUpcommingMatch,
+  updateLiveMatch,
+};

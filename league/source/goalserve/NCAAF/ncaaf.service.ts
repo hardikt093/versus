@@ -1,5 +1,6 @@
 import NcaafMatch from "../../models/documents/NCAAF/match.model";
 import TeamNCAAF from "../../models/documents/NCAAF/team.model";
+import TeamImageNCAAF from "../../models/documents/NCAAF/teamImage.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 var csv = require("csvtojson");
@@ -109,9 +110,14 @@ const getCalendar = async () => {
     })
   );
 };
+const addTeamImage = async (data: any) => {
+  const teamImage = new TeamImageNCAAF(data);
+  const saved = await teamImage.save();
+};
 
 
 export default {
   addTeam,
-  getCalendar
-};
+  getCalendar,
+  addTeamImage
+}

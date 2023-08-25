@@ -20,9 +20,15 @@ const getCalendar = async (req: Request, res: Response) => {
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
+}
+
+const addTeamNCAAFImage = async (req: Request, res: Response) => {
+  const addTeam = await ncaafService.addTeamImage(req.body);
+  createResponse(res, httpStatus.OK, "", addTeam);
 };
 
 export default {
   addTeamNCAAF,
-  getCalendar
+  getCalendar,
+  addTeamNCAAFImage
 };
