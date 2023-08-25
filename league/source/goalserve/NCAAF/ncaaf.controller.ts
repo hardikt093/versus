@@ -27,8 +27,18 @@ const addTeamNCAAFImage = async (req: Request, res: Response) => {
   createResponse(res, httpStatus.OK, "", addTeam);
 };
 
+const nflScoreWithDate = async (req: Request, res: Response) => {
+  try {
+    const data = await ncaafService.scoreWithDate(req.body);
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 export default {
   addTeamNCAAF,
   getCalendar,
-  addTeamNCAAFImage
+  addTeamNCAAFImage,
+  nflScoreWithDate
 };
