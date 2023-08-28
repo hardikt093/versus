@@ -1,0 +1,17 @@
+import { model, Schema } from "mongoose";
+import ITeamImagesModel from "../../interfaces/teamImage.interface";
+
+var ncaafImageSchema = new Schema(
+    {
+        teamId: { required: true, type: Schema.Types.ObjectId, ref: "ncaafteam" },
+        goalServeTeamId: Number,
+        image: { type: String, required: true },
+        isDeleted: { type: Boolean, default: false },
+    },
+    {
+        timestamps: true,
+    }
+);
+const TeamImageNCAAF = model<ITeamImagesModel>("NcaafTeamImage", ncaafImageSchema);
+
+export default TeamImageNCAAF;

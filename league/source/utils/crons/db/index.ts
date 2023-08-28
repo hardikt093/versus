@@ -1,10 +1,11 @@
-import nbaCron from './nba.cron';
-import nhlCron from './nhl.cron';
-import mlbCron from './mlb.cron';
-import betCron from './bet.cron';
+import nbaCron from "./nba.cron";
+import nhlCron from "./nhl.cron";
+import mlbCron from "./mlb.cron";
+import betCron from "./bet.cron";
 import config from "../../../config/config";
 import mongoose from "mongoose";
 import nflCron from './nfl.cron';
+import ncaafCron from './ncaaf.cron';
 
 async function main() {
     await mongoose.connect(config.mongoose.url).then((result: any) => {
@@ -14,6 +15,7 @@ async function main() {
     nhlCron;
     mlbCron;
     betCron;
-    nflCron
+    nflCron;
+    ncaafCron
 }
 main();
