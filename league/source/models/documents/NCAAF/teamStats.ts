@@ -3,7 +3,7 @@ import IStatsTeamModel from "../../interfaces/teamStats.interface";
 
 var statsTeamSchema = new Schema(
   {
-    teamId: { required: true, type: Schema.Types.ObjectId, ref: "nflteam" },
+    teamId: { required: true, type: Schema.Types.ObjectId, ref: "ncaafteam" },
     goalServeTeamId: Number,
     passingOpponent: {
       completion_pc: String,
@@ -128,6 +128,6 @@ var statsTeamSchema = new Schema(
     timestamps: true,
   }
 );
-const StatsTeamNFL = model<IStatsTeamModel>("NflStatsTeam", statsTeamSchema);
+const StatsTeamNCAAF = model<IStatsTeamModel>("NcaafStatsTeam", statsTeamSchema);
 
-export default StatsTeamNFL;
+export default StatsTeamNCAAF;

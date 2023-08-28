@@ -19,7 +19,7 @@ let isupdateStandingRecordRunning: boolean = false;
 // )
 let isUpdateNcaafUpcommingMatch: boolean = false;
 
-const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
+const updateNflUpcommingMatch = cron.schedule("*/10 * * * * *", async () => {
   if (isUpdateNcaafUpcommingMatch) {
     return;
   }
@@ -34,7 +34,7 @@ const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
 });
 
 let isUpdateLiveMatch: boolean = false;
-const updateLiveMatch = cron.schedule("*/5 * * * * *", async () => {
+const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   console.log("isupdateFinalMatchNfl Skip");
   if (isUpdateLiveMatch) {
     return;
@@ -63,8 +63,25 @@ const updatePlayerRecord = cron.schedule("*/10 * * * * *", async () => {
     isupdatePlayerRecordRunning = false;
   }
 });
+
+let isupdateTeamStatsNCAAfRunning: boolean = false;
+const updateTeamStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
+  console.log("isupdateTeamStatsNCAAFRunning Skip");
+  if (isupdateTeamStatsNCAAfRunning) {
+    return;
+  }
+  isupdateTeamStatsNCAAfRunning = true;
+  try {
+    await ncaafService.addTeamStats();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateTeamStatsNCAAfRunning = false;
+  }
+});
+
 export default {
-  // updateStandingRecord,
+  updateTeamStatsNcaaf,
   updatePlayerRecord,
   updateNflUpcommingMatch,
   updateLiveMatch,
