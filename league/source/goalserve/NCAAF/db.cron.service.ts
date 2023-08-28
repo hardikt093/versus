@@ -1152,6 +1152,57 @@ export default class NCAAFDbCronServiceClass {
     }
   };
 
+
+  public addOrUpdateDriveInLive = async () => {
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-playbyplay-scores`,
+        { json: true }
+      );
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.scores?.category?.id,
+      });
+      if (matchArray?.length > 0 && matchArray) {
+        for (let i = 0; i < matchArray?.length; i++) {
+          const match: INcaafMatchModel | null = await NcaafMatch.findOne({
+            goalServeMatchId: matchArray[i]?.contestID,
+          });
+          if (match) {
+            const data: any = {
+              drive: matchArray[i].playbyplay.drive[0].play[0].down
+                ? matchArray[i].playbyplay.drive[0].play[0].down
+                : "",
+            };
+            const dataUpdate = await NcaafMatch.findOneAndUpdate(
+              { goalServeMatchId: matchArray[i]?.contestID },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      } else {
+        if (matchArray) {
+          const match: INcaafMatchModel | null = await NcaafMatch.findOne({
+            goalServeMatchId: matchArray?.contestID,
+          });
+          if (match) {
+            const data: any = {
+              drive: matchArray.playbyplay.drive[0].play[0].down
+                ? matchArray.playbyplay.drive[0].play[0].down
+                : "",
+            };
+            const dataUpdate = await NcaafMatch.findOneAndUpdate(
+              { goalServeMatchId: matchArray?.contestID },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      }
+    } catch (error: any) {}
+  };
+
   public createOdds = async () => {
     let subDate = moment()
       .startOf("day")

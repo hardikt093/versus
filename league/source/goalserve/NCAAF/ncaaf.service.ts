@@ -892,9 +892,9 @@ const scoreWithDate = async (data: any) => {
         seasonName: true,
         awayTeam: {
           abbreviation: "$awayTeam.abbreviation",
-          awayTeamName: "$awayTeamStandings.name",
-          awayTeamId: "$awayTeamStandings._id",
-          goalServeAwayTeamId: "$awayTeamStandings.goalServeTeamId",
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
           awayTeamRun: "$awayTeamTotalScore",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
@@ -905,10 +905,10 @@ const scoreWithDate = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $regexMatch: {
-                  input: "$drive",
-                  regex: "$awayTeam.abbreviation",
-                },
+                $gte: [
+                  "$awayTeamTotalScoreInNumber",
+                  "$homeTeamTotalScoreInNumber",
+                ],
               },
               then: true,
               else: false,
@@ -917,9 +917,9 @@ const scoreWithDate = async (data: any) => {
         },
         homeTeam: {
           abbreviation: "$homeTeam.abbreviation",
-          homeTeamName: "$homeTeamStandings.name",
-          homeTeamId: "$homeTeamStandings._id",
-          goalServeHomeTeamId: "$homeTeamStandings.goalServeTeamId",
+          homeTeamName: "$homeTeam.name",
+          homeTeamId: "$homeTeam._id",
+          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamRun: "$homeTeamTotalScore",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
@@ -930,10 +930,10 @@ const scoreWithDate = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $regexMatch: {
-                  input: "$drive",
-                  regex: "$homeTeam.abbreviation",
-                },
+                $gte: [
+                  "$homeTeamTotalScoreInNumber",
+                  "$awayTeamTotalScoreInNumber",
+                ],
               },
               then: true,
               else: false,

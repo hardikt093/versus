@@ -42,7 +42,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   isUpdateLiveMatch = true;
   try {
     await ncaafService.updateLiveMatch();
-    // await ncaafService.addOrUpdateDriveInLive();
+    await ncaafService.addOrUpdateDriveInLive();
   } catch (error) {
     console.log(error);
   } finally {
@@ -96,7 +96,7 @@ const updateMatchStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
 
 let isOddAdded: boolean = false;
 const oddAdded = cron.schedule("*/10 * * * * *", async () => {
-  console.log("isOddAdded========= Skip");
+  console.log("isOddAdded Skip");
   if (isOddAdded) {
     return;
   }
