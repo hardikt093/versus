@@ -11,6 +11,7 @@ import { axiosGet } from "../../services/axios.service";
 import NCAAFInjury from "../../models/documents/NCAAF/injury.model";
 import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
 import StatsTeamNCAAF from "../../models/documents/NCAAF/teamStats";
+import NCAAFMatchStatsTeam from "../../models/documents/NCAAF/matchTeamStats";
 
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
@@ -108,7 +109,7 @@ export default class NCAAFDbCronServiceClass {
         }
       })
     );
-    }
+  };
   public updateNcaafMatch = async () => {
     try {
       const getMatch = await axiosGet(
@@ -217,8 +218,8 @@ export default class NCAAFDbCronServiceClass {
                           .number
                       : "",
                   };
-                    const matchData = new NcaafMatch(data);
-                    await matchData.save();
+                  const matchData = new NcaafMatch(data);
+                  await matchData.save();
                 }
               }
               continue;
@@ -325,8 +326,8 @@ export default class NCAAFDbCronServiceClass {
       console.log("error", error);
     }
   };
-  
-   public updateLiveMatch = async () => {
+
+  public updateLiveMatch = async () => {
     try {
       const getMatch: any = await axiosGet(
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
@@ -702,7 +703,7 @@ export default class NCAAFDbCronServiceClass {
                 const player: any = players[j];
                 const PlayerData = {
                   height: player.height,
-                  class:  player.class,
+                  class: player.class,
                   number: player.number,
                   position: player.position,
                   weight: player.weight,
@@ -810,6 +811,66 @@ export default class NCAAFDbCronServiceClass {
                   default:
                     break;
                 }
+              }
+            } else {
+              const players = category.player;
+              const playerData: any = {
+                teamId: team.id,
+                goalServeTeamId: team.goalServeTeamId,
+                goalServePlayerId: players.id,
+              };
+              switch (categoryName) {
+                case "Passing":
+                  playerData.name = players.name;
+                  playerData.isPassingPlayer = true;
+                  playerData.passing = { ...players };
+                  allPassingPlayer.push(playerData);
+                  break;
+                case "Rushing":
+                  playerData.name = players.name;
+                  playerData.isRushingPlayer = true;
+                  playerData.rushing = { ...players };
+                  allRushingPlayer.push(playerData);
+                  break;
+                case "Receiving":
+                  playerData.name = players.name;
+                  playerData.isReceivingPlayer = true;
+                  playerData.receiving = { ...players };
+                  allReceivingPlayer.push(playerData);
+                  break;
+                case "Defense":
+                  playerData.name = players.name;
+                  playerData.isDefensePlayer = true;
+                  playerData.defence = { ...players };
+                  allDefencePlayer.push(playerData);
+                  break;
+                case "Scoring":
+                  playerData.name = players.name;
+                  playerData.isScoringPlayer = true;
+                  playerData.scoring = { ...players };
+                  allScoringPlayer.push(playerData);
+                  break;
+                case "Returning":
+                  playerData.name = players.name;
+                  playerData.isReturningPlayer = true;
+                  playerData.returning = { ...players };
+                  allReturningPlayer.push(playerData);
+                  break;
+                case "Kicking":
+                  playerData.name = players.name;
+                  playerData.isKickingPlayer = true;
+                  playerData.kicking = { ...players };
+                  allKickingPlayer.push(playerData);
+                  break;
+                case "Punting":
+                  playerData.name = players.name;
+                  playerData.isPuntingPlayer = true;
+                  playerData.punting = { ...players };
+                  allPuntingPlayer.push(playerData);
+                  break;
+
+                default:
+                  break;
               }
             }
           }
@@ -989,6 +1050,65 @@ export default class NCAAFDbCronServiceClass {
           { upsert: true }
         );
       }
+    }
+  };
+
+  public addMatchTeamStats = async () => {
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
+        { json: true }
+      );
+
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.scores?.category?.id,
+      });
+
+      if (matchArray?.length > 0 && matchArray) {
+        for (let i = 0; i < matchArray?.length; i++) {
+          const data = {
+            attendance: matchArray[i]?.attendance,
+            goalServeHomeTeamId: matchArray[i]?.hometeam.id,
+            goalServeAwayTeamId: matchArray[i]?.awayteam.id,
+            goalServeMatchId: matchArray[i]?.contestID,
+            date: matchArray[i]?.date,
+            dateTimeUtc: matchArray[i]?.datetime_utc,
+            formattedDate: matchArray[i]?.formatted_date,
+            status: matchArray[i]?.status,
+            time: matchArray[i]?.time,
+            timezone: matchArray[i]?.timezone,
+            team_stats: matchArray[i].team_stats,
+          };
+          await NCAAFMatchStatsTeam.updateOne(
+            { goalServeMatchId: matchArray[i]?.contestID },
+            { $set: data },
+            { upsert: true }
+          );
+        }
+      } else {
+        if (matchArray) {
+          const data = {
+            goalServeHomeTeamId: matchArray?.hometeam.id,
+            goalServeAwayTeamId: matchArray?.awayteam.id,
+            date: matchArray?.date,
+            goalServeMatchId: matchArray?.contestID,
+            dateTimeUtc: matchArray?.datetime_utc,
+            formattedDate: matchArray?.formatted_date,
+            status: matchArray?.status,
+            time: matchArray?.time,
+            timezone: matchArray?.timezone,
+            team_stats: matchArray?.team_stats,
+          };
+          await NCAAFMatchStatsTeam.updateOne(
+            { goalServeMatchId: matchArray?.contestID },
+            { $set: data },
+            { upsert: true }
+          );
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
     }
   };
 }

@@ -79,10 +79,24 @@ const updateTeamStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
     isupdateTeamStatsNCAAfRunning = false;
   }
 });
-
+let isupdateMatchStats: boolean = false;
+const updateMatchStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
+  if (isupdateMatchStats) {
+    return;
+  }
+  isupdateMatchStats = true;
+  try {
+    await ncaafService.addMatchTeamStats();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateMatchStats = false;
+  }
+});
 export default {
   updateTeamStatsNcaaf,
   updatePlayerRecord,
   updateNflUpcommingMatch,
   updateLiveMatch,
+  updateMatchStatsNcaaf
 };

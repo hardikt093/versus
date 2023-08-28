@@ -2194,7 +2194,811 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
     return getMatch[0];
   } catch (error) {}
 };
+const ncaafFinal = async (goalServeMatchId: string) => {
+  try {
+    const getMatch = await NcaafMatch.aggregate([
+      {
+        $match: {
+          goalServeMatchId: Number(goalServeMatchId),
+        },
+      },
+      {
+        $lookup: {
+          from: "ncaafteams",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      name: 1,
+                      abbreviation: 1,
+                      goalServeTeamId: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teams",
+        },
+      },
+      {
+        $lookup: {
+          from: "ncaafstandings",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                      ties: { $sum: { $ifNull: [{ $toInt: "$ties" }, 0] } },
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      goalServeTeamId: 1,
+                      won: 1,
+                      lost: 1,
+                      ties: { $sum: { $ifNull: [{ $toInt: "$ties" }, 0] } },
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "standings",
+        },
+      },
+      {
+        $lookup: {
+          from: "ncaafteamimages",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $facet: {
+                awayTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+                homeTeam: [
+                  {
+                    $match: {
+                      $expr: {
+                        $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                      },
+                    },
+                  },
+                  {
+                    $project: {
+                      _id: 0,
+                      image: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $project: {
+                awayTeam: {
+                  $arrayElemAt: ["$awayTeam", 0],
+                },
+                homeTeam: {
+                  $arrayElemAt: ["$homeTeam", 0],
+                },
+              },
+            },
+          ],
+          as: "teamImages",
+        },
+      },
+      {
+        $lookup: {
+          from: "ncaafmatchstatsteams",
+          localField: "goalServeMatchId",
+          foreignField: "goalServeMatchId",
+          as: "matchStatsTeams",
+        },
+      },
+      {
+        $unwind: "$matchStatsTeams",
+      },
+      {
+        $lookup: {
+          from: "ncaafplayers",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $and: [
+                  {
+                    $expr: {
+                      $in: [
+                        "$goalServeTeamId",
+                        ["$$awayTeamId", "$$homeTeamId"],
+                      ],
+                    },
+                  },
 
+                  {
+                    isPassingPlayer: true,
+                  },
+                ],
+              },
+            },
+
+            {
+              $addFields: {
+                rankSorting: { $toInt: "$passing.rank" },
+              },
+            },
+            {
+              $sort: {
+                rankSorting: 1,
+              },
+            },
+          ],
+          as: "passingPlayers",
+        },
+      },
+      {
+        $lookup: {
+          from: "ncaafplayers",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $and: [
+                  {
+                    $expr: {
+                      $in: [
+                        "$goalServeTeamId",
+                        ["$$awayTeamId", "$$homeTeamId"],
+                      ],
+                    },
+                  },
+
+                  {
+                    isRushingPlayer: true,
+                  },
+                ],
+              },
+            },
+
+            {
+              $addFields: {
+                rankSorting: { $toInt: "$rushing.rank" },
+              },
+            },
+            {
+              $sort: {
+                rankSorting: 1,
+              },
+            },
+          ],
+          as: "rushingPlayers",
+        },
+      },
+      {
+        $lookup: {
+          from: "ncaafplayers",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $and: [
+                  {
+                    $expr: {
+                      $in: [
+                        "$goalServeTeamId",
+                        ["$$awayTeamId", "$$homeTeamId"],
+                      ],
+                    },
+                  },
+
+                  {
+                    isReceivingPlayer: true,
+                  },
+                ],
+              },
+            },
+
+            {
+              $addFields: {
+                rankSorting: { $toInt: "$receiving.rank" },
+              },
+            },
+            {
+              $sort: {
+                rankSorting: 1,
+              },
+            },
+          ],
+          as: "receivingPlayers",
+        },
+      },
+
+      {
+        $project: {
+          id: true,
+          attendance: true,
+          status: true,
+          venueName: true,
+          goalServeMatchId: true,
+          goalServeLeagueId: true,
+          teamStats: {
+            awayTeam: {
+              total_yards: "$matchStatsTeams.team_stats.awayteam.yards.total",
+              passing_yards:
+                "$matchStatsTeams.team_stats.awayteam.passing.total",
+              rushing_yards:
+                "$matchStatsTeams.team_stats.awayteam.rushings.total",
+              turnover: "$matchStatsTeams.team_stats.awayteam.turnovers.total",
+              panalties: "$matchStatsTeams.team_stats.awayteam.penalties.total",
+              first_downs:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.total",
+              third_down_efficiency:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.third_down_efficiency",
+              fourth_down_efficiency:
+                "$matchStatsTeams.team_stats.awayteam.first_downs.fourth_down_efficiency",
+            },
+            homeTeam: {
+              total_yards: "$matchStatsTeams.team_stats.hometeam.yards.total",
+              passing_yards:
+                "$matchStatsTeams.team_stats.hometeam.passing.total",
+              rushing_yards:
+                "$matchStatsTeams.team_stats.hometeam.rushings.total",
+              turnover: "$matchStatsTeams.team_stats.hometeam.turnovers.total",
+              panalties: "$matchStatsTeams.team_stats.hometeam.penalties.total",
+              first_downs:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.total",
+              third_down_efficiency:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.third_down_efficiency",
+              fourth_down_efficiency:
+                "$matchStatsTeams.team_stats.hometeam.first_downs.fourth_down_efficiency",
+            },
+          },
+          datetime_utc: "$dateTimeUtc",
+          weekName: "$weekName",
+          seasonName: "$seasonName",
+          statsTeams: true,
+          awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+          homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+          awayTeamAbbreviation: {
+            $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
+          },
+          homeTeamAbbreviation: {
+            $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
+          },
+          awayTeam: {
+            awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
+            goalServeAwayTeamId: {
+              $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
+            },
+            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+            ties: { $arrayElemAt: ["$standings.awayTeam.ties", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+            awayTeamTotalScore: "$awayTeamTotalScore",
+            // awayTeamHit: "$awayTeamHit",
+          },
+          homeTeam: {
+            homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
+            goalServeHomeTeamId: {
+              $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
+            },
+            ties: { $arrayElemAt: ["$standings.homeTeam.ties", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+            homeTeamTotalScore: "$homeTeamTotalScore",
+          },
+          homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
+          awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
+          playerStatistics: {
+            awayTeam: {
+              passing: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$passingPlayers",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeAwayTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.passing", false] },
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      2,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        interceptions: "$$player.passing.interceptions",
+                        sacks: "$$player.passing.sacks",
+                        quarterback_rating:
+                          "$$player.passing.quarterback_rating",
+                        passing_touchdowns:
+                          "$$player.passing.passing_touchdowns",
+                        yards_per_game: "$$player.passing.yards_per_game",
+                        yards: "$$player.passing.yards",
+                        completions_by_Attempts: {
+                          $concat: [
+                            "$$player.passing.completions",
+                            "/",
+                            "$$player.passing.passing_attempts",
+                          ],
+                        },
+                        rank: "$$player.passing.rank",
+                      },
+                    ],
+                  },
+                },
+              },
+              rushing: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$rushingPlayers",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.rushing", false] },
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      3,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        yards: "$$player.rushing.yards",
+                        longest_rush: "$$player.rushing.longest_rush",
+                        rushing_touchdowns:
+                          "$$player.rushing.rushing_touchdowns",
+                        yards_per_game: "$$player.rushing.yards_per_game",
+                        rushing_attempts: "$$player.rushing.rushing_attempts",
+                        rank: "$$player.rushing.rank",
+                      },
+                    ],
+                  },
+                },
+              },
+              receiving: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$receivingPlayers",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeAwayTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.receiving", false] }, // Check if passing object exists
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      4,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        receiving_targets:
+                          "$$player.receiving.receiving_targets",
+                        longest_reception:
+                          "$$player.receiving.longest_reception",
+                        receiving_touchdowns:
+                          "$$player.receiving.receiving_touchdowns",
+                        yards_per_game: "$$player.receiving.yards_per_game",
+                        receiving_yards: "$$player.receiving.receiving_yards",
+                        receptions: "$$player.receiving.receptions",
+                        rank: "$$player.receiving.rank",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+            homeTeam: {
+              passing: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$passingPlayers",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.passing", false] },
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      2,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        interceptions: "$$player.passing.interceptions",
+                        sacks: "$$player.passing.sacks",
+                        quarterback_rating:
+                          "$$player.passing.quarterback_rating",
+                        passing_touchdowns:
+                          "$$player.passing.passing_touchdowns",
+                        yards_per_game: "$$player.passing.yards_per_game",
+                        yards: "$$player.passing.yards",
+                        completions_by_Attempts: {
+                          $concat: [
+                            "$$player.passing.completions",
+                            "/",
+                            "$$player.passing.passing_attempts",
+                          ],
+                        },
+                        rank: "$$player.passing.rank",
+                      },
+                    ],
+                  },
+                },
+              },
+              rushing: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$rushingPlayers",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.rushing", false] },
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      3,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        yards: "$$player.rushing.yards",
+                        longest_rush: "$$player.rushing.longest_rush",
+                        rushing_touchdowns:
+                          "$$player.rushing.rushing_touchdowns",
+                        yards_per_game: "$$player.rushing.yards_per_game",
+                        rushing_attempts: "$$player.rushing.rushing_attempts",
+                        rank: "$$player.rushing.rank",
+                      },
+                    ],
+                  },
+                },
+              },
+              receiving: {
+                $map: {
+                  input: {
+                    $slice: [
+                      {
+                        $filter: {
+                          input: "$receivingPlayers",
+                          cond: {
+                            $and: [
+                              {
+                                $eq: [
+                                  "$$this.goalServeTeamId",
+                                  "$goalServeHomeTeamId",
+                                ],
+                              },
+                              { $ifNull: ["$$this.receiving", false] }, // Check if passing object exists
+                            ],
+                          },
+                        },
+                      },
+                      0,
+                      4,
+                    ],
+                  },
+                  as: "player",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$player", []] },
+                      [],
+                      {
+                        playerName: "$$player.name",
+                        goalServePlayerId: "$$player.goalServePlayerId",
+                        goalServeTeamId: "$$player.goalServeTeamId",
+                        receiving_targets:
+                          "$$player.receiving.receiving_targets",
+                        longest_reception:
+                          "$$player.receiving.longest_reception",
+                        receiving_touchdowns:
+                          "$$player.receiving.receiving_touchdowns",
+                        yards_per_game: "$$player.receiving.yards_per_game",
+                        receiving_yards: "$$player.receiving.receiving_yards",
+                        receptions: "$$player.receiving.receptions",
+                        rank: "$$player.receiving.rank",
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          scoring: {
+            awayTeam: [
+              {
+                title: "Quater 1",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$awayTeamQ1", "0"] },
+                    then: "-",
+                    else: "$awayTeamQ1",
+                  },
+                },
+              },
+              {
+                title: "Quater 2",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$awayTeamQ2", "0"] },
+                    then: "-",
+                    else: "$awayTeamQ2",
+                  },
+                },
+              },
+              {
+                title: "Quater 3",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$awayTeamQ3", "0"] },
+                    then: "-",
+                    else: "$awayTeamQ3",
+                  },
+                },
+              },
+              {
+                title: "Quater 4",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$awayTeamQ4", "0"] },
+                    then: "-",
+                    else: "$awayTeamQ4",
+                  },
+                },
+              },
+              {
+                title: "Total",
+                score: "$awayTeamTotalScore",
+              },
+            ],
+
+            homeTeam: [
+              {
+                title: "Quater 1",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamQ1", "0"] },
+                    then: "-",
+                    else: "$homeTeamQ1",
+                  },
+                },
+              },
+              {
+                title: "Quater 2",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamQ2", "0"] },
+                    then: "-",
+                    else: "$homeTeamQ2",
+                  },
+                },
+              },
+              {
+                title: "Quater 3",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamQ3", "0"] },
+                    then: "-",
+                    else: "$homeTeamQ3",
+                  },
+                },
+              },
+              {
+                title: "Quater 4",
+                score: {
+                  $cond: {
+                    if: { $eq: ["$homeTeamQ4", "0"] },
+                    then: "-",
+                    else: "$homeTeamQ4",
+                  },
+                },
+              },
+              {
+                title: "Total",
+                score: "$homeTeamTotalScore",
+              },
+            ],
+          },
+          scoringSummaries: [
+            { child: "$firstQuarterEvent", title: "1st Quarter" },
+            { child: "$secondQuarterEvent", title: "2nd Quarter" },
+            { child: "$thirdQuarterEvent", title: "3nd Quarter" },
+            { child: "$fourthQuarterEvent", title: "4nd Quarter" },
+            { child: "$overtimeEvent", title: "Overtime" },
+          ],
+        
+       
+        },
+      },
+    ]);
+    console.log(getMatch[0])
+    return getMatch[0];
+  } catch (error) {}
+};
 export default {
   addTeam,
   getCalendar,
@@ -2202,5 +3006,6 @@ export default {
   scoreWithDate,
   getLiveDataOfNfl,
   scoreWithWeek,
-  ncaafUpcomming
+  ncaafUpcomming,
+  ncaafFinal
 }
