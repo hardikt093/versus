@@ -93,10 +93,27 @@ const updateMatchStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
     isupdateMatchStats = false;
   }
 });
+
+let isOddAdded: boolean = false;
+const oddAdded = cron.schedule("*/10 * * * * *", async () => {
+  console.log("isOddAdded========= Skip");
+  if (isOddAdded) {
+    return;
+  }
+  isOddAdded = true;
+  try {
+    await ncaafService.createOdds();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isOddAdded = false;
+  }
+});
 export default {
   updateTeamStatsNcaaf,
   updatePlayerRecord,
   updateNflUpcommingMatch,
   updateLiveMatch,
-  updateMatchStatsNcaaf
+  updateMatchStatsNcaaf,
+  oddAdded
 };
