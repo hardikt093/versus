@@ -2799,7 +2799,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       name: 1,
-                      abbreviation: 1,
+                      locality: 1,
                       goalServeTeamId: 1,
                     },
                   },
@@ -2815,7 +2815,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       name: 1,
-                      abbreviation: 1,
+                      locality: 1,
                       goalServeTeamId: 1,
                     },
                   },
@@ -3787,10 +3787,10 @@ const ncaafFinal = async (goalServeMatchId: string) => {
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
-            $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
+            $arrayElemAt: ["$teams.awayTeam.locality", 0],
           },
           homeTeamAbbreviation: {
-            $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
+            $arrayElemAt: ["$teams.homeTeam.locality", 0],
           },
           awayTeam: {
             awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
