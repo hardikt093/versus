@@ -33,6 +33,7 @@ type TBet = {
   opponentUserGoalServeOdd: string
   isDuplicate? : boolean
   oddType?:string
+  leagueType?:string
 }
 export default interface IBetModel extends TBet, Document {}
 export enum betStatus {
