@@ -2062,6 +2062,9 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             $arrayElemAt: ["$teams.homeTeam.locality", 0],
           },
           awayTeam: {
+            abbreviation: {
+              $arrayElemAt: ["$teams.awayTeam.locality", 0],
+            },
             awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
@@ -2121,6 +2124,9 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             total: "$odds.awayTeamTotal",
           },
           homeTeam: {
+            abbreviation: {
+              $arrayElemAt: ["$teams.homeTeam.locality", 0],
+            },
             homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
@@ -2221,8 +2227,7 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                           "$$player.passing.yards_per_pass_avg",
                         interceptions: "$$player.passing.interceptions",
                         sacks: "$$player.passing.sacks",
-                        quaterback_rating:
-                          "$$player.passing.quaterback_rating",
+                        quaterback_rating: "$$player.passing.quaterback_rating",
                         passing_touchdowns:
                           "$$player.passing.passing_touchdowns",
                         yards_per_game: "$$player.passing.yards_per_game",
@@ -2275,7 +2280,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                         goalServeTeamId: "$$player.goalServeTeamId",
                         yards: "$$player.rushing.yards",
                         longest_rush: "$$player.rushing.longest_rush",
-                        yards_per_rush_avg: "$$player.rushing.yards_per_rush_avg",
+                        yards_per_rush_avg:
+                          "$$player.rushing.yards_per_rush_avg",
                         rushing_touchdowns:
                           "$$player.rushing.rushing_touchdowns",
                         yards_per_game: "$$player.rushing.yards_per_game",
@@ -2325,7 +2331,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                           "$$player.receiving.longest_reception",
                         receiving_touchdowns:
                           "$$player.receiving.receiving_touchdowns",
-                          yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
+                        yards_per_reception_avg:
+                          "$$player.receiving.yards_per_reception_avg",
                         yards_per_game: "$$player.receiving.yards_per_game",
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
@@ -2374,8 +2381,7 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                         yards_per_pass_avg:
                           "$$player.passing.yards_per_pass_avg",
                         sacks: "$$player.passing.sacks",
-                        quaterback_rating:
-                          "$$player.passing.quaterback_rating",
+                        quaterback_rating: "$$player.passing.quaterback_rating",
                         passing_touchdowns:
                           "$$player.passing.passing_touchdowns",
                         yards_per_game: "$$player.passing.yards_per_game",
@@ -2428,7 +2434,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                         goalServeTeamId: "$$player.goalServeTeamId",
                         yards: "$$player.rushing.yards",
                         longest_rush: "$$player.rushing.longest_rush",
-                        yards_per_rush_avg: "$$player.rushing.yards_per_rush_avg",
+                        yards_per_rush_avg:
+                          "$$player.rushing.yards_per_rush_avg",
                         rushing_touchdowns:
                           "$$player.rushing.rushing_touchdowns",
                         yards_per_game: "$$player.rushing.yards_per_game",
@@ -2482,7 +2489,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
                         rank: "$$player.receiving.rank",
-                        yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
+                        yards_per_reception_avg:
+                          "$$player.receiving.yards_per_reception_avg",
                       },
                     ],
                   },
@@ -3753,6 +3761,9 @@ const ncaafFinal = async (goalServeMatchId: string) => {
             $arrayElemAt: ["$teams.homeTeam.locality", 0],
           },
           awayTeam: {
+            abbreviation: {
+              $arrayElemAt: ["$teams.awayTeam.locality", 0],
+            },
             awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
@@ -3765,6 +3776,9 @@ const ncaafFinal = async (goalServeMatchId: string) => {
             // awayTeamHit: "$awayTeamHit",
           },
           homeTeam: {
+            abbreviation: {
+              $arrayElemAt: ["$teams.homeTeam.locality", 0],
+            },
             homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
@@ -3926,7 +3940,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
                         rank: "$$player.receiving.rank",
-                        yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
+                        yards_per_reception_avg:
+                          "$$player.receiving.yards_per_reception_avg",
                       },
                     ],
                   },
@@ -3969,7 +3984,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         goalServeTeamId: "$$player.goalServeTeamId",
                         interceptions: "$$player.passing.interceptions",
                         sacks: "$$player.passing.sacks",
-                        quaterback_rating:"$$player.passing.quaterback_rating",
+                        quaterback_rating: "$$player.passing.quaterback_rating",
                         passing_touchdowns:
                           "$$player.passing.passing_touchdowns",
                         yards_per_game: "$$player.passing.yards_per_game",
@@ -4079,7 +4094,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
                         rank: "$$player.receiving.rank",
-                        yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
+                        yards_per_reception_avg:
+                          "$$player.receiving.yards_per_reception_avg",
                       },
                     ],
                   },
