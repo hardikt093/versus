@@ -42,7 +42,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   isUpdateLiveMatch = true;
   try {
     await ncaafService.updateLiveMatch();
-    // await ncaafService.addOrUpdateDriveInLive();
+    await ncaafService.addOrUpdateDriveInLive();
   } catch (error) {
     console.log(error);
   } finally {
@@ -51,7 +51,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdatePlayerRecordRunning: boolean = false;
-const updatePlayerRecord = cron.schedule("0 0 */1 * * *", async () => {
+const updatePlayerRecord = cron.schedule("*/10 * * * * *", async () => {
   if (isupdatePlayerRecordRunning) {
     return;
   }
@@ -65,7 +65,7 @@ const updatePlayerRecord = cron.schedule("0 0 */1 * * *", async () => {
 });
 
 let isupdateTeamStatsNCAAfRunning: boolean = false;
-const updateTeamStatsNcaaf = cron.schedule("0 0 */1 * * *", async () => {
+const updateTeamStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
   console.log("isupdateTeamStatsNCAAFRunning Skip");
   if (isupdateTeamStatsNCAAfRunning) {
     return;
@@ -93,10 +93,27 @@ const updateMatchStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
     isupdateMatchStats = false;
   }
 });
+
+let isOddAdded: boolean = false;
+const oddAdded = cron.schedule("*/10 * * * * *", async () => {
+  console.log("isOddAdded Skip");
+  if (isOddAdded) {
+    return;
+  }
+  isOddAdded = true;
+  try {
+    await ncaafService.createOdds();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isOddAdded = false;
+  }
+});
 export default {
   updateTeamStatsNcaaf,
   updatePlayerRecord,
   updateNflUpcommingMatch,
   updateLiveMatch,
-  updateMatchStatsNcaaf
+  updateMatchStatsNcaaf,
+  oddAdded
 };

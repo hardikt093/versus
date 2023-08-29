@@ -12,6 +12,9 @@ import NCAAFInjury from "../../models/documents/NCAAF/injury.model";
 import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
 import StatsTeamNCAAF from "../../models/documents/NCAAF/teamStats";
 import NCAAFMatchStatsTeam from "../../models/documents/NCAAF/matchTeamStats";
+import moment from "moment";
+import NcaafOdds from "../../models/documents/NCAAF/odds.model";
+import { isArray } from "lodash";
 
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
@@ -31,6 +34,43 @@ async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
     ...values,
   }));
 }
+
+const getOdds = (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray?.length; i++) {
+    if (myArray[i].value == nameKey) {
+      if (isArray(myArray[i]?.bookmaker) == true) {
+        return myArray[i].bookmaker[0];
+      } else {
+        return myArray[i].bookmaker;
+      }
+    }
+  }
+};
+const getTotal = (nameKey: any, myArray: any) => {
+  if (myArray?.length > 0) {
+    for (let i = 0; i < myArray?.length; i++) {
+      if (myArray[i]?.value == nameKey) {
+        if (isArray(myArray[i]?.bookmaker) == true) {
+          return myArray[i]?.bookmaker[0];
+        } else {
+          return myArray[i]?.bookmaker;
+        }
+      }
+    }
+  }
+};
+
+const getTotalValues = async (total: any) => {
+  if (total) {
+    if (isArray(total?.total)) {
+      return total?.total[0]?.name ? total?.total[0]?.name : "";
+    } else {
+      return total?.total?.name ? total?.total?.name : "";
+    }
+  } else {
+    return "";
+  }
+};
 export default class NCAAFDbCronServiceClass {
   public addNCAAFStandings = async () => {
     let data = {
@@ -1108,6 +1148,364 @@ export default class NCAAFDbCronServiceClass {
         }
       }
     } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+
+  public addOrUpdateDriveInLive = async () => {
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-playbyplay-scores`,
+        { json: true }
+      );
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.scores?.category?.id,
+      });
+      if (matchArray?.length > 0 && matchArray) {
+        for (let i = 0; i < matchArray?.length; i++) {
+          const match: INcaafMatchModel | null = await NcaafMatch.findOne({
+            goalServeMatchId: matchArray[i]?.contestID,
+          });
+          if (match) {
+            const data: any = {
+              drive: matchArray[i].playbyplay.drive[0].play[0].down
+                ? matchArray[i].playbyplay.drive[0].play[0].down
+                : "",
+            };
+            const dataUpdate = await NcaafMatch.findOneAndUpdate(
+              { goalServeMatchId: matchArray[i]?.contestID },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      } else {
+        if (matchArray) {
+          const match: INcaafMatchModel | null = await NcaafMatch.findOne({
+            goalServeMatchId: matchArray?.contestID,
+          });
+          if (match) {
+            const data: any = {
+              drive: matchArray.playbyplay.drive[0].play[0].down
+                ? matchArray.playbyplay.drive[0].play[0].down
+                : "",
+            };
+            const dataUpdate = await NcaafMatch.findOneAndUpdate(
+              { goalServeMatchId: matchArray?.contestID },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      }
+    } catch (error: any) {}
+  };
+
+  public createOdds = async () => {
+    let subDate = moment()
+      .startOf("day")
+      .subtract(24, "hours")
+      .utc()
+      .toISOString();
+    let addDate = moment().add(30, "days").utc().toISOString();
+    let day1 = moment(subDate).format("D");
+    let month1 = moment(subDate).format("MM");
+    let year1 = moment(subDate).format("YYYY");
+    let date1 = `${day1}.${month1}.${year1}`;
+
+    let day2 = moment(addDate).format("D");
+    let month2 = moment(addDate).format("MM");
+    let year2 = moment(addDate).format("YYYY");
+    let date2 = `${day2}.${month2}.${year2}`;
+    try {
+      let data = {
+        json: true,
+        showodds: "1",
+        bm: "451,455,",
+        date1: date1,
+        date2: date2,
+      };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "football/fbs-shedule"
+      );
+      const matchArray = [];
+      await matchArray.push(getMatch?.data?.shedules?.tournament);
+      const league: ILeagueModel | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.shedules?.id,
+      });
+      for (let i = 0; i < matchArray?.length; i++) {
+        for (let j = 0; j < matchArray[i]?.week?.length; j++) {
+          if (matchArray[i]?.week[j]?.matches?.length > 0) {
+            for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
+              for (
+                let l = 0;
+                l < matchArray[i]?.week[j].matches[k].match.length;
+                l++
+              ) {
+                const findOdd = await NcaafOdds.find({
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                });
+                const findMatch = await NcaafMatch.findOne({
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                });
+                const getMoneyLine: any = await getOdds(
+                  "Home/Away",
+                  matchArray[i]?.week[j]?.matches[k]?.match[l]?.odds?.type
+                );
+                const awayTeamMoneyline = getMoneyLine
+                  ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
+                  : undefined;
+                const homeTeamMoneyline = getMoneyLine
+                  ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
+                  : undefined;
+                // getSpread
+                const getSpread = await getOdds(
+                  "Handicap",
+                  matchArray[i]?.week[j]?.matches[k]?.match[l]?.odds?.type
+                );
+
+                const getAwayTeamRunLine = (await getSpread)
+                  ? getSpread?.handicap?.odd?.find(
+                      (item: any) => item?.name === "2"
+                    )
+                  : {};
+                const getHomeTeamRunLine = (await getSpread)
+                  ? getSpread?.handicap?.odd?.find(
+                      (item: any) => item?.name === "1"
+                    )
+                  : {};
+                const total = await getTotal(
+                  "Over/Under",
+                  matchArray[i]?.week[j]?.matches[k]?.match[l]?.odds?.type
+                );
+                const totalValues = await getTotalValues(total);
+
+                const data = {
+                  status: matchArray[i]?.week[j]?.matches[k]?.match[l]?.status,
+                  goalServerLeagueId: league?.goalServeLeagueId,
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                  goalServeHomeTeamId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam?.id,
+                  goalServeAwayTeamId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam?.id,
+                  // homeTeamSpread: homeTeamSpread,
+                  ...(getHomeTeamRunLine && {
+                    homeTeamSpread: getHomeTeamRunLine,
+                  }),
+                  ...(getHomeTeamRunLine?.us && {
+                    homeTeamSpreadUs: getHomeTeamRunLine?.us,
+                  }),
+                  // homeTeamTotal: totalValues,
+                  ...(totalValues && { homeTeamTotal: totalValues }),
+                  // awayTeamSpread: awayTeamSpread,
+                  ...(getAwayTeamRunLine && {
+                    awayTeamSpread: getAwayTeamRunLine,
+                  }),
+                  ...(getAwayTeamRunLine?.us && {
+                    awayTeamSpreadUs: getAwayTeamRunLine?.us,
+                  }),
+                  // awayTeamTotal: totalValues,
+                  ...(totalValues && { awayTeamTotal: totalValues }),
+                  ...(awayTeamMoneyline && {
+                    awayTeamMoneyline: awayTeamMoneyline,
+                  }),
+                  ...(homeTeamMoneyline && {
+                    homeTeamMoneyline: homeTeamMoneyline,
+                  }),
+                };
+                if (findOdd?.length == 0) {
+                  const oddsData = new NcaafOdds(data);
+                  const savedOddsData = await oddsData.save();
+                } else if (findOdd?.length > 0) {
+                  if (findMatch?.status == "Not Started") {
+                    data.status = findMatch?.status;
+                    await NcaafOdds.findOneAndUpdate(
+                      {
+                        goalServeMatchId:
+                          matchArray[i]?.week[j]?.matches[k]?.match[l]
+                            ?.contestID,
+                      },
+                      { $set: data },
+                      { new: true }
+                    );
+                  } else if (
+                    findMatch?.status != "Not Started" &&
+                    findMatch?.status != "Final" &&
+                    findMatch?.status != "Postponed" &&
+                    findMatch?.status != "Canceled" &&
+                    findMatch?.status != "Suspended"
+                  ) {
+                    data.status = findMatch?.status;
+                    await NcaafOdds.updateOne(
+                      {
+                        goalServeMatchId:
+                          matchArray[i]?.week[j]?.matches[k]?.match[l]
+                            ?.contestID,
+                        status: findMatch?.status,
+                      },
+                      { $set: data },
+                      { upsert: true }
+                    );
+                  } else {
+                    const findOddWithStatus = await NcaafOdds.find({
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                      status: findMatch?.status,
+                    });
+                    if (findOddWithStatus.length > 0) {
+                      return;
+                    } else {
+                      data.status = findMatch?.status;
+                      const oddsData = new NcaafOdds(data);
+                      const savedOddsData = await oddsData.save();
+                    }
+                  }
+                }
+              }
+              continue;
+              // return;
+            }
+            continue;
+          } else {
+            for (
+              let m = 0;
+              m < matchArray[i]?.week[j].matches?.match.length;
+              m++
+            ) {
+              const findOdd = await NcaafOdds.find({
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+              });
+              const findMatch = await NcaafMatch.findOne({
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+              });
+              const getMoneyLine: any = await getOdds(
+                "Home/Away",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const awayTeamMoneyline = getMoneyLine
+                ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
+                : undefined;
+              const homeTeamMoneyline = getMoneyLine
+                ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
+                : undefined;
+              // getSpread
+              const getSpread = await getOdds(
+                "Handicap",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const getAwayTeamRunLine = (await getSpread)
+                ? getSpread?.handicap?.odd?.find(
+                    (item: any) => item?.name === "2"
+                  )
+                : {};
+              const getHomeTeamRunLine = (await getSpread)
+                ? getSpread?.handicap?.odd?.find(
+                    (item: any) => item?.name === "1"
+                  )
+                : {};
+              const total = await getTotal(
+                "Over/Under",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const totalValues = await getTotalValues(total);
+              const data = {
+                status: matchArray[i]?.week[j]?.matches?.match[m]?.status,
+                goalServerLeagueId: league?.goalServeLeagueId,
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                goalServeHomeTeamId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.hometeam?.id,
+                goalServeAwayTeamId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.awayteam?.id,
+                // homeTeamSpread: homeTeamSpread,
+                ...(getHomeTeamRunLine && {
+                  homeTeamSpread: getHomeTeamRunLine,
+                }),
+                ...(getHomeTeamRunLine?.us && {
+                  homeTeamSpreadUs: getHomeTeamRunLine?.us,
+                }),
+                // homeTeamTotal: totalValues,
+                ...(totalValues && { homeTeamTotal: totalValues }),
+                // awayTeamSpread: awayTeamSpread,
+                ...(getAwayTeamRunLine && {
+                  awayTeamSpread: getAwayTeamRunLine,
+                }),
+                ...(getAwayTeamRunLine?.us && {
+                  awayTeamSpreadUs: getAwayTeamRunLine?.us,
+                }),
+                // awayTeamTotal: totalValues,
+                ...(totalValues && { awayTeamTotal: totalValues }),
+                ...(awayTeamMoneyline && {
+                  awayTeamMoneyline: awayTeamMoneyline,
+                }),
+                ...(homeTeamMoneyline && {
+                  homeTeamMoneyline: homeTeamMoneyline,
+                }),
+              };
+              if (findOdd?.length == 0) {
+                // const oddsData = new NcaafOdds(data);
+                // const savedOddsData = await oddsData.save();
+              } else if (findOdd?.length > 0) {
+                if (findMatch?.status == "Not Started") {
+                  data.status = findMatch?.status;
+                  // await NcaafOdds.findOneAndUpdate(
+                  //   {
+                  //     goalServeMatchId:
+                  //       matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                  //   },
+                  //   { $set: data },
+                  //   { new: true }
+                  // );
+                } else if (
+                  findMatch?.status != "Not Started" &&
+                  findMatch?.status != "Final" &&
+                  findMatch?.status != "Postponed" &&
+                  findMatch?.status != "Canceled" &&
+                  findMatch?.status != "Suspended"
+                ) {
+                  data.status = findMatch?.status;
+                  // await NcaafOdds.updateOne(
+                  //   {
+                  //     goalServeMatchId:
+                  //       matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                  //     status: findMatch?.status,
+                  //   },
+                  //   { $set: data },
+                  //   { upsert: true }
+                  // );
+                } else {
+                  const findOddWithStatus = await NcaafOdds.find({
+                    goalServeMatchId:
+                      matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                    status: findMatch?.status,
+                  });
+                  if (findOddWithStatus.length > 0) {
+                    return;
+                  } else {
+                    data.status = findMatch?.status;
+                    // const oddsData = new NcaafOdds(data);
+                    // const savedOddsData = await oddsData.save();
+                  }
+                }
+              }
+            }
+            continue;
+          }
+        }
+        continue;
+
+        return true;
+      }
+    } catch (error: any) {
       console.log("error", error);
     }
   };
