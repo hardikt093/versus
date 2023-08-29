@@ -1497,22 +1497,6 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
       },
       {
         $lookup: {
-          from: "ncaafinjuries",
-          localField: "goalServeHomeTeamId",
-          foreignField: "goalServeTeamId",
-          as: "homeTeamInjuredPlayers",
-        },
-      },
-      {
-        $lookup: {
-          from: "ncaafinjuries",
-          localField: "goalServeAwayTeamId",
-          foreignField: "goalServeTeamId",
-          as: "awayTeamInjuredPlayers",
-        },
-      },
-      {
-        $lookup: {
           from: "ncaafplayers",
           let: {
             awayTeamId: "$goalServeAwayTeamId",
@@ -2195,38 +2179,6 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
             spread: "$odds.homeTeamSpread.handicap",
 
             total: "$odds.homeTeamTotal",
-          },
-          injuredPlayers: {
-            homeTeam: {
-              $map: {
-                input: "$homeTeamInjuredPlayers",
-                as: "item",
-                in: {
-                  date: "$$item.date",
-                  description: "$$item.description",
-                  goalServePlayerId: "$$item.goalServePlayerId",
-                  playerName: "$$item.playerName",
-                  status: "$$item.status",
-                  teamId: "$$item.teamId",
-                  goalServeTeamId: "$$item.goalServeTeamId",
-                },
-              },
-            },
-            awayTeam: {
-              $map: {
-                input: "$awayTeamInjuredPlayers",
-                as: "item",
-                in: {
-                  date: "$$item.date",
-                  description: "$$item.description",
-                  goalServePlayerId: "$$item.goalServePlayerId",
-                  playerName: "$$item.playerName",
-                  status: "$$item.status",
-                  teamId: "$$item.teamId",
-                  goalServeTeamId: "$$item.goalServeTeamId",
-                },
-              },
-            },
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },

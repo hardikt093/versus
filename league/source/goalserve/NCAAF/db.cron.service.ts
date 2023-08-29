@@ -723,128 +723,192 @@ export default class NCAAFDbCronServiceClass {
       json: true,
     };
     if (teams.length > 0) {
-      for (let i = 0; i < teams.length; i++) {
-        const team = teams[i];
+      await Promise.all(
+        teams.map(async (item) => {
+          const team = item;
 
-        const roasterApi = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `football/${team.goalServeTeamId}_rosters`
-        );
+          const roasterApi = await goalserveApi(
+            "https://www.goalserve.com/getfeed",
+            data,
+            `football/${team.goalServeTeamId}_rosters`
+          );
 
-        let allRosterPlayers: Partial<INflPlayerModel>[] = [];
-        let position = roasterApi?.data?.team?.position;
-        for (let p = 0; p < position.length; p++) {
-          if (position[p]?.player) {
-            let players: any = position[p].player;
+          let allRosterPlayers: Partial<INflPlayerModel>[] = [];
+          let position = roasterApi?.data?.team?.position;
+          for (let p = 0; p < position.length; p++) {
+            if (position[p]?.player) {
+              let players: any = position[p].player;
 
-            if (players?.length) {
-              for (let j = 0; j < players.length; j++) {
-                const player: any = players[j];
-                const PlayerData = {
-                  height: player.height,
-                  class: player.class,
-                  number: player.number,
-                  position: player.position,
-                  weight: player.weight,
-                  teamId: team.id,
-                  experience_years: player.experience_years,
+              if (players?.length) {
+                for (let j = 0; j < players.length; j++) {
+                  const player: any = players[j];
+                  const PlayerData = {
+                    height: player.height,
+                    class: player.class,
+                    number: player.number,
+                    position: player.position,
+                    weight: player.weight,
+                    teamId: team.id,
+                    experience_years: player.experience_years,
+                    goalServeTeamId: team.goalServeTeamId,
+                    goalServePlayerId: player.id,
+                  };
+                  allRosterPlayers.push(PlayerData);
+                }
+              } else {
+                allRosterPlayers.push({
+                  age: players.age,
+                  college: players.college,
+                  height: players.height,
+                  name: players.name,
+                  number: players.number,
+                  position: players.position,
+                  salarycap: players.salarycap,
+                  weight: players.weight,
+                  experience_years: players.experience_years,
                   goalServeTeamId: team.goalServeTeamId,
-                  goalServePlayerId: player.id,
-                };
-                allRosterPlayers.push(PlayerData);
+                  goalServePlayerId: players.id,
+                });
               }
-            } else {
-              allRosterPlayers.push({
-                age: players.age,
-                college: players.college,
-                height: players.height,
-                name: players.name,
-                number: players.number,
-                position: players.position,
-                salarycap: players.salarycap,
-                weight: players.weight,
-                experience_years: players.experience_years,
-                goalServeTeamId: team.goalServeTeamId,
-                goalServePlayerId: players.id,
-              });
             }
           }
-        }
-        const statsApi = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `football/${team.goalServeTeamId}_player_stats`
-        );
-        const allPassingPlayer = [];
-        const allRushingPlayer = [];
-        const allReceivingPlayer = [];
-        const allDefencePlayer = [];
-        const allScoringPlayer = [];
-        const allReturningPlayer = [];
-        const allPuntingPlayer = [];
-        const allKickingPlayer = [];
-        if (statsApi?.data?.statistic?.category.length) {
-          const categories = statsApi.data.statistic.category;
-          for (let i = 0; i < categories.length; i++) {
-            const category = categories[i];
-            const categoryName = categories[i].name;
-            if (category.player.length) {
-              const players = category.player;
-              for (let j = 0; j < players.length; j++) {
-                const player = players[j];
+          const statsApi = await goalserveApi(
+            "https://www.goalserve.com/getfeed",
+            data,
+            `football/${team.goalServeTeamId}_player_stats`
+          );
+          const allPassingPlayer = [];
+          const allRushingPlayer = [];
+          const allReceivingPlayer = [];
+          const allDefencePlayer = [];
+          const allScoringPlayer = [];
+          const allReturningPlayer = [];
+          const allPuntingPlayer = [];
+          const allKickingPlayer = [];
+          if (statsApi?.data?.statistic?.category.length) {
+            const categories = statsApi.data.statistic.category;
+            for (let i = 0; i < categories.length; i++) {
+              const category = categories[i];
+              const categoryName = categories[i].name;
+
+              if (category.player.length) {
+                const players = category.player;
+                for (let j = 0; j < players.length; j++) {
+                  const player = players[j];
+                  const playerData: any = {
+                    teamId: team.id,
+                    goalServeTeamId: team.goalServeTeamId,
+                    goalServePlayerId: player.id,
+                  };
+
+                  switch (categoryName) {
+                    case "Passing":
+                      playerData.name = player.name;
+                      playerData.isPassingPlayer = true;
+                      playerData.passing = { ...player };
+                      allPassingPlayer.push(playerData);
+                      break;
+                    case "Rushing":
+                      playerData.name = player.name;
+                      playerData.isRushingPlayer = true;
+                      playerData.rushing = { ...player };
+                      allRushingPlayer.push(playerData);
+                      break;
+                    case "Receiving":
+                      playerData.name = player.name;
+                      playerData.isReceivingPlayer = true;
+                      playerData.receiving = { ...player };
+                      allReceivingPlayer.push(playerData);
+                      break;
+                    case "Defense":
+                      playerData.name = player.name;
+                      playerData.isDefensePlayer = true;
+                      playerData.defence = { ...player };
+                      allDefencePlayer.push(playerData);
+                      break;
+                    case "Scoring":
+                      playerData.name = player.name;
+                      playerData.isScoringPlayer = true;
+                      playerData.scoring = { ...player };
+                      allScoringPlayer.push(playerData);
+                      break;
+                    case "Returning":
+                      playerData.name = player.name;
+                      playerData.isReturningPlayer = true;
+                      playerData.returning = { ...player };
+                      allReturningPlayer.push(playerData);
+                      break;
+                    case "Kicking":
+                      playerData.name = player.name;
+                      playerData.isKickingPlayer = true;
+                      playerData.kicking = { ...player };
+                      allKickingPlayer.push(playerData);
+                      break;
+                    case "Punting":
+                      playerData.name = player.name;
+                      playerData.isPuntingPlayer = true;
+                      playerData.punting = { ...player };
+                      allPuntingPlayer.push(playerData);
+                      break;
+
+                    default:
+                      break;
+                  }
+                }
+              } else {
+                const players = category.player;
                 const playerData: any = {
                   teamId: team.id,
                   goalServeTeamId: team.goalServeTeamId,
-                  goalServePlayerId: player.id,
+                  goalServePlayerId: players.id,
                 };
                 switch (categoryName) {
                   case "Passing":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isPassingPlayer = true;
-                    playerData.passing = { ...player };
+                    playerData.passing = { ...players };
                     allPassingPlayer.push(playerData);
                     break;
                   case "Rushing":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isRushingPlayer = true;
-                    playerData.rushing = { ...player };
+                    playerData.rushing = { ...players };
                     allRushingPlayer.push(playerData);
                     break;
                   case "Receiving":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isReceivingPlayer = true;
-                    playerData.receiving = { ...player };
+                    playerData.receiving = { ...players };
                     allReceivingPlayer.push(playerData);
                     break;
                   case "Defense":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isDefensePlayer = true;
-                    playerData.defence = { ...player };
+                    playerData.defence = { ...players };
                     allDefencePlayer.push(playerData);
                     break;
                   case "Scoring":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isScoringPlayer = true;
-                    playerData.scoring = { ...player };
+                    playerData.scoring = { ...players };
                     allScoringPlayer.push(playerData);
                     break;
                   case "Returning":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isReturningPlayer = true;
-                    playerData.returning = { ...player };
+                    playerData.returning = { ...players };
                     allReturningPlayer.push(playerData);
                     break;
                   case "Kicking":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isKickingPlayer = true;
-                    playerData.kicking = { ...player };
+                    playerData.kicking = { ...players };
                     allKickingPlayer.push(playerData);
                     break;
                   case "Punting":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isPuntingPlayer = true;
-                    playerData.punting = { ...player };
+                    playerData.punting = { ...players };
                     allPuntingPlayer.push(playerData);
                     break;
 
@@ -852,92 +916,33 @@ export default class NCAAFDbCronServiceClass {
                     break;
                 }
               }
-            } else {
-              const players = category.player;
-              const playerData: any = {
-                teamId: team.id,
-                goalServeTeamId: team.goalServeTeamId,
-                goalServePlayerId: players.id,
-              };
-              switch (categoryName) {
-                case "Passing":
-                  playerData.name = players.name;
-                  playerData.isPassingPlayer = true;
-                  playerData.passing = { ...players };
-                  allPassingPlayer.push(playerData);
-                  break;
-                case "Rushing":
-                  playerData.name = players.name;
-                  playerData.isRushingPlayer = true;
-                  playerData.rushing = { ...players };
-                  allRushingPlayer.push(playerData);
-                  break;
-                case "Receiving":
-                  playerData.name = players.name;
-                  playerData.isReceivingPlayer = true;
-                  playerData.receiving = { ...players };
-                  allReceivingPlayer.push(playerData);
-                  break;
-                case "Defense":
-                  playerData.name = players.name;
-                  playerData.isDefensePlayer = true;
-                  playerData.defence = { ...players };
-                  allDefencePlayer.push(playerData);
-                  break;
-                case "Scoring":
-                  playerData.name = players.name;
-                  playerData.isScoringPlayer = true;
-                  playerData.scoring = { ...players };
-                  allScoringPlayer.push(playerData);
-                  break;
-                case "Returning":
-                  playerData.name = players.name;
-                  playerData.isReturningPlayer = true;
-                  playerData.returning = { ...players };
-                  allReturningPlayer.push(playerData);
-                  break;
-                case "Kicking":
-                  playerData.name = players.name;
-                  playerData.isKickingPlayer = true;
-                  playerData.kicking = { ...players };
-                  allKickingPlayer.push(playerData);
-                  break;
-                case "Punting":
-                  playerData.name = players.name;
-                  playerData.isPuntingPlayer = true;
-                  playerData.punting = { ...players };
-                  allPuntingPlayer.push(playerData);
-                  break;
-
-                default:
-                  break;
-              }
             }
           }
-        }
-        const mergedArray: INflPlayerModel[] | null = await mergeByPlayerId(
-          allRosterPlayers,
-          allPassingPlayer,
-          allRushingPlayer,
-          allPuntingPlayer,
-          allKickingPlayer,
-          allReturningPlayer,
-          allScoringPlayer,
-          allDefencePlayer,
-          allReceivingPlayer
-        );
-        for (let k = 0; k < mergedArray?.length; k++) {
-          const player = mergedArray[k];
-          await PlayersNCAAF.updateOne(
-            {
-              goalServeTeamId: player.goalServeTeamId,
-              goalServePlayerId: player.goalServePlayerId,
-            },
-            { $set: player },
-            { upsert: true }
+          const mergedArray: INflPlayerModel[] | null = await mergeByPlayerId(
+            allRosterPlayers,
+            allPassingPlayer,
+            allRushingPlayer,
+            allPuntingPlayer,
+            allKickingPlayer,
+            allReturningPlayer,
+            allScoringPlayer,
+            allDefencePlayer,
+            allReceivingPlayer
           );
-        }
-      }
+          for (let k = 0; k < mergedArray?.length; k++) {
+            const player = mergedArray[k];
+
+            const playerPlayer = await PlayersNCAAF.updateOne(
+              {
+                goalServeTeamId: player.goalServeTeamId,
+                goalServePlayerId: player.goalServePlayerId,
+              },
+              { $set: player },
+              { upsert: true }
+            );
+          }
+        })
+      );
     }
   };
 
@@ -1043,53 +1048,55 @@ export default class NCAAFDbCronServiceClass {
       json: true,
     };
     if (teams.length > 0) {
-      for (let i = 0; i < teams.length; i++) {
-        const team = teams[i];
-        const teamstats = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `football/${team.goalServeTeamId}_stats`
-        );
-        let stats: Partial<INFLStatsTeamModel> = {};
-        let category = teamstats?.data?.statistic?.category;
-        for (let j = 0; j < category.length; j++) {
-          let categoryName = category[j].name;
-          switch (categoryName) {
-            case "Passing":
-              stats.passingOpponent = category[j].opponents;
-              stats.passingTeam = category[j].team;
-              break;
-            case "Rushing":
-              stats.rushingOpponent = category[j].opponents;
-              stats.rushingTeam = category[j].team;
-              break;
-            case "Downs":
-              stats.downsOpponent = category[j].opponents;
-              stats.downsTeam = category[j].team;
-              break;
-            case "Returning":
-              stats.returningOpponent = category[j].opponents;
-              stats.returningTeam = category[j].team;
-              break;
-            case "Kicking":
-              stats.kickingOpponent = category[j].opponents;
-              stats.kickingTeam = category[j].team;
+      await Promise.all(
+        teams.map(async (item) => {
+          const team = item;
+          const teamstats = await goalserveApi(
+            "https://www.goalserve.com/getfeed",
+            data,
+            `football/${team.goalServeTeamId}_stats`
+          );
+          let stats: Partial<INFLStatsTeamModel> = {};
+          let category = teamstats?.data?.statistic?.category;
+          for (let j = 0; j < category.length; j++) {
+            let categoryName = category[j].name;
+            switch (categoryName) {
+              case "Passing":
+                stats.passingOpponent = category[j].opponents;
+                stats.passingTeam = category[j].team;
+                break;
+              case "Rushing":
+                stats.rushingOpponent = category[j].opponents;
+                stats.rushingTeam = category[j].team;
+                break;
+              case "Downs":
+                stats.downsOpponent = category[j].opponents;
+                stats.downsTeam = category[j].team;
+                break;
+              case "Returning":
+                stats.returningOpponent = category[j].opponents;
+                stats.returningTeam = category[j].team;
+                break;
+              case "Kicking":
+                stats.kickingOpponent = category[j].opponents;
+                stats.kickingTeam = category[j].team;
 
-              break;
+                break;
 
-            default:
-              break;
+              default:
+                break;
+            }
           }
-        }
-        await StatsTeamNCAAF.updateOne(
-          {
-            teamId: team.id,
-            goalServeTeamId: teamstats?.data?.statistic.id,
-          },
-          { $set: stats },
-          { upsert: true }
-        );
-      }
+          await StatsTeamNCAAF.updateOne(
+            {
+              teamId: team.id,
+              goalServeTeamId: teamstats?.data?.statistic.id,
+            },
+            { $set: stats },
+            { upsert: true }
+          );
+        })
+      );
     }
   };
 
