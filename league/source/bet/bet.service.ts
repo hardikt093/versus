@@ -1450,6 +1450,13 @@ const listBetsByType = async (
       },
     },
     {
+      $sort: {
+        // formattedDate: 1,
+        // time: 1,
+        createdAt: -1,
+      },
+    },
+    {
       $project: {
         _id: 1,
         goalServeMatchId: 1,
