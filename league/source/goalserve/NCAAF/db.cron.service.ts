@@ -8,7 +8,6 @@ import { goalserveApi } from "../../services/goalserve.service";
 import NcaafMatch from "../../models/documents/NCAAF/match.model";
 import INcaafMatchModel from "../../models/interfaces/ncaafMatch.interface";
 import { axiosGet } from "../../services/axios.service";
-import NCAAFInjury from "../../models/documents/NCAAF/injury.model";
 import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
 import StatsTeamNCAAF from "../../models/documents/NCAAF/teamStats";
 import NCAAFMatchStatsTeam from "../../models/documents/NCAAF/matchTeamStats";
@@ -945,103 +944,6 @@ export default class NCAAFDbCronServiceClass {
       );
     }
   };
-
-  public addInjuredPlayer = async () => {
-    const team = await TeamNCAAF.find();
-    await Promise.all(
-      team.map(async (item) => {
-        let data = {
-          json: true,
-        };
-        const injuryApi = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `football/${item?.goalServeTeamId}_injuries`
-        );
-        const injuryArray1 = injuryApi?.data?.team;
-        const existingPlayers = await NCAAFInjury.find({
-          goalServeTeamId: item?.goalServeTeamId,
-        });
-        if (injuryArray1?.report && injuryArray1?.report?.length > 0) {
-          // Find the extra entries in the existingPlayers array
-          const extraEntries = existingPlayers.filter((player) => {
-            const playerExists = injuryArray1?.report?.some(
-              (val: any) => val?.player_id === player.goalServePlayerId
-            );
-            return !playerExists;
-          });
-          await NCAAFInjury.deleteMany({
-            _id: { $in: extraEntries.map((player) => player._id) },
-          });
-
-          await Promise.all(
-            injuryArray1?.report?.map(async (val: any) => {
-              const player = await PlayersNCAAF.findOne({
-                goalServePlayerId: val?.player_id,
-              }).lean();
-
-              const data = {
-                date: val?.date,
-                description: val?.description,
-                goalServePlayerId: val?.player_id,
-                playerName: val?.player_name,
-                playerId: player?.id,
-                status: val?.status,
-                goalServeTeamId: injuryApi?.data?.team?.id,
-                teamId: item?._id,
-              };
-              await NCAAFInjury.updateOne(
-                {
-                  goalServeTeamId: data?.goalServeTeamId,
-                  goalServePlayerId: data?.goalServePlayerId,
-                },
-                { $set: data },
-                { upsert: true }
-              );
-            })
-          );
-        } else if (injuryArray1?.report) {
-          const extraEntries = existingPlayers.filter((player) => {
-            const playerExists = Array(injuryArray1?.report)?.some(
-              (val: any) => val?.player_id === player.goalServePlayerId
-            );
-            return !playerExists;
-          });
-          await NCAAFInjury.deleteMany({
-            _id: { $in: extraEntries.map((player) => player._id) },
-          });
-          const val = injuryArray1?.report;
-          const player = await PlayersNCAAF.findOne({
-            goalServePlayerId: val?.player_id,
-          }).lean();
-
-          const data = {
-            date: val?.date,
-            description: val?.description,
-            goalServePlayerId: val?.player_id,
-            playerName: val?.player_name,
-            status: val?.status,
-            goalServeTeamId: injuryArray1?.id,
-            teamId: item?.id,
-            playerId: player?._id,
-          };
-          await NCAAFInjury.updateOne(
-            {
-              goalServeTeamId: data?.goalServeTeamId,
-              goalServePlayerId: data?.goalServePlayerId,
-            },
-            { $set: data },
-            { upsert: true }
-          );
-        } else {
-          await NCAAFInjury.deleteMany({
-            _id: { $in: existingPlayers.map((player) => player._id) },
-          });
-        }
-      })
-    );
-  };
-
   public addTeamStats = async () => {
     const teams = await TeamNCAAF.find();
     let data = {
