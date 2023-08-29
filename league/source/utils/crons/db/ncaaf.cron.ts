@@ -51,7 +51,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdatePlayerRecordRunning: boolean = false;
-const updatePlayerRecord = cron.schedule("0 0 */1 * * *", async () => {
+const updatePlayerRecord = cron.schedule("*/10 * * * * *", async () => {
   if (isupdatePlayerRecordRunning) {
     return;
   }
@@ -65,7 +65,7 @@ const updatePlayerRecord = cron.schedule("0 0 */1 * * *", async () => {
 });
 
 let isupdateTeamStatsNCAAfRunning: boolean = false;
-const updateTeamStatsNcaaf = cron.schedule("0 0 */1 * * *", async () => {
+const updateTeamStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
   console.log("isupdateTeamStatsNCAAFRunning Skip");
   if (isupdateTeamStatsNCAAfRunning) {
     return;
