@@ -125,14 +125,12 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
-  } 
-  else if (data.leagueType === "NCAAF") {
+  } else if (data.leagueType === "NCAAF") {
     matchData = await NcaafMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
-  } 
-  else {
+  } else {
     matchData = await NbaMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
@@ -782,7 +780,6 @@ const listBetsByType = async (
   });
   let count = await Bet.aggregate(countQuery);
   query.push(
-    
     {
       $skip: skip,
     },
@@ -1357,7 +1354,7 @@ const listBetsByType = async (
                 },
                 {
                   $lookup: {
-                    from: "teams",
+                    from: "ncaafteams",
                     let: {
                       awayTeamId: "$goalServeAwayTeamId",
                     },
@@ -1441,7 +1438,7 @@ const listBetsByType = async (
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nflData","ncaafData" ] },
+        root: { $concatArrays: ["$mlbData", "$nflData", "$ncaafData"] },
       },
     },
     { $unwind: "$root" },
@@ -1499,7 +1496,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
-                { $toString: "$requestUserGoalServeOdd"  },
+                { $toString: "$requestUserGoalServeOdd" },
                 { $toString: "$requestUserGoalServeOdd" },
               ],
             },
@@ -1512,7 +1509,7 @@ const listBetsByType = async (
             {
               $cond: [
                 { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
-                 { $toString: "$opponentUserGoalServeOdd" },
+                { $toString: "$opponentUserGoalServeOdd" },
                 { $toString: "$opponentUserGoalServeOdd" },
               ],
             },
