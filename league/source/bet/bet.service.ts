@@ -19,6 +19,7 @@ import config from "../config/config";
 import socketService from "../services/socket.service";
 import Notification from "../models/documents/notification.model";
 import NflMatch from "../models/documents/NFL/match.model";
+import NcaafMatch from "../models/documents/NCAAF/match.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -124,7 +125,14 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
-  } else {
+  } 
+  else if (data.leagueType === "NCAAF") {
+    matchData = await NcaafMatch.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+      status: "Not Started",
+    }).lean();
+  } 
+  else {
     matchData = await NbaMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
@@ -1279,11 +1287,161 @@ const listBetsByType = async (
             },
           },
         ],
+        ncaafData: [
+          {
+            $match: {
+              leagueType: "NCAAF",
+            },
+          },
+          {
+            $lookup: {
+              from: "ncaafmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "ncaafteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "ncaafteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "ncaafteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
       },
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nflData", ] },
+        root: { $concatArrays: ["$mlbData", "$nflData","ncaafData" ] },
       },
     },
     { $unwind: "$root" },
