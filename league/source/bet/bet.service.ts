@@ -1342,7 +1342,7 @@ const listBetsByType = async (
                           teamImages: {
                             $arrayElemAt: ["$teamImages.image", 0],
                           },
-                          locality: 1,
+                          abbreviation: "$locality",
                           won: 1,
                           lost: 1,
                           _id: 1,
@@ -1390,7 +1390,7 @@ const listBetsByType = async (
                           teamImages: {
                             $arrayElemAt: ["$teamImages.image", 0],
                           },
-                          locality: 1,
+                          abbreviation: "$locality",
                           won: 1,
                           lost: 1,
                           _id: 1,
