@@ -954,17 +954,17 @@ const scoreWithDate = async (data: any) => {
     await socketService.socket("ncaafDashboard", {
       getUpcomingMatch,
       getFinalMatch,
-      getLiveDataOfNfl: await getLiveDataOfNfl(data),
+      getLiveDataOfNfl: await getLiveDataOfNcaaf(data),
     });
     return {
       getUpcomingMatch,
       getFinalMatch,
-      getLiveDataOfNfl: await getLiveDataOfNfl(data),
+      getLiveDataOfNfl: await getLiveDataOfNcaaf(data),
     };
   }
 };
 
-const getLiveDataOfNfl = async (data: any) => {
+const getLiveDataOfNcaaf = async (data: any) => {
   return await NcaafMatch.aggregate([
     {
       $match: {
@@ -1013,9 +1013,9 @@ const getLiveDataOfNfl = async (data: any) => {
             },
           },
         ],
-        seasonName: {
-          $in: data.calenderData.map((name: any) => name.seasonName),
-        },
+        // seasonName: {
+        //   $in: data.calenderData.map((name: any) => name.seasonName),
+        // },
         weekName: {
           $in: data.calenderData.map((name: any) => name.weekName),
         },
@@ -4452,7 +4452,7 @@ export default {
   getCalendar,
   addTeamImage,
   scoreWithDate,
-  getLiveDataOfNfl,
+  getLiveDataOfNcaaf,
   scoreWithWeek,
   ncaafUpcomming,
   ncaafFinal,
