@@ -37,7 +37,6 @@ async function declareResultMatch(
   );
 }
 
-
 const getOdds = (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {

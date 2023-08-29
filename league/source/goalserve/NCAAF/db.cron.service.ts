@@ -14,7 +14,27 @@ import NCAAFMatchStatsTeam from "../../models/documents/NCAAF/matchTeamStats";
 import moment from "moment";
 import NcaafOdds from "../../models/documents/NCAAF/odds.model";
 import { isArray } from "lodash";
+import Bet from "../../models/documents/bet.model";
+import { betStatus } from "../../models/interfaces/bet.interface";
 
+async function declareResultMatch(
+  matchId: number,
+  winTeamId: number,
+  leagueType: string
+) {
+  await Bet.updateMany(
+    {
+      goalServeMatchId: Number(matchId),
+      status: betStatus.ACTIVE,
+      leagueType: leagueType,
+    },
+    {
+      status: betStatus.RESULT_DECLARED,
+      goalServeWinTeamId: winTeamId,
+      resultAt: new Date(),
+    }
+  );
+}
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
 
@@ -542,6 +562,38 @@ export default class NCAAFDbCronServiceClass {
               { $set: data },
               { new: true }
             );
+
+            if (
+              matchArray[i]?.status != "Not Started" &&
+              matchArray[i]?.status != "Final" &&
+              matchArray[i]?.status != "Postponed" &&
+              matchArray[i]?.status != "Canceled" &&
+              matchArray[i]?.status != "Suspended"
+            ) {
+              const goalServeMatchId = matchArray[i].contestID;
+              // expire not accepted bet requests
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              // active  CONFIRMED bet when match start
+              await Bet.updateMany(
+                {
+                  status: "CONFIRMED",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "ACTIVE",
+                }
+              );
+            }
           }
         }
       } else {
@@ -708,6 +760,81 @@ export default class NCAAFDbCronServiceClass {
               { $set: data },
               { new: true }
             );
+
+            if (
+              matchArray?.status != "Not Started" &&
+              matchArray?.status != "Final" &&
+              matchArray?.status != "Postponed" &&
+              matchArray?.status != "Canceled" &&
+              matchArray?.status != "Suspended"
+            ) {
+              const goalServeMatchId = matchArray.contestID;
+              // expire not accepted bet requests
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              // active  CONFIRMED bet when match start
+              await Bet.updateMany(
+                {
+                  status: "CONFIRMED",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "ACTIVE",
+                }
+              );
+            } else if (matchArray.status == "Final") {
+              const homeTeamTotalScore = parseFloat(
+                matchArray.hometeam.totalscore
+              );
+              const awayTeamTotalScore = parseFloat(
+                matchArray.awayteam.totalscore
+              );
+              const goalServeMatchId = matchArray.contestID;
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray.hometeam.id
+                  : matchArray.awayteam.id;
+              await declareResultMatch(
+                parseInt(goalServeMatchId),
+                parseInt(goalServeWinTeamId),
+                "NFL"
+              );
+            } else if (
+              matchArray.status == "Canceled" ||
+              matchArray.status == "Postponed" ||
+              matchArray.status == "Suspended"
+            ) {
+              const goalServeMatchId = matchArray.contestID;
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              await Bet.updateMany(
+                {
+                  status: { $in: ["CONFIRMED", "ACTIVE"] },
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NFL",
+                },
+                {
+                  status: "CANCELED",
+                }
+              );
+            }
           }
         }
       }
@@ -1061,7 +1188,6 @@ export default class NCAAFDbCronServiceClass {
     }
   };
 
-
   public addOrUpdateDriveInLive = async () => {
     try {
       const getMatch: any = await axiosGet(
@@ -1361,19 +1487,19 @@ export default class NCAAFDbCronServiceClass {
                 }),
               };
               if (findOdd?.length == 0) {
-                // const oddsData = new NcaafOdds(data);
-                // const savedOddsData = await oddsData.save();
+                const oddsData = new NcaafOdds(data);
+                const savedOddsData = await oddsData.save();
               } else if (findOdd?.length > 0) {
                 if (findMatch?.status == "Not Started") {
                   data.status = findMatch?.status;
-                  // await NcaafOdds.findOneAndUpdate(
-                  //   {
-                  //     goalServeMatchId:
-                  //       matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
-                  //   },
-                  //   { $set: data },
-                  //   { new: true }
-                  // );
+                  await NcaafOdds.findOneAndUpdate(
+                    {
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                    },
+                    { $set: data },
+                    { new: true }
+                  );
                 } else if (
                   findMatch?.status != "Not Started" &&
                   findMatch?.status != "Final" &&
@@ -1382,15 +1508,15 @@ export default class NCAAFDbCronServiceClass {
                   findMatch?.status != "Suspended"
                 ) {
                   data.status = findMatch?.status;
-                  // await NcaafOdds.updateOne(
-                  //   {
-                  //     goalServeMatchId:
-                  //       matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
-                  //     status: findMatch?.status,
-                  //   },
-                  //   { $set: data },
-                  //   { upsert: true }
-                  // );
+                  await NcaafOdds.updateOne(
+                    {
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                      status: findMatch?.status,
+                    },
+                    { $set: data },
+                    { upsert: true }
+                  );
                 } else {
                   const findOddWithStatus = await NcaafOdds.find({
                     goalServeMatchId:
