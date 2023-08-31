@@ -4,6 +4,7 @@ import { axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
 import Match from "../models/documents/MLB/match.model";
 import NflMatch from "../models/documents/NFL/match.model";
+import NcaafMatch from "../models/documents/NCAAF/match.model";
 export default class BetDbCronServiceClass {
   public releasePayment = async () => {
     try {
@@ -60,6 +61,49 @@ export default class BetDbCronServiceClass {
             }
           } else if (bet?.leagueType == "NFL") {
             const getMatch = await NflMatch.findOne({
+              goalServeMatchId: bet.goalServeMatchId,
+            });
+            const totalRunOfMAtch =
+              Number(getMatch?.awayTeamTotalScore) +
+              Number(getMatch?.homeTeamTotalScore);
+            const requestUserOddSplit =
+              bet?.requestUserGoalServeOdd?.split(" ");
+            const opponentUserOddSplit =
+              bet?.opponentUserGoalServeOdd?.split(" ");
+            const oddWin =
+              totalRunOfMAtch > Number(requestUserOddSplit[1])
+                ? bet?.requestUserGoalServeOdd.includes("O")
+                  ? bet?.requestUserId
+                  : bet?.opponentUserId
+                : bet?.requestUserGoalServeOdd.includes("U")
+                ? bet?.requestUserId
+                : bet?.opponentUserId;
+            if (oddWin == bet?.requestUserId) {
+              // payout to req user
+              const resp = await axiosPostMicro(
+                {
+                  amount: bet?.betTotalAmount,
+                  userId: bet?.requestUserId,
+                  betData: bet,
+                },
+                `${config.authServerUrl}/wallet/paymentRelease`,
+                ""
+              );
+            } else {
+              // payout to opponent user
+              const resp = await axiosPostMicro(
+                {
+                  amount: bet?.betTotalAmount,
+                  userId: bet?.opponentUserId,
+                  betData: bet,
+                },
+                `${config.authServerUrl}/wallet/paymentRelease`,
+                ""
+              );
+            }
+          }
+          else if (bet?.leagueType == "NCAAF") {
+            const getMatch = await NcaafMatch.findOne({
               goalServeMatchId: bet.goalServeMatchId,
             });
             const totalRunOfMAtch =

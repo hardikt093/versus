@@ -108,7 +108,7 @@ const getCalendar = async () => {
   ]);
   return await Promise.all(
     getCalendar.map(async (item: any) => {
-      return item
+      return item;
     })
   );
 };
@@ -218,370 +218,370 @@ const scoreWithDate = async (data: any) => {
         preserveNullAndEmptyArrays: true,
       },
     },
-    // {
-    //   $lookup: {
-    //     from: "ncaffodds",
-    //     let: { matchId: "$goalServeMatchId" },
-    //     pipeline: [
-    //       {
-    //         $match: {
-    //           $expr: {
-    //             $and: [
-    //               { $eq: ["$$matchId", "$goalServeMatchId"] },
-    //               { $eq: ["$status", "Not Started"] },
-    //             ],
-    //           },
-    //         },
-    //       },
-    //       { $sort: { updatedAt: -1 } },
-    //       { $limit: 1 },
-    //     ],
-    //     as: "odds",
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     odds: {
-    //       $arrayElemAt: ["$odds", 0],
-    //     },
-    //   },
-    // },
+    {
+      $lookup: {
+        from: "ncaafodds",
+        let: { matchId: "$goalServeMatchId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$$matchId", "$goalServeMatchId"] },
+                  { $eq: ["$status", "Not Started"] },
+                ],
+              },
+            },
+          },
+          { $sort: { updatedAt: -1 } },
+          { $limit: 1 },
+        ],
+        as: "odds",
+      },
+    },
+    {
+      $addFields: {
+        odds: {
+          $arrayElemAt: ["$odds", 0],
+        },
+      },
+    },
 
-    // {
-    //   $addFields: {
-    //     awayMoneyline: {
-    //       $cond: [
-    //         {
-    //           $gte: [
-    //             {
-    //               $toDouble: "$odds.awayTeamMoneyline.us",
-    //             },
-    //             0,
-    //           ],
-    //         },
-    //         {
-    //           $concat: ["+", "$odds.awayTeamMoneyline.us"],
-    //         },
-    //         "$odds.awayTeamMoneyline.us",
-    //       ],
-    //     },
-    //     homeMoneyline: {
-    //       $cond: [
-    //         {
-    //           $gte: [
-    //             {
-    //               $toDouble: "$odds.homeTeamMoneyline.us",
-    //             },
-    //             0,
-    //           ],
-    //         },
-    //         {
-    //           $concat: ["+", "$odds.homeTeamMoneyline.us"],
-    //         },
-    //         "$odds.homeTeamMoneyline.us",
-    //       ],
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     isAwayTeamNagative: {
-    //       $cond: {
-    //         if: {
-    //           $lt: [
-    //             {
-    //               $toDouble: "$awayMoneyline",
-    //             },
-    //             0,
-    //           ],
-    //         },
-    //         then: "yes",
-    //         else: "no",
-    //       },
-    //     },
-    //     isHomeTeamNagative: {
-    //       $cond: {
-    //         if: {
-    //           $lt: [
-    //             {
-    //               $toDouble: "$homeMoneyline",
-    //             },
-    //             0,
-    //           ],
-    //         },
-    //         then: "yes",
-    //         else: "no",
-    //       },
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     isAwayNagativeOrHomeOrBoth: {
-    //       $switch: {
-    //         branches: [
-    //           {
-    //             case: {
-    //               $eq: ["$isHomeTeamNagative", "$isAwayTeamNagative"],
-    //             },
-    //             then: "bothNagative",
-    //           },
-    //           {
-    //             case: {
-    //               $eq: ["$isAwayTeamNagative", "yes"],
-    //             },
-    //             then: "awayIsNagative",
-    //           },
-    //           {
-    //             case: {
-    //               $eq: ["$isHomeTeamNagative", "yes"],
-    //             },
-    //             then: "homeIsNagative",
-    //           },
-    //         ],
-    //         default: 10,
-    //       },
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     favorite: {
-    //       $cond: {
-    //         if: {
-    //           $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"],
-    //         },
-    //         then: {
-    //           $switch: {
-    //             branches: [
-    //               {
-    //                 case: {
-    //                   $lt: [
-    //                     {
-    //                       $toDouble: "$awayMoneyline",
-    //                     },
-    //                     {
-    //                       $toDouble: "$homeMoneyline",
-    //                     },
-    //                   ],
-    //                 },
-    //                 then: {
-    //                   favorite: "away",
-    //                   moneyline: {
-    //                     $abs: {
-    //                       $toDouble: "$awayMoneyline",
-    //                     },
-    //                   },
-    //                 },
-    //               },
-    //               {
-    //                 case: {
-    //                   $lt: [
-    //                     {
-    //                       $toDouble: "$homeMoneyline",
-    //                     },
-    //                     {
-    //                       $toDouble: "$awayMoneyline",
-    //                     },
-    //                   ],
-    //                 },
-    //                 then: {
-    //                   favorite: "home",
-    //                   moneyline: {
-    //                     $abs: {
-    //                       $toDouble: "$homeMoneyline",
-    //                     },
-    //                   },
-    //                 },
-    //               },
-    //               {
-    //                 case: {
-    //                   $eq: [
-    //                     {
-    //                       $toDouble: "$homeMoneyline",
-    //                     },
-    //                     {
-    //                       $toDouble: "$awayMoneyline",
-    //                     },
-    //                   ],
-    //                 },
-    //                 then: {
-    //                   favorite: "home",
-    //                   moneyline: {
-    //                     $abs: {
-    //                       $toDouble: "$homeMoneyline",
-    //                     },
-    //                   },
-    //                 },
-    //               },
-    //             ],
-    //             default: 10,
-    //           },
-    //         },
-    //         else: {
-    //           $cond: {
-    //             if: {
-    //               $eq: ["$isAwayTeamNagative", "yes"],
-    //             },
-    //             then: {
-    //               favorite: "away",
-    //               moneyline: {
-    //                 $abs: {
-    //                   $toDouble: "$awayMoneyline",
-    //                 },
-    //               },
-    //             },
-    //             else: {
-    //               favorite: "home",
-    //               moneyline: {
-    //                 $abs: {
-    //                   $toDouble: "$homeMoneyline",
-    //                 },
-    //               },
-    //             },
-    //           },
-    //         },
-    //       },
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     underdog: {
-    //       $cond: {
-    //         if: {
-    //           $eq: ["$favorite.favorite", "away"],
-    //         },
-    //         then: {
-    //           underdog: "home",
-    //           moneyline: {
-    //             $abs: { $toDouble: "$homeMoneyline" },
-    //           },
-    //         },
-    //         else: {
-    //           underdog: "away",
-    //           moneyline: {
-    //             $abs: { $toDouble: "$awayMoneyline" },
-    //           },
-    //         },
-    //       },
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     favIP: {
-    //       $multiply: [
-    //         {
-    //           $divide: [
-    //             "$favorite.moneyline",
-    //             {
-    //               $add: ["$favorite.moneyline", 100],
-    //             },
-    //           ],
-    //         },
-    //         100,
-    //       ],
-    //     },
-    //     underIp: {
-    //       $cond: {
-    //         if: {
-    //           $or: [
-    //             { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
-    //             { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
-    //           ],
-    //         },
-    //         then: {
-    //           $multiply: [
-    //             {
-    //               $divide: [
-    //                 "$underdog.moneyline",
-    //                 {
-    //                   $add: ["$underdog.moneyline", 100],
-    //                 },
-    //               ],
-    //             },
-    //             100,
-    //           ],
-    //         },
-    //         else: {
-    //           $multiply: [
-    //             {
-    //               $divide: [
-    //                 100,
-    //                 {
-    //                   $add: ["$underdog.moneyline", 100],
-    //                 },
-    //               ],
-    //             },
-    //             100,
-    //           ],
-    //         },
-    //       },
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     favoriteFoc: {
-    //       $divide: [
-    //         "$favIP",
-    //         {
-    //           $add: ["$favIP", "$underIp"],
-    //         },
-    //       ],
-    //     },
-    //     underdogFoc: {
-    //       $divide: [
-    //         "$underIp",
-    //         {
-    //           $add: ["$underIp", "$favIP"],
-    //         },
-    //       ],
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     favRemovePoint: {
-    //       $multiply: ["$favoriteFoc", 100],
-    //     },
-    //   },
-    // },
-    // {
-    //   $addFields: {
-    //     favoriteOdd: {
-    //       $toString: {
-    //         $round: [
-    //           {
-    //             $multiply: [
-    //               {
-    //                 $divide: ["$favRemovePoint", "$underdogFoc"],
-    //               },
-    //               -1,
-    //             ],
-    //           },
-    //           0,
-    //         ],
-    //       },
-    //     },
-    //     underdogOdd: {
-    //       $toString: {
-    //         $round: [
-    //           {
-    //             $subtract: [
-    //               {
-    //                 $divide: [100, "$underdogFoc"],
-    //               },
-    //               100,
-    //             ],
-    //           },
-    //           0,
-    //         ],
-    //       },
-    //     },
-    //   },
-    // },
+    {
+      $addFields: {
+        awayMoneyline: {
+          $cond: [
+            {
+              $gte: [
+                {
+                  $toDouble: "$odds.awayTeamMoneyline.us",
+                },
+                0,
+              ],
+            },
+            {
+              $concat: ["+", "$odds.awayTeamMoneyline.us"],
+            },
+            "$odds.awayTeamMoneyline.us",
+          ],
+        },
+        homeMoneyline: {
+          $cond: [
+            {
+              $gte: [
+                {
+                  $toDouble: "$odds.homeTeamMoneyline.us",
+                },
+                0,
+              ],
+            },
+            {
+              $concat: ["+", "$odds.homeTeamMoneyline.us"],
+            },
+            "$odds.homeTeamMoneyline.us",
+          ],
+        },
+      },
+    },
+    {
+      $addFields: {
+        isAwayTeamNagative: {
+          $cond: {
+            if: {
+              $lt: [
+                {
+                  $toDouble: "$awayMoneyline",
+                },
+                0,
+              ],
+            },
+            then: "yes",
+            else: "no",
+          },
+        },
+        isHomeTeamNagative: {
+          $cond: {
+            if: {
+              $lt: [
+                {
+                  $toDouble: "$homeMoneyline",
+                },
+                0,
+              ],
+            },
+            then: "yes",
+            else: "no",
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        isAwayNagativeOrHomeOrBoth: {
+          $switch: {
+            branches: [
+              {
+                case: {
+                  $eq: ["$isHomeTeamNagative", "$isAwayTeamNagative"],
+                },
+                then: "bothNagative",
+              },
+              {
+                case: {
+                  $eq: ["$isAwayTeamNagative", "yes"],
+                },
+                then: "awayIsNagative",
+              },
+              {
+                case: {
+                  $eq: ["$isHomeTeamNagative", "yes"],
+                },
+                then: "homeIsNagative",
+              },
+            ],
+            default: 10,
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        favorite: {
+          $cond: {
+            if: {
+              $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"],
+            },
+            then: {
+              $switch: {
+                branches: [
+                  {
+                    case: {
+                      $lt: [
+                        {
+                          $toDouble: "$awayMoneyline",
+                        },
+                        {
+                          $toDouble: "$homeMoneyline",
+                        },
+                      ],
+                    },
+                    then: {
+                      favorite: "away",
+                      moneyline: {
+                        $abs: {
+                          $toDouble: "$awayMoneyline",
+                        },
+                      },
+                    },
+                  },
+                  {
+                    case: {
+                      $lt: [
+                        {
+                          $toDouble: "$homeMoneyline",
+                        },
+                        {
+                          $toDouble: "$awayMoneyline",
+                        },
+                      ],
+                    },
+                    then: {
+                      favorite: "home",
+                      moneyline: {
+                        $abs: {
+                          $toDouble: "$homeMoneyline",
+                        },
+                      },
+                    },
+                  },
+                  {
+                    case: {
+                      $eq: [
+                        {
+                          $toDouble: "$homeMoneyline",
+                        },
+                        {
+                          $toDouble: "$awayMoneyline",
+                        },
+                      ],
+                    },
+                    then: {
+                      favorite: "home",
+                      moneyline: {
+                        $abs: {
+                          $toDouble: "$homeMoneyline",
+                        },
+                      },
+                    },
+                  },
+                ],
+                default: 10,
+              },
+            },
+            else: {
+              $cond: {
+                if: {
+                  $eq: ["$isAwayTeamNagative", "yes"],
+                },
+                then: {
+                  favorite: "away",
+                  moneyline: {
+                    $abs: {
+                      $toDouble: "$awayMoneyline",
+                    },
+                  },
+                },
+                else: {
+                  favorite: "home",
+                  moneyline: {
+                    $abs: {
+                      $toDouble: "$homeMoneyline",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        underdog: {
+          $cond: {
+            if: {
+              $eq: ["$favorite.favorite", "away"],
+            },
+            then: {
+              underdog: "home",
+              moneyline: {
+                $abs: { $toDouble: "$homeMoneyline" },
+              },
+            },
+            else: {
+              underdog: "away",
+              moneyline: {
+                $abs: { $toDouble: "$awayMoneyline" },
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        favIP: {
+          $multiply: [
+            {
+              $divide: [
+                "$favorite.moneyline",
+                {
+                  $add: ["$favorite.moneyline", 100],
+                },
+              ],
+            },
+            100,
+          ],
+        },
+        underIp: {
+          $cond: {
+            if: {
+              $or: [
+                { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+              ],
+            },
+            then: {
+              $multiply: [
+                {
+                  $divide: [
+                    "$underdog.moneyline",
+                    {
+                      $add: ["$underdog.moneyline", 100],
+                    },
+                  ],
+                },
+                100,
+              ],
+            },
+            else: {
+              $multiply: [
+                {
+                  $divide: [
+                    100,
+                    {
+                      $add: ["$underdog.moneyline", 100],
+                    },
+                  ],
+                },
+                100,
+              ],
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        favoriteFoc: {
+          $divide: [
+            "$favIP",
+            {
+              $add: ["$favIP", "$underIp"],
+            },
+          ],
+        },
+        underdogFoc: {
+          $divide: [
+            "$underIp",
+            {
+              $add: ["$underIp", "$favIP"],
+            },
+          ],
+        },
+      },
+    },
+    {
+      $addFields: {
+        favRemovePoint: {
+          $multiply: ["$favoriteFoc", 100],
+        },
+      },
+    },
+    {
+      $addFields: {
+        favoriteOdd: {
+          $toString: {
+            $round: [
+              {
+                $multiply: [
+                  {
+                    $divide: ["$favRemovePoint", "$underdogFoc"],
+                  },
+                  -1,
+                ],
+              },
+              0,
+            ],
+          },
+        },
+        underdogOdd: {
+          $toString: {
+            $round: [
+              {
+                $subtract: [
+                  {
+                    $divide: [100, "$underdogFoc"],
+                  },
+                  100,
+                ],
+              },
+              0,
+            ],
+          },
+        },
+      },
+    },
 
     {
       $sort: {
@@ -590,13 +590,13 @@ const scoreWithDate = async (data: any) => {
         dateTimeUtc: 1,
       },
     },
-    // {
-    //   $unwind: {
-    //     path: "$odds",
-    //     includeArrayIndex: "string",
-    //     preserveNullAndEmptyArrays: true,
-    //   },
-    // },
+    {
+      $unwind: {
+        path: "$odds",
+        includeArrayIndex: "string",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
     {
       $project: {
         id: true,
@@ -606,12 +606,12 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
-        awayTeamAbbreviation: "$awayTeam.abbreviation",
-        homeTeamAbbreviation: "$homeTeam.abbreviation",
+        awayTeamAbbreviation: "$awayTeam.locality",
+        homeTeamAbbreviation: "$homeTeam.locality",
         weekName: true,
         seasonName: true,
         awayTeam: {
-          abbreviation: "$awayTeam.abbreviation",
+          abbreviation: "$awayTeam.locality",
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
@@ -621,67 +621,67 @@ const scoreWithDate = async (data: any) => {
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
-          // spread: "$odds.awayTeamSpread.handicap",
-          // moneyline: {
-          //   $cond: {
-          //     if: {
-          //       $eq: ["$favorite.favorite", "away"],
-          //     },
-          //     then: {
-          //       $cond: {
-          //         if: {
-          //           $gte: [
-          //             {
-          //               $toDouble: "$favoriteOdd",
-          //             },
-          //             0,
-          //           ],
-          //         },
-          //         then: {
-          //           $concat: ["+", "$favoriteOdd"],
-          //         },
-          //         else: "$favoriteOdd",
-          //       },
-          //     },
+          spread: "$odds.awayTeamSpread.handicap",
+          moneyline: {
+            $cond: {
+              if: {
+                $eq: ["$favorite.favorite", "away"],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $gte: [
+                      {
+                        $toDouble: "$favoriteOdd",
+                      },
+                      0,
+                    ],
+                  },
+                  then: {
+                    $concat: ["+", "$favoriteOdd"],
+                  },
+                  else: "$favoriteOdd",
+                },
+              },
 
-          //     else: {
-          //       $cond: {
-          //         if: {
-          //           $gte: [
-          //             {
-          //               $toDouble: "$underdogOdd",
-          //             },
-          //             0,
-          //           ],
-          //         },
-          //         then: {
-          //           $concat: ["+", "$underdogOdd"],
-          //         },
-          //         else: "$underdogOdd",
-          //       },
-          //     },
-          //   },
-          // },
-          // moneylineGoalServe: {
-          //   $cond: [
-          //     {
-          //       $gte: [
-          //         {
-          //           $toDouble: "$odds.awayTeamMoneyline.us",
-          //         },
-          //         0,
-          //       ],
-          //     },
-          //     {
-          //       $concat: ["+", "$odds.awayTeamMoneyline.us"],
-          //     },
-          //     "$odds.awayTeamMoneyline.us",
-          //   ],
-          // },
-          // total: "$odds.awayTeamTotal",
+              else: {
+                $cond: {
+                  if: {
+                    $gte: [
+                      {
+                        $toDouble: "$underdogOdd",
+                      },
+                      0,
+                    ],
+                  },
+                  then: {
+                    $concat: ["+", "$underdogOdd"],
+                  },
+                  else: "$underdogOdd",
+                },
+              },
+            },
+          },
+          moneylineGoalServe: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.awayTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.awayTeamMoneyline.us"],
+              },
+              "$odds.awayTeamMoneyline.us",
+            ],
+          },
+          total: "$odds.awayTeamTotal",
         },
         homeTeam: {
-          abbreviation: "$homeTeam.abbreviation",
+          abbreviation: "$homeTeam.locality",
           homeTeamName: "$homeTeam.name",
           goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamId: "$homeTeam._id",
@@ -691,64 +691,64 @@ const scoreWithDate = async (data: any) => {
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
           teamImage: "$homeTeamImage.image",
-          // moneyline: {
-          //   $cond: {
-          //     if: {
-          //       $eq: ["$favorite.favorite", "home"],
-          //     },
-          //     then: {
-          //       $cond: {
-          //         if: {
-          //           $gte: [
-          //             {
-          //               $toDouble: "$favoriteOdd",
-          //             },
-          //             0,
-          //           ],
-          //         },
-          //         then: {
-          //           $concat: ["+", "$favoriteOdd"],
-          //         },
-          //         else: "$favoriteOdd",
-          //       },
-          //     },
+          moneyline: {
+            $cond: {
+              if: {
+                $eq: ["$favorite.favorite", "home"],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $gte: [
+                      {
+                        $toDouble: "$favoriteOdd",
+                      },
+                      0,
+                    ],
+                  },
+                  then: {
+                    $concat: ["+", "$favoriteOdd"],
+                  },
+                  else: "$favoriteOdd",
+                },
+              },
 
-          //     else: {
-          //       $cond: {
-          //         if: {
-          //           $gte: [
-          //             {
-          //               $toDouble: "$underdogOdd",
-          //             },
-          //             0,
-          //           ],
-          //         },
-          //         then: {
-          //           $concat: ["+", "$underdogOdd"],
-          //         },
-          //         else: "$underdogOdd",
-          //       },
-          //     },
-          //   },
-          // },
-          // moneylineGoalServe: {
-          //   $cond: [
-          //     {
-          //       $gte: [
-          //         {
-          //           $toDouble: "$odds.homeTeamMoneyline.us",
-          //         },
-          //         0,
-          //       ],
-          //     },
-          //     {
-          //       $concat: ["+", "$odds.homeTeamMoneyline.us"],
-          //     },
-          //     "$odds.homeTeamMoneyline.us",
-          //   ],
-          // },
-          // spread: "$odds.homeTeamSpread.handicap",
-          // total: "$odds.homeTeamTotal",
+              else: {
+                $cond: {
+                  if: {
+                    $gte: [
+                      {
+                        $toDouble: "$underdogOdd",
+                      },
+                      0,
+                    ],
+                  },
+                  then: {
+                    $concat: ["+", "$underdogOdd"],
+                  },
+                  else: "$underdogOdd",
+                },
+              },
+            },
+          },
+          moneylineGoalServe: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.homeTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.homeTeamMoneyline.us"],
+              },
+              "$odds.homeTeamMoneyline.us",
+            ],
+          },
+          spread: "$odds.homeTeamSpread.handicap",
+          total: "$odds.homeTeamTotal",
         },
       },
     },
@@ -886,15 +886,15 @@ const scoreWithDate = async (data: any) => {
         time: true,
         goalServeMatchId: true,
         goalServeLeagueId: true,
-        awayTeamAbbreviation: "$awayTeam.abbreviation",
-        homeTeamAbbreviation: "$homeTeam.abbreviation",
+        awayTeamAbbreviation: "$awayTeam.locality",
+        homeTeamAbbreviation: "$homeTeam.locality",
         weekName: true,
         seasonName: true,
         awayTeam: {
-          abbreviation: "$awayTeam.abbreviation",
-          awayTeamName: "$awayTeamStandings.name",
-          awayTeamId: "$awayTeamStandings._id",
-          goalServeAwayTeamId: "$awayTeamStandings.goalServeTeamId",
+          abbreviation: "$awayTeam.locality",
+          awayTeamName: "$awayTeam.name",
+          awayTeamId: "$awayTeam._id",
+          goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
           awayTeamRun: "$awayTeamTotalScore",
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
@@ -905,10 +905,10 @@ const scoreWithDate = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $regexMatch: {
-                  input: "$drive",
-                  regex: "$awayTeam.abbreviation",
-                },
+                $gte: [
+                  "$awayTeamTotalScoreInNumber",
+                  "$homeTeamTotalScoreInNumber",
+                ],
               },
               then: true,
               else: false,
@@ -916,10 +916,10 @@ const scoreWithDate = async (data: any) => {
           },
         },
         homeTeam: {
-          abbreviation: "$homeTeam.abbreviation",
-          homeTeamName: "$homeTeamStandings.name",
-          homeTeamId: "$homeTeamStandings._id",
-          goalServeHomeTeamId: "$homeTeamStandings.goalServeTeamId",
+          abbreviation: "$homeTeam.locality",
+          homeTeamName: "$homeTeam.name",
+          homeTeamId: "$homeTeam._id",
+          goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamRun: "$homeTeamTotalScore",
           won: "$homeTeamStandings.won",
           lose: "$homeTeamStandings.lost",
@@ -930,10 +930,10 @@ const scoreWithDate = async (data: any) => {
           isWinner: {
             $cond: {
               if: {
-                $regexMatch: {
-                  input: "$drive",
-                  regex: "$homeTeam.abbreviation",
-                },
+                $gte: [
+                  "$homeTeamTotalScoreInNumber",
+                  "$awayTeamTotalScoreInNumber",
+                ],
               },
               then: true,
               else: false,
@@ -954,17 +954,17 @@ const scoreWithDate = async (data: any) => {
     await socketService.socket("ncaafDashboard", {
       getUpcomingMatch,
       getFinalMatch,
-      getLiveDataOfNfl: await getLiveDataOfNfl(data),
+      getLiveDataOfNfl: await getLiveDataOfNcaaf(data),
     });
     return {
       getUpcomingMatch,
       getFinalMatch,
-      getLiveDataOfNfl: await getLiveDataOfNfl(data),
+      getLiveDataOfNfl: await getLiveDataOfNcaaf(data),
     };
   }
 };
 
-const getLiveDataOfNfl = async (data: any) => {
+const getLiveDataOfNcaaf = async (data: any) => {
   return await NcaafMatch.aggregate([
     {
       $match: {
@@ -1013,9 +1013,9 @@ const getLiveDataOfNfl = async (data: any) => {
             },
           },
         ],
-        seasonName: {
-          $in: data.calenderData.map((name: any) => name.seasonName),
-        },
+        // seasonName: {
+        //   $in: data.calenderData.map((name: any) => name.seasonName),
+        // },
         weekName: {
           $in: data.calenderData.map((name: any) => name.weekName),
         },
@@ -1208,7 +1208,7 @@ const getLiveDataOfNfl = async (data: any) => {
         weekName: true,
         seasonName: true,
         awayTeam: {
-          abbreviation: "$awayTeam.abbreviation",
+          abbreviation: "$awayTeam.locality",
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           awayTeamRun: "$awayTeamTotalScore",
@@ -1230,7 +1230,7 @@ const getLiveDataOfNfl = async (data: any) => {
           },
         },
         homeTeam: {
-          abbreviation: "$homeTeam.abbreviation",
+          abbreviation: "$homeTeam.locality",
           homeTeamName: "$homeTeam.name",
           homeTeamId: "$homeTeam._id",
           homeTeamRun: "$homeTeamTotalScore",
@@ -1311,7 +1311,7 @@ const scoreWithWeek = async () => {
   }
 };
 
-const ncaafUpcomming= async (goalServeMatchId: string) => {
+const ncaafUpcomming = async (goalServeMatchId: string) => {
   try {
     const getMatch = await NcaafMatch.aggregate([
       {
@@ -1497,22 +1497,6 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
       },
       {
         $lookup: {
-          from: "ncaafinjuries",
-          localField: "goalServeHomeTeamId",
-          foreignField: "goalServeTeamId",
-          as: "homeTeamInjuredPlayers",
-        },
-      },
-      {
-        $lookup: {
-          from: "ncaafinjuries",
-          localField: "goalServeAwayTeamId",
-          foreignField: "goalServeTeamId",
-          as: "awayTeamInjuredPlayers",
-        },
-      },
-      {
-        $lookup: {
           from: "ncaafplayers",
           let: {
             awayTeamId: "$goalServeAwayTeamId",
@@ -1692,7 +1676,371 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
           as: "statsTeams",
         },
       },
-   
+      {
+        $lookup: {
+          from: "ncaafodds",
+          let: { matchId: "$goalServeMatchId", matchStatus: "$status" },
+
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "$$matchStatus"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
+        },
+      },
+      {
+        $unwind: {
+          path: "$odds",
+          includeArrayIndex: "string",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $addFields: {
+          awayMoneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.awayTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.awayTeamMoneyline.us"],
+              },
+              "$odds.awayTeamMoneyline.us",
+            ],
+          },
+          homeMoneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.homeTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.homeTeamMoneyline.us"],
+              },
+              "$odds.homeTeamMoneyline.us",
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          isAwayTeamNagative: {
+            $cond: {
+              if: {
+                $lt: [
+                  {
+                    $toDouble: "$awayMoneyline",
+                  },
+                  0,
+                ],
+              },
+              then: "yes",
+              else: "no",
+            },
+          },
+          isHomeTeamNagative: {
+            $cond: {
+              if: {
+                $lt: [
+                  {
+                    $toDouble: "$homeMoneyline",
+                  },
+                  0,
+                ],
+              },
+              then: "yes",
+              else: "no",
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          isAwayNagativeOrHomeOrBoth: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $eq: ["$isHomeTeamNagative", "$isAwayTeamNagative"],
+                  },
+                  then: "bothNagative",
+                },
+                {
+                  case: {
+                    $eq: ["$isAwayTeamNagative", "yes"],
+                  },
+                  then: "awayIsNagative",
+                },
+                {
+                  case: {
+                    $eq: ["$isHomeTeamNagative", "yes"],
+                  },
+                  then: "homeIsNagative",
+                },
+              ],
+              default: 10,
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          favorite: {
+            $cond: {
+              if: {
+                $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"],
+              },
+              then: {
+                $switch: {
+                  branches: [
+                    {
+                      case: {
+                        $lt: [
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "away",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $lt: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                  ],
+                  default: 10,
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $eq: ["$isAwayTeamNagative", "yes"],
+                  },
+                  then: {
+                    favorite: "away",
+                    moneyline: {
+                      $abs: {
+                        $toDouble: "$awayMoneyline",
+                      },
+                    },
+                  },
+                  else: {
+                    favorite: "home",
+                    moneyline: {
+                      $abs: {
+                        $toDouble: "$homeMoneyline",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          underdog: {
+            $cond: {
+              if: {
+                $eq: ["$favorite.favorite", "away"],
+              },
+              then: {
+                underdog: "home",
+                moneyline: {
+                  $abs: { $toDouble: "$homeMoneyline" },
+                },
+              },
+              else: {
+                underdog: "away",
+                moneyline: {
+                  $abs: { $toDouble: "$awayMoneyline" },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          favIP: {
+            $multiply: [
+              {
+                $divide: [
+                  "$favorite.moneyline",
+                  {
+                    $add: ["$favorite.moneyline", 100],
+                  },
+                ],
+              },
+              100,
+            ],
+          },
+          underIp: {
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
+              },
+              then: {
+                $multiply: [
+                  {
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
+                ],
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          favoriteFoc: {
+            $divide: [
+              "$favIP",
+              {
+                $add: ["$favIP", "$underIp"],
+              },
+            ],
+          },
+          underdogFoc: {
+            $divide: [
+              "$underIp",
+              {
+                $add: ["$underIp", "$favIP"],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          favRemovePoint: {
+            $multiply: ["$favoriteFoc", 100],
+          },
+        },
+      },
+      {
+        $addFields: {
+          favoriteOdd: {
+            $toString: {
+              $round: [
+                {
+                  $multiply: [
+                    {
+                      $divide: ["$favRemovePoint", "$underdogFoc"],
+                    },
+                    -1,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+          underdogOdd: {
+            $toString: {
+              $round: [
+                {
+                  $subtract: [
+                    {
+                      $divide: [100, "$underdogFoc"],
+                    },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+        },
+      },
       {
         $project: {
           id: true,
@@ -1721,8 +2069,55 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
             won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
             lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
-       
 
+            moneyline: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "away"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            moneylineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            spread: "$odds.awayTeamSpread.handicap",
             total: "$odds.awayTeamTotal",
           },
           homeTeam: {
@@ -1733,41 +2128,57 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
             won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
             lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
-  
+
+            moneyline: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "home"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            moneylineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            spread: "$odds.homeTeamSpread.handicap",
 
             total: "$odds.homeTeamTotal",
-          },
-          injuredPlayers: {
-            homeTeam: {
-              $map: {
-                input: "$homeTeamInjuredPlayers",
-                as: "item",
-                in: {
-                  date: "$$item.date",
-                  description: "$$item.description",
-                  goalServePlayerId: "$$item.goalServePlayerId",
-                  playerName: "$$item.playerName",
-                  status: "$$item.status",
-                  teamId: "$$item.teamId",
-                  goalServeTeamId: "$$item.goalServeTeamId",
-                },
-              },
-            },
-            awayTeam: {
-              $map: {
-                input: "$awayTeamInjuredPlayers",
-                as: "item",
-                in: {
-                  date: "$$item.date",
-                  description: "$$item.description",
-                  goalServePlayerId: "$$item.goalServePlayerId",
-                  playerName: "$$item.playerName",
-                  status: "$$item.status",
-                  teamId: "$$item.teamId",
-                  goalServeTeamId: "$$item.goalServeTeamId",
-                },
-              },
-            },
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
@@ -1806,10 +2217,12 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
                         playerName: "$$player.name",
                         goalServePlayerId: "$$player.goalServePlayerId",
                         goalServeTeamId: "$$player.goalServeTeamId",
+                        yards_per_pass_avg:
+                          "$$player.passing.yards_per_pass_avg",
                         interceptions: "$$player.passing.interceptions",
                         sacks: "$$player.passing.sacks",
-                        quarterback_rating:
-                          "$$player.passing.quarterback_rating",
+                        quaterback_rating:
+                          "$$player.passing.quaterback_rating",
                         passing_touchdowns:
                           "$$player.passing.passing_touchdowns",
                         yards_per_game: "$$player.passing.yards_per_game",
@@ -1862,6 +2275,7 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
                         goalServeTeamId: "$$player.goalServeTeamId",
                         yards: "$$player.rushing.yards",
                         longest_rush: "$$player.rushing.longest_rush",
+                        yards_per_rush_avg: "$$player.rushing.yards_per_rush_avg",
                         rushing_touchdowns:
                           "$$player.rushing.rushing_touchdowns",
                         yards_per_game: "$$player.rushing.yards_per_game",
@@ -1911,6 +2325,7 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
                           "$$player.receiving.longest_reception",
                         receiving_touchdowns:
                           "$$player.receiving.receiving_touchdowns",
+                          yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
                         yards_per_game: "$$player.receiving.yards_per_game",
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
@@ -1956,9 +2371,11 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
                         goalServePlayerId: "$$player.goalServePlayerId",
                         goalServeTeamId: "$$player.goalServeTeamId",
                         interceptions: "$$player.passing.interceptions",
+                        yards_per_pass_avg:
+                          "$$player.passing.yards_per_pass_avg",
                         sacks: "$$player.passing.sacks",
-                        quarterback_rating:
-                          "$$player.passing.quarterback_rating",
+                        quaterback_rating:
+                          "$$player.passing.quaterback_rating",
                         passing_touchdowns:
                           "$$player.passing.passing_touchdowns",
                         yards_per_game: "$$player.passing.yards_per_game",
@@ -2011,6 +2428,7 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
                         goalServeTeamId: "$$player.goalServeTeamId",
                         yards: "$$player.rushing.yards",
                         longest_rush: "$$player.rushing.longest_rush",
+                        yards_per_rush_avg: "$$player.rushing.yards_per_rush_avg",
                         rushing_touchdowns:
                           "$$player.rushing.rushing_touchdowns",
                         yards_per_game: "$$player.rushing.yards_per_game",
@@ -2064,6 +2482,7 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
                         rank: "$$player.receiving.rank",
+                        yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
                       },
                     ],
                   },
@@ -2187,7 +2606,124 @@ const ncaafUpcomming= async (goalServeMatchId: string) => {
               },
             },
           ],
-    
+          closingOddsAndOutcome: {
+            awayTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "away"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            awayTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "home"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            homeTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$odds.homeTeamSpread.handicap",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpread.us"] },
+                  "$odds.homeTeamSpread.us",
+                ],
+              },
+            },
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$odds.awayTeamSpread.handicap",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpread.us"] },
+                  "$odds.awayTeamSpread.us",
+                ],
+              },
+            },
+            homeTeamTotal: "$odds.homeTeamTotal",
+            awayTeamTotal: "$odds.awayTeamTotal",
+          },
         },
       },
     ]);
@@ -2223,7 +2759,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       name: 1,
-                      abbreviation: 1,
+                      locality: 1,
                       goalServeTeamId: 1,
                     },
                   },
@@ -2239,7 +2775,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       name: 1,
-                      abbreviation: 1,
+                      locality: 1,
                       goalServeTeamId: 1,
                     },
                   },
@@ -2510,6 +3046,659 @@ const ncaafFinal = async (goalServeMatchId: string) => {
           as: "receivingPlayers",
         },
       },
+      {
+        $lookup: {
+          from: "ncaafodds",
+          let: { matchId: "$goalServeMatchId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $eq: ["$status", "Not Started"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "odds",
+        },
+      },
+      {
+        $lookup: {
+          from: "ncaafodds",
+          let: { matchId: "$goalServeMatchId" },
+
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$$matchId", "$goalServeMatchId"] },
+                    { $ne: ["$status", "Not Started"] },
+                    { $ne: ["$status", "Postponed"] },
+                    { $ne: ["$status", "Canceled"] },
+                    { $ne: ["$status", "Suspended"] },
+                  ],
+                },
+              },
+            },
+            { $sort: { updatedAt: -1 } },
+            { $limit: 1 },
+          ],
+          as: "outcome",
+        },
+      },
+      {
+        $addFields: {
+          outcome: {
+            $arrayElemAt: ["$outcome", 0],
+          },
+          odds: {
+            $arrayElemAt: ["$odds", 0],
+          },
+        },
+      },
+      {
+        $addFields: {
+          awayMoneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.awayTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.awayTeamMoneyline.us"],
+              },
+              "$odds.awayTeamMoneyline.us",
+            ],
+          },
+          homeMoneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$odds.homeTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$odds.homeTeamMoneyline.us"],
+              },
+              "$odds.homeTeamMoneyline.us",
+            ],
+          },
+          awayOutcomeMoneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$outcome.awayTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$outcome.awayTeamMoneyline.us"],
+              },
+              "$outcome.awayTeamMoneyline.us",
+            ],
+          },
+          homeOutcomeMoneyline: {
+            $cond: [
+              {
+                $gte: [
+                  {
+                    $toDouble: "$outcome.homeTeamMoneyline.us",
+                  },
+                  0,
+                ],
+              },
+              {
+                $concat: ["+", "$outcome.homeTeamMoneyline.us"],
+              },
+              "$outcome.homeTeamMoneyline.us",
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          isAwayTeamNagative: {
+            $cond: {
+              if: {
+                $lt: [
+                  {
+                    $toDouble: "$awayMoneyline",
+                  },
+                  0,
+                ],
+              },
+              then: "yes",
+              else: "no",
+            },
+          },
+          isHomeTeamNagative: {
+            $cond: {
+              if: {
+                $lt: [
+                  {
+                    $toDouble: "$homeMoneyline",
+                  },
+                  0,
+                ],
+              },
+              then: "yes",
+              else: "no",
+            },
+          },
+          isAwayTeamOutcomeNagative: {
+            $cond: {
+              if: {
+                $lt: [
+                  {
+                    $toDouble: "$awayOutcomeMoneyline",
+                  },
+                  0,
+                ],
+              },
+              then: "yes",
+              else: "no",
+            },
+          },
+          isHomeTeamOutcomeNagative: {
+            $cond: {
+              if: {
+                $lt: [
+                  {
+                    $toDouble: "$homeOutcomeMoneyline",
+                  },
+                  0,
+                ],
+              },
+              then: "yes",
+              else: "no",
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          isAwayNagativeOrHomeOrBoth: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $eq: ["$isHomeTeamNagative", "$isAwayTeamNagative"],
+                  },
+                  then: "bothNagative",
+                },
+                {
+                  case: {
+                    $eq: ["$isAwayTeamNagative", "yes"],
+                  },
+                  then: "awayIsNagative",
+                },
+                {
+                  case: {
+                    $eq: ["$isHomeTeamNagative", "yes"],
+                  },
+                  then: "homeIsNagative",
+                },
+              ],
+              default: 10,
+            },
+          },
+          isOutcomeAwayNagativeOrHomeOrBoth: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $eq: [
+                      "$isHomeTeamOutcomeNagative",
+                      "$isAwayTeamOutcomeNagative",
+                    ],
+                  },
+                  then: "bothNagative",
+                },
+                {
+                  case: {
+                    $eq: ["$isAwayTeamOutcomeNagative", "yes"],
+                  },
+                  then: "awayIsNagative",
+                },
+                {
+                  case: {
+                    $eq: ["$isHomeTeamOutcomeNagative", "yes"],
+                  },
+                  then: "homeIsNagative",
+                },
+              ],
+              default: 10,
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          favorite: {
+            $cond: {
+              if: {
+                $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"],
+              },
+              then: {
+                $switch: {
+                  branches: [
+                    {
+                      case: {
+                        $lt: [
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "away",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $lt: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $eq: [
+                          {
+                            $toDouble: "$homeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                  ],
+                  default: 10,
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $eq: ["$isAwayTeamNagative", "yes"],
+                  },
+                  then: {
+                    favorite: "away",
+                    moneyline: {
+                      $abs: {
+                        $toDouble: "$awayMoneyline",
+                      },
+                    },
+                  },
+                  else: {
+                    favorite: "home",
+                    moneyline: {
+                      $abs: {
+                        $toDouble: "$homeMoneyline",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          favoriteOutcome: {
+            $cond: {
+              if: {
+                $eq: ["$isOutcomeAwayNagativeOrHomeOrBoth", "bothNagative"],
+              },
+              then: {
+                $switch: {
+                  branches: [
+                    {
+                      case: {
+                        $lt: [
+                          {
+                            $toDouble: "$awayOutcomeMoneyline",
+                          },
+                          {
+                            $toDouble: "$homeOutcomeMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "away",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$awayOutcomeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                    {
+                      case: {
+                        $lt: [
+                          {
+                            $toDouble: "$homeOutcomeMoneyline",
+                          },
+                          {
+                            $toDouble: "$awayOutcomeMoneyline",
+                          },
+                        ],
+                      },
+                      then: {
+                        favorite: "home",
+                        moneyline: {
+                          $abs: {
+                            $toDouble: "$homeOutcomeMoneyline",
+                          },
+                        },
+                      },
+                    },
+                  ],
+                  default: 10,
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $eq: ["$isAwayTeamOutcomeNagative", "yes"],
+                  },
+                  then: {
+                    favorite: "away",
+                    moneyline: {
+                      $abs: {
+                        $toDouble: "$awayOutcomeMoneyline",
+                      },
+                    },
+                  },
+                  else: {
+                    favorite: "home",
+                    moneyline: {
+                      $abs: {
+                        $toDouble: "$homeOutcomeMoneyline",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          underdog: {
+            $cond: {
+              if: {
+                $eq: ["$favorite.favorite", "away"],
+              },
+              then: {
+                underdog: "home",
+                moneyline: {
+                  $abs: { $toDouble: "$homeMoneyline" },
+                },
+              },
+              else: {
+                underdog: "away",
+                moneyline: {
+                  $abs: { $toDouble: "$awayMoneyline" },
+                },
+              },
+            },
+          },
+          underdogOutcome: {
+            $cond: {
+              if: {
+                $eq: ["$favoriteOutcome.favorite", "away"],
+              },
+              then: {
+                underdog: "home",
+                moneyline: {
+                  $abs: { $toDouble: "$homeOutcomeMoneyline" },
+                },
+              },
+              else: {
+                underdog: "away",
+                moneyline: {
+                  $abs: { $toDouble: "$awayOutcomeMoneyline" },
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          favIP: {
+            $multiply: [
+              {
+                $divide: [
+                  "$favorite.moneyline",
+                  {
+                    $add: ["$favorite.moneyline", 100],
+                  },
+                ],
+              },
+              100,
+            ],
+          },
+          underIp: {
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$favorite.moneyline", "$underdog.moneyline"] },
+                  { $eq: ["$isAwayNagativeOrHomeOrBoth", "bothNagative"] },
+                ],
+              },
+              then: {
+                $multiply: [
+                  {
+                    $divide: [
+                      "$underdog.moneyline",
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
+                ],
+              },
+              else: {
+                $multiply: [
+                  {
+                    $divide: [
+                      100,
+                      {
+                        $add: ["$underdog.moneyline", 100],
+                      },
+                    ],
+                  },
+                  100,
+                ],
+              },
+            },
+          },
+          favIPOutcome: {
+            $multiply: [
+              {
+                $divide: [
+                  "$favoriteOutcome.moneyline",
+                  {
+                    $add: ["$favoriteOutcome.moneyline", 100],
+                  },
+                ],
+              },
+              100,
+            ],
+          },
+          underIpOutcome: {
+            $multiply: [
+              {
+                $divide: [
+                  "$underdogOutcome.moneyline",
+                  {
+                    $add: ["$underdogOutcome.moneyline", 100],
+                  },
+                ],
+              },
+              100,
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          favoriteFoc: {
+            $divide: [
+              "$favIP",
+              {
+                $add: ["$favIP", "$underIp"],
+              },
+            ],
+          },
+          underdogFoc: {
+            $divide: [
+              "$underIp",
+              {
+                $add: ["$underIp", "$favIP"],
+              },
+            ],
+          },
+          favoriteFocOutcome: {
+            $divide: [
+              "$favIPOutcome",
+              {
+                $add: ["$favIPOutcome", "$underIpOutcome"],
+              },
+            ],
+          },
+          underdogFocOutcome: {
+            $divide: [
+              "$underIpOutcome",
+              {
+                $add: ["$underIpOutcome", "$favIPOutcome"],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
+          favRemovePoint: {
+            $multiply: ["$favoriteFoc", 100],
+          },
+          favRemovePointOutcome: {
+            $multiply: ["$favoriteFocOutcome", 100],
+          },
+        },
+      },
+      {
+        $addFields: {
+          favoriteOdd: {
+            $toString: {
+              $round: [
+                {
+                  $multiply: [
+                    {
+                      $divide: ["$favRemovePoint", "$underdogFoc"],
+                    },
+                    -1,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+          underdogOdd: {
+            $toString: {
+              $round: [
+                {
+                  $subtract: [
+                    {
+                      $divide: [100, "$underdogFoc"],
+                    },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+          favoriteOddOutcome: {
+            $toString: {
+              $round: [
+                {
+                  $multiply: [
+                    {
+                      $divide: [
+                        "$favRemovePointOutcome",
+                        "$underdogFocOutcome",
+                      ],
+                    },
+                    -1,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+          underdogOddOutcome: {
+            $toString: {
+              $round: [
+                {
+                  $subtract: [
+                    {
+                      $divide: [100, "$underdogFocOutcome"],
+                    },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          },
+        },
+      },
 
       {
         $project: {
@@ -2558,10 +3747,10 @@ const ncaafFinal = async (goalServeMatchId: string) => {
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
-            $arrayElemAt: ["$teams.awayTeam.abbreviation", 0],
+            $arrayElemAt: ["$teams.awayTeam.locality", 0],
           },
           homeTeamAbbreviation: {
-            $arrayElemAt: ["$teams.homeTeam.abbreviation", 0],
+            $arrayElemAt: ["$teams.homeTeam.locality", 0],
           },
           awayTeam: {
             awayTeamName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
@@ -2629,8 +3818,11 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                           "$$player.passing.quarterback_rating",
                         passing_touchdowns:
                           "$$player.passing.passing_touchdowns",
+                        yards_per_pass_avg:
+                          "$$player.passing.yards_per_pass_avg",
                         yards_per_game: "$$player.passing.yards_per_game",
                         yards: "$$player.passing.yards",
+                        quaterback_rating: "$$player.passing.quaterback_rating",
                         completions_by_Attempts: {
                           $concat: [
                             "$$player.passing.completions",
@@ -2679,6 +3871,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         goalServeTeamId: "$$player.goalServeTeamId",
                         yards: "$$player.rushing.yards",
                         longest_rush: "$$player.rushing.longest_rush",
+                        yards_per_rush_avg:
+                          "$$player.rushing.yards_per_rush_avg",
                         rushing_touchdowns:
                           "$$player.rushing.rushing_touchdowns",
                         yards_per_game: "$$player.rushing.yards_per_game",
@@ -2732,6 +3926,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
                         rank: "$$player.receiving.rank",
+                        yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
                       },
                     ],
                   },
@@ -2774,12 +3969,13 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         goalServeTeamId: "$$player.goalServeTeamId",
                         interceptions: "$$player.passing.interceptions",
                         sacks: "$$player.passing.sacks",
-                        quarterback_rating:
-                          "$$player.passing.quarterback_rating",
+                        quaterback_rating:"$$player.passing.quaterback_rating",
                         passing_touchdowns:
                           "$$player.passing.passing_touchdowns",
                         yards_per_game: "$$player.passing.yards_per_game",
                         yards: "$$player.passing.yards",
+                        yards_per_pass_avg:
+                          "$$player.passing.yards_per_pass_avg",
                         completions_by_Attempts: {
                           $concat: [
                             "$$player.passing.completions",
@@ -2833,6 +4029,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         yards_per_game: "$$player.rushing.yards_per_game",
                         rushing_attempts: "$$player.rushing.rushing_attempts",
                         rank: "$$player.rushing.rank",
+                        yards_per_rush_avg:
+                          "$$player.rushing.yards_per_rush_avg",
                       },
                     ],
                   },
@@ -2881,6 +4079,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                         receiving_yards: "$$player.receiving.receiving_yards",
                         receptions: "$$player.receiving.receptions",
                         rank: "$$player.receiving.rank",
+                        yards_per_reception_avg: "$$player.receiving.yards_per_reception_avg",
                       },
                     ],
                   },
@@ -2990,12 +4189,261 @@ const ncaafFinal = async (goalServeMatchId: string) => {
             { child: "$fourthQuarterEvent", title: "4nd Quarter" },
             { child: "$overtimeEvent", title: "Overtime" },
           ],
-        
-       
+          closingOddsAndOutcome: {
+            awayTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "away"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            awayTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.awayTeamMoneyline.us"] },
+                "$odds.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favorite.favorite", "home"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOdd"],
+                    },
+                    else: "$favoriteOdd",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOdd",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOdd"],
+                    },
+                    else: "$underdogOdd",
+                  },
+                },
+              },
+            },
+            homeTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$odds.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$odds.homeTeamMoneyline.us"] },
+                "$odds.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$odds.homeTeamSpread.handicap",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.homeTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.homeTeamSpread.us"] },
+                  "$odds.homeTeamSpread.us",
+                ],
+              },
+            },
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$odds.awayTeamSpread.handicap",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$odds.awayTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$odds.awayTeamSpread.us"] },
+                  "$odds.awayTeamSpread.us",
+                ],
+              },
+            },
+            homeTeamTotal: "$odds.homeTeamTotal",
+            awayTeamTotal: "$odds.awayTeamTotal",
+          },
+          outcome: {
+            awayTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favoriteOutcome.favorite", "away"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOddOutcome",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOddOutcome"],
+                    },
+                    else: "$favoriteOddOutcome",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOddOutcome",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOddOutcome"],
+                    },
+                    else: "$underdogOddOutcome",
+                  },
+                },
+              },
+            },
+            homeTeamMoneyLine: {
+              $cond: {
+                if: {
+                  $eq: ["$favoriteOutcome.favorite", "home"],
+                },
+                then: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$favoriteOddOutcome",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$favoriteOddOutcome"],
+                    },
+                    else: "$favoriteOddOutcome",
+                  },
+                },
+
+                else: {
+                  $cond: {
+                    if: {
+                      $gte: [
+                        {
+                          $toDouble: "$underdogOddOutcome",
+                        },
+                        0,
+                      ],
+                    },
+                    then: {
+                      $concat: ["+", "$underdogOddOutcome"],
+                    },
+                    else: "$underdogOddOutcome",
+                  },
+                },
+              },
+            },
+            awayTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$outcome.awayTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$outcome.awayTeamMoneyline.us"] },
+                "$outcome.awayTeamMoneyline.us",
+              ],
+            },
+            homeTeamMoneyLineGoalServe: {
+              $cond: [
+                { $gte: [{ $toDouble: "$outcome.homeTeamMoneyline.us" }, 0] },
+                { $concat: ["+", "$outcome.homeTeamMoneyline.us"] },
+                "$outcome.homeTeamMoneyline.us",
+              ],
+            },
+            homeTeamSpreadObj: {
+              homeTeamSpread: "$outcome.homeTeamSpread",
+              homeTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$outcome.homeTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$outcome.homeTeamSpreadUs"] },
+                  "$outcome.homeTeamSpreadUs",
+                ],
+              },
+            },
+            awayTeamSpreadObj: {
+              awayTeamSpread: "$outcome.awayTeamSpread",
+              awayTeamSpreadUs: {
+                $cond: [
+                  { $gte: [{ $toDouble: "$outcome.awayTeamSpreadUs" }, 0] },
+                  { $concat: ["+", "$outcome.awayTeamSpreadUs"] },
+                  "$outcome.awayTeamSpreadUs",
+                ],
+              },
+            },
+            homeTeamTotal: "$outcome.homeTeamTotal",
+            awayTeamTotal: "$outcome.awayTeamTotal",
+            awayTeamTotalScoreInNumber: "$awayTeamTotalScoreInNumber",
+            homeTeamTotalScoreInNumber: "$homeTeamTotalScoreInNumber",
+            scoreDifference: {
+              $abs: {
+                $subtract: [
+                  "$awayTeamTotalScoreInNumber",
+                  "$homeTeamTotalScoreInNumber",
+                ],
+              },
+            },
+            totalGameScore: {
+              $add: [
+                "$awayTeamTotalScoreInNumber",
+                "$homeTeamTotalScoreInNumber",
+              ],
+            },
+          },
         },
       },
     ]);
-    console.log(getMatch[0])
     return getMatch[0];
   } catch (error) {}
 };
@@ -3004,8 +4452,8 @@ export default {
   getCalendar,
   addTeamImage,
   scoreWithDate,
-  getLiveDataOfNfl,
+  getLiveDataOfNcaaf,
   scoreWithWeek,
   ncaafUpcomming,
-  ncaafFinal
-}
+  ncaafFinal,
+};

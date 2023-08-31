@@ -79,7 +79,7 @@ var betSchema = new Schema(
     },
     leagueType: {
       type: String,
-      enum: ["NHL", "MLB", "NBA", "NFL"],
+      enum: ["NHL", "MLB", "NBA", "NFL","NCAAF"],
       required: true,
     },
     status: {
