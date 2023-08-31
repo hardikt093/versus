@@ -2264,7 +2264,7 @@ const nflUpcomming = async (goalServeMatchId: string) => {
                               {
                                 $eq: [
                                   "$$this.goalServeTeamId",
-                                  "$goalServeHomeTeamId",
+                                  "$goalServeAwayTeamId",
                                 ],
                               },
                               { $ifNull: ["$$this.rushing", false] },
