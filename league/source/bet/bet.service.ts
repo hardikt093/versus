@@ -778,7 +778,7 @@ const listBetsByType = async (
       ],
     },
   });
-  let count = await Bet.aggregate(countQuery);
+  const count = await Bet.aggregate(countQuery);
   query.push(
     {
       $skip: skip,

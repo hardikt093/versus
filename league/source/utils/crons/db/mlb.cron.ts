@@ -131,9 +131,9 @@ const updateMlbMatch = cron.schedule("*/10 * * * * *", async () => {
   }
   isupdateMlbMatchRunning = true;
   try {
-    console.log("start updateMlbMatch");
+    // console.log("start updateMlbMatch");
     await mlbService.updateMlbMatch();
-    console.log("end updateMlbMatch");
+    // console.log("end updateMlbMatch");
   } catch (error) {
     console.log(error);
   } finally {

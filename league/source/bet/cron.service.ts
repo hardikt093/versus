@@ -16,8 +16,8 @@ export default class BetDbCronServiceClass {
       for (let i = 0; i < betData.length; i++) {
         const bet = betData[i];
 
-        if (bet?.oddType == "Total") {
-          if (bet?.leagueType == "MLB") {
+        if (bet?.oddType === "Total") {
+          if (bet?.leagueType === "MLB") {
             const getMatch = await Match.findOne({
               goalServeMatchId: bet.goalServeMatchId,
             });
@@ -36,7 +36,7 @@ export default class BetDbCronServiceClass {
                 : bet?.requestUserGoalServeOdd.includes("U")
                 ? bet?.requestUserId
                 : bet?.opponentUserId;
-            if (oddWin == bet?.requestUserId) {
+            if (oddWin === bet?.requestUserId) {
               // payout to req user
               const resp = await axiosPostMicro(
                 {
@@ -59,7 +59,7 @@ export default class BetDbCronServiceClass {
                 ""
               );
             }
-          } else if (bet?.leagueType == "NFL") {
+          } else if (bet?.leagueType === "NFL") {
             const getMatch = await NflMatch.findOne({
               goalServeMatchId: bet.goalServeMatchId,
             });
@@ -78,7 +78,7 @@ export default class BetDbCronServiceClass {
                 : bet?.requestUserGoalServeOdd.includes("U")
                 ? bet?.requestUserId
                 : bet?.opponentUserId;
-            if (oddWin == bet?.requestUserId) {
+            if (oddWin === bet?.requestUserId) {
               // payout to req user
               const resp = await axiosPostMicro(
                 {
@@ -102,7 +102,7 @@ export default class BetDbCronServiceClass {
               );
             }
           }
-          else if (bet?.leagueType == "NCAAF") {
+          else if (bet?.leagueType === "NCAAF") {
             const getMatch = await NcaafMatch.findOne({
               goalServeMatchId: bet.goalServeMatchId,
             });
@@ -121,7 +121,7 @@ export default class BetDbCronServiceClass {
                 : bet?.requestUserGoalServeOdd.includes("U")
                 ? bet?.requestUserId
                 : bet?.opponentUserId;
-            if (oddWin == bet?.requestUserId) {
+            if (oddWin === bet?.requestUserId) {
               // payout to req user
               const resp = await axiosPostMicro(
                 {
@@ -146,7 +146,7 @@ export default class BetDbCronServiceClass {
             }
           }
         } else {
-          if (bet?.goalServeWinTeamId == bet?.goalServeRequestUserTeamId) {
+          if (bet?.goalServeWinTeamId === bet?.goalServeRequestUserTeamId) {
             const resp = await axiosPostMicro(
               {
                 amount: bet?.betTotalAmount,

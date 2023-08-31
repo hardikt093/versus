@@ -1,7 +1,7 @@
 import { model, Schema } from "mongoose";
 import IStatsTeamModel from "../../interfaces/teamStats.interface";
 
-var matchStatsTeamSchema = new Schema(
+const matchStatsTeamSchema = new Schema(
   {
     goalServeLeagueId: { type: Number, required: true },
     goalServeMatchId: { type: Number, required: true },
