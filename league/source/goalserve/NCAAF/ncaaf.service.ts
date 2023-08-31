@@ -954,12 +954,12 @@ const scoreWithDate = async (data: any) => {
     await socketService.socket("ncaafDashboard", {
       getUpcomingMatch,
       getFinalMatch,
-      getLiveDataOfNfl: await getLiveDataOfNcaaf(data),
+      getLiveDataOfNcaaf: await getLiveDataOfNcaaf(data),
     });
     return {
       getUpcomingMatch,
       getFinalMatch,
-      getLiveDataOfNfl: await getLiveDataOfNcaaf(data),
+      getLiveDataOfNcaaf: await getLiveDataOfNcaaf(data),
     };
   }
 };
