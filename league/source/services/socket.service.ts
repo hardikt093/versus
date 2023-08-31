@@ -72,6 +72,9 @@ const socket = async (eventName: string, data: object | Array<object>) => {
     case "ncaafDashboard":
       io.emit("ncaafDashboard", data);
       break;
+    case "ncaafLiveBoxscore":
+      io.emit("ncaafLiveBoxscore", data);
+      break;
     default:
       break;
   }

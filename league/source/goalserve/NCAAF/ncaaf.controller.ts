@@ -57,12 +57,22 @@ const ncaafFinal = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-
+const ncaafLive = async (req: Request, res: Response) => {
+  try {
+    const id = [];
+    id.push(Number(req.query.goalServeMatchId));
+    const data = await ncaafService.ncaafLive(id);
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   addTeamNCAAF,
   getCalendar,
   addTeamNCAAFImage,
   nflScoreWithDate,
   ncaafUpcomming,
-  ncaafFinal
+  ncaafFinal,
+  ncaafLive,
 };

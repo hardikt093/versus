@@ -13,6 +13,7 @@ router.post(
 router.post("/addTeamImage", goalserveController.addTeamNCAAFImage);
 router.get("/single-game-boxscore-upcomming", goalserveController.ncaafUpcomming);
 router.get("/single-game-boxscore-final", goalserveController.ncaafFinal);
+router.get("/single-game-boxscore-live", goalserveController.ncaafLive);
 
 router.get("/getCalendar", ncaafController.getCalendar);
 router.post("/scoreWithDate", ncaafController.nflScoreWithDate);
