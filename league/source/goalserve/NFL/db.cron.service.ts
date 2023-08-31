@@ -15,6 +15,28 @@ import moment from "moment";
 import NflOdds from "../../models/documents/NFL/odds.model";
 import { isArray } from "lodash";
 import NFLMatchStatsTeam from "../../models/documents/NFL/matchTeamStats";
+import Bet from "../../models/documents/bet.model";
+import { betStatus } from "../../models/interfaces/bet.interface";
+
+async function declareResultMatch(
+  matchId: number,
+  winTeamId: number,
+  leagueType: string
+) {
+  await Bet.updateMany(
+    {
+      goalServeMatchId: Number(matchId),
+      status: betStatus.ACTIVE,
+      leagueType: leagueType,
+    },
+    {
+      status: betStatus.RESULT_DECLARED,
+      goalServeWinTeamId: winTeamId,
+      resultAt: new Date(),
+    }
+  );
+}
+
 const getOdds = (nameKey: any, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
@@ -749,7 +771,86 @@ export default class NFLDbCronServiceClass {
               { $set: data },
               { new: true }
             );
+
+            if (
+              matchArray[i]?.status != "Not Started" &&
+              matchArray[i]?.status != "Final" &&
+              matchArray[i]?.status != "Postponed" &&
+              matchArray[i]?.status != "Canceled" &&
+              matchArray[i]?.status != "Suspended"
+            ) {
+              const goalServeMatchId = matchArray[i].contestID;
+              // expire not accepted bet requests
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NFL",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              // active  CONFIRMED bet when match start
+              await Bet.updateMany(
+                {
+                  status: "CONFIRMED",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NFL",
+                },
+                {
+                  status: "ACTIVE",
+                }
+              );
+            } 
+            
+            else if (matchArray[i].status == "Final") {
+              const homeTeamTotalScore = parseFloat(
+                matchArray[i].hometeam.totalscore
+              );
+              const awayTeamTotalScore = parseFloat(
+                matchArray[i].awayteam.totalscore
+              );
+              const goalServeMatchId = matchArray[i].contestID;
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray[i].hometeam.id
+                  : matchArray[i].awayteam.id;
+              await declareResultMatch(
+                Number(goalServeMatchId),
+                Number(goalServeWinTeamId),
+                "NFL"
+              );
+            } 
+            else if (
+              matchArray[i].status == "Canceled" ||
+              matchArray[i].status == "Postponed" ||
+              matchArray[i].status == "Suspended"
+            ) {
+              const goalServeMatchId = matchArray[i].contestID;
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NFL",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              await Bet.updateMany(
+                {
+                  status: { $in: ["CONFIRMED", "ACTIVE"] },
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NFL",
+                },
+                {
+                  status: "CANCELED",
+                }
+              );
+            }
           }
+          
         }
       } else {
         if (matchArray) {
@@ -915,6 +1016,81 @@ export default class NFLDbCronServiceClass {
               { $set: data },
               { new: true }
             );
+
+            if (
+              matchArray?.status != "Not Started" &&
+              matchArray?.status != "Final" &&
+              matchArray?.status != "Postponed" &&
+              matchArray?.status != "Canceled" &&
+              matchArray?.status != "Suspended"
+            ) {
+              const goalServeMatchId = matchArray.contestID;
+              // expire not accepted bet requests
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NFL",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              // active  CONFIRMED bet when match start
+              await Bet.updateMany(
+                {
+                  status: "CONFIRMED",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NFL",
+                },
+                {
+                  status: "ACTIVE",
+                }
+              );
+            } else if (matchArray.status == "Final") {
+              const homeTeamTotalScore = parseFloat(
+                matchArray.hometeam.totalscore
+              );
+              const awayTeamTotalScore = parseFloat(
+                matchArray.awayteam.totalscore
+              );
+              const goalServeMatchId = matchArray.contestID;
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray.hometeam.id
+                  : matchArray.awayteam.id;
+              await declareResultMatch(
+                parseInt(goalServeMatchId),
+                parseInt(goalServeWinTeamId),
+                "NFL"
+              );
+            } else if (
+              matchArray.status == "Canceled" ||
+              matchArray.status == "Postponed" ||
+              matchArray.status == "Suspended"
+            ) {
+              const goalServeMatchId = matchArray.contestID;
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NFL",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              await Bet.updateMany(
+                {
+                  status: { $in: ["CONFIRMED", "ACTIVE"] },
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NFL",
+                },
+                {
+                  status: "CANCELED",
+                }
+              );
+            }
           }
         }
       }

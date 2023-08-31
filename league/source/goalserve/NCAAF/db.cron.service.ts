@@ -8,7 +8,33 @@ import { goalserveApi } from "../../services/goalserve.service";
 import NcaafMatch from "../../models/documents/NCAAF/match.model";
 import INcaafMatchModel from "../../models/interfaces/ncaafMatch.interface";
 import { axiosGet } from "../../services/axios.service";
+import INFLStatsTeamModel from "../../models/interfaces/nflStats.interface";
+import StatsTeamNCAAF from "../../models/documents/NCAAF/teamStats";
+import NCAAFMatchStatsTeam from "../../models/documents/NCAAF/matchTeamStats";
+import moment from "moment";
+import NcaafOdds from "../../models/documents/NCAAF/odds.model";
+import { isArray } from "lodash";
+import Bet from "../../models/documents/bet.model";
+import { betStatus } from "../../models/interfaces/bet.interface";
 
+async function declareResultMatch(
+  matchId: number,
+  winTeamId: number,
+  leagueType: string
+) {
+  await Bet.updateMany(
+    {
+      goalServeMatchId: Number(matchId),
+      status: betStatus.ACTIVE,
+      leagueType: leagueType,
+    },
+    {
+      status: betStatus.RESULT_DECLARED,
+      goalServeWinTeamId: winTeamId,
+      resultAt: new Date(),
+    }
+  );
+}
 async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
   const merged: { [key: number]: any } = {};
 
@@ -27,6 +53,43 @@ async function mergeByPlayerId(...arrays: any[][]): Promise<any[]> {
     ...values,
   }));
 }
+
+const getOdds = (nameKey: any, myArray: any) => {
+  for (let i = 0; i < myArray?.length; i++) {
+    if (myArray[i].value == nameKey) {
+      if (isArray(myArray[i]?.bookmaker) == true) {
+        return myArray[i].bookmaker[0];
+      } else {
+        return myArray[i].bookmaker;
+      }
+    }
+  }
+};
+const getTotal = (nameKey: any, myArray: any) => {
+  if (myArray?.length > 0) {
+    for (let i = 0; i < myArray?.length; i++) {
+      if (myArray[i]?.value == nameKey) {
+        if (isArray(myArray[i]?.bookmaker) == true) {
+          return myArray[i]?.bookmaker[0];
+        } else {
+          return myArray[i]?.bookmaker;
+        }
+      }
+    }
+  }
+};
+
+const getTotalValues = async (total: any) => {
+  if (total) {
+    if (isArray(total?.total)) {
+      return total?.total[0]?.name ? total?.total[0]?.name : "";
+    } else {
+      return total?.total?.name ? total?.total?.name : "";
+    }
+  } else {
+    return "";
+  }
+};
 export default class NCAAFDbCronServiceClass {
   public addNCAAFStandings = async () => {
     let data = {
@@ -105,7 +168,7 @@ export default class NCAAFDbCronServiceClass {
         }
       })
     );
-    }
+  };
   public updateNcaafMatch = async () => {
     try {
       const getMatch = await axiosGet(
@@ -214,8 +277,8 @@ export default class NCAAFDbCronServiceClass {
                           .number
                       : "",
                   };
-                    const matchData = new NcaafMatch(data);
-                    await matchData.save();
+                  const matchData = new NcaafMatch(data);
+                  await matchData.save();
                 }
               }
               continue;
@@ -322,8 +385,8 @@ export default class NCAAFDbCronServiceClass {
       console.log("error", error);
     }
   };
-  
-   public updateLiveMatch = async () => {
+
+  public updateLiveMatch = async () => {
     try {
       const getMatch: any = await axiosGet(
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
@@ -499,6 +562,38 @@ export default class NCAAFDbCronServiceClass {
               { $set: data },
               { new: true }
             );
+
+            if (
+              matchArray[i]?.status != "Not Started" &&
+              matchArray[i]?.status != "Final" &&
+              matchArray[i]?.status != "Postponed" &&
+              matchArray[i]?.status != "Canceled" &&
+              matchArray[i]?.status != "Suspended"
+            ) {
+              const goalServeMatchId = matchArray[i].contestID;
+              // expire not accepted bet requests
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              // active  CONFIRMED bet when match start
+              await Bet.updateMany(
+                {
+                  status: "CONFIRMED",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "ACTIVE",
+                }
+              );
+            }
           }
         }
       } else {
@@ -665,6 +760,81 @@ export default class NCAAFDbCronServiceClass {
               { $set: data },
               { new: true }
             );
+
+            if (
+              matchArray?.status != "Not Started" &&
+              matchArray?.status != "Final" &&
+              matchArray?.status != "Postponed" &&
+              matchArray?.status != "Canceled" &&
+              matchArray?.status != "Suspended"
+            ) {
+              const goalServeMatchId = matchArray.contestID;
+              // expire not accepted bet requests
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              // active  CONFIRMED bet when match start
+              await Bet.updateMany(
+                {
+                  status: "CONFIRMED",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "ACTIVE",
+                }
+              );
+            } else if (matchArray.status == "Final") {
+              const homeTeamTotalScore = parseFloat(
+                matchArray.hometeam.totalscore
+              );
+              const awayTeamTotalScore = parseFloat(
+                matchArray.awayteam.totalscore
+              );
+              const goalServeMatchId = matchArray.contestID;
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray.hometeam.id
+                  : matchArray.awayteam.id;
+              await declareResultMatch(
+                parseInt(goalServeMatchId),
+                parseInt(goalServeWinTeamId),
+                "NFL"
+              );
+            } else if (
+              matchArray.status == "Canceled" ||
+              matchArray.status == "Postponed" ||
+              matchArray.status == "Suspended"
+            ) {
+              const goalServeMatchId = matchArray.contestID;
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              await Bet.updateMany(
+                {
+                  status: { $in: ["CONFIRMED", "ACTIVE"] },
+                  goalServeMatchId: goalServeMatchId,
+                  leagueType: "NFL",
+                },
+                {
+                  status: "CANCELED",
+                }
+              );
+            }
           }
         }
       }
@@ -679,128 +849,192 @@ export default class NCAAFDbCronServiceClass {
       json: true,
     };
     if (teams.length > 0) {
-      for (let i = 0; i < teams.length; i++) {
-        const team = teams[i];
+      await Promise.all(
+        teams.map(async (item) => {
+          const team = item;
 
-        const roasterApi = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `football/${team.goalServeTeamId}_rosters`
-        );
+          const roasterApi = await goalserveApi(
+            "https://www.goalserve.com/getfeed",
+            data,
+            `football/${team.goalServeTeamId}_rosters`
+          );
 
-        let allRosterPlayers: Partial<INflPlayerModel>[] = [];
-        let position = roasterApi?.data?.team?.position;
-        for (let p = 0; p < position.length; p++) {
-          if (position[p]?.player) {
-            let players: any = position[p].player;
+          let allRosterPlayers: Partial<INflPlayerModel>[] = [];
+          let position = roasterApi?.data?.team?.position;
+          for (let p = 0; p < position.length; p++) {
+            if (position[p]?.player) {
+              let players: any = position[p].player;
 
-            if (players?.length) {
-              for (let j = 0; j < players.length; j++) {
-                const player: any = players[j];
-                const PlayerData = {
-                  height: player.height,
-                  class:  player.class,
-                  number: player.number,
-                  position: player.position,
-                  weight: player.weight,
-                  teamId: team.id,
-                  experience_years: player.experience_years,
+              if (players?.length) {
+                for (let j = 0; j < players.length; j++) {
+                  const player: any = players[j];
+                  const PlayerData = {
+                    height: player.height,
+                    class: player.class,
+                    number: player.number,
+                    position: player.position,
+                    weight: player.weight,
+                    teamId: team.id,
+                    experience_years: player.experience_years,
+                    goalServeTeamId: team.goalServeTeamId,
+                    goalServePlayerId: player.id,
+                  };
+                  allRosterPlayers.push(PlayerData);
+                }
+              } else {
+                allRosterPlayers.push({
+                  age: players.age,
+                  college: players.college,
+                  height: players.height,
+                  name: players.name,
+                  number: players.number,
+                  position: players.position,
+                  salarycap: players.salarycap,
+                  weight: players.weight,
+                  experience_years: players.experience_years,
                   goalServeTeamId: team.goalServeTeamId,
-                  goalServePlayerId: player.id,
-                };
-                allRosterPlayers.push(PlayerData);
+                  goalServePlayerId: players.id,
+                });
               }
-            } else {
-              allRosterPlayers.push({
-                age: players.age,
-                college: players.college,
-                height: players.height,
-                name: players.name,
-                number: players.number,
-                position: players.position,
-                salarycap: players.salarycap,
-                weight: players.weight,
-                experience_years: players.experience_years,
-                goalServeTeamId: team.goalServeTeamId,
-                goalServePlayerId: players.id,
-              });
             }
           }
-        }
-        const statsApi = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `football/${team.goalServeTeamId}_player_stats`
-        );
-        const allPassingPlayer = [];
-        const allRushingPlayer = [];
-        const allReceivingPlayer = [];
-        const allDefencePlayer = [];
-        const allScoringPlayer = [];
-        const allReturningPlayer = [];
-        const allPuntingPlayer = [];
-        const allKickingPlayer = [];
-        if (statsApi?.data?.statistic?.category.length) {
-          const categories = statsApi.data.statistic.category;
-          for (let i = 0; i < categories.length; i++) {
-            const category = categories[i];
-            const categoryName = categories[i].name;
-            if (category.player.length) {
-              const players = category.player;
-              for (let j = 0; j < players.length; j++) {
-                const player = players[j];
+          const statsApi = await goalserveApi(
+            "https://www.goalserve.com/getfeed",
+            data,
+            `football/${team.goalServeTeamId}_player_stats`
+          );
+          const allPassingPlayer = [];
+          const allRushingPlayer = [];
+          const allReceivingPlayer = [];
+          const allDefencePlayer = [];
+          const allScoringPlayer = [];
+          const allReturningPlayer = [];
+          const allPuntingPlayer = [];
+          const allKickingPlayer = [];
+          if (statsApi?.data?.statistic?.category.length) {
+            const categories = statsApi.data.statistic.category;
+            for (let i = 0; i < categories.length; i++) {
+              const category = categories[i];
+              const categoryName = categories[i].name;
+
+              if (category.player.length) {
+                const players = category.player;
+                for (let j = 0; j < players.length; j++) {
+                  const player = players[j];
+                  const playerData: any = {
+                    teamId: team.id,
+                    goalServeTeamId: team.goalServeTeamId,
+                    goalServePlayerId: player.id,
+                  };
+
+                  switch (categoryName) {
+                    case "Passing":
+                      playerData.name = player.name;
+                      playerData.isPassingPlayer = true;
+                      playerData.passing = { ...player };
+                      allPassingPlayer.push(playerData);
+                      break;
+                    case "Rushing":
+                      playerData.name = player.name;
+                      playerData.isRushingPlayer = true;
+                      playerData.rushing = { ...player };
+                      allRushingPlayer.push(playerData);
+                      break;
+                    case "Receiving":
+                      playerData.name = player.name;
+                      playerData.isReceivingPlayer = true;
+                      playerData.receiving = { ...player };
+                      allReceivingPlayer.push(playerData);
+                      break;
+                    case "Defense":
+                      playerData.name = player.name;
+                      playerData.isDefensePlayer = true;
+                      playerData.defence = { ...player };
+                      allDefencePlayer.push(playerData);
+                      break;
+                    case "Scoring":
+                      playerData.name = player.name;
+                      playerData.isScoringPlayer = true;
+                      playerData.scoring = { ...player };
+                      allScoringPlayer.push(playerData);
+                      break;
+                    case "Returning":
+                      playerData.name = player.name;
+                      playerData.isReturningPlayer = true;
+                      playerData.returning = { ...player };
+                      allReturningPlayer.push(playerData);
+                      break;
+                    case "Kicking":
+                      playerData.name = player.name;
+                      playerData.isKickingPlayer = true;
+                      playerData.kicking = { ...player };
+                      allKickingPlayer.push(playerData);
+                      break;
+                    case "Punting":
+                      playerData.name = player.name;
+                      playerData.isPuntingPlayer = true;
+                      playerData.punting = { ...player };
+                      allPuntingPlayer.push(playerData);
+                      break;
+
+                    default:
+                      break;
+                  }
+                }
+              } else {
+                const players = category.player;
                 const playerData: any = {
                   teamId: team.id,
                   goalServeTeamId: team.goalServeTeamId,
-                  goalServePlayerId: player.id,
+                  goalServePlayerId: players.id,
                 };
                 switch (categoryName) {
                   case "Passing":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isPassingPlayer = true;
-                    playerData.passing = { ...player };
+                    playerData.passing = { ...players };
                     allPassingPlayer.push(playerData);
                     break;
                   case "Rushing":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isRushingPlayer = true;
-                    playerData.rushing = { ...player };
+                    playerData.rushing = { ...players };
                     allRushingPlayer.push(playerData);
                     break;
                   case "Receiving":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isReceivingPlayer = true;
-                    playerData.receiving = { ...player };
+                    playerData.receiving = { ...players };
                     allReceivingPlayer.push(playerData);
                     break;
                   case "Defense":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isDefensePlayer = true;
-                    playerData.defence = { ...player };
+                    playerData.defence = { ...players };
                     allDefencePlayer.push(playerData);
                     break;
                   case "Scoring":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isScoringPlayer = true;
-                    playerData.scoring = { ...player };
+                    playerData.scoring = { ...players };
                     allScoringPlayer.push(playerData);
                     break;
                   case "Returning":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isReturningPlayer = true;
-                    playerData.returning = { ...player };
+                    playerData.returning = { ...players };
                     allReturningPlayer.push(playerData);
                     break;
                   case "Kicking":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isKickingPlayer = true;
-                    playerData.kicking = { ...player };
+                    playerData.kicking = { ...players };
                     allKickingPlayer.push(playerData);
                     break;
                   case "Punting":
-                    playerData.name = player.name;
+                    playerData.name = players.name;
                     playerData.isPuntingPlayer = true;
-                    playerData.punting = { ...player };
+                    playerData.punting = { ...players };
                     allPuntingPlayer.push(playerData);
                     break;
 
@@ -810,30 +1044,504 @@ export default class NCAAFDbCronServiceClass {
               }
             }
           }
-        }
-        const mergedArray: INflPlayerModel[] | null = await mergeByPlayerId(
-          allRosterPlayers,
-          allPassingPlayer,
-          allRushingPlayer,
-          allPuntingPlayer,
-          allKickingPlayer,
-          allReturningPlayer,
-          allScoringPlayer,
-          allDefencePlayer,
-          allReceivingPlayer
-        );
-        for (let k = 0; k < mergedArray?.length; k++) {
-          const player = mergedArray[k];
-          await PlayersNCAAF.updateOne(
+          const mergedArray: INflPlayerModel[] | null = await mergeByPlayerId(
+            allRosterPlayers,
+            allPassingPlayer,
+            allRushingPlayer,
+            allPuntingPlayer,
+            allKickingPlayer,
+            allReturningPlayer,
+            allScoringPlayer,
+            allDefencePlayer,
+            allReceivingPlayer
+          );
+          for (let k = 0; k < mergedArray?.length; k++) {
+            const player = mergedArray[k];
+
+            const playerPlayer = await PlayersNCAAF.updateOne(
+              {
+                goalServeTeamId: player.goalServeTeamId,
+                goalServePlayerId: player.goalServePlayerId,
+              },
+              { $set: player },
+              { upsert: true }
+            );
+          }
+        })
+      );
+    }
+  };
+  public addTeamStats = async () => {
+    const teams = await TeamNCAAF.find();
+    let data = {
+      json: true,
+    };
+    if (teams.length > 0) {
+      await Promise.all(
+        teams.map(async (item) => {
+          const team = item;
+          const teamstats = await goalserveApi(
+            "https://www.goalserve.com/getfeed",
+            data,
+            `football/${team.goalServeTeamId}_stats`
+          );
+          let stats: Partial<INFLStatsTeamModel> = {};
+          let category = teamstats?.data?.statistic?.category;
+          for (let j = 0; j < category.length; j++) {
+            let categoryName = category[j].name;
+            switch (categoryName) {
+              case "Passing":
+                stats.passingOpponent = category[j].opponents;
+                stats.passingTeam = category[j].team;
+                break;
+              case "Rushing":
+                stats.rushingOpponent = category[j].opponents;
+                stats.rushingTeam = category[j].team;
+                break;
+              case "Downs":
+                stats.downsOpponent = category[j].opponents;
+                stats.downsTeam = category[j].team;
+                break;
+              case "Returning":
+                stats.returningOpponent = category[j].opponents;
+                stats.returningTeam = category[j].team;
+                break;
+              case "Kicking":
+                stats.kickingOpponent = category[j].opponents;
+                stats.kickingTeam = category[j].team;
+
+                break;
+
+              default:
+                break;
+            }
+          }
+          await StatsTeamNCAAF.updateOne(
             {
-              goalServeTeamId: player.goalServeTeamId,
-              goalServePlayerId: player.goalServePlayerId,
+              teamId: team.id,
+              goalServeTeamId: teamstats?.data?.statistic.id,
             },
-            { $set: player },
+            { $set: stats },
+            { upsert: true }
+          );
+        })
+      );
+    }
+  };
+
+  public addMatchTeamStats = async () => {
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
+        { json: true }
+      );
+
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.scores?.category?.id,
+      });
+
+      if (matchArray?.length > 0 && matchArray) {
+        for (let i = 0; i < matchArray?.length; i++) {
+          const data = {
+            attendance: matchArray[i]?.attendance,
+            goalServeHomeTeamId: matchArray[i]?.hometeam.id,
+            goalServeAwayTeamId: matchArray[i]?.awayteam.id,
+            goalServeMatchId: matchArray[i]?.contestID,
+            date: matchArray[i]?.date,
+            dateTimeUtc: matchArray[i]?.datetime_utc,
+            formattedDate: matchArray[i]?.formatted_date,
+            status: matchArray[i]?.status,
+            time: matchArray[i]?.time,
+            timezone: matchArray[i]?.timezone,
+            team_stats: matchArray[i].team_stats,
+          };
+          await NCAAFMatchStatsTeam.updateOne(
+            { goalServeMatchId: matchArray[i]?.contestID },
+            { $set: data },
+            { upsert: true }
+          );
+        }
+      } else {
+        if (matchArray) {
+          const data = {
+            goalServeHomeTeamId: matchArray?.hometeam.id,
+            goalServeAwayTeamId: matchArray?.awayteam.id,
+            date: matchArray?.date,
+            goalServeMatchId: matchArray?.contestID,
+            dateTimeUtc: matchArray?.datetime_utc,
+            formattedDate: matchArray?.formatted_date,
+            status: matchArray?.status,
+            time: matchArray?.time,
+            timezone: matchArray?.timezone,
+            team_stats: matchArray?.team_stats,
+          };
+          await NCAAFMatchStatsTeam.updateOne(
+            { goalServeMatchId: matchArray?.contestID },
+            { $set: data },
             { upsert: true }
           );
         }
       }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  public addOrUpdateDriveInLive = async () => {
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-playbyplay-scores`,
+        { json: true }
+      );
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.scores?.category?.id,
+      });
+      if (matchArray?.length > 0 && matchArray) {
+        for (let i = 0; i < matchArray?.length; i++) {
+          const match: INcaafMatchModel | null = await NcaafMatch.findOne({
+            goalServeMatchId: matchArray[i]?.contestID,
+          });
+          if (match) {
+            const data: any = {
+              drive: matchArray[i].playbyplay.drive[0].play[0].down
+                ? matchArray[i].playbyplay.drive[0].play[0].down
+                : "",
+            };
+            const dataUpdate = await NcaafMatch.findOneAndUpdate(
+              { goalServeMatchId: matchArray[i]?.contestID },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      } else {
+        if (matchArray) {
+          const match: INcaafMatchModel | null = await NcaafMatch.findOne({
+            goalServeMatchId: matchArray?.contestID,
+          });
+          if (match) {
+            const data: any = {
+              drive: matchArray.playbyplay.drive[0].play[0].down
+                ? matchArray.playbyplay.drive[0].play[0].down
+                : "",
+            };
+            const dataUpdate = await NcaafMatch.findOneAndUpdate(
+              { goalServeMatchId: matchArray?.contestID },
+              { $set: data },
+              { new: true }
+            );
+          }
+        }
+      }
+    } catch (error: any) {}
+  };
+
+  public createOdds = async () => {
+    let subDate = moment()
+      .startOf("day")
+      .subtract(24, "hours")
+      .utc()
+      .toISOString();
+    let addDate = moment().add(30, "days").utc().toISOString();
+    let day1 = moment(subDate).format("D");
+    let month1 = moment(subDate).format("MM");
+    let year1 = moment(subDate).format("YYYY");
+    let date1 = `${day1}.${month1}.${year1}`;
+
+    let day2 = moment(addDate).format("D");
+    let month2 = moment(addDate).format("MM");
+    let year2 = moment(addDate).format("YYYY");
+    let date2 = `${day2}.${month2}.${year2}`;
+    try {
+      let data = {
+        json: true,
+        showodds: "1",
+        bm: "451,455,",
+        date1: date1,
+        date2: date2,
+      };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "football/fbs-shedule"
+      );
+      const matchArray = [];
+      await matchArray.push(getMatch?.data?.shedules?.tournament);
+      const league: ILeagueModel | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.shedules?.id,
+      });
+      for (let i = 0; i < matchArray?.length; i++) {
+        for (let j = 0; j < matchArray[i]?.week?.length; j++) {
+          if (matchArray[i]?.week[j]?.matches?.length > 0) {
+            for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
+              for (
+                let l = 0;
+                l < matchArray[i]?.week[j].matches[k].match.length;
+                l++
+              ) {
+                const findOdd = await NcaafOdds.find({
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                });
+                const findMatch = await NcaafMatch.findOne({
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                });
+                const getMoneyLine: any = await getOdds(
+                  "Home/Away",
+                  matchArray[i]?.week[j]?.matches[k]?.match[l]?.odds?.type
+                );
+                const awayTeamMoneyline = getMoneyLine
+                  ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
+                  : undefined;
+                const homeTeamMoneyline = getMoneyLine
+                  ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
+                  : undefined;
+                // getSpread
+                const getSpread = await getOdds(
+                  "Handicap",
+                  matchArray[i]?.week[j]?.matches[k]?.match[l]?.odds?.type
+                );
+
+                const getAwayTeamRunLine = (await getSpread)
+                  ? getSpread?.handicap?.odd?.find(
+                      (item: any) => item?.name === "2"
+                    )
+                  : {};
+                const getHomeTeamRunLine = (await getSpread)
+                  ? getSpread?.handicap?.odd?.find(
+                      (item: any) => item?.name === "1"
+                    )
+                  : {};
+                const total = await getTotal(
+                  "Over/Under",
+                  matchArray[i]?.week[j]?.matches[k]?.match[l]?.odds?.type
+                );
+                const totalValues = await getTotalValues(total);
+
+                const data = {
+                  status: matchArray[i]?.week[j]?.matches[k]?.match[l]?.status,
+                  goalServerLeagueId: league?.goalServeLeagueId,
+                  goalServeMatchId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                  goalServeHomeTeamId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam?.id,
+                  goalServeAwayTeamId:
+                    matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam?.id,
+                  // homeTeamSpread: homeTeamSpread,
+                  ...(getHomeTeamRunLine && {
+                    homeTeamSpread: getHomeTeamRunLine,
+                  }),
+                  ...(getHomeTeamRunLine?.us && {
+                    homeTeamSpreadUs: getHomeTeamRunLine?.us,
+                  }),
+                  // homeTeamTotal: totalValues,
+                  ...(totalValues && { homeTeamTotal: totalValues }),
+                  // awayTeamSpread: awayTeamSpread,
+                  ...(getAwayTeamRunLine && {
+                    awayTeamSpread: getAwayTeamRunLine,
+                  }),
+                  ...(getAwayTeamRunLine?.us && {
+                    awayTeamSpreadUs: getAwayTeamRunLine?.us,
+                  }),
+                  // awayTeamTotal: totalValues,
+                  ...(totalValues && { awayTeamTotal: totalValues }),
+                  ...(awayTeamMoneyline && {
+                    awayTeamMoneyline: awayTeamMoneyline,
+                  }),
+                  ...(homeTeamMoneyline && {
+                    homeTeamMoneyline: homeTeamMoneyline,
+                  }),
+                };
+                if (findOdd?.length == 0) {
+                  const oddsData = new NcaafOdds(data);
+                  const savedOddsData = await oddsData.save();
+                } else if (findOdd?.length > 0) {
+                  if (findMatch?.status == "Not Started") {
+                    data.status = findMatch?.status;
+                    await NcaafOdds.findOneAndUpdate(
+                      {
+                        goalServeMatchId:
+                          matchArray[i]?.week[j]?.matches[k]?.match[l]
+                            ?.contestID,
+                      },
+                      { $set: data },
+                      { new: true }
+                    );
+                  } else if (
+                    findMatch?.status != "Not Started" &&
+                    findMatch?.status != "Final" &&
+                    findMatch?.status != "Postponed" &&
+                    findMatch?.status != "Canceled" &&
+                    findMatch?.status != "Suspended"
+                  ) {
+                    data.status = findMatch?.status;
+                    await NcaafOdds.updateOne(
+                      {
+                        goalServeMatchId:
+                          matchArray[i]?.week[j]?.matches[k]?.match[l]
+                            ?.contestID,
+                        status: findMatch?.status,
+                      },
+                      { $set: data },
+                      { upsert: true }
+                    );
+                  } else {
+                    const findOddWithStatus = await NcaafOdds.find({
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                      status: findMatch?.status,
+                    });
+                    if (findOddWithStatus.length > 0) {
+                      return;
+                    } else {
+                      data.status = findMatch?.status;
+                      const oddsData = new NcaafOdds(data);
+                      const savedOddsData = await oddsData.save();
+                    }
+                  }
+                }
+              }
+              continue;
+              // return;
+            }
+            continue;
+          } else {
+            for (
+              let m = 0;
+              m < matchArray[i]?.week[j].matches?.match.length;
+              m++
+            ) {
+              const findOdd = await NcaafOdds.find({
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+              });
+              const findMatch = await NcaafMatch.findOne({
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+              });
+              const getMoneyLine: any = await getOdds(
+                "Home/Away",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const awayTeamMoneyline = getMoneyLine
+                ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
+                : undefined;
+              const homeTeamMoneyline = getMoneyLine
+                ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
+                : undefined;
+              // getSpread
+              const getSpread = await getOdds(
+                "Handicap",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const getAwayTeamRunLine = (await getSpread)
+                ? getSpread?.handicap?.odd?.find(
+                    (item: any) => item?.name === "2"
+                  )
+                : {};
+              const getHomeTeamRunLine = (await getSpread)
+                ? getSpread?.handicap?.odd?.find(
+                    (item: any) => item?.name === "1"
+                  )
+                : {};
+              const total = await getTotal(
+                "Over/Under",
+                matchArray[i]?.week[j]?.matches?.match[m]?.odds?.type
+              );
+              const totalValues = await getTotalValues(total);
+              const data = {
+                status: matchArray[i]?.week[j]?.matches?.match[m]?.status,
+                goalServerLeagueId: league?.goalServeLeagueId,
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                goalServeHomeTeamId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.hometeam?.id,
+                goalServeAwayTeamId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.awayteam?.id,
+                // homeTeamSpread: homeTeamSpread,
+                ...(getHomeTeamRunLine && {
+                  homeTeamSpread: getHomeTeamRunLine,
+                }),
+                ...(getHomeTeamRunLine?.us && {
+                  homeTeamSpreadUs: getHomeTeamRunLine?.us,
+                }),
+                // homeTeamTotal: totalValues,
+                ...(totalValues && { homeTeamTotal: totalValues }),
+                // awayTeamSpread: awayTeamSpread,
+                ...(getAwayTeamRunLine && {
+                  awayTeamSpread: getAwayTeamRunLine,
+                }),
+                ...(getAwayTeamRunLine?.us && {
+                  awayTeamSpreadUs: getAwayTeamRunLine?.us,
+                }),
+                // awayTeamTotal: totalValues,
+                ...(totalValues && { awayTeamTotal: totalValues }),
+                ...(awayTeamMoneyline && {
+                  awayTeamMoneyline: awayTeamMoneyline,
+                }),
+                ...(homeTeamMoneyline && {
+                  homeTeamMoneyline: homeTeamMoneyline,
+                }),
+              };
+              if (findOdd?.length == 0) {
+                const oddsData = new NcaafOdds(data);
+                const savedOddsData = await oddsData.save();
+              } else if (findOdd?.length > 0) {
+                if (findMatch?.status == "Not Started") {
+                  data.status = findMatch?.status;
+                  await NcaafOdds.findOneAndUpdate(
+                    {
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                    },
+                    { $set: data },
+                    { new: true }
+                  );
+                } else if (
+                  findMatch?.status != "Not Started" &&
+                  findMatch?.status != "Final" &&
+                  findMatch?.status != "Postponed" &&
+                  findMatch?.status != "Canceled" &&
+                  findMatch?.status != "Suspended"
+                ) {
+                  data.status = findMatch?.status;
+                  await NcaafOdds.updateOne(
+                    {
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                      status: findMatch?.status,
+                    },
+                    { $set: data },
+                    { upsert: true }
+                  );
+                } else {
+                  const findOddWithStatus = await NcaafOdds.find({
+                    goalServeMatchId:
+                      matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                    status: findMatch?.status,
+                  });
+                  if (findOddWithStatus.length > 0) {
+                    return;
+                  } else {
+                    data.status = findMatch?.status;
+                    // const oddsData = new NcaafOdds(data);
+                    // const savedOddsData = await oddsData.save();
+                  }
+                }
+              }
+            }
+            continue;
+          }
+        }
+        continue;
+
+        return true;
+      }
+    } catch (error: any) {
+      console.log("error", error);
     }
   };
 }

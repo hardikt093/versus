@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import IStatsTeamModel from "../../interfaces/teamStats.interface";
+
 
 const matchStatsTeamSchema = new Schema(
   {
@@ -146,6 +146,6 @@ const matchStatsTeamSchema = new Schema(
     timestamps: true,
   }
 );
-const NFLMatchStatsTeam = model("NflMatchStatsTeam", matchStatsTeamSchema);
+const NCAAFMatchStatsTeam = model("NCAAFMatchStatsTeam", matchStatsTeamSchema);
 
-export default NFLMatchStatsTeam;
+export default NCAAFMatchStatsTeam;
