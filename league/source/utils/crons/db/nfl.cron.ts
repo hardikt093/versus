@@ -34,7 +34,7 @@ const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
 
 let isupdatePlayersNflRunning: boolean = false;
 const updatePlayersNfl = cron.schedule("*/60 * * * * *", async () => {
-  console.log("updatePlayersnfl Skip");
+  // console.log("updatePlayersnfl Skip");
   if (isupdatePlayersNflRunning) {
     return;
   }
@@ -49,7 +49,7 @@ const updatePlayersNfl = cron.schedule("*/60 * * * * *", async () => {
 });
 let isupdateTeamStatsNflRunning: boolean = false;
 const updateTeamStatsNfl = cron.schedule("0 0 */1 * * *", async () => {
-  console.log("isupdateTeamStatsNflRunning Skip");
+  // console.log("isupdateTeamStatsNflRunning Skip");
   if (isupdateTeamStatsNflRunning) {
     return;
   }
@@ -65,7 +65,7 @@ const updateTeamStatsNfl = cron.schedule("0 0 */1 * * *", async () => {
 
 let isUpdateLiveMatch: boolean = false;
 const updateLiveMatch = cron.schedule("*/5 * * * * *", async () => {
-  console.log("isupdateFinalMatchNfl Skip");
+  // console.log("isupdateFinalMatchNfl Skip");
   if (isUpdateLiveMatch) {
     return;
   }
@@ -97,7 +97,7 @@ const updateInjuredPlayerNFL = cron.schedule("0 0 */1 * * *", async () => {
 
 let isOddAdded: boolean = false;
 const oddAdded = cron.schedule("*/10 * * * * *", async () => {
-  console.log("isOddAdded Skip");
+  // console.log("isOddAdded Skip");
   if (isOddAdded) {
     return;
   }

@@ -16,8 +16,8 @@ export default class BetDbCronServiceClass {
       for (let i = 0; i < betData.length; i++) {
         const bet = betData[i];
 
-        if (bet?.oddType == "Total") {
-          if (bet?.leagueType == "MLB") {
+        if (bet?.oddType === "Total") {
+          if (bet?.leagueType === "MLB") {
             const getMatch = await Match.findOne({
               goalServeMatchId: bet.goalServeMatchId,
             });
