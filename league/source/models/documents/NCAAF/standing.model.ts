@@ -16,6 +16,20 @@ var standingSchema = new Schema({
   overall_won: String,
   position: String,
   streak: String,
+  ap_ranking: {
+    name: String,
+    points: String,
+    position: String,
+    prev_rank: String,
+    record: String,
+  },
+  coaches_ranking: {
+    name: String,
+    points: String,
+    position: String,
+    prev_rank: String,
+    record: String,
+  },
 });
 const NCAAFStandings = model("NcaafStanding", standingSchema);
 

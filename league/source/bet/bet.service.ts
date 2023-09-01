@@ -87,7 +87,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     requestUserId: loggedInUserId,
     opponentUserId: data.opponentUserId,
     requestUserBetAmount: parseFloat(data.amount.toFixed(2)),
-    requestUserFairOdds: data.requestUserFairOdds,
+    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
   if (betRequestUserDataFound && isConfirmed === false) {
@@ -101,7 +101,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     opponentUserId: loggedInUserId,
     requestUserId: data.opponentUserId,
     opponentUserBetAmount: parseFloat(data.amount.toFixed(2)),
-    opponentUserFairOdds: data.requestUserFairOdds,
+    opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
 

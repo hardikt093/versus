@@ -4,19 +4,19 @@ import NcaafService from "../../../goalserve/NCAAF/db.cron.service";
 const ncaafService = new NcaafService();
 
 let isupdateStandingRecordRunning: boolean = false;
-// const updateStandingRecord = cron.schedule("0 0 */1 * * *", async () => {
-//   if (isupdateStandingRecordRunning) {
-//     return;
-//   }
-//   isupdateStandingRecordRunning = true;
-//   try {
-//     await ncaafService.addNCAAFStandings();
-//   } catch (error) {
-//   } finally {
-//     isupdateStandingRecordRunning = false;
-//   }
-// }
-// )
+const updateStandingRecord = cron.schedule("*/5 * * * * *", async () => {
+  if (isupdateStandingRecordRunning) {
+    return;
+  }
+  isupdateStandingRecordRunning = true;
+  try {
+    await ncaafService.addNCAAFStandings();
+  } catch (error) {
+  } finally {
+    isupdateStandingRecordRunning = false;
+  }
+}
+)
 let isUpdateNcaafUpcommingMatch: boolean = false;
 
 const updateNflUpcommingMatch = cron.schedule("0 0 */1 * * *", async () => {
@@ -124,4 +124,5 @@ export default {
   updateLiveMatch,
   updateMatchStatsNcaaf,
   oddAdded,
+  updateStandingRecord
 };

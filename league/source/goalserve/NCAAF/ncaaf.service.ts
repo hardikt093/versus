@@ -5,6 +5,7 @@ import TeamImageNCAAF from "../../models/documents/NCAAF/teamImage.model";
 import League from "../../models/documents/league.model";
 import ILeagueModel from "../../models/interfaces/league.interface";
 import socketService from "../../services/socket.service";
+import NCAAFStandings from "../../models/documents/NCAAF/standing.model";
 var csv = require("csvtojson");
 
 const addTeam = async (data: any) => {
@@ -2930,7 +2931,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
       },
       {
         $unwind: "$matchStatsTeams",
-      },  
+      },
       {
         $lookup: {
           from: "ncaafodds",
@@ -5060,7 +5061,7 @@ const ncaafLive = async (goalServeMatchId: any) => {
           weekName: "$weekName",
           seasonName: "$seasonName",
           status: "$status",
-          timer:true,
+          timer: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
@@ -5070,7 +5071,7 @@ const ncaafLive = async (goalServeMatchId: any) => {
             $arrayElemAt: ["$teams.homeTeam.locality", 0],
           },
           awayTeam: {
-            abbreviation:{
+            abbreviation: {
               $arrayElemAt: ["$teams.awayTeam.locality", 0],
             },
             awayTeamTotalScore: "$awayTeamTotalScore",
@@ -5083,7 +5084,7 @@ const ncaafLive = async (goalServeMatchId: any) => {
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
           },
           homeTeam: {
-            abbreviation:{
+            abbreviation: {
               $arrayElemAt: ["$teams.homeTeam.locality", 0],
             },
             homeTeamTotalScore: "$homeTeamTotalScore",
@@ -5520,6 +5521,168 @@ const ncaafLive = async (goalServeMatchId: any) => {
     return getMatch[0];
   } catch (error) {}
 };
+const getStandings = async () => {
+  const getStandingData = await NCAAFStandings.aggregate([
+    {
+      $lookup: {
+        from: "ncaafteamimages",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "images",
+      },
+    },
+    {
+      $unwind: {
+        path: "$images",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: {
+          leagueType: "$leagueType",
+          division: "$division",
+        },
+        teams: {
+          $push: {
+            id: {
+              $toString: "$goalServeTeamId",
+            },
+            images: "$images.image",
+            conference_lost: "$conference_lost",
+            conference_points_against: "$conference_points_against",
+            conference_points_for: "$conference_points_for",
+            conference_won: "$conference_won",
+            division: "$division",
+            goalServeLeagueId: "$goalServeLeagueId",
+            leagueType: "$leagueType",
+            name: "$name",
+            overall_lost: "$overall_lost",
+            overall_points_against: "$overall_points_against",
+            overall_points_for: "$overall_points_for",
+            overall_won: "$overall_won",
+            position: "$position",
+            streak: "$streak",
+          },
+        },
+        ranking: {
+          $push: {
+            ap_ranking: "$ap_ranking",
+            coaches_ranking: "$coaches_ranking",
+            images: "$images.image",
+            name: "$name",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        conference: {
+          name: {
+            $cond: {
+              if: {
+                $regexMatch: {
+                  input: {
+                    $toLower: "$_id.division",
+                  },
+                  regex: "main",
+                  options: "i", // Case-insensitive
+                },
+              },
+
+              then: "$_id.leagueType",
+              else: {
+                $concat: ["$_id.leagueType", " ", "$_id.division"],
+              },
+            },
+          },
+          teams: {
+            $map: {
+              input: "$teams",
+              as: "team",
+              in: {
+                name: "$$team.name",
+                teamImage: "$$team.images",
+                conference: {
+                  lost: "$$team.conference_lost",
+                  points_against: "$$team.conference_points_against",
+                  points_for: "$$team.conference_points_for",
+                  won: "$$team.conference_won",
+                },
+                overall: {
+                  lost: "$$team.overall_lost",
+                  points_against: "$$team.overall_points_against",
+                  points_for: "$$team.overall_points_for",
+                  won: "$$team.overall_won",
+                  streak: "$$team.streak",
+                },
+              },
+            },
+          },
+        },
+        ranking: 1,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        conference: {
+          $push: "$conference",
+        },
+        ranking: {
+          $push: "$ranking",
+        },
+      },
+    },
+  ]);
+  let rankingData = getStandingData[0].ranking.reduce(
+    (result: any, currentArray: any, index: any) => {
+      const object = currentArray;
+
+      return result.concat(object);
+    },
+    []
+  );
+  let ranking: any = {};
+  ranking.apName = "AP Top 256";
+  ranking.coachesName = "Coaches Top 256";
+  ranking.coachesTeams = rankingData
+    .filter((item: any) => item && item.coaches_ranking)
+    .map((item: any) => ({
+      name: item.coaches_ranking.name,
+      points: item.coaches_ranking.points,
+      position: item.coaches_ranking.position,
+      prev_rank: item.coaches_ranking.prev_rank,
+      record: item.coaches_ranking.record,
+      images: item.images,
+    }));
+  ranking.apTeams = rankingData
+    .filter((item: any) => item && item.ap_ranking)
+    .map((item: any) => {
+      return {
+        name: item.ap_ranking.name,
+        points: item.ap_ranking.points,
+        position: item.ap_ranking.position,
+        prev_rank: item.ap_ranking.prev_rank,
+        record: item.ap_ranking.record,
+        images: item.images,
+      };
+    });
+    ranking.coachesTeams.sort((a:any, b:any) => {
+      const positionA = parseInt(a.position) || 0;
+      const positionB = parseInt(b.position) || 0;
+      return positionA - positionB;
+    });
+    ranking.apTeams.sort((a:any, b:any) => {
+      const positionA = parseInt(a.position) || 0;
+      const positionB = parseInt(b.position) || 0;
+      return positionA - positionB;
+    });
+    
+  return { conference: getStandingData[0].conference, ranking: ranking };
+};
+
 export default {
   addTeam,
   getCalendar,
@@ -5529,5 +5692,6 @@ export default {
   scoreWithWeek,
   ncaafUpcomming,
   ncaafFinal,
-  ncaafLive
+  ncaafLive,
+  getStandings,
 };

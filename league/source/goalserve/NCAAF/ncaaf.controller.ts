@@ -67,6 +67,15 @@ const ncaafLive = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const getNcaafStandings = async (req: Request, res: Response) => {
+  try {
+    const data = await ncaafService.getStandings();
+    createResponse(res, httpStatus.OK, "", data);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   addTeamNCAAF,
   getCalendar,
@@ -75,4 +84,5 @@ export default {
   ncaafUpcomming,
   ncaafFinal,
   ncaafLive,
+  getNcaafStandings,
 };
