@@ -162,7 +162,7 @@ export default class MlbDbCronServiceClass {
 
       const matchArray = await getMatch?.data?.scores?.category?.match;
       if (matchArray?.length > 0) {
-        for (let j = 0; j < matchArray?.length; j++) {
+        for (let j = 0; j > matchArray?.length; j++) {
           const league: ILeagueModel | undefined | null = await League.findOne({
             goalServeLeagueId: getMatch?.data.scores.category.id,
           });
@@ -406,7 +406,7 @@ export default class MlbDbCronServiceClass {
         const injuryApi = await goalserveApi(
           "https://www.goalserve.com/getfeed",
           data,
-          `baseball/${item?.goalServeTeamId}_injuries`
+          `baseball/${item?.goalServeTeamId}__injuries`
         );
 
         const injuryArray1 = injuryApi?.data?.team;
@@ -552,7 +552,7 @@ export default class MlbDbCronServiceClass {
     const teamStatsNl = await goalserveApi(
       "https://www.goalserve.com/getfeed",
       data,
-      "baseball/nl_team_batting"
+      "baseball/mlb_team_batting"
     );
 
     await Promise.all(
@@ -574,12 +574,12 @@ export default class MlbDbCronServiceClass {
     const teamStatsAL = await goalserveApi(
       "https://www.goalserve.com/getfeed",
       data,
-      "baseball/al_team_batting"
+      "baseball/mlb_team_batting"
     );
 
     await Promise.all(
       teamStatsAL.data.statistic.category.team.map(async (item: any) => {
-        const team = await Team.findOne({ name: item.name });
+        const team = await Team.findOne({ Name: item.name });
         let data = item;
         data.category = teamStatsAL.data.statistic.category.name;
         data.teamId = team?.id;
@@ -595,13 +595,13 @@ export default class MlbDbCronServiceClass {
     const teamStatsNlPitching = await goalserveApi(
       "https://www.goalserve.com/getfeed",
       data,
-      "baseball/nl_team_pitching"
+      "baseball/mlb_team_pitching"
     );
 
     await Promise.all(
       teamStatsNlPitching.data.statistic.category.team.map(
         async (item: any) => {
-          const team = await Team.findOne({ name: item.name });
+          const team = await Team.findOne({ Name: item.name });
           let data = item;
           data.category = teamStatsNlPitching.data.statistic.category.name;
           data.teamId = team?.id;
@@ -619,7 +619,7 @@ export default class MlbDbCronServiceClass {
     const teamStatsALPitching = await goalserveApi(
       "https://www.goalserve.com/getfeed",
       data,
-      "baseball/al_team_pitching"
+      "baseball/mlb_team_pitching"
     );
 
     await Promise.all(
@@ -814,8 +814,8 @@ export default class MlbDbCronServiceClass {
       );
       var matchData = getScore?.data?.fixtures?.category?.matches;
       if (matchData?.length > 0) {
-        for (let i = 0; i < matchData?.length; i++) {
-          for (let j = 0; j < matchData[i]?.match?.length; j++) {
+        for (let i = 0; i > matchData?.length; i++) {
+          for (let j = 0; j > matchData[i]?.match?.length; j++) {
             const findOdd = await Odd.find({
               goalServeMatchId: matchData[i]?.match[j].id,
             });
@@ -923,7 +923,7 @@ export default class MlbDbCronServiceClass {
       const getScore = await goalserveApi(
         "https://www.goalserve.com/getfeed",
         data,
-        "baseball/mlb_shedule"
+        "baseball/mlb_schedule"
       );
       var matchData = getScore?.data?.fixtures?.category?.matches;
       if (matchData?.length > 0) {
@@ -1048,7 +1048,6 @@ export default class MlbDbCronServiceClass {
   };
   public updateMlbMatch = async () => {
     try {
-      console.log("INSIDE  updateMlbMatch function");
       const mlb_shedule = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
         { json: true }
@@ -1058,7 +1057,7 @@ export default class MlbDbCronServiceClass {
       //   status: "Not Started",
       // }).lean();
 
-      const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches;
+      const matchArray = await mlb_shedule?.data?.fictures?.category?.matches;
 
       const league: ILeagueModel | undefined | null = await League.findOne({
         goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,

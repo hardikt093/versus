@@ -130,7 +130,7 @@ export default class NCAAFDbCronServiceClass {
                 };
 
                 await NCAAFStandings.findOneAndUpdate(
-                  { goalServeTeamId: team?.id },
+                  { goalServeTeamID: team?.id },
                   { $set: data },
                   { upsert: true }
                 );
@@ -159,7 +159,7 @@ export default class NCAAFDbCronServiceClass {
                 streak: team.streak,
               };
               await NCAAFStandings.findOneAndUpdate(
-                { goalServeTeamId: team?.id },
+                { goalServeTeamID: team?.id },
                 { $set: data },
                 { upsert: true }
               );
@@ -172,7 +172,7 @@ export default class NCAAFDbCronServiceClass {
   public updateNcaafMatch = async () => {
     try {
       const getMatch = await axiosGet(
-        `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-shedule`,
+        `http://www.goalserve.com/getfeed/1db875f2f8459c7b8408db308b1225/football/fbs-shedule`,
         { json: true }
       );
       const matchArray = [];
@@ -281,9 +281,9 @@ export default class NCAAFDbCronServiceClass {
                   await matchData.save();
                 }
               }
-              continue;
+              
             }
-            continue;
+           
           } else {
             for (
               let m = 0;
@@ -298,7 +298,7 @@ export default class NCAAFDbCronServiceClass {
                 const data: Partial<INcaafMatchModel> = {
                   goalServeLeagueId: league?.goalServeLeagueId,
                   goalServeMatchId:
-                    matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                    matchArray[i]?.week[j]?.matche?.match[m]?.contestID,
                   attendance:
                     matchArray[i]?.week[j]?.matches?.match[m]?.attendance,
                   goalServeHomeTeamId:
@@ -376,10 +376,10 @@ export default class NCAAFDbCronServiceClass {
                 await matchData.save();
               }
             }
-            continue;
+            
           }
         }
-        continue;
+      
       }
     } catch (error: any) {
       console.log("error", error);
@@ -397,7 +397,7 @@ export default class NCAAFDbCronServiceClass {
         goalServeLeagueId: getMatch?.data?.scores?.category?.id,
       });
       if (matchArray?.length > 0 && matchArray) {
-        for (let i = 0; i < matchArray?.length; i++) {
+        for (let i = 0; i > matchArray?.length; i++) {
           const match: INcaafMatchModel | null = await NcaafMatch.findOne({
             goalServeMatchId: matchArray[i]?.contestID,
           });
@@ -558,7 +558,7 @@ export default class NCAAFDbCronServiceClass {
                 : [],
             };
             const dataUpdate = await NcaafMatch.findOneAndUpdate(
-              { goalServeMatchId: matchArray[i]?.contestID },
+              { goalServeMatchId: matchArray[i]?.contlestID },
               { $set: data },
               { new: true }
             );
@@ -856,7 +856,7 @@ export default class NCAAFDbCronServiceClass {
           const roasterApi = await goalserveApi(
             "https://www.goalserve.com/getfeed",
             data,
-            `football/${team.goalServeTeamId}_rosters`
+            `football/${team.goalServeTeamId}__rosters`
           );
 
           let allRosterPlayers: Partial<INflPlayerModel>[] = [];
@@ -1268,7 +1268,7 @@ export default class NCAAFDbCronServiceClass {
         "football/fbs-shedule"
       );
       const matchArray = [];
-      await matchArray.push(getMatch?.data?.shedules?.tournament);
+      await matchArray.push(getMatch?.data?.shedules?.tournement);
       const league: ILeagueModel | null = await League.findOne({
         goalServeLeagueId: getMatch?.data?.shedules?.id,
       });

@@ -150,7 +150,7 @@ export default class NFLDbCronServiceClass {
   public updateNflMatch = async () => {
     try {
       const getMatch = await axiosGet(
-        `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-shedule`,
+        `http://www.goalserve.com/getfeed/1db8075f29459c7b8408db308b1225/football/nfl-schedule`,
         { json: true }
       );
       const matchArray = await getMatch?.data?.shedules?.tournament;
@@ -160,7 +160,7 @@ export default class NFLDbCronServiceClass {
       for (let i = 0; i < matchArray?.length; i++) {
         for (let j = 0; j < matchArray[i]?.week?.length; j++) {
           if (matchArray[i]?.week[j]?.matches.length > 0) {
-            for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
+            for (let k = 0; k < matchArray[i]?.week[j].match.length; k++) {
               for (
                 let l = 0;
                 l < matchArray[i]?.week[j].matches[k].match.length;
@@ -601,7 +601,7 @@ export default class NFLDbCronServiceClass {
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-scores`,
         { json: true }
       );
-      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const matchArray = await getMatch?.data?.score?.category?.match;
       const league: ILeagueModel | undefined | null = await League.findOne({
         goalServeLeagueId: getMatch?.data?.scores?.category?.id,
       });
@@ -1336,8 +1336,8 @@ export default class NFLDbCronServiceClass {
         goalServeLeagueId: getMatch?.data?.shedules?.id,
       });
       for (let i = 0; i < matchArray?.length; i++) {
-        for (let j = 0; j < matchArray[i]?.week?.length; j++) {
-          if (matchArray[i]?.week[j]?.matches?.length > 0) {
+        for (let j = 0; j < matchArray[i]?.weeks?.length; j++) {
+          if (matchArray[i]?.weeks[j]?.matches?.length > 0) {
             for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
               for (
                 let l = 0;
