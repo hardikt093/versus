@@ -144,8 +144,8 @@ export default class NCAAFDbCronServiceClass {
                   overall_won: team.overall_points_for,
                   position: team.position,
                   streak: team.streak,
-                  coaches_ranking: coaches_ranking ? coaches_ranking : "-",
-                  ap_ranking: ap_ranking ? ap_ranking : "-",
+                  coaches_ranking: coaches_ranking,
+                  ap_ranking: ap_ranking,
                 };
 
                 await NCAAFStandings.findOneAndUpdate(
@@ -182,8 +182,8 @@ export default class NCAAFDbCronServiceClass {
                 overall_won: team.overall_points_for,
                 position: team.position,
                 streak: team.streak,
-                coaches_ranking: coaches_ranking ? coaches_ranking : "-",
-                ap_ranking: ap_ranking ? ap_ranking : "-",
+                coaches_ranking: coaches_ranking,
+                ap_ranking: ap_ranking,
               };
               await NCAAFStandings.findOneAndUpdate(
                 { goalServeTeamId: team?.id },

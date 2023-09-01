@@ -5647,18 +5647,39 @@ const getStandings = async () => {
   let ranking: any = {};
   ranking.apName = "AP Top 256";
   ranking.coachesName = "Coaches Top 256";
-  ranking.teams = rankingData.map((item: any) => {
-    return {
-      ap_ranking:
-        item.ap_ranking || item.ap_ranking?.length>0 ? item.ap_ranking : "-",
-      coaches_ranking:
-        item.coaches_ranking || item.coaches_ranking?.length>0
-          ? item.coaches_ranking
-          : "-",
+  ranking.coachesTeams = rankingData
+    .filter((item: any) => item && item.coaches_ranking)
+    .map((item: any) => ({
+      name: item.coaches_ranking.name,
+      points: item.coaches_ranking.points,
+      position: item.coaches_ranking.position,
+      prev_rank: item.coaches_ranking.prev_rank,
+      record: item.coaches_ranking.record,
       images: item.images,
-      name: item.name,
-    };
-  });
+    }));
+  ranking.apTeams = rankingData
+    .filter((item: any) => item && item.ap_ranking)
+    .map((item: any) => {
+      return {
+        name: item.ap_ranking.name,
+        points: item.ap_ranking.points,
+        position: item.ap_ranking.position,
+        prev_rank: item.ap_ranking.prev_rank,
+        record: item.ap_ranking.record,
+        images: item.images,
+      };
+    });
+    ranking.coachesTeams.sort((a:any, b:any) => {
+      const positionA = parseInt(a.position) || 0;
+      const positionB = parseInt(b.position) || 0;
+      return positionA - positionB;
+    });
+    ranking.apTeams.sort((a:any, b:any) => {
+      const positionA = parseInt(a.position) || 0;
+      const positionB = parseInt(b.position) || 0;
+      return positionA - positionB;
+    });
+    
   return { conference: getStandingData[0].conference, ranking: ranking };
 };
 
