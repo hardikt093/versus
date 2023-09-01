@@ -5645,8 +5645,8 @@ const getStandings = async () => {
     []
   );
   let ranking: any = {};
-  ranking.apName = "AP Top 256";
-  ranking.coachesName = "Coaches Top 256";
+  ranking.apName = "AP Top 25";
+  ranking.coachesName = "Coaches Top 25";
   ranking.coachesTeams = rankingData
     .filter((item: any) => item && item.coaches_ranking)
     .map((item: any) => ({
