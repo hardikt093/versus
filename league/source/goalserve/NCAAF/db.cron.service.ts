@@ -120,11 +120,11 @@ export default class NCAAFDbCronServiceClass {
             await Promise.all(
               div.team.map(async (team: any) => {
                 let ap_ranking = getApRangking?.data?.rankings?.team.find(
-                  (item: any) => Number(item.id) == Number(team.id)
+                  (item: any) => Number(item.id) === Number(team.id)
                 );
                 let coaches_ranking =
                   getCoachRangking?.data?.rankings?.team.find(
-                    (item: any) => Number(item.id) == Number(team.id)
+                    (item: any) => Number(item.id) === Number(team.id)
                   );
 
                 let data = {
@@ -160,10 +160,10 @@ export default class NCAAFDbCronServiceClass {
           await Promise.all(
             item.division.team.map(async (team: any) => {
               let ap_ranking = getApRangking?.data?.rankings?.team.find(
-                (item: any) => Number(item.id) == Number(team.id)
+                (item: any) => Number(item.id) === Number(team.id)
               );
               let coaches_ranking = getCoachRangking?.data?.rankings?.team.find(
-                (item: any) => Number(item.id) == Number(team.id)
+                (item: any) => Number(item.id) === Number(team.id)
               );
               let data = {
                 leagueId: league?._id,
