@@ -126,6 +126,7 @@ export default class NCAAFDbCronServiceClass {
                   getCoachRangking?.data?.rankings?.team.find(
                     (item: any) => Number(item.id) == Number(team.id)
                   );
+
                 let data = {
                   leagueId: league?._id,
                   leagueType: item?.name,
@@ -143,8 +144,8 @@ export default class NCAAFDbCronServiceClass {
                   overall_won: team.overall_points_for,
                   position: team.position,
                   streak: team.streak,
-                  ap_ranking: ap_ranking,
-                  coaches_ranking: coaches_ranking,
+                  coaches_ranking: coaches_ranking ? coaches_ranking : "-",
+                  ap_ranking: ap_ranking ? ap_ranking : "-",
                 };
 
                 await NCAAFStandings.findOneAndUpdate(
@@ -158,6 +159,12 @@ export default class NCAAFDbCronServiceClass {
         } else {
           await Promise.all(
             item.division.team.map(async (team: any) => {
+              let ap_ranking = getApRangking?.data?.rankings?.team.find(
+                (item: any) => Number(item.id) == Number(team.id)
+              );
+              let coaches_ranking = getCoachRangking?.data?.rankings?.team.find(
+                (item: any) => Number(item.id) == Number(team.id)
+              );
               let data = {
                 leagueId: league?._id,
                 leagueType: item?.name,
@@ -175,6 +182,8 @@ export default class NCAAFDbCronServiceClass {
                 overall_won: team.overall_points_for,
                 position: team.position,
                 streak: team.streak,
+                coaches_ranking: coaches_ranking ? coaches_ranking : "-",
+                ap_ranking: ap_ranking ? ap_ranking : "-",
               };
               await NCAAFStandings.findOneAndUpdate(
                 { goalServeTeamId: team?.id },
