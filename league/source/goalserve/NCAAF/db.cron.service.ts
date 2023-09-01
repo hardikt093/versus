@@ -100,7 +100,16 @@ export default class NCAAFDbCronServiceClass {
       data,
       `football/fbs-standings`
     );
-
+    const getApRangking = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      `football/ap-rankings`
+    );
+    const getCoachRangking = await goalserveApi(
+      "https://www.goalserve.com/getfeed",
+      data,
+      `football/coaches-rankings`
+    );
     const league: ILeagueModel | null = await League.findOne({
       goalServeLeagueId: getstanding?.data?.standings?.category?.id,
     });
@@ -110,6 +119,13 @@ export default class NCAAFDbCronServiceClass {
           item.division.map(async (div: any) => {
             await Promise.all(
               div.team.map(async (team: any) => {
+                let ap_ranking = getApRangking?.data?.rankings?.team.find(
+                  (item: any) => Number(item.id) == Number(team.id)
+                );
+                let coaches_ranking =
+                  getCoachRangking?.data?.rankings?.team.find(
+                    (item: any) => Number(item.id) == Number(team.id)
+                  );
                 let data = {
                   leagueId: league?._id,
                   leagueType: item?.name,
@@ -127,6 +143,8 @@ export default class NCAAFDbCronServiceClass {
                   overall_won: team.overall_points_for,
                   position: team.position,
                   streak: team.streak,
+                  ap_ranking: ap_ranking,
+                  coaches_ranking: coaches_ranking,
                 };
 
                 await NCAAFStandings.findOneAndUpdate(

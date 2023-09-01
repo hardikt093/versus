@@ -10,7 +10,8 @@ router.post(
   upload.single("file"),
   goalserveController.addTeamNCAAF
 );
-router.post("/addTeamImage", goalserveController.addTeamNCAAFImage);
+router.get("/standings", goalserveController.getNcaafStandings);
+// router.post("/addTeamImage", goalserveController.addTeamNCAAFImage);
 router.get("/single-game-boxscore-upcomming", goalserveController.ncaafUpcomming);
 router.get("/single-game-boxscore-final", goalserveController.ncaafFinal);
 router.get("/single-game-boxscore-live", goalserveController.ncaafLive);
