@@ -5575,6 +5575,7 @@ const getStandings = async () => {
         },
       },
     },
+
     {
       $project: {
         _id: 0,
@@ -5625,6 +5626,11 @@ const getStandings = async () => {
       },
     },
     {
+      $sort: {
+        "conference.name": 1
+      }
+    },
+    {
       $group: {
         _id: null,
         conference: {
@@ -5635,6 +5641,7 @@ const getStandings = async () => {
         },
       },
     },
+    
   ]);
   let rankingData = getStandingData[0].ranking.reduce(
     (result: any, currentArray: any, index: any) => {
