@@ -141,7 +141,7 @@ export default class NCAAFDbCronServiceClass {
                   overall_lost: team.overall_lost,
                   overall_points_against: team.overall_points_against,
                   overall_points_for: team.overall_points_for,
-                  overall_won: team.overall_points_for,
+                  overall_won: team.overall_won,
                   position: team.position,
                   streak: team.streak,
                   coaches_ranking: coaches_ranking,
