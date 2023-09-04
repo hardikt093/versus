@@ -4131,7 +4131,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
               ],
             },
             homeTeamSpreadObj: {
-              homeTeamSpread: "$outcome.homeTeamSpread",
+              homeTeamSpread: "$outcome.homeTeamSpread.handicap",
               homeTeamSpreadUs: {
                 $cond: [
                   { $gte: [{ $toDouble: "$outcome.homeTeamSpreadUs" }, 0] },
@@ -4141,7 +4141,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
               },
             },
             awayTeamSpreadObj: {
-              awayTeamSpread: "$outcome.awayTeamSpread",
+              awayTeamSpread: "$outcome.awayTeamSpread.handicap",
               awayTeamSpreadUs: {
                 $cond: [
                   { $gte: [{ $toDouble: "$outcome.awayTeamSpreadUs" }, 0] },
