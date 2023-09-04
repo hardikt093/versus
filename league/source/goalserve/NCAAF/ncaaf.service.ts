@@ -5692,6 +5692,7 @@ const getStandings = async () => {
         prev_rank: item.ap_ranking.prev_rank,
         record: item.ap_ranking.record,
         images: item.images,
+        abbreviation:item.abbreviation
       };
     });
     ranking.coachesTeams.sort((a:any, b:any) => {
