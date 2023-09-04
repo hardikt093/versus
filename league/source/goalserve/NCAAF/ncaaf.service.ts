@@ -1415,8 +1415,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      points_for: 1,
-                      points_against: 1,
+                      overall_points_for: 1,
+                      overall_points_against: 1,
                       overall_lost: 1,
                       overall_won: 1,
                     },
@@ -1433,8 +1433,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      points_for: 1,
-                      points_against: 1,
+                      overall_points_for: 1,
+                      overall_points_against: 1,
                       overall_lost: 1,
                       overall_won: 1,
                     },
@@ -2519,18 +2519,18 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
           teamStatistics: [
             {
               title: "Points Scored",
-              homeTeam: { $arrayElemAt: ["$standings.homeTeam.points_for", 0] },
-              awayTeam: { $arrayElemAt: ["$standings.awayTeam.points_for", 0] },
+              homeTeam: { $arrayElemAt: ["$standings.homeTeam.overall_points_for", 0] },
+              awayTeam: { $arrayElemAt: ["$standings.awayTeam.overall_points_for", 0] },
               total: {
                 $add: [
                   {
                     $toInt: {
-                      $arrayElemAt: ["$standings.homeTeam.points_for", 0],
+                      $arrayElemAt: ["$standings.homeTeam.overall_points_for", 0],
                     },
                   },
                   {
                     $toInt: {
-                      $arrayElemAt: ["$standings.awayTeam.points_for", 0],
+                      $arrayElemAt: ["$standings.awayTeam.overall_points_for", 0],
                     },
                   },
                 ],
@@ -2540,21 +2540,21 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             {
               title: "Points Against",
               homeTeam: {
-                $arrayElemAt: ["$standings.homeTeam.points_against", 0],
+                $arrayElemAt: ["$standings.homeTeam.overall_points_against", 0],
               },
               awayTeam: {
-                $arrayElemAt: ["$standings.awayTeam.points_against", 0],
+                $arrayElemAt: ["$standings.awayTeam.overall_points_against", 0],
               },
               total: {
                 $add: [
                   {
                     $toDouble: {
-                      $arrayElemAt: ["$standings.homeTeam.points_against", 0],
+                      $arrayElemAt: ["$standings.homeTeam.overall_points_against", 0],
                     },
                   },
                   {
                     $toDouble: {
-                      $arrayElemAt: ["$standings.awayTeam.points_against", 0],
+                      $arrayElemAt: ["$standings.awayTeam.overall_points_against", 0],
                     },
                   },
                 ],
