@@ -15,8 +15,7 @@ const updateStandingRecord = cron.schedule("*/5 * * * * *", async () => {
   } finally {
     isupdateStandingRecordRunning = false;
   }
-}
-)
+});
 let isUpdateNcaafUpcommingMatch: boolean = false;
 
 const updateNflUpcommingMatch = cron.schedule("0 0 */1 * * *", async () => {
@@ -102,7 +101,7 @@ const updateMatchStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isOddAdded: boolean = false;
-const oddAdded = cron.schedule("*/10 * * * * *", async () => {
+const oddAdded = cron.schedule("0 */5 * * * *", async () => {
   if (isOddAdded) {
     console.log("oddAdded Skip", new Date());
     return;
@@ -124,5 +123,5 @@ export default {
   updateLiveMatch,
   updateMatchStatsNcaaf,
   oddAdded,
-  updateStandingRecord
+  updateStandingRecord,
 };
