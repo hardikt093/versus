@@ -5532,6 +5532,20 @@ const getStandings = async () => {
       },
     },
     {
+      $lookup: {
+        from: "ncaafteams",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "team",
+      },
+    },
+    {
+      $unwind: {
+        path: "$team",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $unwind: {
         path: "$images",
         preserveNullAndEmptyArrays: true,
@@ -5548,6 +5562,7 @@ const getStandings = async () => {
             id: {
               $toString: "$goalServeTeamId",
             },
+            abbreviation:"$team.locality",
             images: "$images.image",
             conference_lost: "$conference_lost",
             conference_points_against: "$conference_points_against",
@@ -5571,6 +5586,7 @@ const getStandings = async () => {
             coaches_ranking: "$coaches_ranking",
             images: "$images.image",
             name: "$name",
+            abbreviation:"$team.locality",
           },
         },
       },
@@ -5605,6 +5621,7 @@ const getStandings = async () => {
               in: {
                 name: "$$team.name",
                 teamImage: "$$team.images",
+                abbreviation:"$$team.abbreviation",
                 conference: {
                   lost: "$$team.conference_lost",
                   points_against: "$$team.conference_points_against",
@@ -5663,6 +5680,7 @@ const getStandings = async () => {
       prev_rank: item.coaches_ranking.prev_rank,
       record: item.coaches_ranking.record,
       images: item.images,
+      abbreviation:item.abbreviation
     }));
   ranking.apTeams = rankingData
     .filter((item: any) => item && item.ap_ranking)
