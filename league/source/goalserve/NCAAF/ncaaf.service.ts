@@ -619,8 +619,8 @@ const scoreWithDate = async (data: any) => {
           awayTeamRun: "$awayTeamTotalScore",
           awayTeamHit: "$awayTeamHit",
           awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.conference_won",
-          lose: "$awayTeamStandings.conference_lost",
+          won: "$awayTeamStandings.overall_won",
+          lose: "$awayTeamStandings.overall_lost",
           teamImage: "$awayTeamImage.image",
           spread: "$odds.awayTeamSpread.handicap",
           moneyline: {
@@ -689,8 +689,8 @@ const scoreWithDate = async (data: any) => {
           homeTeamRun: "$homeTeamTotalScore",
           homeTeamHit: "$homeTeamHit",
           homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.conference_won",
-          lose: "$homeTeamStandings.conference_lost",
+          won: "$homeTeamStandings.overall_won",
+          lose: "$homeTeamStandings.overall_lost",
           teamImage: "$homeTeamImage.image",
           moneyline: {
             $cond: {
@@ -908,8 +908,8 @@ const scoreWithDate = async (data: any) => {
           awayTeamId: "$awayTeam._id",
           goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
           awayTeamRun: "$awayTeamTotalScore",
-          won: "$awayTeamStandings.conference_won",
-          lose: "$awayTeamStandings.conference_lost",
+          won: "$awayTeamStandings.overall_won",
+          lose: "$awayTeamStandings.overall_lost",
           teamImage: "$awayTeamImage.image",
           ties: {
             $sum: { $ifNull: [{ $toInt: "$awayTeamStandings.ties" }, 0] },
@@ -933,8 +933,8 @@ const scoreWithDate = async (data: any) => {
           homeTeamId: "$homeTeam._id",
           goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamRun: "$homeTeamTotalScore",
-          won: "$homeTeamStandings.conference_won",
-          lose: "$homeTeamStandings.conference_lost",
+          won: "$homeTeamStandings.overall_won",
+          lose: "$homeTeamStandings.overall_lost",
           ties: {
             $sum: { $ifNull: [{ $toInt: "$homeTeamStandings.ties" }, 0] },
           },
@@ -1229,8 +1229,8 @@ const getLiveDataOfNcaaf = async (data: any) => {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           awayTeamRun: "$awayTeamTotalScore",
-          won: "$awayTeamStandings.conference_won",
-          lose: "$awayTeamStandings.conference_lost",
+          won: "$awayTeamStandings.overall_won",
+          lose: "$awayTeamStandings.overall_lost",
           teamImage: "$awayTeamImage.image",
           goalServeAwayTeamId: "$goalServeAwayTeamId",
           isWinner: {
@@ -1251,8 +1251,8 @@ const getLiveDataOfNcaaf = async (data: any) => {
           homeTeamName: "$homeTeam.name",
           homeTeamId: "$homeTeam._id",
           homeTeamRun: "$homeTeamTotalScore",
-          won: "$homeTeamStandings.conference_won",
-          lose: "$homeTeamStandings.conference_lost",
+          won: "$homeTeamStandings.overall_won",
+          lose: "$homeTeamStandings.overall_lost",
           teamImage: "$homeTeamImage.image",
           goalServeHomeTeamId: "$goalServeHomeTeamId",
           isWinner: {
@@ -1417,8 +1417,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                       goalServeTeamId: 1,
                       points_for: 1,
                       points_against: 1,
-                      conference_won: 1,
-                      conference_lost: 1,
+                      overall_lost: 1,
+                      overall_won: 1,
                     },
                   },
                 ],
@@ -1435,8 +1435,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                       goalServeTeamId: 1,
                       points_for: 1,
                       points_against: 1,
-                      conference_won: 1,
-                      conference_lost: 1,
+                      overall_lost: 1,
+                      overall_won: 1,
                     },
                   },
                 ],
@@ -2086,8 +2086,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.awayTeam.conference_won", 0] },
-            lose: { $arrayElemAt: ["$standings.awayTeam.conference_lost", 0] },
+            won: { $arrayElemAt: ["$standings.awayTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
 
             moneyline: {
@@ -2148,8 +2148,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.homeTeam.conference_won", 0] },
-            lose: { $arrayElemAt: ["$standings.homeTeam.conference_lost", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
 
             moneyline: {
@@ -2842,8 +2842,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      conference_won: 1,
-                      conference_lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                       ties: { $sum: { $ifNull: [{ $toInt: "$ties" }, 0] } },
                     },
                   },
@@ -2859,8 +2859,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      conference_won: 1,
-                      conference_lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                       ties: { $sum: { $ifNull: [{ $toInt: "$ties" }, 0] } },
                     },
                   },
@@ -3662,9 +3662,9 @@ const ncaafFinal = async (goalServeMatchId: string) => {
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.awayTeam.conference_won", 0] },
+            won: { $arrayElemAt: ["$standings.awayTeam.overall_won", 0] },
             ties: { $arrayElemAt: ["$standings.awayTeam.ties", 0] },
-            lose: { $arrayElemAt: ["$standings.awayTeam.conference_lost", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
             awayTeamTotalScore: "$awayTeamTotalScore",
             // awayTeamHit: "$awayTeamHit",
@@ -3678,8 +3678,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
             },
             ties: { $arrayElemAt: ["$standings.homeTeam.ties", 0] },
-            won: { $arrayElemAt: ["$standings.homeTeam.conference_won", 0] },
-            lose: { $arrayElemAt: ["$standings.homeTeam.conference_lost", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
             homeTeamTotalScore: "$homeTeamTotalScore",
           },
@@ -4279,8 +4279,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      conference_won: 1,
-                      conference_lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                     },
                   },
                 ],
@@ -4295,8 +4295,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      conference_won: 1,
-                      conference_lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                     },
                   },
                 ],
@@ -5095,8 +5095,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.awayTeam.conference_won", 0] },
-            lose: { $arrayElemAt: ["$standings.awayTeam.conference_lost", 0] },
+            won: { $arrayElemAt: ["$standings.awayTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
           },
           homeTeam: {
@@ -5108,8 +5108,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.homeTeam.conference_won", 0] },
-            lose: { $arrayElemAt: ["$standings.homeTeam.conference_lost", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
