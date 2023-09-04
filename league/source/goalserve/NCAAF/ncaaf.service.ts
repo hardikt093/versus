@@ -760,7 +760,18 @@ const scoreWithDate = async (data: any) => {
         weekName: {
           $in: data.calenderData.map((name: any) => name.weekName),
         },
-        status: "Final",
+        $or: [
+          {
+            status: {
+              $eq: "Final",
+            },
+          },
+          {
+            status: {
+              $eq: "After Over Time",
+            },
+          },
+        ],
       },
     },
     {
@@ -1006,6 +1017,11 @@ const getLiveDataOfNcaaf = async (data: any) => {
           {
             status: {
               $ne: "Canceled",
+            },
+          },
+          {
+            status: {
+              $ne: "After Over Time",
             },
           },
           {
@@ -5562,7 +5578,7 @@ const getStandings = async () => {
             id: {
               $toString: "$goalServeTeamId",
             },
-            abbreviation:"$team.locality",
+            abbreviation: "$team.locality",
             images: "$images.image",
             conference_lost: "$conference_lost",
             conference_points_against: "$conference_points_against",
@@ -5586,7 +5602,7 @@ const getStandings = async () => {
             coaches_ranking: "$coaches_ranking",
             images: "$images.image",
             name: "$name",
-            abbreviation:"$team.locality",
+            abbreviation: "$team.locality",
           },
         },
       },
@@ -5621,7 +5637,7 @@ const getStandings = async () => {
               in: {
                 name: "$$team.name",
                 teamImage: "$$team.images",
-                abbreviation:"$$team.abbreviation",
+                abbreviation: "$$team.abbreviation",
                 conference: {
                   lost: "$$team.conference_lost",
                   points_against: "$$team.conference_points_against",
@@ -5644,8 +5660,8 @@ const getStandings = async () => {
     },
     {
       $sort: {
-        "conference.name": 1
-      }
+        "conference.name": 1,
+      },
     },
     {
       $group: {
@@ -5658,7 +5674,6 @@ const getStandings = async () => {
         },
       },
     },
-    
   ]);
   let rankingData = getStandingData[0].ranking.reduce(
     (result: any, currentArray: any, index: any) => {
@@ -5680,7 +5695,7 @@ const getStandings = async () => {
       prev_rank: item.coaches_ranking.prev_rank,
       record: item.coaches_ranking.record,
       images: item.images,
-      abbreviation:item.abbreviation
+      abbreviation: item.abbreviation,
     }));
   ranking.apTeams = rankingData
     .filter((item: any) => item && item.ap_ranking)
@@ -5692,20 +5707,20 @@ const getStandings = async () => {
         prev_rank: item.ap_ranking.prev_rank,
         record: item.ap_ranking.record,
         images: item.images,
-        abbreviation:item.abbreviation
+        abbreviation: item.abbreviation,
       };
     });
-    ranking.coachesTeams.sort((a:any, b:any) => {
-      const positionA = parseInt(a.position) || 0;
-      const positionB = parseInt(b.position) || 0;
-      return positionA - positionB;
-    });
-    ranking.apTeams.sort((a:any, b:any) => {
-      const positionA = parseInt(a.position) || 0;
-      const positionB = parseInt(b.position) || 0;
-      return positionA - positionB;
-    });
-    
+  ranking.coachesTeams.sort((a: any, b: any) => {
+    const positionA = parseInt(a.position) || 0;
+    const positionB = parseInt(b.position) || 0;
+    return positionA - positionB;
+  });
+  ranking.apTeams.sort((a: any, b: any) => {
+    const positionA = parseInt(a.position) || 0;
+    const positionB = parseInt(b.position) || 0;
+    return positionA - positionB;
+  });
+
   return { conference: getStandingData[0].conference, ranking: ranking };
 };
 
