@@ -760,12 +760,7 @@ const scoreWithDate = async (data: any) => {
         weekName: {
           $in: data.calenderData.map((name: any) => name.weekName),
         },
-
-        $or: [
-          { status: "Final" },
-          { status: "Final/OT" },
-          { status: "Final/2OT" },
-        ],
+        status: "Final",
       },
     },
     {
@@ -5674,17 +5669,17 @@ const getStandings = async () => {
         images: item.images,
       };
     });
-  ranking.coachesTeams.sort((a: any, b: any) => {
-    const positionA = parseInt(a.position) || 0;
-    const positionB = parseInt(b.position) || 0;
-    return positionA - positionB;
-  });
-  ranking.apTeams.sort((a: any, b: any) => {
-    const positionA = parseInt(a.position) || 0;
-    const positionB = parseInt(b.position) || 0;
-    return positionA - positionB;
-  });
-
+    ranking.coachesTeams.sort((a:any, b:any) => {
+      const positionA = parseInt(a.position) || 0;
+      const positionB = parseInt(b.position) || 0;
+      return positionA - positionB;
+    });
+    ranking.apTeams.sort((a:any, b:any) => {
+      const positionA = parseInt(a.position) || 0;
+      const positionB = parseInt(b.position) || 0;
+      return positionA - positionB;
+    });
+    
   return { conference: getStandingData[0].conference, ranking: ranking };
 };
 
