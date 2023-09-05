@@ -141,7 +141,7 @@ export default class NCAAFDbCronServiceClass {
                   overall_lost: team.overall_lost,
                   overall_points_against: team.overall_points_against,
                   overall_points_for: team.overall_points_for,
-                  overall_won: team.overall_points_for,
+                  overall_won: team.overall_won,
                   position: team.position,
                   streak: team.streak,
                   coaches_ranking: coaches_ranking,
@@ -179,7 +179,7 @@ export default class NCAAFDbCronServiceClass {
                 overall_lost: team.overall_lost,
                 overall_points_against: team.overall_points_against,
                 overall_points_for: team.overall_points_for,
-                overall_won: team.overall_points_for,
+                overall_won: team.overall_won,
                 position: team.position,
                 streak: team.streak,
                 coaches_ranking: coaches_ranking,
@@ -620,6 +620,49 @@ export default class NCAAFDbCronServiceClass {
                   status: "ACTIVE",
                 }
               );
+            } else if (matchArray[i].status == "Final") {
+              const homeTeamTotalScore = parseFloat(
+                matchArray[i].hometeam.totalscore
+              );
+              const awayTeamTotalScore = parseFloat(
+                matchArray[i].awayteam.totalscore
+              );
+              const goalServeMatchId = matchArray[i].contestID;
+              const goalServeWinTeamId =
+                homeTeamTotalScore > awayTeamTotalScore
+                  ? matchArray[i].hometeam.id
+                  : matchArray[i].awayteam.id;
+              await declareResultMatch(
+                Number(goalServeMatchId),
+                Number(goalServeWinTeamId),
+                "NCAAF"
+              );
+            } else if (
+              matchArray[i].status == "Canceled" ||
+              matchArray[i].status == "Postponed" ||
+              matchArray[i].status == "Suspended"
+            ) {
+              const goalServeMatchId = matchArray[i].contestID;
+              await Bet.updateMany(
+                {
+                  status: "PENDING",
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "EXPIRED",
+                }
+              );
+              await Bet.updateMany(
+                {
+                  status: { $in: ["CONFIRMED", "ACTIVE"] },
+                  goalServeMatchId: Number(goalServeMatchId),
+                  leagueType: "NCAAF",
+                },
+                {
+                  status: "CANCELED",
+                }
+              );
             }
           }
         }
@@ -833,7 +876,7 @@ export default class NCAAFDbCronServiceClass {
               await declareResultMatch(
                 parseInt(goalServeMatchId),
                 parseInt(goalServeWinTeamId),
-                "NFL"
+                "NCAAF"
               );
             } else if (
               matchArray.status == "Canceled" ||
@@ -855,7 +898,7 @@ export default class NCAAFDbCronServiceClass {
                 {
                   status: { $in: ["CONFIRMED", "ACTIVE"] },
                   goalServeMatchId: goalServeMatchId,
-                  leagueType: "NFL",
+                  leagueType: "NCAAF",
                 },
                 {
                   status: "CANCELED",

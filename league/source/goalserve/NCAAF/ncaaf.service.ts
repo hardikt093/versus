@@ -619,8 +619,8 @@ const scoreWithDate = async (data: any) => {
           awayTeamRun: "$awayTeamTotalScore",
           awayTeamHit: "$awayTeamHit",
           awayTeamErrors: "$awayTeamError",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
+          won: "$awayTeamStandings.overall_won",
+          lose: "$awayTeamStandings.overall_lost",
           teamImage: "$awayTeamImage.image",
           spread: "$odds.awayTeamSpread.handicap",
           moneyline: {
@@ -689,8 +689,8 @@ const scoreWithDate = async (data: any) => {
           homeTeamRun: "$homeTeamTotalScore",
           homeTeamHit: "$homeTeamHit",
           homeTeamErrors: "$homeTeamError",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
+          won: "$homeTeamStandings.overall_won",
+          lose: "$homeTeamStandings.overall_lost",
           teamImage: "$homeTeamImage.image",
           moneyline: {
             $cond: {
@@ -760,7 +760,18 @@ const scoreWithDate = async (data: any) => {
         weekName: {
           $in: data.calenderData.map((name: any) => name.weekName),
         },
-        status: "Final",
+        $or: [
+          {
+            status: {
+              $eq: "Final",
+            },
+          },
+          {
+            status: {
+              $eq: "After Over Time",
+            },
+          },
+        ],
       },
     },
     {
@@ -897,8 +908,8 @@ const scoreWithDate = async (data: any) => {
           awayTeamId: "$awayTeam._id",
           goalServeAwayTeamId: "$awayTeam.goalServeTeamId",
           awayTeamRun: "$awayTeamTotalScore",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
+          won: "$awayTeamStandings.overall_won",
+          lose: "$awayTeamStandings.overall_lost",
           teamImage: "$awayTeamImage.image",
           ties: {
             $sum: { $ifNull: [{ $toInt: "$awayTeamStandings.ties" }, 0] },
@@ -922,8 +933,8 @@ const scoreWithDate = async (data: any) => {
           homeTeamId: "$homeTeam._id",
           goalServeHomeTeamId: "$homeTeam.goalServeTeamId",
           homeTeamRun: "$homeTeamTotalScore",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
+          won: "$homeTeamStandings.overall_won",
+          lose: "$homeTeamStandings.overall_lost",
           ties: {
             $sum: { $ifNull: [{ $toInt: "$homeTeamStandings.ties" }, 0] },
           },
@@ -1006,6 +1017,11 @@ const getLiveDataOfNcaaf = async (data: any) => {
           {
             status: {
               $ne: "Canceled",
+            },
+          },
+          {
+            status: {
+              $ne: "After Over Time",
             },
           },
           {
@@ -1213,8 +1229,8 @@ const getLiveDataOfNcaaf = async (data: any) => {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
           awayTeamRun: "$awayTeamTotalScore",
-          won: "$awayTeamStandings.won",
-          lose: "$awayTeamStandings.lost",
+          won: "$awayTeamStandings.overall_won",
+          lose: "$awayTeamStandings.overall_lost",
           teamImage: "$awayTeamImage.image",
           goalServeAwayTeamId: "$goalServeAwayTeamId",
           isWinner: {
@@ -1235,8 +1251,8 @@ const getLiveDataOfNcaaf = async (data: any) => {
           homeTeamName: "$homeTeam.name",
           homeTeamId: "$homeTeam._id",
           homeTeamRun: "$homeTeamTotalScore",
-          won: "$homeTeamStandings.won",
-          lose: "$homeTeamStandings.lost",
+          won: "$homeTeamStandings.overall_won",
+          lose: "$homeTeamStandings.overall_lost",
           teamImage: "$homeTeamImage.image",
           goalServeHomeTeamId: "$goalServeHomeTeamId",
           isWinner: {
@@ -1399,10 +1415,10 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      won: 1,
-                      points_for: 1,
-                      points_against: 1,
-                      lost: 1,
+                      overall_points_for: 1,
+                      overall_points_against: 1,
+                      overall_lost: 1,
+                      overall_won: 1,
                     },
                   },
                 ],
@@ -1417,10 +1433,10 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      won: 1,
-                      points_for: 1,
-                      points_against: 1,
-                      lost: 1,
+                      overall_points_for: 1,
+                      overall_points_against: 1,
+                      overall_lost: 1,
+                      overall_won: 1,
                     },
                   },
                 ],
@@ -2070,8 +2086,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
-            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            won: { $arrayElemAt: ["$standings.awayTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
 
             moneyline: {
@@ -2132,8 +2148,8 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
 
             moneyline: {
@@ -2503,18 +2519,18 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
           teamStatistics: [
             {
               title: "Points Scored",
-              homeTeam: { $arrayElemAt: ["$standings.homeTeam.points_for", 0] },
-              awayTeam: { $arrayElemAt: ["$standings.awayTeam.points_for", 0] },
+              homeTeam: { $arrayElemAt: ["$standings.homeTeam.overall_points_for", 0] },
+              awayTeam: { $arrayElemAt: ["$standings.awayTeam.overall_points_for", 0] },
               total: {
                 $add: [
                   {
                     $toInt: {
-                      $arrayElemAt: ["$standings.homeTeam.points_for", 0],
+                      $arrayElemAt: ["$standings.homeTeam.overall_points_for", 0],
                     },
                   },
                   {
                     $toInt: {
-                      $arrayElemAt: ["$standings.awayTeam.points_for", 0],
+                      $arrayElemAt: ["$standings.awayTeam.overall_points_for", 0],
                     },
                   },
                 ],
@@ -2524,21 +2540,21 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
             {
               title: "Points Against",
               homeTeam: {
-                $arrayElemAt: ["$standings.homeTeam.points_against", 0],
+                $arrayElemAt: ["$standings.homeTeam.overall_points_against", 0],
               },
               awayTeam: {
-                $arrayElemAt: ["$standings.awayTeam.points_against", 0],
+                $arrayElemAt: ["$standings.awayTeam.overall_points_against", 0],
               },
               total: {
                 $add: [
                   {
                     $toDouble: {
-                      $arrayElemAt: ["$standings.homeTeam.points_against", 0],
+                      $arrayElemAt: ["$standings.homeTeam.overall_points_against", 0],
                     },
                   },
                   {
                     $toDouble: {
-                      $arrayElemAt: ["$standings.awayTeam.points_against", 0],
+                      $arrayElemAt: ["$standings.awayTeam.overall_points_against", 0],
                     },
                   },
                 ],
@@ -2826,8 +2842,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      won: 1,
-                      lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                       ties: { $sum: { $ifNull: [{ $toInt: "$ties" }, 0] } },
                     },
                   },
@@ -2843,8 +2859,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      won: 1,
-                      lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                       ties: { $sum: { $ifNull: [{ $toInt: "$ties" }, 0] } },
                     },
                   },
@@ -3646,9 +3662,9 @@ const ncaafFinal = async (goalServeMatchId: string) => {
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
+            won: { $arrayElemAt: ["$standings.awayTeam.overall_won", 0] },
             ties: { $arrayElemAt: ["$standings.awayTeam.ties", 0] },
-            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
             awayTeamTotalScore: "$awayTeamTotalScore",
             // awayTeamHit: "$awayTeamHit",
@@ -3662,8 +3678,8 @@ const ncaafFinal = async (goalServeMatchId: string) => {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
             },
             ties: { $arrayElemAt: ["$standings.homeTeam.ties", 0] },
-            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
             homeTeamTotalScore: "$homeTeamTotalScore",
           },
@@ -4131,7 +4147,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
               ],
             },
             homeTeamSpreadObj: {
-              homeTeamSpread: "$outcome.homeTeamSpread",
+              homeTeamSpread: "$outcome.homeTeamSpread.handicap",
               homeTeamSpreadUs: {
                 $cond: [
                   { $gte: [{ $toDouble: "$outcome.homeTeamSpreadUs" }, 0] },
@@ -4141,7 +4157,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
               },
             },
             awayTeamSpreadObj: {
-              awayTeamSpread: "$outcome.awayTeamSpread",
+              awayTeamSpread: "$outcome.awayTeamSpread.handicap",
               awayTeamSpreadUs: {
                 $cond: [
                   { $gte: [{ $toDouble: "$outcome.awayTeamSpreadUs" }, 0] },
@@ -4263,8 +4279,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      won: 1,
-                      lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                     },
                   },
                 ],
@@ -4279,8 +4295,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
                   {
                     $project: {
                       goalServeTeamId: 1,
-                      won: 1,
-                      lost: 1,
+                      overall_won: 1,
+                      overall_lost: 1,
                     },
                   },
                 ],
@@ -5079,8 +5095,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
             goalServeAwayTeamId: {
               $arrayElemAt: ["$teams.awayTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.awayTeam.won", 0] },
-            lose: { $arrayElemAt: ["$standings.awayTeam.lost", 0] },
+            won: { $arrayElemAt: ["$standings.awayTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.awayTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
           },
           homeTeam: {
@@ -5092,8 +5108,8 @@ const ncaafLive = async (goalServeMatchId: any) => {
             goalServeHomeTeamId: {
               $arrayElemAt: ["$teams.homeTeam.goalServeTeamId", 0],
             },
-            won: { $arrayElemAt: ["$standings.homeTeam.won", 0] },
-            lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
+            won: { $arrayElemAt: ["$standings.homeTeam.overall_won", 0] },
+            lose: { $arrayElemAt: ["$standings.homeTeam.overall_lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
@@ -5532,6 +5548,20 @@ const getStandings = async () => {
       },
     },
     {
+      $lookup: {
+        from: "ncaafteams",
+        localField: "goalServeTeamId",
+        foreignField: "goalServeTeamId",
+        as: "team",
+      },
+    },
+    {
+      $unwind: {
+        path: "$team",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
       $unwind: {
         path: "$images",
         preserveNullAndEmptyArrays: true,
@@ -5548,6 +5578,7 @@ const getStandings = async () => {
             id: {
               $toString: "$goalServeTeamId",
             },
+            abbreviation: "$team.locality",
             images: "$images.image",
             conference_lost: "$conference_lost",
             conference_points_against: "$conference_points_against",
@@ -5571,10 +5602,12 @@ const getStandings = async () => {
             coaches_ranking: "$coaches_ranking",
             images: "$images.image",
             name: "$name",
+            abbreviation: "$team.locality",
           },
         },
       },
     },
+
     {
       $project: {
         _id: 0,
@@ -5604,6 +5637,7 @@ const getStandings = async () => {
               in: {
                 name: "$$team.name",
                 teamImage: "$$team.images",
+                abbreviation: "$$team.abbreviation",
                 conference: {
                   lost: "$$team.conference_lost",
                   points_against: "$$team.conference_points_against",
@@ -5622,6 +5656,11 @@ const getStandings = async () => {
           },
         },
         ranking: 1,
+      },
+    },
+    {
+      $sort: {
+        "conference.name": 1,
       },
     },
     {
@@ -5645,8 +5684,8 @@ const getStandings = async () => {
     []
   );
   let ranking: any = {};
-  ranking.apName = "AP Top 256";
-  ranking.coachesName = "Coaches Top 256";
+  ranking.apName = "AP Top 25";
+  ranking.coachesName = "Coaches Top 25";
   ranking.coachesTeams = rankingData
     .filter((item: any) => item && item.coaches_ranking)
     .map((item: any) => ({
@@ -5656,6 +5695,7 @@ const getStandings = async () => {
       prev_rank: item.coaches_ranking.prev_rank,
       record: item.coaches_ranking.record,
       images: item.images,
+      abbreviation: item.abbreviation,
     }));
   ranking.apTeams = rankingData
     .filter((item: any) => item && item.ap_ranking)
@@ -5667,19 +5707,20 @@ const getStandings = async () => {
         prev_rank: item.ap_ranking.prev_rank,
         record: item.ap_ranking.record,
         images: item.images,
+        abbreviation: item.abbreviation,
       };
     });
-    ranking.coachesTeams.sort((a:any, b:any) => {
-      const positionA = parseInt(a.position) || 0;
-      const positionB = parseInt(b.position) || 0;
-      return positionA - positionB;
-    });
-    ranking.apTeams.sort((a:any, b:any) => {
-      const positionA = parseInt(a.position) || 0;
-      const positionB = parseInt(b.position) || 0;
-      return positionA - positionB;
-    });
-    
+  ranking.coachesTeams.sort((a: any, b: any) => {
+    const positionA = parseInt(a.position) || 0;
+    const positionB = parseInt(b.position) || 0;
+    return positionA - positionB;
+  });
+  ranking.apTeams.sort((a: any, b: any) => {
+    const positionA = parseInt(a.position) || 0;
+    const positionB = parseInt(b.position) || 0;
+    return positionA - positionB;
+  });
+
   return { conference: getStandingData[0].conference, ranking: ranking };
 };
 
