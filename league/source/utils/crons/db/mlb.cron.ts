@@ -23,12 +23,12 @@ const createOdds = cron.schedule("*/5 * * * *", async () => {
 let isupdateCurruntDateRecordRunning: boolean = false;
 const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateCurruntDateRecordRunning) {
-    console.log("MLB updateCurruntDateRecord Skip");
+    // console.log("MLB updateCurruntDateRecord Skip");
     return;
   }
   isupdateCurruntDateRecordRunning = true;
   try {
-    console.info("inside score cron updateCurruntDateRecord");
+    // console.info("inside score cron updateCurruntDateRecord");
     await mlbService.updateCurruntDateRecord();
   } catch (error) {
     console.log(error);
@@ -40,12 +40,12 @@ const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
 let isUpdateRemainingCurruntDateRecord: boolean = false;
 const updateRemainingCurruntDateRecord = cron.schedule("*/60 * * * * *", async () => {
   if (isUpdateRemainingCurruntDateRecord) {
-    console.log("MLB updateRemainingCurruntDateRecord Skip");
+    // console.log("MLB updateRemainingCurruntDateRecord Skip");
     return;
   }
   isUpdateRemainingCurruntDateRecord = true;
   try {
-    console.info("inside score cron updateRemainingCurruntDateRecord");
+    // console.info("inside score cron updateRemainingCurruntDateRecord");
     await mlbService.updateRmainingCurruntDateRecord();
   } catch (error) {
     console.log(error);

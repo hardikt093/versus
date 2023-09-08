@@ -36,12 +36,12 @@ const updateNflUpcommingMatch = cron.schedule("0 0 */1 * * *", async () => {
 let isUpdateLiveMatch: boolean = false;
 const updateLiveMatch = cron.schedule("*/35 * * * * *", async () => {
   if (isUpdateLiveMatch) {
-    // console.log("updateLiveMatch NCAAF Skip", new Date());
+    console.log("updateLiveMatch NCAAF Skip", new Date());
     return;
   }
   isUpdateLiveMatch = true;
   try {
-    // console.info("inside updateLiveMatch", new Date());
+    console.info("inside NCAAF updateLiveMatch", new Date());
     await ncaafService.updateLiveMatch();
   } catch (error) {
     Date;

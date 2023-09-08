@@ -457,15 +457,15 @@ export default class NCAAFDbCronServiceClass {
             awayTeamQ4: matchArray[i]?.awayteam.q4
               ? matchArray[i]?.awayteam.q4
               : "",
-            awayTeamBallOn: matchArray[i]?.awayteam.ball_on
-              ? matchArray[i]?.awayteam.ball_on
-              : "",
-            awayTeamDrive: matchArray[i]?.awayteam.drive
-              ? matchArray[i]?.awayteam.drive
-              : "",
-            awayTeamNumber: matchArray[i]?.awayteam.number
-              ? matchArray[i]?.awayteam.number
-              : "",
+            // awayTeamBallOn: matchArray[i]?.awayteam.ball_on
+            //   ? matchArray[i]?.awayteam.ball_on
+            //   : "",
+            // awayTeamDrive: matchArray[i]?.awayteam.drive
+            //   ? matchArray[i]?.awayteam.drive
+            //   : "",
+            // awayTeamNumber: matchArray[i]?.awayteam.number
+            //   ? matchArray[i]?.awayteam.number
+            //   : "",
 
             homeTeamOt: matchArray[i]?.hometeam.ot
               ? matchArray[i]?.hometeam.ot
@@ -482,15 +482,15 @@ export default class NCAAFDbCronServiceClass {
             homeTeamQ4: matchArray[i]?.hometeam.q4
               ? matchArray[i]?.hometeam.q4
               : "",
-            homeTeamBallOn: matchArray[i]?.awayteam.ball_on
-              ? matchArray[i]?.awayteam.ball_on
-              : "",
-            homeTeamDrive: matchArray[i]?.hometeam.drive
-              ? matchArray[i]?.hometeam.drive
-              : "",
-            homeTeamNumber: matchArray[i]?.hometeam.number
-              ? matchArray[i]?.hometeam.number
-              : "",
+            // homeTeamBallOn: matchArray[i]?.awayteam.ball_on
+            //   ? matchArray[i]?.awayteam.ball_on
+            //   : "",
+            // homeTeamDrive: matchArray[i]?.hometeam.drive
+            //   ? matchArray[i]?.hometeam.drive
+            //   : "",
+            // homeTeamNumber: matchArray[i]?.hometeam.number
+            //   ? matchArray[i]?.hometeam.number
+            //   : "",
             // awayTeamDefensive: matchArray[i]?.defensive?.awayteam?.player
             //   ? matchArray[i]?.defensive?.awayteam?.player
             //   : [],

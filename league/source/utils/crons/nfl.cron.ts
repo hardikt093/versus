@@ -5,7 +5,7 @@ import moment from "moment";
 
 let isScoreWithWeek: boolean = false;
 const scoreWithWeek = cron.schedule("*/10 * * * * *", async () => {
-  console.log("isScoreWithWeek Skip");
+  // console.log("isScoreWithWeek Skip");
   if (isScoreWithWeek) {
     return;
   }
@@ -20,7 +20,7 @@ const scoreWithWeek = cron.schedule("*/10 * * * * *", async () => {
 });
 let isliveDataOfBoxscore: boolean = false;
 const liveDataOfBoxscore = cron.schedule("*/10 * * * * *", async () => {
-  console.log("liveDataOfBoxscore Skip");
+  // console.log("liveDataOfBoxscore Skip");
   if (isliveDataOfBoxscore) {
     return;
   }
