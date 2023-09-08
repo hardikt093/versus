@@ -1611,13 +1611,7 @@ export default class NCAAFDbCronServiceClass {
                     homeTeamMoneyline: homeTeamMoneyline,
                   }),
                 };
-                console.log("in oddssssssss", data?.goalServeMatchId);
-                if (
-                  data?.goalServeMatchId == "106882" 
-                  // data?.goalServeMatchId == 106882
-                ) {
-                  console.log("oddddsssssssss", data);
-                }
+                // console.log("in oddssssssss", data?.goalServeMatchId);
                 if (findOdd?.length == 0) {
                   const oddsData = new NcaafOdds(data);
                   const savedOddsData = await oddsData.save();
