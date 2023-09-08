@@ -425,7 +425,7 @@ export default class NCAAFDbCronServiceClass {
       });
       if (matchArray?.length > 0 && matchArray) {
         for (let i = 0; i < matchArray?.length; i++) {
-          console.log("ncaafmatch.id", matchArray[i]?.contestID)
+          console.log("ncaafmatch.id", matchArray[i]?.contestID);
           const data: Partial<INcaafMatchModel> = {
             attendance: matchArray[i]?.attendance,
             goalServeHomeTeamId: matchArray[i]?.hometeam.id,
@@ -586,7 +586,7 @@ export default class NCAAFDbCronServiceClass {
             { $set: data },
             { new: true }
           );
-          console.log("ncaafdataUpdate==>",dataUpdate?.goalServeMatchId)
+          console.log("ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
 
           if (
             matchArray[i]?.status != "Not Started" &&
@@ -1497,7 +1497,7 @@ export default class NCAAFDbCronServiceClass {
       .subtract(24, "hours")
       .utc()
       .toISOString();
-    let addDate = moment().add(30, "days").utc().toISOString();
+    let addDate = moment().add(3, "days").utc().toISOString();
     let day1 = moment(subDate).format("D");
     let month1 = moment(subDate).format("MM");
     let year1 = moment(subDate).format("YYYY");
@@ -1507,6 +1507,8 @@ export default class NCAAFDbCronServiceClass {
     let month2 = moment(addDate).format("MM");
     let year2 = moment(addDate).format("YYYY");
     let date2 = `${day2}.${month2}.${year2}`;
+    console.log("date1",date1)
+    console.log("date2",date2)
     try {
       let data = {
         json: true,
@@ -1522,6 +1524,7 @@ export default class NCAAFDbCronServiceClass {
       );
       const matchArray = [];
       await matchArray.push(getMatch?.data?.shedules?.tournament);
+      console.log("matchArraymatchArraymatchArraymatchArray",matchArray?.length)
       const league: ILeagueModel | null = await League.findOne({
         goalServeLeagueId: getMatch?.data?.shedules?.id,
       });
@@ -1608,6 +1611,13 @@ export default class NCAAFDbCronServiceClass {
                     homeTeamMoneyline: homeTeamMoneyline,
                   }),
                 };
+                console.log("in oddssssssss", data?.goalServeMatchId);
+                if (
+                  data?.goalServeMatchId == "106882" 
+                  // data?.goalServeMatchId == 106882
+                ) {
+                  console.log("oddddsssssssss", data);
+                }
                 if (findOdd?.length == 0) {
                   const oddsData = new NcaafOdds(data);
                   const savedOddsData = await oddsData.save();

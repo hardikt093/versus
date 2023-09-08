@@ -602,14 +602,18 @@ export default class NFLDbCronServiceClass {
         { json: true }
       );
       const matchArrayAll = await getMatch?.data?.scores?.category?.match;
+      // console.log("matchArrayAll?.length",matchArrayAll?.length)
+
       const matchArray = matchArrayAll.filter((element: any) => {
         return element.status !== "Not Started";
       });
+      // console.log("matchArray?.length",matchArray?.length)
       // const league: ILeagueModel | undefined | null = await League.findOne({
       //   goalServeLeagueId: getMatch?.data?.scores?.category?.id,
       // });
       if (matchArray?.length > 0 && matchArray) {
         for (let i = 0; i < matchArray?.length; i++) {
+          // console.log("matchArray[i].id",matchArray[i]?.contestID)
           // const match: INflMatchModel | null = await NflMatch.findOne({
           //   goalServeMatchId: matchArray[i]?.contestID,
           // });
@@ -774,6 +778,8 @@ export default class NFLDbCronServiceClass {
             { $set: data },
             { new: true }
           );
+          // console.log("nfl dataUpdate",dataUpdate?.goalServeMatchId)
+
 
           if (
             matchArray[i]?.status != "Not Started" &&

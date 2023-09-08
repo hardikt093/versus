@@ -137,7 +137,7 @@ const updateMatchStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isOddAdded: boolean = false;
-const oddAdded = cron.schedule("*/5 * * * *", async () => {
+const oddAdded = cron.schedule("*/1 * * * *", async () => {
   if (isOddAdded) {
     console.log("oddAdded Skip", new Date());
     return;

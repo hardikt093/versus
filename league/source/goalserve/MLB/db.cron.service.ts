@@ -196,7 +196,7 @@ export default class MlbDbCronServiceClass {
             data,
             { new: true }
           );
-          console.log("matchUpdate==>", matchUpdate?.goalServeMatchId);
+          // console.log("matchUpdate==>", matchUpdate?.goalServeMatchId);
           // }
           if (
             match.status != "Not Started" &&
@@ -302,10 +302,10 @@ export default class MlbDbCronServiceClass {
         console.log("Element not found in the array.");
       }
 
-      console.log("remaning matchArray.length====>", matchArray?.length);
+      // console.log("remaning matchArray.length====>", matchArray?.length);
       if (matchArray?.length > 0) {
         for (const match of matchArray) {
-          console.log("remaningmatchArray[j]==>", match.id);
+          // console.log("remaningmatchArray[j]==>", match.id);
 
           const data: Partial<IMatchModel> = {
             // outs: match.outs,
@@ -339,7 +339,7 @@ export default class MlbDbCronServiceClass {
             data,
             { new: true }
           );
-          console.log("remaingmatchUpdate==>", matchUpdate?.goalServeMatchId);
+          // console.log("remaingmatchUpdate==>", matchUpdate?.goalServeMatchId);
           // }
         }
       }
@@ -1000,7 +1000,7 @@ export default class MlbDbCronServiceClass {
   };
   public updateMlbMatch = async () => {
     try {
-      console.log("INSIDE  updateMlbMatch function");
+      // console.log("INSIDE  updateMlbMatch function");
       const mlb_shedule = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
         { json: true }
