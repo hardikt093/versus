@@ -184,7 +184,7 @@ export default class MlbDbCronServiceClass {
             awayTeamError: match.awayteam.errors,
             awayTeamInnings: match.awayteam?.innings?.inning || [],
             homeTeamInnings: match.hometeam?.innings?.inning || [],
-            event: match.events?.event || [],
+            // event: match.events?.event || [],
             // startingPitchers: match.starting_pitchers,
             // awayTeamHitters: match.stats?.hitters?.awayteam?.player || [],
             // homeTeamHitters: match.stats?.hitters?.hometeam?.player || [],
@@ -272,6 +272,75 @@ export default class MlbDbCronServiceClass {
               }
             );
           }
+        }
+      }
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+
+  public updateRmainingCurruntDateRecord = async () => {
+    try {
+      let data = {
+        json: true,
+      };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "baseball/usa"
+      );
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      const index = matchArray.findIndex(
+        (element: any) =>
+           element.status === "Not Started"
+      );
+      if (index !== -1) {
+        // Element found, remove it from the array
+        matchArray.splice(index, 1);
+      } else {
+        // Element not found
+        console.log("Element not found in the array.");
+      }
+
+      console.log("remaning matchArray.length====>", matchArray?.length);
+      if (matchArray?.length > 0) {
+        for (const match of matchArray) {
+          console.log("remaningmatchArray[j]==>", match.id);
+
+          const data: Partial<IMatchModel> = {
+            // outs: match.outs,
+            // date: match.date,
+            // formattedDate: match.formatted_date,
+            // timezone: match.timezone,
+            // oddsid: match.seasonType,
+            // attendance: match.attendance,
+            goalServeMatchId: match.id,
+            // dateTimeUtc: match.datetime_utc,
+            // status: match.status,
+            // time: match.time,
+            // homeTeamHit: match.hometeam.hits,
+            // homeTeamTotalScore: match.hometeam.totalscore,
+            // homeTeamError: match.hometeam.errors,
+            // awayTeamHit: match.awayteam.hits,
+            // awayTeamTotalScore: match.awayteam.totalscore,
+            // awayTeamError: match.awayteam.errors,
+            // awayTeamInnings: match.awayteam?.innings?.inning || [],
+            // homeTeamInnings: match.hometeam?.innings?.inning || [],
+            event: match.events?.event || [],
+            startingPitchers: match.starting_pitchers,
+            awayTeamHitters: match.stats?.hitters?.awayteam?.player || [],
+            homeTeamHitters: match.stats?.hitters?.hometeam?.player || [],
+            awayTeamPitchers: match.stats?.pitchers?.awayteam?.player || [],
+            homeTeamPitchers: match.stats?.pitchers?.hometeam?.player || [],
+          };
+          // console.log("remaing data=======>",data)
+          const matchUpdate = await Match.findOneAndUpdate(
+            { goalServeMatchId: data.goalServeMatchId },
+            data,
+            { new: true }
+          );
+          console.log("remaingmatchUpdate==>", matchUpdate?.goalServeMatchId);
+          // }
         }
       }
     } catch (error: any) {
