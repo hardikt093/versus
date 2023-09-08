@@ -15,7 +15,7 @@ async function main() {
     // nhlCron;
     mlbCron;
     betCron;
-    // nflCron;
-    // ncaafCron
+    nflCron;
+    ncaafCron
 }
 main();

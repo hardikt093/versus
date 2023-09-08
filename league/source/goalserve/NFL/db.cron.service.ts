@@ -677,94 +677,94 @@ export default class NFLDbCronServiceClass {
               homeTeamNumber: matchArray[i]?.hometeam.number
                 ? matchArray[i]?.hometeam.number
                 : "",
-              awayTeamDefensive: matchArray[i]?.defensive?.awayteam?.player
-                ? matchArray[i]?.defensive?.awayteam?.player
-                : [],
-              homeTeamDefensive: matchArray[i]?.defensive?.hometeam?.player
-                ? matchArray[i]?.defensive?.hometeam?.player
-                : [],
+              // awayTeamDefensive: matchArray[i]?.defensive?.awayteam?.player
+              //   ? matchArray[i]?.defensive?.awayteam?.player
+              //   : [],
+              // homeTeamDefensive: matchArray[i]?.defensive?.hometeam?.player
+              //   ? matchArray[i]?.defensive?.hometeam?.player
+              //   : [],
 
-              firstQuarterEvent: matchArray[i]?.events?.firstquarter?.event
-                ? matchArray[i]?.events?.firstquarter?.event
-                : [],
-              fourthQuarterEvent: matchArray[i]?.events?.fourthquarter?.event
-                ? matchArray[i]?.events?.fourthquarter?.event
-                : [],
-              overtimeEvent: matchArray[i]?.events?.overtime?.event
-                ? matchArray[i]?.events?.overtime?.event
-                : [],
-              secondQuarterEvent: matchArray[i]?.events?.secondquarter?.event
-                ? matchArray[i]?.events?.secondquarter?.event
-                : [],
-              thirdQuarterEvent:
-                matchArray[i]?.events?.thirdquarter?.event != null
-                  ? matchArray[i]?.events?.thirdquarter?.event
-                  : [],
+              // firstQuarterEvent: matchArray[i]?.events?.firstquarter?.event
+              //   ? matchArray[i]?.events?.firstquarter?.event
+              //   : [],
+              // fourthQuarterEvent: matchArray[i]?.events?.fourthquarter?.event
+              //   ? matchArray[i]?.events?.fourthquarter?.event
+              //   : [],
+              // overtimeEvent: matchArray[i]?.events?.overtime?.event
+              //   ? matchArray[i]?.events?.overtime?.event
+              //   : [],
+              // secondQuarterEvent: matchArray[i]?.events?.secondquarter?.event
+              //   ? matchArray[i]?.events?.secondquarter?.event
+              //   : [],
+              // thirdQuarterEvent:
+              //   matchArray[i]?.events?.thirdquarter?.event != null
+              //     ? matchArray[i]?.events?.thirdquarter?.event
+              //     : [],
 
-              awayTeamFumbles: matchArray[i]?.fumbles?.awayteam?.player
-                ? matchArray[i]?.fumbles?.awayteam?.player
-                : [],
-              homeTeamFumbles: matchArray[i]?.fumbles?.hometeam?.player
-                ? matchArray[i]?.fumbles?.hometeam?.player
-                : [],
+              // awayTeamFumbles: matchArray[i]?.fumbles?.awayteam?.player
+              //   ? matchArray[i]?.fumbles?.awayteam?.player
+              //   : [],
+              // homeTeamFumbles: matchArray[i]?.fumbles?.hometeam?.player
+              //   ? matchArray[i]?.fumbles?.hometeam?.player
+              //   : [],
 
-              awayTeamInterceptions: matchArray[i]?.interceptions?.awayteam
-                ?.player
-                ? matchArray[i]?.interceptions?.awayteam?.player
-                : [],
-              homeTeamInterceptions: matchArray[i]?.interceptions?.hometeam
-                ?.player
-                ? matchArray[i]?.interceptions?.hometeam?.player
-                : [],
+              // awayTeamInterceptions: matchArray[i]?.interceptions?.awayteam
+              //   ?.player
+              //   ? matchArray[i]?.interceptions?.awayteam?.player
+              //   : [],
+              // homeTeamInterceptions: matchArray[i]?.interceptions?.hometeam
+              //   ?.player
+              //   ? matchArray[i]?.interceptions?.hometeam?.player
+              //   : [],
 
-              awayTeamKickReturn: matchArray[i]?.kick_returns?.awayteam?.player
-                ? matchArray[i]?.kick_returns?.awayteam?.player
-                : [],
-              homeTeamKickReturn: matchArray[i]?.kick_returns?.hometeam?.player
-                ? matchArray[i]?.kick_returns?.hometeam?.player
-                : [],
+              // awayTeamKickReturn: matchArray[i]?.kick_returns?.awayteam?.player
+              //   ? matchArray[i]?.kick_returns?.awayteam?.player
+              //   : [],
+              // homeTeamKickReturn: matchArray[i]?.kick_returns?.hometeam?.player
+              //   ? matchArray[i]?.kick_returns?.hometeam?.player
+              //   : [],
 
-              awayTeamKick: matchArray[i]?.kicking?.awayteam?.player
-                ? matchArray[i]?.kicking?.awayteam?.player
-                : {},
-              homeTeamKick: matchArray[i]?.kicking?.hometeam?.player
-                ? matchArray[i]?.kicking?.hometeam?.player
-                : {},
+              // awayTeamKick: matchArray[i]?.kicking?.awayteam?.player
+              //   ? matchArray[i]?.kicking?.awayteam?.player
+              //   : {},
+              // homeTeamKick: matchArray[i]?.kicking?.hometeam?.player
+              //   ? matchArray[i]?.kicking?.hometeam?.player
+              //   : {},
 
-              awayTeamPassing: matchArray[i]?.passing?.awayteam?.player
-                ? matchArray[i]?.passing?.awayteam?.player
-                : [],
-              homeTeamPassing: matchArray[i]?.passing?.hometeam?.player
-                ? matchArray[i]?.passing?.hometeam?.player
-                : [],
+              // awayTeamPassing: matchArray[i]?.passing?.awayteam?.player
+              //   ? matchArray[i]?.passing?.awayteam?.player
+              //   : [],
+              // homeTeamPassing: matchArray[i]?.passing?.hometeam?.player
+              //   ? matchArray[i]?.passing?.hometeam?.player
+              //   : [],
 
-              awayTeamPuntReturns: matchArray[i]?.punt_returns?.awayteam?.player
-                ? matchArray[i]?.punt_returns?.awayteam?.player
-                : [],
-              homeTeamPuntReturns: matchArray[i]?.punt_returns?.hometeam?.player
-                ? matchArray[i]?.punt_returns?.hometeam?.player
-                : [],
+              // awayTeamPuntReturns: matchArray[i]?.punt_returns?.awayteam?.player
+              //   ? matchArray[i]?.punt_returns?.awayteam?.player
+              //   : [],
+              // homeTeamPuntReturns: matchArray[i]?.punt_returns?.hometeam?.player
+              //   ? matchArray[i]?.punt_returns?.hometeam?.player
+              //   : [],
 
-              awayTeamPunting: matchArray[i]?.punting?.awayteam?.player
-                ? matchArray[i]?.punting?.awayteam?.player
-                : [],
-              homeTeamPunting: matchArray[i]?.punting?.hometeam?.player
-                ? matchArray[i]?.punting?.hometeam?.player
-                : [],
+              // awayTeamPunting: matchArray[i]?.punting?.awayteam?.player
+              //   ? matchArray[i]?.punting?.awayteam?.player
+              //   : [],
+              // homeTeamPunting: matchArray[i]?.punting?.hometeam?.player
+              //   ? matchArray[i]?.punting?.hometeam?.player
+              //   : [],
 
-              awayTeamReceiving: matchArray[i]?.receiving?.awayteam?.player
-                ? matchArray[i]?.receiving?.awayteam?.player
-                : [],
-              homeTeamReceiving: matchArray[i]?.receiving?.hometeam?.player
-                ? matchArray[i]?.receiving?.hometeam?.player
-                : [],
+              // awayTeamReceiving: matchArray[i]?.receiving?.awayteam?.player
+              //   ? matchArray[i]?.receiving?.awayteam?.player
+              //   : [],
+              // homeTeamReceiving: matchArray[i]?.receiving?.hometeam?.player
+              //   ? matchArray[i]?.receiving?.hometeam?.player
+              //   : [],
 
-              awayTeamRushing: matchArray[i]?.rushing?.awayteam?.player
-                ? matchArray[i]?.rushing?.awayteam?.player
-                : [],
-              homeTeamRushing: matchArray[i]?.rushing?.hometeam?.player
-                ? matchArray[i]?.rushing?.hometeam?.player
-                : [],
+              // awayTeamRushing: matchArray[i]?.rushing?.awayteam?.player
+              //   ? matchArray[i]?.rushing?.awayteam?.player
+              //   : [],
+              // homeTeamRushing: matchArray[i]?.rushing?.hometeam?.player
+              //   ? matchArray[i]?.rushing?.hometeam?.player
+              //   : [],
             };
             const dataUpdate = await NflMatch.findOneAndUpdate(
               { goalServeMatchId: matchArray[i]?.contestID },
