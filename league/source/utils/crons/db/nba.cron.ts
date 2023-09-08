@@ -3,7 +3,7 @@ import GoalserveNbaService from "../../../goalserve/NBA/db.cron.service";
 const goalserveNbaService = new GoalserveNbaService();
 
 let createAndUpdateMatchOddsRunning: boolean = false;
-const createAndUpdateOddsNba = cron.schedule("*/10 * * * * *", async () => {
+const createAndUpdateOddsNba = cron.schedule("*/5 * * * *", async () => {
   if (createAndUpdateMatchOddsRunning) {
     // console.log("createAndUpdateMatchOdds Skip");
     return;

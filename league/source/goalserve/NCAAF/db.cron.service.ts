@@ -584,6 +584,7 @@ export default class NCAAFDbCronServiceClass {
                 ? matchArray[i]?.rushing?.hometeam?.player
                 : [],
             };
+            console.log("Status of NCAAF : ",matchArray[i]?.contestID,matchArray[i]?.status)
             const dataUpdate = await NcaafMatch.findOneAndUpdate(
               { goalServeMatchId: matchArray[i]?.contestID },
               { $set: data },
