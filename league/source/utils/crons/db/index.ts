@@ -13,9 +13,9 @@ async function main() {
     });
     // nbaCron;
     // nhlCron;
-    mlbCron;
-    betCron;
+    // mlbCron;
+    // betCron;
     // nflCron;
-    // ncaafCron
+    ncaafCron
 }
 main();

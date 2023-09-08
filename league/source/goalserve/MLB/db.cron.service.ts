@@ -159,24 +159,12 @@ export default class MlbDbCronServiceClass {
         data,
         "baseball/usa"
       );
-      const matchArray = await getMatch?.data?.scores?.category?.match;
-      const index = matchArray.findIndex(
-        (element: any) =>
-           element.status === "Not Started"
-      );
-      if (index !== -1) {
-        // Element found, remove it from the array
-        matchArray.splice(index, 1);
-      } else {
-        // Element not found
-        console.log("Element not found in the array.");
-      }
-
-      console.log("matchArray.length", matchArray?.length);
+      const matchArrayAll = await getMatch?.data?.scores?.category?.match;
+      const matchArray = matchArrayAll.filter((element: any) => {
+        return element.status !== "Not Started";
+      });
       if (matchArray?.length > 0) {
         for (const match of matchArray) {
-          console.log("matchArray[j]==>", match.id);
-
           const data: Partial<IMatchModel> = {
             outs: match.outs,
             date: match.date,

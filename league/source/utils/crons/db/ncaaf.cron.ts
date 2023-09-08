@@ -43,7 +43,6 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   try {
     // console.info("inside updateLiveMatch", new Date());
     await ncaafService.updateLiveMatch();
-    await ncaafService.addOrUpdateDriveInLive();
   } catch (error) {
     Date;
     console.log(error);
@@ -51,7 +50,43 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
     isUpdateLiveMatch = false;
   }
 });
+// updateLiveMatchRemainingData
 
+
+let isUpdateDriveInLive: boolean = false;
+const addOrUpdateDriveInLive = cron.schedule("*/10 * * * * *", async () => {
+  if (isUpdateDriveInLive) {
+    // console.log("updateLiveMatch NCAAF Skip", new Date());
+    return;
+  }
+  isUpdateDriveInLive = true;
+  try {
+    // console.info("inside updateLiveMatch", new Date());
+    await ncaafService.addOrUpdateDriveInLive();
+  } catch (error) {
+    Date;
+    console.log(error);
+  } finally {
+    isUpdateDriveInLive = false;
+  }
+});
+let updateLiveMatchRemainingDatarunning: boolean = false;
+const updateLiveMatchRemainingData = cron.schedule("*/10 * * * * *", async () => {
+  if (updateLiveMatchRemainingDatarunning) {
+    // console.log("updateLiveMatch NCAAF Skip", new Date());
+    return;
+  }
+  updateLiveMatchRemainingDatarunning = true;
+  try {
+    // console.info("inside updateLiveMatch", new Date());
+    await ncaafService.updateLiveMatchRemainingData();
+  } catch (error) {
+    Date;
+    console.log(error);
+  } finally {
+    updateLiveMatchRemainingDatarunning = false;
+  }
+});
 let isupdatePlayerRecordRunning: boolean = false;
 const updatePlayerRecord = cron.schedule("*/10 * * * * *", async () => {
   if (isupdatePlayerRecordRunning) {
@@ -124,5 +159,7 @@ export default {
   updateLiveMatch,
   updateMatchStatsNcaaf,
   oddAdded,
-  updateStandingRecord
+  updateStandingRecord,
+  updateLiveMatchRemainingData,
+  addOrUpdateDriveInLive
 };
