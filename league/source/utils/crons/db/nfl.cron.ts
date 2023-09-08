@@ -72,7 +72,6 @@ const updateLiveMatch = cron.schedule("*/5 * * * * *", async () => {
   isUpdateLiveMatch = true;
   try {
     await nflService.updateLiveMatch();
-    await nflService.addOrUpdateDriveInLive()
   } catch (error) {
     console.log(error);
   } finally {
@@ -143,6 +142,23 @@ const updateLiveMatchRemainingData = cron.schedule("*/10 * * * * *", async () =>
   }
 });
 
+let isUpdateDriveInLive: boolean = false;
+const addOrUpdateDriveInLive = cron.schedule("*/35 * * * * *", async () => {
+  if (isUpdateDriveInLive) {
+    // console.log("updateLiveMatch NCAAF Skip", new Date());
+    return;
+  }
+  isUpdateDriveInLive = true;
+  try {
+    // console.info("inside updateLiveMatch", new Date());
+    await nflService.addOrUpdateDriveInLive();
+  } catch (error) {
+    Date;
+    console.log(error);
+  } finally {
+    isUpdateDriveInLive = false;
+  }
+});
 export default {
   updateStandingRecord,
   updateNflUpcommingMatch,
@@ -152,5 +168,6 @@ export default {
   updateInjuredPlayerNFL,
   oddAdded,
   updateMatchStatsNFL,
-  updateLiveMatchRemainingData
+  updateLiveMatchRemainingData,
+  addOrUpdateDriveInLive
 };
