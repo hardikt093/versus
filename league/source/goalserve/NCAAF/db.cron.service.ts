@@ -425,7 +425,7 @@ export default class NCAAFDbCronServiceClass {
       });
       if (matchArray?.length > 0 && matchArray) {
         for (let i = 0; i < matchArray?.length; i++) {
-          // console.log("match.id", matchArray[i]?.contestID)
+          console.log("ncaafmatch.id", matchArray[i]?.contestID)
           const data: Partial<INcaafMatchModel> = {
             attendance: matchArray[i]?.attendance,
             goalServeHomeTeamId: matchArray[i]?.hometeam.id,
@@ -586,7 +586,7 @@ export default class NCAAFDbCronServiceClass {
             { $set: data },
             { new: true }
           );
-          // console.log("dataUpdate==>",dataUpdate?.goalServeMatchId)
+          console.log("ncaafdataUpdate==>",dataUpdate?.goalServeMatchId)
 
           if (
             matchArray[i]?.status != "Not Started" &&

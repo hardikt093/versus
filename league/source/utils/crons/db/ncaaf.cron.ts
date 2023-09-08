@@ -34,7 +34,7 @@ const updateNflUpcommingMatch = cron.schedule("0 0 */1 * * *", async () => {
 });
 
 let isUpdateLiveMatch: boolean = false;
-const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
+const updateLiveMatch = cron.schedule("*/35 * * * * *", async () => {
   if (isUpdateLiveMatch) {
     // console.log("updateLiveMatch NCAAF Skip", new Date());
     return;
@@ -54,7 +54,7 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
 
 
 let isUpdateDriveInLive: boolean = false;
-const addOrUpdateDriveInLive = cron.schedule("*/10 * * * * *", async () => {
+const addOrUpdateDriveInLive = cron.schedule("*/35 * * * * *", async () => {
   if (isUpdateDriveInLive) {
     // console.log("updateLiveMatch NCAAF Skip", new Date());
     return;
@@ -71,7 +71,7 @@ const addOrUpdateDriveInLive = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 let updateLiveMatchRemainingDatarunning: boolean = false;
-const updateLiveMatchRemainingData = cron.schedule("*/10 * * * * *", async () => {
+const updateLiveMatchRemainingData = cron.schedule("*/35 * * * * *", async () => {
   if (updateLiveMatchRemainingDatarunning) {
     // console.log("updateLiveMatch NCAAF Skip", new Date());
     return;
