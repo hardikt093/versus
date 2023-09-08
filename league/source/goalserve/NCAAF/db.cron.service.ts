@@ -891,17 +891,10 @@ export default class NCAAFDbCronServiceClass {
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
         { json: true }
       );
-      const matchArray = await getMatch?.data?.scores?.category?.match;
-      const index = matchArray.findIndex(
-        (element: any) => element.status === "Not Started"
-      );
-      if (index !== -1) {
-        // Element found, remove it from the array
-        matchArray.splice(index, 1);
-      } else {
-        // Element not found
-        console.log("Element not found in the array.");
-      }
+      const matchArrayAll = await getMatch?.data?.scores?.category?.match;
+      const matchArray = matchArrayAll.filter((element: any) => {
+        return element.status !== "Not Started";
+      });
       if (matchArray?.length > 0 && matchArray) {
         for (let i = 0; i < matchArray?.length; i++) {
           const data: Partial<INcaafMatchModel> = {
