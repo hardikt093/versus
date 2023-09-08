@@ -424,38 +424,38 @@ export default class NCAAFDbCronServiceClass {
         return element.status !== "Not Started";
       });
       if (matchArray?.length > 0 && matchArray) {
-        for (let i = 0; i < matchArray?.length; i++) {
-          console.log("ncaafmatch.id", matchArray[i]?.contestID);
+        for (const match of matchArray) {
+          console.log("ncaafmatch.id", match?.contestID);
           const data: Partial<INcaafMatchModel> = {
-            attendance: matchArray[i]?.attendance,
-            goalServeHomeTeamId: matchArray[i]?.hometeam.id,
-            goalServeAwayTeamId: matchArray[i]?.awayteam.id,
-            date: matchArray[i]?.date,
-            dateTimeUtc: matchArray[i]?.datetime_utc,
-            formattedDate: matchArray[i]?.formatted_date,
-            status: matchArray[i]?.status,
-            time: matchArray[i]?.time,
-            timezone: matchArray[i]?.timezone,
-            goalServeVenueId: matchArray[i]?.venue_id,
-            venueName: matchArray[i]?.venue,
-            homeTeamTotalScore: matchArray[i]?.hometeam.totalscore,
-            awayTeamTotalScore: matchArray[i]?.awayteam.totalscore,
+            attendance: match?.attendance,
+            goalServeHomeTeamId: match?.hometeam.id,
+            goalServeAwayTeamId: match?.awayteam.id,
+            date: match?.date,
+            dateTimeUtc: match?.datetime_utc,
+            formattedDate: match?.formatted_date,
+            status: match?.status,
+            time: match?.time,
+            timezone: match?.timezone,
+            goalServeVenueId: match?.venue_id,
+            venueName: match?.venue,
+            homeTeamTotalScore: match?.hometeam.totalscore,
+            awayTeamTotalScore: match?.awayteam.totalscore,
 
-            timer: matchArray[i]?.timer ? matchArray[i]?.timer : "",
-            awayTeamOt: matchArray[i]?.awayteam.ot
-              ? matchArray[i]?.awayteam.ot
+            timer: match?.timer ? match?.timer : "",
+            awayTeamOt: match?.awayteam.ot
+              ? match?.awayteam.ot
               : "",
-            awayTeamQ1: matchArray[i]?.awayteam.q1
-              ? matchArray[i]?.awayteam.q1
+            awayTeamQ1: match?.awayteam.q1
+              ? match?.awayteam.q1
               : "",
-            awayTeamQ2: matchArray[i]?.awayteam.q2
-              ? matchArray[i]?.awayteam.q2
+            awayTeamQ2: match?.awayteam.q2
+              ? match?.awayteam.q2
               : "",
-            awayTeamQ3: matchArray[i]?.awayteam.q3
-              ? matchArray[i]?.awayteam.q3
+            awayTeamQ3: match?.awayteam.q3
+              ? match?.awayteam.q3
               : "",
-            awayTeamQ4: matchArray[i]?.awayteam.q4
-              ? matchArray[i]?.awayteam.q4
+            awayTeamQ4: match?.awayteam.q4
+              ? match?.awayteam.q4
               : "",
             // awayTeamBallOn: matchArray[i]?.awayteam.ball_on
             //   ? matchArray[i]?.awayteam.ball_on
@@ -467,20 +467,20 @@ export default class NCAAFDbCronServiceClass {
             //   ? matchArray[i]?.awayteam.number
             //   : "",
 
-            homeTeamOt: matchArray[i]?.hometeam.ot
-              ? matchArray[i]?.hometeam.ot
+            homeTeamOt: match?.hometeam.ot
+              ? match?.hometeam.ot
               : "",
-            homeTeamQ1: matchArray[i]?.hometeam.q1
-              ? matchArray[i]?.hometeam.q1
+            homeTeamQ1: match?.hometeam.q1
+              ? match?.hometeam.q1
               : "",
-            homeTeamQ2: matchArray[i]?.hometeam.q2
-              ? matchArray[i]?.hometeam.q2
+            homeTeamQ2: match?.hometeam.q2
+              ? match?.hometeam.q2
               : "",
-            homeTeamQ3: matchArray[i]?.hometeam.q3
-              ? matchArray[i]?.hometeam.q3
+            homeTeamQ3: match?.hometeam.q3
+              ? match?.hometeam.q3
               : "",
-            homeTeamQ4: matchArray[i]?.hometeam.q4
-              ? matchArray[i]?.hometeam.q4
+            homeTeamQ4: match?.hometeam.q4
+              ? match?.hometeam.q4
               : "",
             // homeTeamBallOn: matchArray[i]?.awayteam.ball_on
             //   ? matchArray[i]?.awayteam.ball_on
@@ -582,20 +582,20 @@ export default class NCAAFDbCronServiceClass {
           };
 
           const dataUpdate = await NcaafMatch.findOneAndUpdate(
-            { goalServeMatchId: matchArray[i]?.contestID },
+            { goalServeMatchId: match?.contestID },
             { $set: data },
             { new: true }
           );
           console.log("ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
 
           if (
-            matchArray[i]?.status != "Not Started" &&
-            matchArray[i]?.status != "Final" &&
-            matchArray[i]?.status != "Postponed" &&
-            matchArray[i]?.status != "Canceled" &&
-            matchArray[i]?.status != "Suspended"
+            match?.status != "Not Started" &&
+            match?.status != "Final" &&
+            match?.status != "Postponed" &&
+            match?.status != "Canceled" &&
+            match?.status != "Suspended"
           ) {
-            const goalServeMatchId = matchArray[i].contestID;
+            const goalServeMatchId = match.contestID;
             // expire not accepted bet requests
             await Bet.updateMany(
               {
@@ -618,29 +618,29 @@ export default class NCAAFDbCronServiceClass {
                 status: "ACTIVE",
               }
             );
-          } else if (matchArray[i].status == "Final") {
+          } else if (match.status == "Final") {
             const homeTeamTotalScore = parseFloat(
-              matchArray[i].hometeam.totalscore
+              match.hometeam.totalscore
             );
             const awayTeamTotalScore = parseFloat(
-              matchArray[i].awayteam.totalscore
+              match.awayteam.totalscore
             );
-            const goalServeMatchId = matchArray[i].contestID;
+            const goalServeMatchId = match.contestID;
             const goalServeWinTeamId =
               homeTeamTotalScore > awayTeamTotalScore
-                ? matchArray[i].hometeam.id
-                : matchArray[i].awayteam.id;
+                ? match.hometeam.id
+                : match.awayteam.id;
             await declareResultMatch(
               Number(goalServeMatchId),
               Number(goalServeWinTeamId),
               "NCAAF"
             );
           } else if (
-            matchArray[i].status == "Canceled" ||
-            matchArray[i].status == "Postponed" ||
-            matchArray[i].status == "Suspended"
+            match.status == "Canceled" ||
+            match.status == "Postponed" ||
+            match.status == "Suspended"
           ) {
-            const goalServeMatchId = matchArray[i].contestID;
+            const goalServeMatchId = match.contestID;
             await Bet.updateMany(
               {
                 status: "PENDING",
@@ -1507,8 +1507,6 @@ export default class NCAAFDbCronServiceClass {
     let month2 = moment(addDate).format("MM");
     let year2 = moment(addDate).format("YYYY");
     let date2 = `${day2}.${month2}.${year2}`;
-    console.log("date1",date1)
-    console.log("date2",date2)
     try {
       let data = {
         json: true,
@@ -1524,7 +1522,7 @@ export default class NCAAFDbCronServiceClass {
       );
       const matchArray = [];
       await matchArray.push(getMatch?.data?.shedules?.tournament);
-      console.log("matchArraymatchArraymatchArraymatchArray",matchArray?.length)
+      // console.log("matchArraymatchArraymatchArraymatchArray",matchArray?.length)
       const league: ILeagueModel | null = await League.findOne({
         goalServeLeagueId: getMatch?.data?.shedules?.id,
       });
