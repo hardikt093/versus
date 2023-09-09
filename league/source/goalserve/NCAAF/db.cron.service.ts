@@ -422,7 +422,14 @@ export default class NCAAFDbCronServiceClass {
       const matchArrayAll = await getMatch?.data?.scores?.category?.match;
       const matchArray = matchArrayAll.filter((element: any) => {
         // return element.status !== "Not Started";
-        return element.status !== "Not Started" && element.status !== "Final";
+        return (
+          element.status !== "Not Started" &&
+          element.status !== "Final" &&
+          element.status !== "Delayed" &&
+          element.status !== "Suspended" &&
+          element.status !== "Canceled" &&
+          element.status !== "Postponed"
+        );
       });
       // console.log("ncaafffff matchArray=======>",matchArray)
       if (matchArray?.length > 0 && matchArray) {
@@ -1155,7 +1162,9 @@ export default class NCAAFDbCronServiceClass {
       });
       if (matchArray?.length > 0 && matchArray) {
         for (let i = 0; i < matchArray?.length; i++) {
+          // console.log("statusssssss======>", matchArray[i]?.status);
           const data: Partial<INcaafMatchModel> = {
+            status: matchArray[i]?.status,
             awayTeamDefensive: matchArray[i]?.defensive?.awayteam?.player
               ? matchArray[i]?.defensive?.awayteam?.player
               : [],
@@ -1254,6 +1263,8 @@ export default class NCAAFDbCronServiceClass {
       } else {
         if (matchArray) {
           const data: Partial<INcaafMatchModel> = {
+            status: matchArray?.status,
+
             awayTeamDefensive: matchArray?.defensive?.awayteam?.player
               ? matchArray?.defensive?.awayteam?.player
               : [],
