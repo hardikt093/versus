@@ -447,8 +447,8 @@ export default class NCAAFDbCronServiceClass {
             timezone: match?.timezone,
             goalServeVenueId: match?.venue_id,
             venueName: match?.venue,
-            homeTeamTotalScore: match?.hometeam.totalscore,
-            awayTeamTotalScore: match?.awayteam.totalscore,
+            homeTeamTotalScore: match?.hometeam?.totalscore,
+            awayTeamTotalScore: match?.awayteam?.totalscore,
 
             timer: match?.timer ? match?.timer : "",
             awayTeamOt: match?.awayteam.ot ? match?.awayteam.ot : "",
@@ -652,8 +652,8 @@ export default class NCAAFDbCronServiceClass {
         if (matchArray) {
           const data: Partial<INcaafMatchModel> = {
             attendance: matchArray?.attendance,
-            goalServeHomeTeamId: matchArray?.hometeam.id,
-            goalServeAwayTeamId: matchArray?.awayteam.id,
+            goalServeHomeTeamId: matchArray?.hometeam?.id,
+            goalServeAwayTeamId: matchArray?.awayteam?.id,
 
             date: matchArray?.date,
             dateTimeUtc: matchArray?.datetime_utc,
@@ -663,38 +663,38 @@ export default class NCAAFDbCronServiceClass {
             timezone: matchArray?.timezone,
             goalServeVenueId: matchArray?.venue_id,
             venueName: matchArray?.venue,
-            homeTeamTotalScore: matchArray?.hometeam.totalscore,
-            awayTeamTotalScore: matchArray?.awayteam.totalscore,
+            homeTeamTotalScore: matchArray?.hometeam?.totalscore,
+            awayTeamTotalScore: matchArray?.awayteam?.totalscore,
 
             timer: matchArray?.timer ? matchArray?.timer : "",
-            awayTeamOt: matchArray?.awayteam.ot ? matchArray?.awayteam.ot : "",
-            awayTeamQ1: matchArray?.awayteam.q1 ? matchArray?.awayteam.q1 : "",
-            awayTeamQ2: matchArray?.awayteam.q2 ? matchArray?.awayteam.q2 : "",
-            awayTeamQ3: matchArray?.awayteam.q3 ? matchArray?.awayteam.q3 : "",
-            awayTeamQ4: matchArray?.awayteam.q4 ? matchArray?.awayteam.q4 : "",
-            awayTeamBallOn: matchArray?.awayteam.ball_on
+            awayTeamOt: matchArray?.awayteam?.ot ? matchArray?.awayteam.ot : "",
+            awayTeamQ1: matchArray?.awayteam?.q1 ? matchArray?.awayteam.q1 : "",
+            awayTeamQ2: matchArray?.awayteam?.q2 ? matchArray?.awayteam.q2 : "",
+            awayTeamQ3: matchArray?.awayteam?.q3 ? matchArray?.awayteam.q3 : "",
+            awayTeamQ4: matchArray?.awayteam?.q4 ? matchArray?.awayteam.q4 : "",
+            awayTeamBallOn: matchArray?.awayteam?.ball_on
               ? matchArray?.awayteam.ball_on
               : "",
-            awayTeamDrive: matchArray?.awayteam.drive
-              ? matchArray?.awayteam.drive
+            awayTeamDrive: matchArray?.awayteam?.drive
+              ? matchArray?.awayteam?.drive
               : "",
-            awayTeamNumber: matchArray?.awayteam.number
-              ? matchArray?.awayteam.number
+            awayTeamNumber: matchArray?.awayteam?.number
+              ? matchArray?.awayteam?.number
               : "",
 
-            homeTeamOt: matchArray?.hometeam.ot ? matchArray?.hometeam.ot : "",
-            homeTeamQ1: matchArray?.hometeam.q1 ? matchArray?.hometeam.q1 : "",
-            homeTeamQ2: matchArray?.hometeam.q2 ? matchArray?.hometeam.q2 : "",
-            homeTeamQ3: matchArray?.hometeam.q3 ? matchArray?.hometeam.q3 : "",
-            homeTeamQ4: matchArray?.hometeam.q4 ? matchArray?.hometeam.q4 : "",
-            homeTeamBallOn: matchArray?.awayteam.ball_on
+            homeTeamOt: matchArray?.hometeam?.ot ? matchArray?.hometeam.ot : "",
+            homeTeamQ1: matchArray?.hometeam?.q1 ? matchArray?.hometeam.q1 : "",
+            homeTeamQ2: matchArray?.hometeam?.q2 ? matchArray?.hometeam.q2 : "",
+            homeTeamQ3: matchArray?.hometeam?.q3 ? matchArray?.hometeam.q3 : "",
+            homeTeamQ4: matchArray?.hometeam?.q4 ? matchArray?.hometeam.q4 : "",
+            homeTeamBallOn: matchArray?.awayteam?.ball_on
               ? matchArray?.awayteam.ball_on
               : "",
-            homeTeamDrive: matchArray?.hometeam.drive
-              ? matchArray?.hometeam.drive
+            homeTeamDrive: matchArray?.hometeam?.drive
+              ? matchArray?.hometeam?.drive
               : "",
-            homeTeamNumber: matchArray?.hometeam.number
-              ? matchArray?.hometeam.number
+            homeTeamNumber: matchArray?.hometeam?.number
+              ? matchArray?.hometeam?.number
               : "",
             // awayTeamDefensive: matchArray?.defensive?.awayteam?.player
             //   ? matchArray?.defensive?.awayteam?.player
