@@ -110,44 +110,44 @@ const search = async (nameKey: any, myArray: any) => {
   }
   return;
 };
-const transformLeague = async (getResponse: any, data: any) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const leagues = getResponse?.data?.standings?.category?.league;
-      const transformedLeagues = [];
-      for (let i = 0; i < leagues.length; i++) {
-        const league = leagues[i];
-        const leagueTransform: any = [];
-        const divisions = league.division;
-        await Promise.all(
-          divisions.map(async (division: IDivision) => {
-            const teams = division.team;
-            await Promise.all(
-              teams.map(async (team: ITeam) => {
-                const getAwayTeamImage = await goalserveApi(
-                  "https://www.goalserve.com/getfeed",
-                  data,
-                  `baseball/${team.id}_rosters`
-                );
-                team.teamImage = getAwayTeamImage.data.team.image;
+// const transformLeague = async (getResponse: any, data: any) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const leagues = getResponse?.data?.standings?.category?.league;
+//       const transformedLeagues = [];
+//       for (let i = 0; i < leagues.length; i++) {
+//         const league = leagues[i];
+//         const leagueTransform: any = [];
+//         const divisions = league.division;
+//         await Promise.all(
+//           divisions.map(async (division: IDivision) => {
+//             const teams = division.team;
+//             await Promise.all(
+//               teams.map(async (team: ITeam) => {
+//                 const getAwayTeamImage = await goalserveApi(
+//                   "https://www.goalserve.com/getfeed",
+//                   data,
+//                   `baseball/${team.id}_rosters`
+//                 );
+//                 team.teamImage = getAwayTeamImage.data.team.image;
 
-                team.pct = +(
-                  (Number(team.won) * 100) /
-                  (Number(team.won) + Number(team.lost))
-                ).toFixed(3);
-              })
-            );
-            leagueTransform.push({ teams: teams, name: division.name });
-          })
-        );
-        transformedLeagues.push({ [league.name]: leagueTransform });
-      }
-      resolve(transformedLeagues);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
+//                 team.pct = +(
+//                   (Number(team.won) * 100) /
+//                   (Number(team.won) + Number(team.lost))
+//                 ).toFixed(3);
+//               })
+//             );
+//             leagueTransform.push({ teams: teams, name: division.name });
+//           })
+//         );
+//         transformedLeagues.push({ [league.name]: leagueTransform });
+//       }
+//       resolve(transformedLeagues);
+//     } catch (error) {
+//       reject(error);
+//     }
+//   });
+// };
 export default class MlbDbCronServiceClass {
   public updateCurruntDateRecord = async () => {
     try {
@@ -508,10 +508,10 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsNl.data.statistic.category.team.map(async (item: any) => {
+      teamStatsNl?.data.statistic.category.team.map(async (item: any) => {
         const team = await Team.findOne({ name: item.name });
         let data = item;
-        data.category = teamStatsNl.data.statistic.category.name;
+        data.category = teamStatsNl?.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
         data.battingRank = teamStatsNl?.data.statistic.category.rank;
@@ -530,10 +530,10 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsAL.data.statistic.category.team.map(async (item: any) => {
+      teamStatsAL?.data.statistic.category.team.map(async (item: any) => {
         const team = await Team.findOne({ name: item.name });
         let data = item;
-        data.category = teamStatsAL.data.statistic.category.name;
+        data.category = teamStatsAL?.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
         data.battingRank = teamStatsAL?.data.statistic.category.rank;
@@ -551,11 +551,11 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsNlPitching.data.statistic.category.team.map(
+      teamStatsNlPitching?.data.statistic.category.team.map(
         async (item: any) => {
           const team = await Team.findOne({ name: item.name });
           let data = item;
-          data.category = teamStatsNlPitching.data.statistic.category.name;
+          data.category = teamStatsNlPitching?.data.statistic.category.name;
           data.teamId = team?.id;
           data.goalServeTeamId = team?.goalServeTeamId;
           data.pitchingRank = teamStatsNlPitching?.data.statistic.category.rank;
@@ -575,11 +575,11 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsALPitching.data.statistic.category.team.map(
+      teamStatsALPitching?.data.statistic.category.team.map(
         async (item: any) => {
           const team = await Team.findOne({ name: item.name });
           let data = item;
-          data.category = teamStatsALPitching.data.statistic.category.name;
+          data.category = teamStatsALPitching?.data.statistic.category.name;
           data.teamId = team?.id;
           data.goalServeTeamId = team?.goalServeTeamId;
           data.pitchingRank = teamStatsALPitching?.data.statistic.category.rank;

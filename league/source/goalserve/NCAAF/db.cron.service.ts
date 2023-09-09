@@ -1340,7 +1340,7 @@ export default class NCAAFDbCronServiceClass {
           );
           let stats: Partial<INFLStatsTeamModel> = {};
           let category = teamstats?.data?.statistic?.category;
-          for (let j = 0; j < category.length; j++) {
+          for (let j = 0; j < category?.length; j++) {
             let categoryName = category[j].name;
             switch (categoryName) {
               case "Passing":
