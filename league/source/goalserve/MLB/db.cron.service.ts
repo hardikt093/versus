@@ -165,6 +165,7 @@ export default class MlbDbCronServiceClass {
       });
       if (matchArray?.length > 0) {
         for (const match of matchArray) {
+          console.log("MLB match.id==>", match.id);
           const data: Partial<IMatchModel> = {
             outs: match.outs,
             date: match.date,
@@ -196,7 +197,7 @@ export default class MlbDbCronServiceClass {
             data,
             { new: true }
           );
-          // console.log("matchUpdate==>", matchUpdate?.goalServeMatchId);
+          console.log("MLB matchUpdate==>", matchUpdate?.goalServeMatchId);
           // }
           if (
             match.status != "Not Started" &&

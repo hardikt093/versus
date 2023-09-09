@@ -23,12 +23,12 @@ const createOdds = cron.schedule("*/5 * * * *", async () => {
 let isupdateCurruntDateRecordRunning: boolean = false;
 const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateCurruntDateRecordRunning) {
-    // console.log("MLB updateCurruntDateRecord Skip");
+    console.log("MLB updateCurruntDateRecord Skip");
     return;
   }
   isupdateCurruntDateRecordRunning = true;
   try {
-    // console.info("inside score cron updateCurruntDateRecord");
+    console.info("inside MLB score cron updateCurruntDateRecord");
     await mlbService.updateCurruntDateRecord();
   } catch (error) {
     console.log(error);
