@@ -1029,6 +1029,11 @@ const getLiveDataOfNcaaf = async (data: any) => {
               $ne: "Suspended",
             },
           },
+          {
+            status: {
+              $ne: "Delayed",
+            },
+          },
         ],
         // seasonName: {
         //   $in: data.calenderData.map((name: any) => name.seasonName),
