@@ -421,11 +421,13 @@ export default class NCAAFDbCronServiceClass {
       );
       const matchArrayAll = await getMatch?.data?.scores?.category?.match;
       const matchArray = matchArrayAll.filter((element: any) => {
-        return element.status !== "Not Started";
+        // return element.status !== "Not Started";
+        return element.status !== "Not Started" && element.status !== "Final";
       });
+      // console.log("ncaafffff matchArray=======>",matchArray)
       if (matchArray?.length > 0 && matchArray) {
         for (const match of matchArray) {
-          console.log("ncaafmatch.id", match?.contestID);
+          console.log("LIVE ncaafmatch.id", match?.contestID);
           const data: Partial<INcaafMatchModel> = {
             attendance: match?.attendance,
             goalServeHomeTeamId: match?.hometeam.id,
@@ -586,7 +588,7 @@ export default class NCAAFDbCronServiceClass {
             { $set: data },
             { new: true }
           );
-          console.log("ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
+          console.log("LIVE ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
 
           if (
             match?.status != "Not Started" &&
@@ -834,7 +836,8 @@ export default class NCAAFDbCronServiceClass {
                 status: "ACTIVE",
               }
             );
-          } else if (matchArray.status == "Final") {
+          } 
+          else if (matchArray.status == "Final") {
             const homeTeamTotalScore = parseFloat(
               matchArray.hometeam.totalscore
             );
@@ -878,6 +881,372 @@ export default class NCAAFDbCronServiceClass {
               }
             );
           }
+        }
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  public updateLiveMatchFinal = async () => {
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
+        { json: true }
+      );
+      const matchArrayAll = await getMatch?.data?.scores?.category?.match;
+      const matchArray = matchArrayAll.filter((element: any) => {
+        return element.status === "Final";
+        // return element.status !== "Not Started" && element.status !== "Final";
+      });
+      // console.log("ncaafffff matchArray=======>",matchArray)
+      if (matchArray?.length > 0 && matchArray) {
+        for (const match of matchArray) {
+          console.log("FINAL ncaafmatch.id", match?.contestID);
+          const data: Partial<INcaafMatchModel> = {
+            attendance: match?.attendance,
+            goalServeHomeTeamId: match?.hometeam.id,
+            goalServeAwayTeamId: match?.awayteam.id,
+            date: match?.date,
+            dateTimeUtc: match?.datetime_utc,
+            formattedDate: match?.formatted_date,
+            status: match?.status,
+            time: match?.time,
+            timezone: match?.timezone,
+            goalServeVenueId: match?.venue_id,
+            venueName: match?.venue,
+            homeTeamTotalScore: match?.hometeam.totalscore,
+            awayTeamTotalScore: match?.awayteam.totalscore,
+
+            timer: match?.timer ? match?.timer : "",
+            awayTeamOt: match?.awayteam.ot
+              ? match?.awayteam.ot
+              : "",
+            awayTeamQ1: match?.awayteam.q1
+              ? match?.awayteam.q1
+              : "",
+            awayTeamQ2: match?.awayteam.q2
+              ? match?.awayteam.q2
+              : "",
+            awayTeamQ3: match?.awayteam.q3
+              ? match?.awayteam.q3
+              : "",
+            awayTeamQ4: match?.awayteam.q4
+              ? match?.awayteam.q4
+              : "",
+            // awayTeamBallOn: matchArray[i]?.awayteam.ball_on
+            //   ? matchArray[i]?.awayteam.ball_on
+            //   : "",
+            // awayTeamDrive: matchArray[i]?.awayteam.drive
+            //   ? matchArray[i]?.awayteam.drive
+            //   : "",
+            // awayTeamNumber: matchArray[i]?.awayteam.number
+            //   ? matchArray[i]?.awayteam.number
+            //   : "",
+
+            homeTeamOt: match?.hometeam.ot
+              ? match?.hometeam.ot
+              : "",
+            homeTeamQ1: match?.hometeam.q1
+              ? match?.hometeam.q1
+              : "",
+            homeTeamQ2: match?.hometeam.q2
+              ? match?.hometeam.q2
+              : "",
+            homeTeamQ3: match?.hometeam.q3
+              ? match?.hometeam.q3
+              : "",
+            homeTeamQ4: match?.hometeam.q4
+              ? match?.hometeam.q4
+              : "",
+            // homeTeamBallOn: matchArray[i]?.awayteam.ball_on
+            //   ? matchArray[i]?.awayteam.ball_on
+            //   : "",
+            // homeTeamDrive: matchArray[i]?.hometeam.drive
+            //   ? matchArray[i]?.hometeam.drive
+            //   : "",
+            // homeTeamNumber: matchArray[i]?.hometeam.number
+            //   ? matchArray[i]?.hometeam.number
+            //   : "",
+            // awayTeamDefensive: matchArray[i]?.defensive?.awayteam?.player
+            //   ? matchArray[i]?.defensive?.awayteam?.player
+            //   : [],
+            // homeTeamDefensive: matchArray[i]?.defensive?.hometeam?.player
+            //   ? matchArray[i]?.defensive?.hometeam?.player
+            //   : [],
+
+            // firstQuarterEvent: matchArray[i]?.events?.firstquarter?.event
+            //   ? matchArray[i]?.events?.firstquarter?.event
+            //   : [],
+            // fourthQuarterEvent: matchArray[i]?.events?.fourthquarter?.event
+            //   ? matchArray[i]?.events?.fourthquarter?.event
+            //   : [],
+            // overtimeEvent: matchArray[i]?.events?.overtime?.event
+            //   ? matchArray[i]?.events?.overtime?.event
+            //   : [],
+            // secondQuarterEvent: matchArray[i]?.events?.secondquarter?.event
+            //   ? matchArray[i]?.events?.secondquarter?.event
+            //   : [],
+            // thirdQuarterEvent:
+            //   matchArray[i]?.events?.thirdquarter?.event != null
+            //     ? matchArray[i]?.events?.thirdquarter?.event
+            //     : [],
+
+            // awayTeamFumbles: matchArray[i]?.fumbles?.awayteam?.player
+            //   ? matchArray[i]?.fumbles?.awayteam?.player
+            //   : [],
+            // homeTeamFumbles: matchArray[i]?.fumbles?.hometeam?.player
+            //   ? matchArray[i]?.fumbles?.hometeam?.player
+            //   : [],
+
+            // awayTeamInterceptions: matchArray[i]?.interceptions?.awayteam
+            //   ?.player
+            //   ? matchArray[i]?.interceptions?.awayteam?.player
+            //   : [],
+            // homeTeamInterceptions: matchArray[i]?.interceptions?.hometeam
+            //   ?.player
+            //   ? matchArray[i]?.interceptions?.hometeam?.player
+            //   : [],
+
+            // awayTeamKickReturn: matchArray[i]?.kick_returns?.awayteam?.player
+            //   ? matchArray[i]?.kick_returns?.awayteam?.player
+            //   : [],
+            // homeTeamKickReturn: matchArray[i]?.kick_returns?.hometeam?.player
+            //   ? matchArray[i]?.kick_returns?.hometeam?.player
+            //   : [],
+
+            // awayTeamKick: matchArray[i]?.kicking?.awayteam?.player
+            //   ? matchArray[i]?.kicking?.awayteam?.player
+            //   : {},
+            // homeTeamKick: matchArray[i]?.kicking?.hometeam?.player
+            //   ? matchArray[i]?.kicking?.hometeam?.player
+            //   : {},
+
+            // awayTeamPassing: matchArray[i]?.passing?.awayteam?.player
+            //   ? matchArray[i]?.passing?.awayteam?.player
+            //   : [],
+            // homeTeamPassing: matchArray[i]?.passing?.hometeam?.player
+            //   ? matchArray[i]?.passing?.hometeam?.player
+            //   : [],
+
+            // awayTeamPuntReturns: matchArray[i]?.punt_returns?.awayteam?.player
+            //   ? matchArray[i]?.punt_returns?.awayteam?.player
+            //   : [],
+            // homeTeamPuntReturns: matchArray[i]?.punt_returns?.hometeam?.player
+            //   ? matchArray[i]?.punt_returns?.hometeam?.player
+            //   : [],
+
+            // awayTeamPunting: matchArray[i]?.punting?.awayteam?.player
+            //   ? matchArray[i]?.punting?.awayteam?.player
+            //   : [],
+            // homeTeamPunting: matchArray[i]?.punting?.hometeam?.player
+            //   ? matchArray[i]?.punting?.hometeam?.player
+            //   : [],
+
+            // awayTeamReceiving: matchArray[i]?.receiving?.awayteam?.player
+            //   ? matchArray[i]?.receiving?.awayteam?.player
+            //   : [],
+            // homeTeamReceiving: matchArray[i]?.receiving?.hometeam?.player
+            //   ? matchArray[i]?.receiving?.hometeam?.player
+            //   : [],
+
+            // awayTeamRushing: matchArray[i]?.rushing?.awayteam?.player
+            //   ? matchArray[i]?.rushing?.awayteam?.player
+            //   : [],
+            // homeTeamRushing: matchArray[i]?.rushing?.hometeam?.player
+            //   ? matchArray[i]?.rushing?.hometeam?.player
+            // : [],
+          };
+
+          const dataUpdate = await NcaafMatch.findOneAndUpdate(
+            { goalServeMatchId: match?.contestID },
+            { $set: data },
+            { new: true }
+          );
+          console.log("FINAL ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
+
+         
+           if (match.status == "Final") {
+            const homeTeamTotalScore = parseFloat(
+              match.hometeam.totalscore
+            );
+            const awayTeamTotalScore = parseFloat(
+              match.awayteam.totalscore
+            );
+            const goalServeMatchId = match.contestID;
+            const goalServeWinTeamId =
+              homeTeamTotalScore > awayTeamTotalScore
+                ? match.hometeam.id
+                : match.awayteam.id;
+            await declareResultMatch(
+              Number(goalServeMatchId),
+              Number(goalServeWinTeamId),
+              "NCAAF"
+            );
+          } 
+          
+        }
+      } else {
+        if (matchArray) {
+          const data: Partial<INcaafMatchModel> = {
+            attendance: matchArray?.attendance,
+            goalServeHomeTeamId: matchArray?.hometeam.id,
+            goalServeAwayTeamId: matchArray?.awayteam.id,
+
+            date: matchArray?.date,
+            dateTimeUtc: matchArray?.datetime_utc,
+            formattedDate: matchArray?.formatted_date,
+            status: matchArray?.status,
+            time: matchArray?.time,
+            timezone: matchArray?.timezone,
+            goalServeVenueId: matchArray?.venue_id,
+            venueName: matchArray?.venue,
+            homeTeamTotalScore: matchArray?.hometeam.totalscore,
+            awayTeamTotalScore: matchArray?.awayteam.totalscore,
+
+            timer: matchArray?.timer ? matchArray?.timer : "",
+            awayTeamOt: matchArray?.awayteam.ot ? matchArray?.awayteam.ot : "",
+            awayTeamQ1: matchArray?.awayteam.q1 ? matchArray?.awayteam.q1 : "",
+            awayTeamQ2: matchArray?.awayteam.q2 ? matchArray?.awayteam.q2 : "",
+            awayTeamQ3: matchArray?.awayteam.q3 ? matchArray?.awayteam.q3 : "",
+            awayTeamQ4: matchArray?.awayteam.q4 ? matchArray?.awayteam.q4 : "",
+            awayTeamBallOn: matchArray?.awayteam.ball_on
+              ? matchArray?.awayteam.ball_on
+              : "",
+            awayTeamDrive: matchArray?.awayteam.drive
+              ? matchArray?.awayteam.drive
+              : "",
+            awayTeamNumber: matchArray?.awayteam.number
+              ? matchArray?.awayteam.number
+              : "",
+
+            homeTeamOt: matchArray?.hometeam.ot ? matchArray?.hometeam.ot : "",
+            homeTeamQ1: matchArray?.hometeam.q1 ? matchArray?.hometeam.q1 : "",
+            homeTeamQ2: matchArray?.hometeam.q2 ? matchArray?.hometeam.q2 : "",
+            homeTeamQ3: matchArray?.hometeam.q3 ? matchArray?.hometeam.q3 : "",
+            homeTeamQ4: matchArray?.hometeam.q4 ? matchArray?.hometeam.q4 : "",
+            homeTeamBallOn: matchArray?.awayteam.ball_on
+              ? matchArray?.awayteam.ball_on
+              : "",
+            homeTeamDrive: matchArray?.hometeam.drive
+              ? matchArray?.hometeam.drive
+              : "",
+            homeTeamNumber: matchArray?.hometeam.number
+              ? matchArray?.hometeam.number
+              : "",
+            // awayTeamDefensive: matchArray?.defensive?.awayteam?.player
+            //   ? matchArray?.defensive?.awayteam?.player
+            //   : [],
+            // homeTeamDefensive: matchArray?.defensive?.hometeam?.player
+            //   ? matchArray?.defensive?.hometeam?.player
+            //   : [],
+
+            // firstQuarterEvent: matchArray?.events?.firstquarter?.event
+            //   ? matchArray?.events?.firstquarter?.event
+            //   : [],
+            // fourthQuarterEvent: matchArray?.events?.fourthquarter?.event
+            //   ? matchArray?.events?.fourthquarter?.event
+            //   : [],
+            // overtimeEvent: matchArray?.events?.overtime?.event
+            //   ? matchArray?.events?.overtime?.event
+            //   : [],
+            // secondQuarterEvent: matchArray?.events?.secondquarter?.event
+            //   ? matchArray?.events?.secondquarter?.event
+            //   : [],
+            // thirdQuarterEvent:
+            //   matchArray?.events?.thirdquarter?.event != null
+            //     ? matchArray?.events?.thirdquarter?.event
+            //     : [],
+
+            // awayTeamFumbles: matchArray?.fumbles?.awayteam?.player
+            //   ? matchArray?.fumbles?.awayteam?.player
+            //   : [],
+            // homeTeamFumbles: matchArray?.fumbles?.hometeam?.player
+            //   ? matchArray?.fumbles?.hometeam?.player
+            //   : [],
+
+            // awayTeamInterceptions: matchArray?.interceptions?.awayteam?.player
+            //   ? matchArray?.interceptions?.awayteam?.player
+            //   : [],
+            // homeTeamInterceptions: matchArray?.interceptions?.hometeam?.player
+            //   ? matchArray?.interceptions?.hometeam?.player
+            //   : [],
+
+            // awayTeamKickReturn: matchArray?.kick_returns?.awayteam?.player
+            //   ? matchArray?.kick_returns?.awayteam?.player
+            //   : [],
+            // homeTeamKickReturn: matchArray?.kick_returns?.hometeam?.player
+            //   ? matchArray?.kick_returns?.hometeam?.player
+            //   : [],
+
+            // awayTeamKick: matchArray?.kicking?.awayteam?.player
+            //   ? matchArray?.kicking?.awayteam?.player
+            //   : {},
+            // homeTeamKick: matchArray?.kicking?.hometeam?.player
+            //   ? matchArray?.kicking?.hometeam?.player
+            //   : {},
+
+            // awayTeamPassing: matchArray?.passing?.awayteam?.player
+            //   ? matchArray?.passing?.awayteam?.player
+            //   : [],
+            // homeTeamPassing: matchArray?.passing?.hometeam?.player
+            //   ? matchArray?.passing?.hometeam?.player
+            //   : [],
+
+            // awayTeamPuntReturns: matchArray?.punt_returns?.awayteam?.player
+            //   ? matchArray?.punt_returns?.awayteam?.player
+            //   : [],
+            // homeTeamPuntReturns: matchArray?.punt_returns?.hometeam?.player
+            //   ? matchArray?.punt_returns?.hometeam?.player
+            //   : [],
+
+            // awayTeamPunting: matchArray?.punting?.awayteam?.player
+            //   ? matchArray?.punting?.awayteam?.player
+            //   : [],
+            // homeTeamPunting: matchArray?.punting?.hometeam?.player
+            //   ? matchArray?.punting?.hometeam?.player
+            //   : [],
+
+            // awayTeamReceiving: matchArray?.receiving?.awayteam?.player
+            //   ? matchArray?.receiving?.awayteam?.player
+            //   : [],
+            // homeTeamReceiving: matchArray?.receiving?.hometeam?.player
+            //   ? matchArray?.receiving?.hometeam?.player
+            //   : [],
+
+            // awayTeamRushing: matchArray?.rushing?.awayteam?.player
+            //   ? matchArray?.rushing?.awayteam?.player
+            //   : [],
+            // homeTeamRushing: matchArray?.rushing?.hometeam?.player
+            //   ? matchArray?.rushing?.hometeam?.player
+            //   : [],
+          };
+          const dataUpdate = await NcaafMatch.findOneAndUpdate(
+            { goalServeMatchId: matchArray?.contestID },
+            { $set: data },
+            { new: true }
+          );
+
+         
+            if (matchArray.status == "Final") {
+            const homeTeamTotalScore = parseFloat(
+              matchArray.hometeam.totalscore
+            );
+            const awayTeamTotalScore = parseFloat(
+              matchArray.awayteam.totalscore
+            );
+            const goalServeMatchId = matchArray.contestID;
+            const goalServeWinTeamId =
+              homeTeamTotalScore > awayTeamTotalScore
+                ? matchArray.hometeam.id
+                : matchArray.awayteam.id;
+            await declareResultMatch(
+              parseInt(goalServeMatchId),
+              parseInt(goalServeWinTeamId),
+              "NCAAF"
+            );
+          } 
+          
         }
       }
     } catch (error) {

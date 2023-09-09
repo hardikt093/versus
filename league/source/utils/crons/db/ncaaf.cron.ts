@@ -50,8 +50,24 @@ const updateLiveMatch = cron.schedule("*/35 * * * * *", async () => {
     isUpdateLiveMatch = false;
   }
 });
-// updateLiveMatchRemainingData
 
+let isUpdateLiveMatchFinal: boolean = false;
+const updateLiveMatchFinal = cron.schedule("*/35 * * * * *", async () => {
+  if (isUpdateLiveMatchFinal) {
+    console.log("updateLiveMatchFinal NCAAF Skip", new Date());
+    return;
+  }
+  isUpdateLiveMatchFinal = true;
+  try {
+    console.info("inside NCAAF updateLiveMatchFinal", new Date());
+    await ncaafService.updateLiveMatchFinal();
+  } catch (error) {
+    Date;
+    console.log(error);
+  } finally {
+    isUpdateLiveMatch = false;
+  }
+});
 
 let isUpdateDriveInLive: boolean = false;
 const addOrUpdateDriveInLive = cron.schedule("*/35 * * * * *", async () => {
@@ -161,5 +177,6 @@ export default {
   oddAdded,
   updateStandingRecord,
   updateLiveMatchRemainingData,
-  addOrUpdateDriveInLive
+  addOrUpdateDriveInLive,
+  updateLiveMatchFinal
 };
