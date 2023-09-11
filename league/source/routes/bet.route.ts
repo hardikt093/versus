@@ -32,7 +32,7 @@ router.post(
 );
 
 router.post(
-  "/settled",
+  "/squared",
   auth,
   validate(BetValidation.betSettled),
   BetController.betSettledUpdate
