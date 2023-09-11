@@ -49,6 +49,7 @@ var betSchema = new Schema(
     isSquared: {
       type: Boolean,
       default: false,
+      required: true,
     },
     isOpponentUserWinAmount: {
       type: Boolean,

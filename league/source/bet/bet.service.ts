@@ -1631,7 +1631,7 @@ const listBetsByType = async (
         goalServeMatchId: 1,
         requestUserId: 1,
         opponentUserId: 1,
-        isSquared: 1,
+        isSquared: { $ifNull: ["$isSquared", false] },
         betTotalAmount: { $round: ["$betTotalAmount", 2] },
         requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
         opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
