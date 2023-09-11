@@ -160,7 +160,7 @@ export default class MlbDbCronServiceClass {
         "baseball/usa"
       );
       const matchArrayAll = await getMatch?.data?.scores?.category?.match;
-      const matchArray = matchArrayAll.filter((element: any) => {
+      const matchArray = matchArrayAll?.filter((element: any) => {
         return element.status !== "Not Started";
       });
       if (matchArray?.length > 0) {
