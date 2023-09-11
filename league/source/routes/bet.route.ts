@@ -30,7 +30,12 @@ router.post(
   validate(BetValidation.listbyType),
   BetController.listBetsByType
 );
-
+router.post(
+  "/like",
+  auth,
+  validate(BetValidation.betLike),
+  BetController.likeBet
+);
 router.post(
   "/:id/response",
   auth,

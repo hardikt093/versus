@@ -56,3 +56,8 @@ enum sportsType {
     BASEBALL,
     VOLLEYBALL
 }
+
+export interface IBetData{
+    betId:string,
+    isBetLike:boolean,
+}

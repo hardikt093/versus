@@ -3,6 +3,7 @@ import Bet from "../models/documents/bet.model";
 import Match from "../models/documents/MLB/match.model";
 import AppError from "../utils/AppError";
 import {
+  IBetData,
   ICreateBetRequest,
   IOpponentCount,
   IlistBetCondition,
@@ -20,6 +21,7 @@ import socketService from "../services/socket.service";
 import Notification from "../models/documents/notification.model";
 import NflMatch from "../models/documents/NFL/match.model";
 import NcaafMatch from "../models/documents/NCAAF/match.model";
+import BetLike from "../models/documents/betLike.model";
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -667,9 +669,44 @@ const listBetsByType = async (
     condition["$and"].push({
       $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
     });
-    query.push({
-      $match: condition,
-    });
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
   } else if (body.type === "SETTLED") {
     condition.status = "RESULT_DECLARED";
     query.push(
@@ -687,6 +724,39 @@ const listBetsByType = async (
               else: { $eq: ["$opponentUserId", loggedInUserId] },
             },
           },
+        },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
         },
       }
     );
@@ -713,6 +783,39 @@ const listBetsByType = async (
         $match: {
           isWon: true,
         },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
       }
     );
   } else if (body.type === "LOST") {
@@ -738,7 +841,41 @@ const listBetsByType = async (
         $match: {
           isWon: false,
         },
-      }
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      },
+      
     );
   } else {
     condition.status = {
@@ -1466,6 +1603,8 @@ const listBetsByType = async (
         requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
         opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
         oddType: 1,
+        likeCount: 1,
+        loggedInUserLiked: 1,
         goalServeLeagueId: 1,
         goalServeRequestUserTeamId: 1,
         goalServeOpponentUserTeamId: 1,
@@ -1673,6 +1812,30 @@ const readNotification = async (userId: number) => {
     });
   }
 };
+
+const likeBet = async (userId: number, betData: IBetData) => {
+  const bet = await Bet.findOne({
+    _id: betData.betId,
+  }).lean();
+  if (!bet) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
+  }
+  await BetLike.updateOne(
+    {
+      goalServeMatchId: bet.goalServeMatchId,
+      betId: betData.betId,
+      betLikedUserId: userId,
+    },
+    {
+      $set: {
+        opponentUserId: bet.opponentUserId,
+        requestUserId: bet.requestUserId,
+        isBetLike: betData.isBetLike,
+      },
+    },
+    { upsert: true }
+  );
+};
 export default {
   getBetUser,
   listBetsByStatus,
@@ -1687,4 +1850,5 @@ export default {
   listBetsByType,
   readNotification,
   pushNotification,
+  likeBet,
 };

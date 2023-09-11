@@ -68,7 +68,12 @@ const listBetsByStatus = {
       .required(),
   }),
 };
-
+const betLike={
+  body:Joi.object().keys({
+    betId:Joi.string().required(),
+    isBetLike:Joi.boolean().required(),
+  }),
+}
 const listbyType = {
   body: Joi.object().keys({
     size : Joi.number(),
@@ -97,5 +102,6 @@ export default {
   responseBet,
   modifyBet,
   listbyType,
-  deleteBet
+  deleteBet,
+  betLike
 };
