@@ -30,6 +30,13 @@ router.post(
   validate(BetValidation.listbyType),
   BetController.listBetsByType
 );
+
+router.post(
+  "/settled",
+  auth,
+  validate(BetValidation.betSettled),
+  BetController.betSettledUpdate
+);
 router.post(
   "/like",
   auth,

@@ -174,7 +174,18 @@ const likeBet = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const betSettledUpdate = async (req: Request, res: Response) => {
+  try {
+    const betData = await BetService.betSettledUpdate(
+      req.loggedInUser.id,
+      req.body
 
+    );
+    createResponse(res, httpStatus.OK, "", betData);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   getBetUser,
   createBet,
@@ -186,5 +197,6 @@ export default {
   responseBet,
   listBetsByType,
   deleteBet,
-  likeBet
+  likeBet,
+  betSettledUpdate
 };

@@ -874,8 +874,7 @@ const listBetsByType = async (
           },
           likeCount: { $size: "$likes" },
         },
-      },
-      
+      }
     );
   } else {
     condition.status = {
@@ -896,6 +895,39 @@ const listBetsByType = async (
               else: { $eq: ["$opponentUserId", loggedInUserId] },
             },
           },
+        },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
         },
       }
     );
@@ -1599,6 +1631,7 @@ const listBetsByType = async (
         goalServeMatchId: 1,
         requestUserId: 1,
         opponentUserId: 1,
+        isSquared: 1,
         betTotalAmount: { $round: ["$betTotalAmount", 2] },
         requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
         opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
@@ -1836,6 +1869,39 @@ const likeBet = async (userId: number, betData: IBetData) => {
     { upsert: true }
   );
 };
+
+const betSettledUpdate = async (userId: number, betData: IBetData) => {
+  const bet = await Bet.findOne({
+    _id: betData.betId,
+  }).lean();
+  if (!bet) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
+  }
+  if (
+    (userId === bet.requestUserId &&
+      bet?.goalServeWinTeamId === bet.goalServeRequestUserTeamId) ||
+    (userId === bet.opponentUserId &&
+      bet?.goalServeWinTeamId === bet.goalServeOpponentUserTeamId)
+  ) {
+    await Bet.updateOne(
+      {
+        goalServeMatchId: bet.goalServeMatchId,
+        _id: betData.betId,
+      },
+      {
+        $set: {
+          squaredUser: userId,
+          isSquared: true,
+        },
+      }
+    );
+  } else {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      Messages.YOU_CAN_NOT_RESPONSE_TO_THIS_BET
+    );
+  }
+};
 export default {
   getBetUser,
   listBetsByStatus,
@@ -1851,4 +1917,5 @@ export default {
   readNotification,
   pushNotification,
   likeBet,
+  betSettledUpdate,
 };

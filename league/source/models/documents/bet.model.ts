@@ -43,6 +43,13 @@ var betSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    squaredUser: {
+      type: Number,
+    },
+    isSquared: {
+      type: Boolean,
+      default: false,
+    },
     isOpponentUserWinAmount: {
       type: Boolean,
       default: false,
@@ -79,7 +86,7 @@ var betSchema = new Schema(
     },
     leagueType: {
       type: String,
-      enum: ["NHL", "MLB", "NBA", "NFL","NCAAF"],
+      enum: ["NHL", "MLB", "NBA", "NFL", "NCAAF"],
       required: true,
     },
     status: {
