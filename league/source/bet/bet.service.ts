@@ -1656,7 +1656,7 @@ const listBetsByType = async (
     {
       $sort: {
         createdAt: -1,
-      }
+      },
     },
     {
       $project: {
@@ -1671,6 +1671,900 @@ const listBetsByType = async (
         oddType: 1,
         likeCount: 1,
         loggedInUserLiked: 1,
+        goalServeLeagueId: 1,
+        goalServeRequestUserTeamId: 1,
+        goalServeOpponentUserTeamId: 1,
+        isRequestUserWinAmount: 1,
+        isOpponentUserWinAmount: 1,
+        requestUserFairOdds: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
+                { $toString: "$requestUserFairOdds" },
+              ],
+            },
+            { $toString: "$requestUserFairOdds" },
+          ],
+        },
+        opponentUserFairOdds: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
+                { $toString: "$opponentUserFairOdds" },
+              ],
+            },
+            { $toString: "$opponentUserFairOdds" },
+          ],
+        },
+        requestUserGoalServeOdd: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
+                { $toString: "$requestUserGoalServeOdd" },
+                { $toString: "$requestUserGoalServeOdd" },
+              ],
+            },
+            { $toString: "$requestUserGoalServeOdd" },
+          ],
+        },
+        opponentUserGoalServeOdd: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
+                { $toString: "$opponentUserGoalServeOdd" },
+                { $toString: "$opponentUserGoalServeOdd" },
+              ],
+            },
+            { $toString: "$opponentUserGoalServeOdd" },
+          ],
+        },
+        leagueType: 1,
+        status: 1,
+        paymentStatus: 1,
+        isDeleted: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        __v: 1,
+        responseAt: 1,
+        goalServeWinTeamId: 1,
+        resultAt: 1,
+        isWon: 1,
+        match: 1,
+        requestUser: 1,
+        opponentUser: 1,
+        displayStatus: {
+          $switch: {
+            branches: [
+              {
+                case: { $eq: ["$status", "CONFIRMED"] },
+                then: "ACTIVE",
+              },
+              {
+                case: {
+                  $and: [
+                    { $eq: ["$status", "RESULT_DECLARED"] },
+                    { $eq: ["$isWon", true] },
+                  ],
+                },
+                then: "WON",
+              },
+              {
+                case: {
+                  $and: [
+                    { $eq: ["$status", "RESULT_DECLARED"] },
+                    { $eq: ["$isWon", false] },
+                  ],
+                },
+                then: "LOST",
+              },
+            ],
+            default: "$status",
+          },
+        },
+      },
+    }
+  );
+  let data = await Bet.aggregate(query);
+  if (data && data.length > 0) {
+    const ids = [
+      ...new Set(
+        data.map((item) => [item.requestUserId, item.opponentUserId]).flat()
+      ),
+    ];
+    const resp = await axiosPostMicro(
+      {
+        ids,
+      },
+      `${config.authServerUrl}/users/getBulk`,
+      ""
+    );
+    const bindedObject: any = data.map(
+      (item: { requestUserId: number; opponentUserId: number }) => {
+        const requestUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.requestUserId
+        );
+        const opponentUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.opponentUserId
+        );
+        return {
+          ...item,
+          requestUser,
+          opponentUser,
+        };
+      }
+    );
+    return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
+  }
+  return { list: data, count: count[0]?.count[0]?.count ?? 0 };
+};
+
+const listBetsDashboard = async (body: IlistBetRequestData) => {
+  let page = 1;
+  let limit = body.size ?? 10;
+  if (body.page) {
+    page = body.page;
+  }
+  let skip = limit * (page - 1);
+  let condition: any = {
+    isDeleted: false,
+    $or: [
+      { status: "CONFIRMED" },
+      { status: "ACTIVE" },
+      { status: "RESULT_DECLARED" },
+    ],
+  };
+
+  let query: any = [];
+
+  query.push(
+    {
+      $match: condition,
+    },
+    {
+      $lookup: {
+        from: "betlikes",
+        let: {
+          id: "$_id",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ["$betId", "$$id"],
+                  },
+                  {
+                    $eq: ["$isBetLike", true],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        likeCount: { $size: "$likes" },
+      },
+    }
+  );
+
+  let countQuery: Array<any> = Array.from(query);
+  countQuery.push({
+    $facet: {
+      count: [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ],
+    },
+  });
+  const count = await Bet.aggregate(countQuery);
+  query.push(
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
+    },
+    {
+      $facet: {
+        mlbData: [
+          {
+            $match: {
+              leagueType: "MLB",
+            },
+          },
+          {
+            $lookup: {
+              from: "matches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      //added standing
+                      {
+                        $lookup: {
+                          from: "standings",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "homeTeamStanding",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: {
+                            $arrayElemAt: ["$homeTeamStanding.won", 0],
+                          },
+                          lost: {
+                            $arrayElemAt: ["$homeTeamStanding.lost", 0],
+                          },
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      //added standing
+                      {
+                        $lookup: {
+                          from: "standings",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "awayTeamStanding",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: {
+                            $arrayElemAt: ["$awayTeamStanding.won", 0],
+                          },
+                          lost: {
+                            $arrayElemAt: ["$awayTeamStanding.lost", 0],
+                          },
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        nflData: [
+          {
+            $match: {
+              leagueType: "NFL",
+            },
+          },
+          {
+            $lookup: {
+              from: "nflmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nflteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nflteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nflteams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nflteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        nhlData: [
+          {
+            $match: {
+              leagueType: "NHL",
+            },
+          },
+          {
+            $lookup: {
+              from: "nhlmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nhlteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        ncaafData: [
+          {
+            $match: {
+              leagueType: "NCAAF",
+            },
+          },
+          {
+            $lookup: {
+              from: "ncaafmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "ncaafteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "ncaafteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: "$locality",
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "ncaafteams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "ncaafteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: "$locality",
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        root: { $concatArrays: ["$mlbData", "$nflData", "$ncaafData"] },
+      },
+    },
+    { $unwind: "$root" },
+    { $replaceRoot: { newRoot: "$root" } },
+    {
+      $unwind: {
+        path: "$match",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        goalServeMatchId: 1,
+        requestUserId: 1,
+        opponentUserId: 1,
+        isSquared: { $ifNull: ["$isSquared", false] },
+        betTotalAmount: { $round: ["$betTotalAmount", 2] },
+        requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
+        opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
+        oddType: 1,
+        likeCount: 1,
         goalServeLeagueId: 1,
         goalServeRequestUserTeamId: 1,
         goalServeOpponentUserTeamId: 1,
@@ -2006,4 +2900,5 @@ export default {
   pushNotification,
   likeBet,
   betSettledUpdate,
+  listBetsDashboard,
 };

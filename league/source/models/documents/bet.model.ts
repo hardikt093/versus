@@ -115,5 +115,4 @@ var betSchema = new Schema(
   }
 );
 const Bet = model<IBetModel>("bet", betSchema);
-
 export default Bet;
