@@ -1650,8 +1650,13 @@ const listBetsByType = async (
         preserveNullAndEmptyArrays: true,
       },
     },
+    // {
+    //   $sort: body.sortBy,
+    // },
     {
-      $sort: body.sortBy,
+      $sort: {
+        createdAt: -1,
+      }
     },
     {
       $project: {

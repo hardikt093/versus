@@ -84,10 +84,10 @@ const listbyType = {
   body: Joi.object().keys({
     size: Joi.number(),
     page: Joi.number(),
-    sortBy: Joi.object().keys({
-      createdAt: Joi.number(),
-      updatedAt: Joi.number(),
-    }),
+    // sortBy: Joi.object().keys({
+    //   createdAt: Joi.number(),
+    //   updatedAt: Joi.number(),
+    // }),
     type: Joi.string().valid("OPEN", "ACTIVE", "SETTLED", "WON", "LOST"),
   }),
 };
