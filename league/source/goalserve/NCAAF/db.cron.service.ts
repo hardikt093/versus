@@ -419,19 +419,30 @@ export default class NCAAFDbCronServiceClass {
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
         { json: true }
       );
-      const matchArrayAll = await getMatch?.data?.scores?.category?.match;
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
+
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
+      }
       const matchArray = matchArrayAll.filter((element: any) => {
         return (
           element.status !== "Not Started" &&
           element.status !== "Final" &&
-          element.status !== "Delayed" &&
+          element.status !== "Delayed" && 
           element.status !== "Suspended" &&
           element.status !== "Canceled" &&
-          element.status !== "Postponed"
+          element.status !== "Postponed" &&
+          element.status !== "After Over Time" &&
+          element.status !== "Final/OT" &&
+          element.status !== "Final/20T"
         );
       });
-      if (matchArray?.length > 0 && matchArray) {
-        for (const match of matchArray) {
+      const updatePromises = matchArray?.map(async (match: any) => {
           console.log("LIVE ncaafmatch.id", match?.contestID);
           const data: Partial<INcaafMatchModel> = {
             attendance: match?.attendance,
@@ -566,7 +577,7 @@ export default class NCAAFDbCronServiceClass {
             // homeTeamRushing: matchArray[i]?.rushing?.hometeam?.player
             //   ? matchArray[i]?.rushing?.hometeam?.player
             // : [],
-          };
+          }
 
           const dataUpdate = await NcaafMatch.findOneAndUpdate(
             { goalServeMatchId: match?.contestID },
@@ -598,8 +609,9 @@ export default class NCAAFDbCronServiceClass {
               status: "ACTIVE",
             }
           );
-        }
-      }
+        
+      })
+      await Promise.all(updatePromises);
     } catch (error) {
       console.log("error", error);
     }
@@ -611,9 +623,12 @@ export default class NCAAFDbCronServiceClass {
         "https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores",
         { json: true }
       );
-      const matchArrayAll = Array.isArray(getMatch?.data?.scores?.category?.match)
-      ? getMatch?.data?.scores?.category?.match
-      : [getMatch?.data?.scores?.category?.match];
+      // console.log("getMatch",getMatch.data?.scores?.category?.match)
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
 
       if (!matchArrayAll || matchArrayAll?.length === 0) {
         console.log("No matches to update.");
@@ -621,12 +636,23 @@ export default class NCAAFDbCronServiceClass {
       }
 
       const matchArray = matchArrayAll?.filter(
-        (element: any) => element.status === "Final"
+        (element: any) =>
+          element.status === "Final" ||
+          element.status === "After Over Time" ||
+          element.status === "Final/OT" ||
+          element.status === "Final/20T"
       );
+
+      console.log("matchArray NCAAF FINAL", matchArray);
       const updatePromises = matchArray?.map(async (match: any) => {
+        // console.log("NCAAF FINAL match.contestID", match.contestID);
         const findMatch = await NcaafMatch.findOne({
           goalServeMatchId: match.contestID,
-          status: "Final",
+          $or: [
+            { status: "After Over Time" },
+            { status: "Final" },
+            { status: "Final/20T" },
+          ],
         }).lean();
         if (!findMatch) {
           const data: Partial<INcaafMatchModel> = {
@@ -663,20 +689,20 @@ export default class NCAAFDbCronServiceClass {
             { $set: data },
             { new: true, upsert: true }
           );
-          if (match.status == "Final") {
-            const homeTeamTotalScore = parseFloat(match.hometeam.totalscore);
-            const awayTeamTotalScore = parseFloat(match.awayteam.totalscore);
-            const goalServeMatchId = match.contestID;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? match.hometeam.id
-                : match.awayteam.id;
-            await declareResultMatch(
-              Number(goalServeMatchId),
-              Number(goalServeWinTeamId),
-              "NCAAF"
-            );
-          }
+          // if (match.status == "Final") {
+          const homeTeamTotalScore = parseFloat(match.hometeam.totalscore);
+          const awayTeamTotalScore = parseFloat(match.awayteam.totalscore);
+          const goalServeMatchId = match.contestID;
+          const goalServeWinTeamId =
+            homeTeamTotalScore > awayTeamTotalScore
+              ? match.hometeam.id
+              : match.awayteam.id;
+          await declareResultMatch(
+            Number(goalServeMatchId),
+            Number(goalServeWinTeamId),
+            "NCAAF"
+          );
+          // }
         }
       });
       await Promise.all(updatePromises);

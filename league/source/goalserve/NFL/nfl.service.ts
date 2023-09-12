@@ -2784,6 +2784,11 @@ const getLiveDataOfNfl = async (data: any) => {
               $ne: "Suspended",
             },
           },
+          {
+            status: {
+              $ne: "After Over Time",
+            },
+          },
         ],
         seasonName: {
           $in: data.calenderData.map((name: any) => name.seasonName),

@@ -811,7 +811,7 @@ export default class NFLDbCronServiceClass {
                 status: "ACTIVE",
               }
             );
-          } else if (matchArray[i].status == "Final") {
+          } else if (matchArray[i].status == "Final" || matchArray[i].status == "After Over Time") {
             const homeTeamTotalScore = parseFloat(
               matchArray[i].hometeam.totalscore
             );
