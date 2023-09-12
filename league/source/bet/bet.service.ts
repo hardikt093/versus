@@ -1868,6 +1868,51 @@ const likeBet = async (userId: number, betData: IBetData) => {
     },
     { upsert: true }
   );
+  const betLikedResponse = await Bet.aggregate([
+    { $match: { _id: bet._id } },
+    { $limit: 1 },
+    {
+      $lookup: {
+        from: "betlikes",
+        let: {
+          id: "$_id",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ["$betId", "$$id"],
+                  },
+                  {
+                    $eq: ["$isBetLike", true],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        loggedInUserLiked: {
+          $in: [userId, "$likes.betLikedUserId"],
+        },
+        likeCount: { $size: "$likes" },
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        likeCount: 1,
+        loggedInUserLiked: 1,
+      },
+    },
+  ]);
+  return betLikedResponse[0];
 };
 
 const betSettledUpdate = async (userId: number, betData: IBetData) => {
