@@ -61,3 +61,7 @@ export interface IBetData{
     betId:string,
     isBetLike:boolean,
 }
+export interface IBetSquared{
+    betId:string,
+    isSquaredBet:boolean,
+}

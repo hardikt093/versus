@@ -76,7 +76,8 @@ const betLike={
 }
 const betSettled={
   body:Joi.object().keys({
-    betId:Joi.string().required()
+    betId:Joi.string().required(),
+    isSquaredBet:Joi.boolean().required(),
   }),
 }
 const listbyType = {

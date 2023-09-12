@@ -4,16 +4,13 @@ import Match from "../models/documents/MLB/match.model";
 import AppError from "../utils/AppError";
 import {
   IBetData,
+  IBetSquared,
   ICreateBetRequest,
   IOpponentCount,
-  IlistBetCondition,
   IlistBetRequestData,
-  IlistBetTypes,
-  IresponseBetRequest,
 } from "./bet.interface";
 import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
-import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
@@ -662,9 +659,44 @@ const listBetsByType = async (
   let query: any = [];
   if (body.type === "OPEN") {
     condition.status = "PENDING";
-    query.push({
-      $match: condition,
-    });
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
   } else if (body.type === "ACTIVE") {
     condition["$and"].push({
       $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
@@ -1915,7 +1947,7 @@ const likeBet = async (userId: number, betData: IBetData) => {
   return betLikedResponse[0];
 };
 
-const betSettledUpdate = async (userId: number, betData: IBetData) => {
+const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
   const bet = await Bet.findOne({
     _id: betData.betId,
   }).lean();
@@ -1936,10 +1968,20 @@ const betSettledUpdate = async (userId: number, betData: IBetData) => {
       {
         $set: {
           squaredUser: userId,
-          isSquared: true,
+          isSquared: betData.isSquaredBet,
         },
       }
     );
+    const betSettledResponse = await Bet.aggregate([
+      { $match: { _id: bet._id } },
+      {
+        $project: {
+          _id: 1,
+          isSquared: { $ifNull: ["$isSquared", false] },
+        },
+      },
+    ]);
+    return betSettledResponse[0];
   } else {
     throw new AppError(
       httpStatus.NOT_FOUND,
