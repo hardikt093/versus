@@ -30,7 +30,8 @@ export interface IlistBetCondition {
 export interface IlistBetRequestData {
     size? : number,
     page? : number,
-    type?: IlistBetTypes
+    type?: IlistBetTypes,
+    sortBy?: any
 }
 
 export enum IlistBetTypes {

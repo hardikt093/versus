@@ -1651,11 +1651,7 @@ const listBetsByType = async (
       },
     },
     {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        createdAt: -1,
-      },
+      $sort: body.sortBy,
     },
     {
       $project: {
