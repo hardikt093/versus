@@ -7,14 +7,14 @@ const createBet = {
     goalServeRequestUserTeamId: Joi.number().required(),
     goalServeOpponentUserTeamId: Joi.number().required(),
     goalServeMatchId: Joi.number().required(),
-    goalServeLeagueId : Joi.number().required(),
-    leagueType : Joi.string().required(),
-    oddType : Joi.string().required(),
-    requestUserGoalServeOdd : Joi.string().required(),
-    opponentUserGoalServeOdd : Joi.string().required(),
-    requestUserFairOdds : Joi.number().required(),
-    opponentUserFairOdds : Joi.number().required(),
-    isConfirmed : Joi.boolean().required()
+    goalServeLeagueId: Joi.number().required(),
+    leagueType: Joi.string().required(),
+    oddType: Joi.string().required(),
+    requestUserGoalServeOdd: Joi.string().required(),
+    opponentUserGoalServeOdd: Joi.string().required(),
+    requestUserFairOdds: Joi.number().required(),
+    opponentUserFairOdds: Joi.number().required(),
+    isConfirmed: Joi.boolean().required(),
   }),
 };
 const responseBet = {
@@ -68,37 +68,34 @@ const listBetsByStatus = {
       .required(),
   }),
 };
-const betLike={
-  body:Joi.object().keys({
-    betId:Joi.string().required(),
-    isBetLike:Joi.boolean().required(),
+const betLike = {
+  body: Joi.object().keys({
+    betId: Joi.string().required(),
+    isBetLike: Joi.boolean().required(),
   }),
-}
-const betSettled={
-  body:Joi.object().keys({
-    betId:Joi.string().required(),
-    isSquaredBet:Joi.boolean().required(),
+};
+const betSettled = {
+  body: Joi.object().keys({
+    betId: Joi.string().required(),
+    isSquaredBet: Joi.boolean().required(),
   }),
-}
+};
 const listbyType = {
   body: Joi.object().keys({
-    size : Joi.number(),
-    page : Joi.number(),
-    type: Joi.string()
-      .valid(
-        "OPEN",
-        "ACTIVE",
-        "SETTLED",
-        "WON",
-        "LOST",
-      ),
+    size: Joi.number(),
+    page: Joi.number(),
+    sortBy: Joi.object().keys({
+      createdAt: Joi.number(),
+      updatedAt: Joi.number(),
+    }),
+    type: Joi.string().valid("OPEN", "ACTIVE", "SETTLED", "WON", "LOST"),
   }),
 };
 
 const deleteBet = {
   params: Joi.object().keys({
     id: Joi.string().required(),
-  })
+  }),
 };
 export default {
   listBetsByStatus,
@@ -110,5 +107,5 @@ export default {
   listbyType,
   deleteBet,
   betLike,
-  betSettled
+  betSettled,
 };
