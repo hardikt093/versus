@@ -1866,7 +1866,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
     },
     {
       $addFields: {
-        likeCount: { $size: "$likes" },
+        likedUser: "$likes",
       },
     }
   );
@@ -2591,7 +2591,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
         requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
         opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
         oddType: 1,
-        likeCount: 1,
+        likedUser: 1,
         goalServeLeagueId: 1,
         goalServeRequestUserTeamId: 1,
         goalServeOpponentUserTeamId: 1,
