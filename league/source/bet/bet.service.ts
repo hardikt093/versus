@@ -1663,7 +1663,7 @@ const listBetsByType = async (
     // },
     {
       $sort: {
-        createdAt: -1,
+        updatedAt: -1,
       },
     },
     {
@@ -2575,7 +2575,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
     },
     {
       $sort: {
-        createdAt: -1,
+        updatedAt: -1,
       },
     },
     {
