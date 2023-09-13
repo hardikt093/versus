@@ -433,7 +433,7 @@ export default class NCAAFDbCronServiceClass {
         return (
           element.status !== "Not Started" &&
           element.status !== "Final" &&
-          element.status !== "Delayed" && 
+          element.status !== "Delayed" &&
           element.status !== "Suspended" &&
           element.status !== "Canceled" &&
           element.status !== "Postponed" &&
@@ -443,156 +443,59 @@ export default class NCAAFDbCronServiceClass {
         );
       });
       const updatePromises = matchArray?.map(async (match: any) => {
-          console.log("LIVE ncaafmatch.id", match?.contestID);
-          const data: Partial<INcaafMatchModel> = {
-            attendance: match?.attendance,
-            goalServeHomeTeamId: match?.hometeam.id,
-            goalServeAwayTeamId: match?.awayteam.id,
-            date: match?.date,
-            dateTimeUtc: match?.datetime_utc,
-            formattedDate: match?.formatted_date,
-            status: match?.status,
-            time: match?.time,
-            timezone: match?.timezone,
-            goalServeVenueId: match?.venue_id,
-            venueName: match?.venue,
-            homeTeamTotalScore: match?.hometeam?.totalscore,
-            awayTeamTotalScore: match?.awayteam?.totalscore,
+        console.log("LIVE ncaafmatch.id", match?.contestID);
+        const data: Partial<INcaafMatchModel> = {
+          attendance: match?.attendance,
+          goalServeHomeTeamId: match?.hometeam.id,
+          goalServeAwayTeamId: match?.awayteam.id,
+          date: match?.date,
+          dateTimeUtc: match?.datetime_utc,
+          formattedDate: match?.formatted_date,
+          status: match?.status,
+          time: match?.time,
+          timezone: match?.timezone,
+          goalServeVenueId: match?.venue_id,
+          venueName: match?.venue,
+          homeTeamTotalScore: match?.hometeam?.totalscore,
+          awayTeamTotalScore: match?.awayteam?.totalscore,
 
-            timer: match?.timer ? match?.timer : "",
-            awayTeamOt: match?.awayteam.ot ? match?.awayteam.ot : "",
-            awayTeamQ1: match?.awayteam.q1 ? match?.awayteam.q1 : "",
-            awayTeamQ2: match?.awayteam.q2 ? match?.awayteam.q2 : "",
-            awayTeamQ3: match?.awayteam.q3 ? match?.awayteam.q3 : "",
-            awayTeamQ4: match?.awayteam.q4 ? match?.awayteam.q4 : "",
-            // awayTeamBallOn: matchArray[i]?.awayteam.ball_on
-            //   ? matchArray[i]?.awayteam.ball_on
-            //   : "",
-            // awayTeamDrive: matchArray[i]?.awayteam.drive
-            //   ? matchArray[i]?.awayteam.drive
-            //   : "",
-            // awayTeamNumber: matchArray[i]?.awayteam.number
-            //   ? matchArray[i]?.awayteam.number
-            //   : "",
+          timer: match?.timer ? match?.timer : "",
+          awayTeamOt: match?.awayteam.ot ? match?.awayteam.ot : "",
+          awayTeamQ1: match?.awayteam.q1 ? match?.awayteam.q1 : "",
+          awayTeamQ2: match?.awayteam.q2 ? match?.awayteam.q2 : "",
+          awayTeamQ3: match?.awayteam.q3 ? match?.awayteam.q3 : "",
+          awayTeamQ4: match?.awayteam.q4 ? match?.awayteam.q4 : "",
 
-            homeTeamOt: match?.hometeam.ot ? match?.hometeam.ot : "",
-            homeTeamQ1: match?.hometeam.q1 ? match?.hometeam.q1 : "",
-            homeTeamQ2: match?.hometeam.q2 ? match?.hometeam.q2 : "",
-            homeTeamQ3: match?.hometeam.q3 ? match?.hometeam.q3 : "",
-            homeTeamQ4: match?.hometeam.q4 ? match?.hometeam.q4 : "",
-            // homeTeamBallOn: matchArray[i]?.awayteam.ball_on
-            //   ? matchArray[i]?.awayteam.ball_on
-            //   : "",
-            // homeTeamDrive: matchArray[i]?.hometeam.drive
-            //   ? matchArray[i]?.hometeam.drive
-            //   : "",
-            // homeTeamNumber: matchArray[i]?.hometeam.number
-            //   ? matchArray[i]?.hometeam.number
-            //   : "",
-            // awayTeamDefensive: matchArray[i]?.defensive?.awayteam?.player
-            //   ? matchArray[i]?.defensive?.awayteam?.player
-            //   : [],
-            // homeTeamDefensive: matchArray[i]?.defensive?.hometeam?.player
-            //   ? matchArray[i]?.defensive?.hometeam?.player
-            //   : [],
+          homeTeamOt: match?.hometeam.ot ? match?.hometeam.ot : "",
+          homeTeamQ1: match?.hometeam.q1 ? match?.hometeam.q1 : "",
+          homeTeamQ2: match?.hometeam.q2 ? match?.hometeam.q2 : "",
+          homeTeamQ3: match?.hometeam.q3 ? match?.hometeam.q3 : "",
+          homeTeamQ4: match?.hometeam.q4 ? match?.hometeam.q4 : "",
+        };
 
-            // firstQuarterEvent: matchArray[i]?.events?.firstquarter?.event
-            //   ? matchArray[i]?.events?.firstquarter?.event
-            //   : [],
-            // fourthQuarterEvent: matchArray[i]?.events?.fourthquarter?.event
-            //   ? matchArray[i]?.events?.fourthquarter?.event
-            //   : [],
-            // overtimeEvent: matchArray[i]?.events?.overtime?.event
-            //   ? matchArray[i]?.events?.overtime?.event
-            //   : [],
-            // secondQuarterEvent: matchArray[i]?.events?.secondquarter?.event
-            //   ? matchArray[i]?.events?.secondquarter?.event
-            //   : [],
-            // thirdQuarterEvent:
-            //   matchArray[i]?.events?.thirdquarter?.event != null
-            //     ? matchArray[i]?.events?.thirdquarter?.event
-            //     : [],
+        const dataUpdate = await NcaafMatch.findOneAndUpdate(
+          { goalServeMatchId: match?.contestID },
+          { $set: data },
+          { new: true }
+        );
+        console.log("LIVE ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
 
-            // awayTeamFumbles: matchArray[i]?.fumbles?.awayteam?.player
-            //   ? matchArray[i]?.fumbles?.awayteam?.player
-            //   : [],
-            // homeTeamFumbles: matchArray[i]?.fumbles?.hometeam?.player
-            //   ? matchArray[i]?.fumbles?.hometeam?.player
-            //   : [],
-
-            // awayTeamInterceptions: matchArray[i]?.interceptions?.awayteam
-            //   ?.player
-            //   ? matchArray[i]?.interceptions?.awayteam?.player
-            //   : [],
-            // homeTeamInterceptions: matchArray[i]?.interceptions?.hometeam
-            //   ?.player
-            //   ? matchArray[i]?.interceptions?.hometeam?.player
-            //   : [],
-
-            // awayTeamKickReturn: matchArray[i]?.kick_returns?.awayteam?.player
-            //   ? matchArray[i]?.kick_returns?.awayteam?.player
-            //   : [],
-            // homeTeamKickReturn: matchArray[i]?.kick_returns?.hometeam?.player
-            //   ? matchArray[i]?.kick_returns?.hometeam?.player
-            //   : [],
-
-            // awayTeamKick: matchArray[i]?.kicking?.awayteam?.player
-            //   ? matchArray[i]?.kicking?.awayteam?.player
-            //   : {},
-            // homeTeamKick: matchArray[i]?.kicking?.hometeam?.player
-            //   ? matchArray[i]?.kicking?.hometeam?.player
-            //   : {},
-
-            // awayTeamPassing: matchArray[i]?.passing?.awayteam?.player
-            //   ? matchArray[i]?.passing?.awayteam?.player
-            //   : [],
-            // homeTeamPassing: matchArray[i]?.passing?.hometeam?.player
-            //   ? matchArray[i]?.passing?.hometeam?.player
-            //   : [],
-
-            // awayTeamPuntReturns: matchArray[i]?.punt_returns?.awayteam?.player
-            //   ? matchArray[i]?.punt_returns?.awayteam?.player
-            //   : [],
-            // homeTeamPuntReturns: matchArray[i]?.punt_returns?.hometeam?.player
-            //   ? matchArray[i]?.punt_returns?.hometeam?.player
-            //   : [],
-
-            // awayTeamPunting: matchArray[i]?.punting?.awayteam?.player
-            //   ? matchArray[i]?.punting?.awayteam?.player
-            //   : [],
-            // homeTeamPunting: matchArray[i]?.punting?.hometeam?.player
-            //   ? matchArray[i]?.punting?.hometeam?.player
-            //   : [],
-
-            // awayTeamReceiving: matchArray[i]?.receiving?.awayteam?.player
-            //   ? matchArray[i]?.receiving?.awayteam?.player
-            //   : [],
-            // homeTeamReceiving: matchArray[i]?.receiving?.hometeam?.player
-            //   ? matchArray[i]?.receiving?.hometeam?.player
-            //   : [],
-
-            // awayTeamRushing: matchArray[i]?.rushing?.awayteam?.player
-            //   ? matchArray[i]?.rushing?.awayteam?.player
-            //   : [],
-            // homeTeamRushing: matchArray[i]?.rushing?.hometeam?.player
-            //   ? matchArray[i]?.rushing?.hometeam?.player
-            // : [],
-          }
-
-          const dataUpdate = await NcaafMatch.findOneAndUpdate(
-            { goalServeMatchId: match?.contestID },
-            { $set: data },
-            { new: true }
-          );
-          console.log("LIVE ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
-
-          const goalServeMatchId = match.contestID;
+        const goalServeMatchId = match.contestID;
+        // expire not accepted bet requests
+        if (
+          match?.status != "Not Started" &&
+          match?.status != "Final" &&
+          match?.status != "Postponed" &&
+          match?.status != "Canceled" &&
+          match?.status != "Suspended"
+        ) {
+          const goalServeMatchId = match?.contestID;
           // expire not accepted bet requests
           await Bet.updateMany(
             {
               status: "PENDING",
               goalServeMatchId: Number(goalServeMatchId),
-              leagueType: "NCAAF",
+              leagueType: "NFL",
             },
             {
               status: "EXPIRED",
@@ -603,14 +506,40 @@ export default class NCAAFDbCronServiceClass {
             {
               status: "CONFIRMED",
               goalServeMatchId: Number(goalServeMatchId),
-              leagueType: "NCAAF",
+              leagueType: "NFL",
             },
             {
               status: "ACTIVE",
             }
           );
-        
-      })
+        } else if (
+          match.status == "Cancelled" ||
+          match.status == "Postponed" ||
+          match.status == "Suspended"
+        ) {
+          const goalServeMatchId = match.contestID;
+          await Bet.updateMany(
+            {
+              status: "PENDING",
+              goalServeMatchId: Number(goalServeMatchId),
+              leagueType: "NFL",
+            },
+            {
+              status: "EXPIRED",
+            }
+          );
+          await Bet.updateMany(
+            {
+              status: { $in: ["CONFIRMED", "ACTIVE"] },
+              goalServeMatchId: Number(goalServeMatchId),
+              leagueType: "NFL",
+            },
+            {
+              status: "CANCELED",
+            }
+          );
+        }
+      });
       await Promise.all(updatePromises);
     } catch (error) {
       console.log("error", error);
@@ -643,7 +572,6 @@ export default class NCAAFDbCronServiceClass {
           element.status === "Final/20T"
       );
 
-      console.log("matchArray NCAAF FINAL", matchArray);
       const updatePromises = matchArray?.map(async (match: any) => {
         // console.log("NCAAF FINAL match.contestID", match.contestID);
         const findMatch = await NcaafMatch.findOne({
@@ -651,6 +579,7 @@ export default class NCAAFDbCronServiceClass {
           $or: [
             { status: "After Over Time" },
             { status: "Final" },
+            { status: "Final/OT" },
             { status: "Final/20T" },
           ],
         }).lean();

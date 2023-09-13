@@ -955,7 +955,18 @@ const scoreWithDate = async (data: any) => {
         weekName: {
           $in: data.calenderData.map((name: any) => name.weekName),
         },
-        status: "Final",
+        $or: [
+          {
+            status: {
+              $eq: "Final",
+            },
+          },
+          {
+            status: {
+              $eq: "After Over Time",
+            },
+          },
+        ],
       },
     },
     {

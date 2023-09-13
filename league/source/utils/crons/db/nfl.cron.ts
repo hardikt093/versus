@@ -79,6 +79,22 @@ const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 
+let isUpdateLiveMatchFinal: boolean = false;
+const updateLiveMatchFinal = cron.schedule("*/10 * * * * *", async () => {
+  // console.log("isupdateFinalMatchNfl Skip");
+  if (isUpdateLiveMatchFinal) {
+    return;
+  }
+  isUpdateLiveMatchFinal = true;
+  try {
+    await nflService.updateLiveMatchFinal();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isUpdateLiveMatch = false;
+  }
+});
+
 let isupdateInjuredPlayernflRunning: boolean = false;
 const updateInjuredPlayerNFL = cron.schedule("0 0 */1 * * *", async () => {
   if (isupdateInjuredPlayernflRunning) {
@@ -165,6 +181,7 @@ export default {
   updatePlayersNfl,
   updateTeamStatsNfl,
   updateLiveMatch,
+  updateLiveMatchFinal,
   updateInjuredPlayerNFL,
   oddAdded,
   updateMatchStatsNFL,
