@@ -2809,48 +2809,44 @@ const likeBet = async (userId: number, betData: IBetData) => {
     { upsert: true }
   );
   const betLikedResponse = await Bet.aggregate([
-    { $match: { _id: bet._id } },
-    { $limit: 1 },
     {
-      $lookup: {
-        from: "betlikes",
-        let: {
-          id: "$_id",
-        },
-        pipeline: [
+      '$match': {
+        '_id': bet._id 
+      }
+    }, {
+      '$limit': 1
+    }, {
+      '$lookup': {
+        'from': 'betlikes', 
+        'let': {
+          'id': '$_id'
+        }, 
+        'pipeline': [
           {
-            $match: {
-              $expr: {
-                $and: [
+            '$match': {
+              '$expr': {
+                '$and': [
                   {
-                    $eq: ["$betId", "$$id"],
-                  },
-                  {
-                    $eq: ["$isBetLike", true],
-                  },
-                ],
-              },
-            },
-          },
-        ],
-        as: "likes",
-      },
-    },
-    {
-      $addFields: {
-        loggedInUserLiked: {
-          $in: [userId, "$likes.betLikedUserId"],
-        },
-        likeCount: "$likes"
-      },
-    },
-    {
-      $project: {
-        _id: 1,
-        likedUser: 1,
-        loggedInUserLiked: 1,
-      },
-    },
+                    '$eq': [
+                      '$betId', '$$id'
+                    ]
+                  }, {
+                    '$eq': [
+                      '$isBetLike', true
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        ], 
+        'as': 'likes'
+      }
+    }, {
+      '$project': {
+        'likedUser': '$likes'
+      }
+    }
   ]);
   return betLikedResponse[0];
 };
