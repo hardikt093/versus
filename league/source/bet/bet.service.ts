@@ -1660,12 +1660,12 @@ const listBetsByType = async (
       $sort: {
         updatedAt: -1,
       },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: limit,
-      },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
     },
     {
       $project: {
