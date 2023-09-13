@@ -204,6 +204,9 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     betId: createBet._id,
   });
   pushNotification(data.opponentUserId);
+  await socketService.socket("bet", {
+    createdBet,
+  });
   return createdBet;
 };
 
@@ -1170,6 +1173,7 @@ const listBetsByType = async (
                     homeTeamHit: 1,
                     homeTeamError: 1,
                     awayTeamHit: 1,
+                  
                     awayTeamError: 1,
                     createdAt: 1,
                     updatedAt: 1,
@@ -1177,6 +1181,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"mlb",
                     _id: 1,
                   },
                 },
@@ -1327,6 +1332,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"nfl",
                     _id: 1,
                   },
                 },
@@ -1477,6 +1483,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"nhl",
                     _id: 1,
                   },
                 },
@@ -1627,6 +1634,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"ncaaf",
                     _id: 1,
                   },
                 },
@@ -2088,6 +2096,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"mlb",
                     _id: 1,
                   },
                 },
@@ -2238,6 +2247,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"nfl",
                     _id: 1,
                   },
                 },
@@ -2388,6 +2398,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"nhl",
                     _id: 1,
                   },
                 },
@@ -2538,6 +2549,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league:"ncaaf",
                     _id: 1,
                   },
                 },
