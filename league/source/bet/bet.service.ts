@@ -1880,6 +1880,19 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
   const count = await Bet.aggregate(countQuery);
   query.push(
     {
+      $addFields: {
+        isWon: {
+          $cond: {
+            if: {
+              $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+            },
+            then: "$requestUserId",
+            else: "$opponentUserId",
+          },
+        },
+      },
+    },
+    {
       $skip: skip,
     },
     {
@@ -2644,22 +2657,8 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                 then: "ACTIVE",
               },
               {
-                case: {
-                  $and: [
-                    { $eq: ["$status", "RESULT_DECLARED"] },
-                    { $eq: ["$isWon", true] },
-                  ],
-                },
-                then: "WON",
-              },
-              {
-                case: {
-                  $and: [
-                    { $eq: ["$status", "RESULT_DECLARED"] },
-                    { $eq: ["$isWon", false] },
-                  ],
-                },
-                then: "LOST",
+                case: { $eq: ["$status", "RESULT_DECLARED"] },
+                then: "FINAL",
               },
             ],
             default: "$status",
