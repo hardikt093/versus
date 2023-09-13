@@ -2841,13 +2841,13 @@ const likeBet = async (userId: number, betData: IBetData) => {
         loggedInUserLiked: {
           $in: [userId, "$likes.betLikedUserId"],
         },
-        likeCount: { $size: "$likes" },
+        likeCount: "$likes"
       },
     },
     {
       $project: {
         _id: 1,
-        likeCount: 1,
+        likedUser: 1,
         loggedInUserLiked: 1,
       },
     },
