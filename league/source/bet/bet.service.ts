@@ -1657,8 +1657,22 @@ const listBetsByType = async (
     //   $sort: body.sortBy,
     // },
     {
+      $addFields: {
+        dateutc: {
+          $toDate: "$createdAt",
+        },
+      },
+    },
+    {
       $sort: {
-        updatedAt: -1,
+        dateutc: -1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
       },
     },
     {
@@ -1741,7 +1755,7 @@ const listBetsByType = async (
         status: 1,
         paymentStatus: 1,
         isDeleted: 1,
-        createdAt: 1,
+        createdAt: "$dateInString",
         updatedAt: 1,
         __v: 1,
         responseAt: 1,
