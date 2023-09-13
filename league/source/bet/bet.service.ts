@@ -984,12 +984,7 @@ const listBetsByType = async (
   });
   const count = await Bet.aggregate(countQuery);
   query.push(
-    {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
-    },
+   
     {
       $facet: {
         mlbData: [
@@ -1665,6 +1660,12 @@ const listBetsByType = async (
       $sort: {
         updatedAt: -1,
       },
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      },
     },
     {
       $project: {
@@ -1900,12 +1901,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
         },
       },
     },
-    {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
-    },
+  
     {
       $facet: {
         mlbData: [
@@ -2577,6 +2573,12 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       $sort: {
         updatedAt: -1,
       },
+    },
+    {
+      $skip: skip,
+    },
+    {
+      $limit: limit,
     },
     {
       $project: {
