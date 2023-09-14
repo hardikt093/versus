@@ -75,6 +75,12 @@ const socket = async (eventName: string, data: object | Array<object>) => {
     case "ncaafLiveBoxscore":
       io.emit("ncaafLiveBoxscore", data);
       break;
+    case "betUpdate":
+      io.emit("betUpdate", data);
+      break;
+    case "betConfirmed":
+      io.emit("betConfirmed", data);
+      break;
     default:
       break;
   }

@@ -20,6 +20,7 @@ import NflMatch from "../models/documents/NFL/match.model";
 import NcaafMatch from "../models/documents/NCAAF/match.model";
 import BetLike from "../models/documents/betLike.model";
 
+
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
     return amount / ((-1 * odd) / 100);
@@ -204,9 +205,6 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     betId: createBet._id,
   });
   pushNotification(data.opponentUserId);
-  await socketService.socket("bet", {
-    createdBet,
-  });
   return createdBet;
 };
 
@@ -249,6 +247,7 @@ const responseBet = async (
   let prepareObject = {
     status: isConfirmed ? betStatus.CONFIRMED : betStatus.REJECTED,
     responseAt: new Date(),
+    activeTimestamp: isConfirmed ? new Date() : null,
   };
 
   const updateBet = await Bet.updateOne(
@@ -257,7 +256,14 @@ const responseBet = async (
     },
     prepareObject
   );
+  let updatedStatus = await listBetsDashboard({
+    socketType: true,
+    betId: id,
+  });
 
+  await socketService.socket("betConfirmed", {
+    bet: updatedStatus.list[0],
+  });
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
@@ -984,7 +990,6 @@ const listBetsByType = async (
   });
   const count = await Bet.aggregate(countQuery);
   query.push(
-   
     {
       $facet: {
         mlbData: [
@@ -1168,7 +1173,7 @@ const listBetsByType = async (
                     homeTeamHit: 1,
                     homeTeamError: 1,
                     awayTeamHit: 1,
-                  
+
                     awayTeamError: 1,
                     createdAt: 1,
                     updatedAt: 1,
@@ -1176,7 +1181,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"mlb",
+                    league: "mlb",
                     _id: 1,
                   },
                 },
@@ -1327,7 +1332,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"nfl",
+                    league: "nfl",
                     _id: 1,
                   },
                 },
@@ -1478,7 +1483,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"nhl",
+                    league: "nhl",
                     _id: 1,
                   },
                 },
@@ -1629,7 +1634,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"ncaaf",
+                    league: "ncaaf",
                     _id: 1,
                   },
                 },
@@ -1846,7 +1851,9 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       { status: "RESULT_DECLARED" },
     ],
   };
-
+  if (body.socketType) {
+    condition._id = body.betId;
+  }
   let query: any = [];
 
   query.push(
@@ -1915,7 +1922,11 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
         },
       },
     },
-  
+    {
+      $sort: {
+        activeTimestamp: -1,
+      },
+    },
     {
       $facet: {
         mlbData: [
@@ -2106,7 +2117,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"mlb",
+                    league: "mlb",
                     _id: 1,
                   },
                 },
@@ -2257,7 +2268,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"nfl",
+                    league: "nfl",
                     _id: 1,
                   },
                 },
@@ -2408,7 +2419,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"nhl",
+                    league: "nhl",
                     _id: 1,
                   },
                 },
@@ -2559,7 +2570,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
                     date: 1,
                     outs: 1,
                     timezone: 1,
-                    league:"ncaaf",
+                    league: "ncaaf",
                     _id: 1,
                   },
                 },
@@ -2582,119 +2593,120 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
         path: "$match",
         preserveNullAndEmptyArrays: true,
       },
-    },
-    {
-      $sort: {
-        updatedAt: -1,
-      },
-    },
-    {
-      $skip: skip,
-    },
-    {
-      $limit: limit,
-    },
-    {
-      $project: {
-        _id: 1,
-        goalServeMatchId: 1,
-        requestUserId: 1,
-        opponentUserId: 1,
-        isSquared: { $ifNull: ["$isSquared", false] },
-        betTotalAmount: { $round: ["$betTotalAmount", 2] },
-        requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
-        opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
-        oddType: 1,
-        likedUser: 1,
-        goalServeLeagueId: 1,
-        goalServeRequestUserTeamId: 1,
-        goalServeOpponentUserTeamId: 1,
-        isRequestUserWinAmount: 1,
-        isOpponentUserWinAmount: 1,
-        requestUserFairOdds: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
-                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
-                { $toString: "$requestUserFairOdds" },
-              ],
-            },
-            { $toString: "$requestUserFairOdds" },
-          ],
-        },
-        opponentUserFairOdds: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
-                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
-                { $toString: "$opponentUserFairOdds" },
-              ],
-            },
-            { $toString: "$opponentUserFairOdds" },
-          ],
-        },
-        requestUserGoalServeOdd: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
-                { $toString: "$requestUserGoalServeOdd" },
-                { $toString: "$requestUserGoalServeOdd" },
-              ],
-            },
-            { $toString: "$requestUserGoalServeOdd" },
-          ],
-        },
-        opponentUserGoalServeOdd: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
-                { $toString: "$opponentUserGoalServeOdd" },
-                { $toString: "$opponentUserGoalServeOdd" },
-              ],
-            },
-            { $toString: "$opponentUserGoalServeOdd" },
-          ],
-        },
-        leagueType: 1,
-        status: 1,
-        paymentStatus: 1,
-        isDeleted: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        __v: 1,
-        responseAt: 1,
-        goalServeWinTeamId: 1,
-        resultAt: 1,
-        isWon: 1,
-        match: 1,
-        requestUser: 1,
-        opponentUser: 1,
-        displayStatus: {
-          $switch: {
-            branches: [
-              {
-                case: { $eq: ["$status", "CONFIRMED"] },
-                then: "ACTIVE",
-              },
-              {
-                case: { $eq: ["$status", "RESULT_DECLARED"] },
-                then: "FINAL",
-              },
-            ],
-            default: "$status",
-          },
-        },
-      },
     }
   );
+  if (!body.socketType) {
+    query.push(
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      }
+    );
+  }
+
+  query.push({
+    $project: {
+      _id: 1,
+      goalServeMatchId: 1,
+      requestUserId: 1,
+      opponentUserId: 1,
+      isSquared: { $ifNull: ["$isSquared", false] },
+      betTotalAmount: { $round: ["$betTotalAmount", 2] },
+      requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
+      opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
+      oddType: 1,
+      likedUser: 1,
+      goalServeLeagueId: 1,
+      goalServeRequestUserTeamId: 1,
+      goalServeOpponentUserTeamId: 1,
+      isRequestUserWinAmount: 1,
+      isOpponentUserWinAmount: 1,
+      requestUserFairOdds: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
+              { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
+              { $toString: "$requestUserFairOdds" },
+            ],
+          },
+          { $toString: "$requestUserFairOdds" },
+        ],
+      },
+      opponentUserFairOdds: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
+              { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
+              { $toString: "$opponentUserFairOdds" },
+            ],
+          },
+          { $toString: "$opponentUserFairOdds" },
+        ],
+      },
+      requestUserGoalServeOdd: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
+              { $toString: "$requestUserGoalServeOdd" },
+              { $toString: "$requestUserGoalServeOdd" },
+            ],
+          },
+          { $toString: "$requestUserGoalServeOdd" },
+        ],
+      },
+      opponentUserGoalServeOdd: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
+              { $toString: "$opponentUserGoalServeOdd" },
+              { $toString: "$opponentUserGoalServeOdd" },
+            ],
+          },
+          { $toString: "$opponentUserGoalServeOdd" },
+        ],
+      },
+      leagueType: 1,
+      status: 1,
+      paymentStatus: 1,
+      isDeleted: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      __v: 1,
+      responseAt: 1,
+      goalServeWinTeamId: 1,
+      resultAt: 1,
+      isWon: 1,
+      match: 1,
+      requestUser: 1,
+      opponentUser: 1,
+      displayStatus: {
+        $switch: {
+          branches: [
+            {
+              case: { $eq: ["$status", "CONFIRMED"] },
+              then: "ACTIVE",
+            },
+            {
+              case: { $eq: ["$status", "RESULT_DECLARED"] },
+              then: "FINAL",
+            },
+          ],
+          default: "$status",
+        },
+      },
+    },
+  });
+
   let data = await Bet.aggregate(query);
   if (data && data.length > 0) {
     const ids = [
@@ -2824,44 +2836,52 @@ const likeBet = async (userId: number, betData: IBetData) => {
   );
   const betLikedResponse = await Bet.aggregate([
     {
-      '$match': {
-        '_id': bet._id 
-      }
-    }, {
-      '$limit': 1
-    }, {
-      '$lookup': {
-        'from': 'betlikes', 
-        'let': {
-          'id': '$_id'
-        }, 
-        'pipeline': [
+      $match: {
+        _id: bet._id,
+      },
+    },
+    {
+      $limit: 1,
+    },
+    {
+      $lookup: {
+        from: "betlikes",
+        let: {
+          id: "$_id",
+        },
+        pipeline: [
           {
-            '$match': {
-              '$expr': {
-                '$and': [
+            $match: {
+              $expr: {
+                $and: [
                   {
-                    '$eq': [
-                      '$betId', '$$id'
-                    ]
-                  }, {
-                    '$eq': [
-                      '$isBetLike', true
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        ], 
-        'as': 'likes'
-      }
-    }, {
-      '$project': {
-        'likedUser': '$likes'
-      }
-    }
+                    $eq: ["$betId", "$$id"],
+                  },
+                  {
+                    $eq: ["$isBetLike", true],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "likes",
+      },
+    },
+    {
+      $project: {
+        likedUser: "$likes",
+      },
+    },
   ]);
+  let updatedStatus = await listBetsDashboard({
+    socketType: true,
+    betId: betData.betId,
+  });
+
+  await socketService.socket("betUpdate", {
+    bet: updatedStatus.list[0],
+  });
   return betLikedResponse[0];
 };
 
@@ -2899,7 +2919,14 @@ const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
         },
       },
     ]);
-    return betSettledResponse[0];
+    let updatedStatus = await listBetsDashboard({
+      socketType: true,
+      betId: bet._id,
+    });
+
+    await socketService.socket("betUpdate", {
+      bet: updatedStatus.list[0],
+    });
   } else {
     throw new AppError(
       httpStatus.NOT_FOUND,

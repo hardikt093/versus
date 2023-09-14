@@ -103,6 +103,9 @@ var betSchema = new Schema(
       ],
       default: "PENDING",
     },
+    activeTimestamp: {
+      type: Date,
+    },
     paymentStatus: {
       type: String,
       enum: ["PENDING", "DONE", "REFUNDED"],
