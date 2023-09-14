@@ -2694,12 +2694,12 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       paymentStatus: 1,
       isDeleted: 1,
       createdAt: 1,
-      isWon:1,
       updatedAt: 1,
       __v: 1,
       responseAt: 1,
       goalServeWinTeamId: 1,
       resultAt: 1,
+      isWon: 1,
       match: 1,
       requestUser: 1,
       opponentUser: 1,
@@ -2739,22 +2739,38 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       (item: {
         requestUserId: number;
         opponentUserId: number;
+        status: string;
+        isWon: number;
       }) => {
+        // Find the corresponding requestUser and opponentUser
         const requestUser = resp.data.data.find(
-          (user: { id: number }) => user.id == item.requestUserId
+          (user: { id: number }) => user.id === item.requestUserId
         );
         const opponentUser = resp.data.data.find(
-          (user: { id: number }) => user.id == item.opponentUserId
+          (user: { id: number }) => user.id === item.opponentUserId
         );
- 
+
+        // Create separate objects for requestUser and opponentUser with isWon property
+        const modifiedRequestUser = { ...requestUser };
+        const modifiedOpponentUser = { ...opponentUser };
+
+        // Set isWon property based on the status condition
+        if (modifiedRequestUser && item.status === "RESULT_DECLARED") {
+          modifiedRequestUser.isWon = item.isWon === item.requestUserId;
+        }
+
+        if (modifiedOpponentUser && item.status === "RESULT_DECLARED") {
+          modifiedOpponentUser.isWon = item.isWon === item.opponentUserId;
+        }
+
         return {
           ...item,
-          requestUser,
-          opponentUser,
+          requestUser: modifiedRequestUser,
+          opponentUser: modifiedOpponentUser,
         };
       }
-    );
-    return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
+      );
+      return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
   }
   return { list: data, count: count[0]?.count[0]?.count ?? 0 };
 };
