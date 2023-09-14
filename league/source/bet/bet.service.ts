@@ -9,6 +9,7 @@ import {
   IOpponentCount,
   IlistBetRequestData,
 } from "./bet.interface";
+const ObjectId = require("mongodb").ObjectId;
 import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
 import NbaMatch from "../models/documents/NBA/match.model";
@@ -19,7 +20,6 @@ import Notification from "../models/documents/notification.model";
 import NflMatch from "../models/documents/NFL/match.model";
 import NcaafMatch from "../models/documents/NCAAF/match.model";
 import BetLike from "../models/documents/betLike.model";
-
 
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
@@ -1824,6 +1824,7 @@ const listBetsByType = async (
         const opponentUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.opponentUserId
         );
+
         return {
           ...item,
           requestUser,
@@ -1852,10 +1853,9 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
     ],
   };
   if (body.socketType) {
-    condition._id = body.betId;
+    condition._id = new ObjectId(body.betId);
   }
   let query: any = [];
-
   query.push(
     {
       $match: condition,
@@ -1923,8 +1923,22 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       },
     },
     {
+      $addFields: {
+        dateutc: {
+          $toDate: "$activeTimestamp",
+        },
+      },
+    },
+    {
       $sort: {
-        activeTimestamp: -1,
+        dateutc: -1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
       },
     },
     {
@@ -2680,12 +2694,12 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       paymentStatus: 1,
       isDeleted: 1,
       createdAt: 1,
+      isWon:1,
       updatedAt: 1,
       __v: 1,
       responseAt: 1,
       goalServeWinTeamId: 1,
       resultAt: 1,
-      isWon: 1,
       match: 1,
       requestUser: 1,
       opponentUser: 1,
@@ -2722,13 +2736,17 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       ""
     );
     const bindedObject: any = data.map(
-      (item: { requestUserId: number; opponentUserId: number }) => {
+      (item: {
+        requestUserId: number;
+        opponentUserId: number;
+      }) => {
         const requestUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.requestUserId
         );
         const opponentUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.opponentUserId
         );
+ 
         return {
           ...item,
           requestUser,
@@ -2878,7 +2896,7 @@ const likeBet = async (userId: number, betData: IBetData) => {
     socketType: true,
     betId: betData.betId,
   });
-
+  console.log(updatedStatus);
   await socketService.socket("betUpdate", {
     bet: updatedStatus.list[0],
   });
