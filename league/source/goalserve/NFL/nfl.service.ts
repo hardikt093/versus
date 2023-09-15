@@ -1113,8 +1113,8 @@ const scoreWithDate = async (data: any) => {
             $cond: {
               if: {
                 $regexMatch: {
-                  input: "$drive",
-                  regex: "$awayTeam.abbreviation",
+                  input: { $toLower: "$drive" },
+                  regex: { $toLower: "$awayTeam.abbreviation" },
                 },
               },
               then: true,
@@ -1138,8 +1138,8 @@ const scoreWithDate = async (data: any) => {
             $cond: {
               if: {
                 $regexMatch: {
-                  input: "$drive",
-                  regex: "$homeTeam.abbreviation",
+                  input: { $toLower: "$drive" },
+                  regex: { $toLower: "$homeTeam.abbreviation" },
                 },
               },
               then: true,
@@ -3008,8 +3008,8 @@ const getLiveDataOfNfl = async (data: any) => {
             $cond: {
               if: {
                 $regexMatch: {
-                  input: "$drive",
-                  regex: "$awayTeam.abbreviation",
+                  input: { $toLower: "$drive" },
+                  regex: { $toLower: "$awayTeam.abbreviation" },
                 },
               },
               then: true,
@@ -3030,8 +3030,8 @@ const getLiveDataOfNfl = async (data: any) => {
             $cond: {
               if: {
                 $regexMatch: {
-                  input: "$drive",
-                  regex: "$homeTeam.abbreviation",
+                  input: { $toLower: "$drive" },
+                  regex: { $toLower: "$homeTeam.abbreviation" },
                 },
               },
               then: true,
@@ -5376,7 +5376,7 @@ const nflLive = async (goalServeMatchId: any) => {
           weekName: "$weekName",
           seasonName: "$seasonName",
           status: "$status",
-          timer:true,
+          timer: true,
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {

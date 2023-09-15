@@ -21,6 +21,36 @@ import NflMatch from "../models/documents/NFL/match.model";
 import NcaafMatch from "../models/documents/NCAAF/match.model";
 import BetLike from "../models/documents/betLike.model";
 
+BetLike.watch().on("change", async (data: any) => {
+  let updatedStatus = await listBetsDashboard({
+    socketType: true,
+    betId: data.documentKey._id.toString(),
+  });
+  if (data.ns.coll == "betlikes")
+    await socketService.socket("betUpdate", {
+      bet: updatedStatus.list[0],
+    });
+});
+
+Bet.watch().on("change", async (data: any) => {
+  let updatedStatus = await listBetsDashboard({
+    socketType: true,
+    betId: data.documentKey._id.toString(),
+  });
+  if (
+    data.ns.coll == "isSquared" ||
+    data.ns.coll == "goalServeWinTeamId" ||
+    data.ns.updateDescription.updatedFields.status == "RESULT_DECLARED"
+  ) {
+    await socketService.socket("betUpdate", {
+      bet: updatedStatus.list[0],
+    });
+  } else if (data.ns.updateDescription.updatedFields.status === "CONFIRMED") {
+    await socketService.socket("betConfirmed", {
+      bet: updatedStatus.list[0],
+    });
+  }
+});
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
     return amount / ((-1 * odd) / 100);
@@ -256,14 +286,13 @@ const responseBet = async (
     },
     prepareObject
   );
-  let updatedStatus = await listBetsDashboard({
-    socketType: true,
-    betId: id,
-  });
-
-  await socketService.socket("betConfirmed", {
-    bet: updatedStatus.list[0],
-  });
+  // let updatedStatus = await listBetsDashboard({
+  //   socketType: true,
+  //   betId: id,
+  // });
+  // await socketService.socket("betConfirmed", {
+  //   bet: updatedStatus.list[0],
+  // });
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
@@ -2749,12 +2778,8 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
         const opponentUser = resp.data.data.find(
           (user: { id: number }) => user.id === item.opponentUserId
         );
-
-        // Create separate objects for requestUser and opponentUser with isWon property
         const modifiedRequestUser = { ...requestUser };
         const modifiedOpponentUser = { ...opponentUser };
-
-        // Set isWon property based on the status condition
         if (modifiedRequestUser && item.status === "RESULT_DECLARED") {
           modifiedRequestUser.isWon = item.isWon === item.requestUserId;
         }
@@ -2769,8 +2794,8 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
           opponentUser: modifiedOpponentUser,
         };
       }
-      );
-      return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
+    );
+    return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
   }
   return { list: data, count: count[0]?.count[0]?.count ?? 0 };
 };
@@ -2908,14 +2933,13 @@ const likeBet = async (userId: number, betData: IBetData) => {
       },
     },
   ]);
-  let updatedStatus = await listBetsDashboard({
-    socketType: true,
-    betId: betData.betId,
-  });
-  console.log(updatedStatus);
-  await socketService.socket("betUpdate", {
-    bet: updatedStatus.list[0],
-  });
+  // let updatedStatus = await listBetsDashboard({
+  //   socketType: true,
+  //   betId: betData.betId,
+  // });
+  // await socketService.socket("betUpdate", {
+  //   bet: updatedStatus.list[0],
+  // });
   return betLikedResponse[0];
 };
 
@@ -2953,14 +2977,14 @@ const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
         },
       },
     ]);
-    let updatedStatus = await listBetsDashboard({
-      socketType: true,
-      betId: bet._id,
-    });
+    // let updatedStatus = await listBetsDashboard({
+    //   socketType: true,
+    //   betId: bet._id,
+    // });
 
-    await socketService.socket("betUpdate", {
-      bet: updatedStatus.list[0],
-    });
+    // await socketService.socket("betUpdate", {
+    //   bet: updatedStatus.list[0],
+    // });
   } else {
     throw new AppError(
       httpStatus.NOT_FOUND,
@@ -2968,6 +2992,7 @@ const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
     );
   }
 };
+
 export default {
   getBetUser,
   listBetsByStatus,
