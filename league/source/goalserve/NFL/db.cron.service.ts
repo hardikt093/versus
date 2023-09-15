@@ -606,21 +606,29 @@ export default class NFLDbCronServiceClass {
       )
         ? getMatch?.data?.scores?.category?.match
         : [getMatch?.data?.scores?.category?.match];
-
       if (!matchArrayAll || matchArrayAll?.length === 0) {
         console.log("No matches to update.");
         return;
       }
+
       const matchArray = matchArrayAll.filter((element: any) => {
-        element.status !== "Not Started" &&
+        return (
+          element.status !== "Not Started" &&
           element.status !== "Final" &&
           // element.status !== "Delayed" &&
+          // element.status !== "Suspended" &&
+          // element.status !== "Canceled" &&
+          // element.status !== "Postponed" &&
           element.status !== "After Over Time" &&
           element.status !== "Final/OT" &&
-          element.status !== "Final/20T";
+          element.status !== "Final/20T"
+        );
       });
+      // console.log("matchArray", matchArray);
 
       const updatePromises = matchArray?.map(async (match: any) => {
+        console.log("LIVE NFLmatch.id", match?.contestID);
+
         const data: Partial<INflMatchModel> = {
           attendance: match?.attendance,
           goalServeHomeTeamId: match?.hometeam.id,
@@ -665,6 +673,8 @@ export default class NFLDbCronServiceClass {
           { $set: data },
           { new: true }
         );
+        console.log("LIVE NFLdataUpdate==>", dataUpdate?.goalServeMatchId);
+
         if (
           match?.status != "Not Started" &&
           match?.status != "Final" &&
@@ -815,18 +825,18 @@ export default class NFLDbCronServiceClass {
           );
 
           // if (match?.status == "Final" || match?.status == "After Over Time") {
-            const homeTeamTotalScore = parseFloat(match?.hometeam.totalscore);
-            const awayTeamTotalScore = parseFloat(match?.awayteam.totalscore);
-            const goalServeMatchId = match?.contestID;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? match?.hometeam.id
-                : match?.awayteam.id;
-            await declareResultMatch(
-              Number(goalServeMatchId),
-              Number(goalServeWinTeamId),
-              "NFL"
-            );
+          const homeTeamTotalScore = parseFloat(match?.hometeam.totalscore);
+          const awayTeamTotalScore = parseFloat(match?.awayteam.totalscore);
+          const goalServeMatchId = match?.contestID;
+          const goalServeWinTeamId =
+            homeTeamTotalScore > awayTeamTotalScore
+              ? match?.hometeam.id
+              : match?.awayteam.id;
+          await declareResultMatch(
+            Number(goalServeMatchId),
+            Number(goalServeWinTeamId),
+            "NFL"
+          );
           // }
         }
       });

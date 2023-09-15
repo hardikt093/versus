@@ -65,12 +65,14 @@ const updateTeamStatsNfl = cron.schedule("0 0 */1 * * *", async () => {
 
 let isUpdateLiveMatch: boolean = false;
 const updateLiveMatch = cron.schedule("*/10 * * * * *", async () => {
-  // console.log("isupdateFinalMatchNfl Skip");
+  console.log("isupdateFinalMatchNfl Skip");
   if (isUpdateLiveMatch) {
     return;
   }
   isUpdateLiveMatch = true;
   try {
+  console.log("inside isupdateFinalMatchNfl");
+
     await nflService.updateLiveMatch();
   } catch (error) {
     console.log(error);

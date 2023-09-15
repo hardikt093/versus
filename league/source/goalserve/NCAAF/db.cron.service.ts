@@ -433,10 +433,10 @@ export default class NCAAFDbCronServiceClass {
         return (
           element.status !== "Not Started" &&
           element.status !== "Final" &&
-          element.status !== "Delayed" &&
-          element.status !== "Suspended" &&
-          element.status !== "Canceled" &&
-          element.status !== "Postponed" &&
+          // element.status !== "Delayed" &&
+          // element.status !== "Suspended" &&
+          // element.status !== "Canceled" &&
+          // element.status !== "Postponed" &&
           element.status !== "After Over Time" &&
           element.status !== "Final/OT" &&
           element.status !== "Final/20T"
@@ -515,6 +515,7 @@ export default class NCAAFDbCronServiceClass {
         } else if (
           match.status == "Cancelled" ||
           match.status == "Postponed" ||
+          match.status == "Delayed" ||
           match.status == "Suspended"
         ) {
           const goalServeMatchId = match.contestID;
