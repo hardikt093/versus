@@ -23,7 +23,7 @@ import BetLike from "../models/documents/betLike.model";
 Bet.watch().on("change", async (data: any) => {
   if (data?.operationType === "update") {
     if (
-      data?.updateDescription?.updatedFields?.isSquared &&
+      data?.updateDescription?.updatedFields?.isSquared ||
       data?.updateDescription?.updatedFields?.status === "RESULT_DECLARED"
     ) {
       const updatedStatus = await listBetsDashboard({
