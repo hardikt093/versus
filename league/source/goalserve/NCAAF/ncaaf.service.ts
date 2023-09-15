@@ -1242,8 +1242,8 @@ const getLiveDataOfNcaaf = async (data: any) => {
             $cond: {
               if: {
                 $regexMatch: {
-                  input: "$drive",
-                  regex: "$awayTeam.locality",
+                  input: { $toLower: "$drive" },
+                  regex: { $toLower: "$awayTeam.locality" },
                 },
               },
               then: true,
@@ -1264,8 +1264,8 @@ const getLiveDataOfNcaaf = async (data: any) => {
             $cond: {
               if: {
                 $regexMatch: {
-                  input: "$drive",
-                  regex: "$homeTeam.locality",
+                  input: { $toLower: "$drive" },
+                  regex: { $toLower: "$homeTeam.locality" },
                 },
               },
               then: true,
