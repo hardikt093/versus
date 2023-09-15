@@ -23,7 +23,7 @@ import BetLike from "../models/documents/betLike.model";
 Bet.watch().on("change", async (data: any) => {
   if (data?.operationType === "update") {
     if (
-      data?.updateDescription?.updatedFields?.isSquared &&
+      data?.updateDescription?.updatedFields?.isSquared ||
       data?.updateDescription?.updatedFields?.status === "RESULT_DECLARED"
     ) {
       const updatedStatus = await listBetsDashboard({
@@ -1950,25 +1950,6 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       },
     },
     {
-      $addFields: {
-        dateutc: {
-          $toDate: "$activeTimestamp",
-        },
-      },
-    },
-    {
-      $sort: {
-        dateutc: -1,
-      },
-    },
-    {
-      $addFields: {
-        dateInString: {
-          $toString: "$dateutc",
-        },
-      },
-    },
-    {
       $facet: {
         mlbData: [
           {
@@ -2634,7 +2615,26 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
         path: "$match",
         preserveNullAndEmptyArrays: true,
       },
-    }
+    },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$activeTimestamp",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateutc: -1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
+    },
   );
   if (!body.socketType) {
     query.push(
@@ -2653,6 +2653,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       goalServeMatchId: 1,
       requestUserId: 1,
       opponentUserId: 1,
+      dateutc:1,
       isSquared: { $ifNull: ["$isSquared", false] },
       betTotalAmount: { $round: ["$betTotalAmount", 2] },
       requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
