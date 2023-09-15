@@ -20,23 +20,6 @@ import Notification from "../models/documents/notification.model";
 import NflMatch from "../models/documents/NFL/match.model";
 import NcaafMatch from "../models/documents/NCAAF/match.model";
 import BetLike from "../models/documents/betLike.model";
-
-BetLike.watch().on("change", async (data: any) => {
-  if (data?.operationType == "update") {
-    if (data?.ns?.coll == "betlikes") {
-      const updatedStatus = await listBetsDashboard({
-        socketType: true,
-        betId: data.documentKey?._id.toString(),
-      });
-      await socketService.socket("betUpdate", {
-        bet: updatedStatus?.list[0],
-      });
-      return;
-    }
-    return;
-  }
-});
-
 Bet.watch().on("change", async (data: any) => {
   if (data?.operationType === "update") {
     if (
@@ -2893,7 +2876,7 @@ const likeBet = async (userId: number, betData: IBetData) => {
   if (!bet) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-  await BetLike.updateOne(
+   await BetLike.updateOne(
     {
       goalServeMatchId: bet.goalServeMatchId,
       betId: betData.betId,
@@ -2948,13 +2931,13 @@ const likeBet = async (userId: number, betData: IBetData) => {
       },
     },
   ]);
-  // let updatedStatus = await listBetsDashboard({
-  //   socketType: true,
-  //   betId: betData.betId,
-  // });
-  // await socketService.socket("betUpdate", {
-  //   bet: updatedStatus.list[0],
-  // });
+  let updatedStatus = await listBetsDashboard({
+    socketType: true,
+    betId: betData.betId,
+  });
+  await socketService.socket("betUpdate", {
+    bet: updatedStatus.list[0],
+  });
   return betLikedResponse[0];
 };
 
@@ -3000,7 +2983,7 @@ const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
     // await socketService.socket("betUpdate", {
     //   bet: updatedStatus.list[0],
     // });
-    return betSettledResponse[0]
+    return betSettledResponse[0];
   } else {
     throw new AppError(
       httpStatus.NOT_FOUND,
