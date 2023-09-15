@@ -22,33 +22,48 @@ import NcaafMatch from "../models/documents/NCAAF/match.model";
 import BetLike from "../models/documents/betLike.model";
 
 BetLike.watch().on("change", async (data: any) => {
-  let updatedStatus = await listBetsDashboard({
-    socketType: true,
-    betId: data.documentKey._id.toString(),
-  });
-  if (data.ns.coll == "betlikes")
-    await socketService.socket("betUpdate", {
-      bet: updatedStatus.list[0],
-    });
+  if (data?.operationType == "update") {
+    if (data?.ns?.coll == "betlikes") {
+      const updatedStatus = await listBetsDashboard({
+        socketType: true,
+        betId: data.documentKey?._id.toString(),
+      });
+      await socketService.socket("betUpdate", {
+        bet: updatedStatus?.list[0],
+      });
+      return;
+    }
+    return;
+  }
 });
 
 Bet.watch().on("change", async (data: any) => {
-  let updatedStatus = await listBetsDashboard({
-    socketType: true,
-    betId: data.documentKey._id.toString(),
-  });
-  if (
-    data.ns.coll == "isSquared" ||
-    data.ns.coll == "goalServeWinTeamId" ||
-    data.ns.updateDescription.updatedFields.status == "RESULT_DECLARED"
-  ) {
-    await socketService.socket("betUpdate", {
-      bet: updatedStatus.list[0],
-    });
-  } else if (data.ns.updateDescription.updatedFields.status === "CONFIRMED") {
-    await socketService.socket("betConfirmed", {
-      bet: updatedStatus.list[0],
-    });
+  if (data?.operationType === "update") {
+    if (
+      data?.updateDescription?.updatedFields?.isSquared &&
+      data?.updateDescription?.updatedFields?.status === "RESULT_DECLARED"
+    ) {
+      const updatedStatus = await listBetsDashboard({
+        socketType: true,
+        betId: data?.documentKey?._id.toString(),
+      });
+      await socketService.socket("betUpdate", {
+        bet: updatedStatus?.list[0],
+      });
+      return;
+    }
+    if (data?.updateDescription?.updatedFields?.status === "CONFIRMED") {
+      const updatedStatus = await listBetsDashboard({
+        socketType: true,
+        betId: data?.documentKey?._id.toString(),
+      });
+      await socketService.socket("betConfirmed", {
+        bet: updatedStatus?.list[0],
+      });
+
+      return;
+    }
+    return;
   }
 });
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
@@ -2985,6 +3000,7 @@ const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
     // await socketService.socket("betUpdate", {
     //   bet: updatedStatus.list[0],
     // });
+    return betSettledResponse[0]
   } else {
     throw new AppError(
       httpStatus.NOT_FOUND,
