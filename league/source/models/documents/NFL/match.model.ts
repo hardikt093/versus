@@ -3,7 +3,7 @@ import INflMatchModel from "../../interfaces/nflMatch.interface";
 var nflMatchSchema = new Schema(
   {
     goalServeLeagueId: { type: Number, required: true },
-    goalServeMatchId: { type: Number, required: true },
+    goalServeMatchId: { type: Number, required: true, index:true },
     attendance: Number,
     goalServeAwayTeamId: { type: Number, required: true },
     goalServeHomeTeamId: { type: Number, required: true },

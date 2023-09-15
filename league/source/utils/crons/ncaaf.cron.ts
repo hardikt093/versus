@@ -5,7 +5,7 @@ import moment from "moment";
 
 let isScoreWithWeek: boolean = false;
 const scoreWithWeek = cron.schedule("*/10 * * * * *", async () => {
-  console.log("isScoreWithWeek Skip");
+  // console.log("isScoreWithWeek Skip");
   if (isScoreWithWeek) {
     return;
   }

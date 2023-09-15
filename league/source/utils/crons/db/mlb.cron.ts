@@ -4,7 +4,7 @@ import MlbService from "../../../goalserve/MLB/db.cron.service";
 const mlbService = new MlbService();
 
 let iscreateOddsRunning: boolean = false;
-const createOdds = cron.schedule("*/5 * * * * *", async () => {
+const createOdds = cron.schedule("*/5 * * * *", async () => {
   if (iscreateOddsRunning) {
     // console.log("createOdds Skip");
     return;
@@ -21,15 +21,32 @@ const createOdds = cron.schedule("*/5 * * * * *", async () => {
 });
 
 let isupdateCurruntDateRecordRunning: boolean = false;
-const updateCurruntDateRecord = cron.schedule("*/5 * * * * *", async () => {
+const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateCurruntDateRecordRunning) {
-    // console.log("updateCurruntDateRecord Skip");
+    console.log("MLB updateCurruntDateRecord Skip");
     return;
   }
   isupdateCurruntDateRecordRunning = true;
   try {
-    // console.info("inside score cron updateCurruntDateRecord");
+    console.info("inside MLB score cron updateCurruntDateRecord");
     await mlbService.updateCurruntDateRecord();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateCurruntDateRecordRunning = false;
+  }
+});
+
+let isUpdateRemainingCurruntDateRecord: boolean = false;
+const updateRemainingCurruntDateRecord = cron.schedule("*/60 * * * * *", async () => {
+  if (isUpdateRemainingCurruntDateRecord) {
+    // console.log("MLB updateRemainingCurruntDateRecord Skip");
+    return;
+  }
+  isUpdateRemainingCurruntDateRecord = true;
+  try {
+    // console.info("inside score cron updateRemainingCurruntDateRecord");
+    await mlbService.updateRmainingCurruntDateRecord();
   } catch (error) {
     console.log(error);
   } finally {
@@ -106,7 +123,7 @@ const updatePlayerStats = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let iscreateOrUpdateOddsRunning: boolean = false;
-const createOrUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
+const createOrUpdateOdds = cron.schedule("*/5 * * * *", async () => {
   if (iscreateOrUpdateOddsRunning) {
     // console.log("createOrUpdateOdds Skip");
     return;
@@ -124,9 +141,9 @@ const createOrUpdateOdds = cron.schedule("*/5 * * * * *", async () => {
 
 
 let isupdateMlbMatchRunning: boolean = false;
-const updateMlbMatch = cron.schedule("*/10 * * * * *", async () => {
+const updateMlbMatch = cron.schedule("*/5 * * * *", async () => {
   if (isupdateMlbMatchRunning) {
-    console.log("skip updateMlbMatch");
+    // console.log("skip updateMlbMatch");
     return;
   }
   isupdateMlbMatchRunning = true;
@@ -143,6 +160,7 @@ const updateMlbMatch = cron.schedule("*/10 * * * * *", async () => {
 export default {
   createOdds,
   updateCurruntDateRecord,
+  updateRemainingCurruntDateRecord,
   updateStandingRecord,
   createOrUpdateOdds,
   updatePlayerStats,

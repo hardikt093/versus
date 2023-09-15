@@ -3,16 +3,15 @@ import Bet from "../models/documents/bet.model";
 import Match from "../models/documents/MLB/match.model";
 import AppError from "../utils/AppError";
 import {
+  IBetData,
+  IBetSquared,
   ICreateBetRequest,
   IOpponentCount,
-  IlistBetCondition,
   IlistBetRequestData,
-  IlistBetTypes,
-  IresponseBetRequest,
 } from "./bet.interface";
+const ObjectId = require("mongodb").ObjectId;
 import { betStatus } from "../models/interfaces/bet.interface";
 import Messages from "../utils/messages";
-import NhlMatch from "../models/documents/NHL/match.model";
 import NbaMatch from "../models/documents/NBA/match.model";
 import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
@@ -20,7 +19,36 @@ import socketService from "../services/socket.service";
 import Notification from "../models/documents/notification.model";
 import NflMatch from "../models/documents/NFL/match.model";
 import NcaafMatch from "../models/documents/NCAAF/match.model";
+import BetLike from "../models/documents/betLike.model";
+Bet.watch().on("change", async (data: any) => {
+  if (data?.operationType === "update") {
+    if (
+      data?.updateDescription?.updatedFields?.isSquared ||
+      data?.updateDescription?.updatedFields?.status === "RESULT_DECLARED"
+    ) {
+      const updatedStatus = await listBetsDashboard({
+        socketType: true,
+        betId: data?.documentKey?._id.toString(),
+      });
+      await socketService.socket("betUpdate", {
+        bet: updatedStatus?.list[0],
+      });
+      return;
+    }
+    if (data?.updateDescription?.updatedFields?.status === "CONFIRMED") {
+      const updatedStatus = await listBetsDashboard({
+        socketType: true,
+        betId: data?.documentKey?._id.toString(),
+      });
+      await socketService.socket("betConfirmed", {
+        bet: updatedStatus?.list[0],
+      });
 
+      return;
+    }
+    return;
+  }
+});
 const winAmountCalculationUsingOdd = function (amount: number, odd: number) {
   if (odd < 0) {
     return amount / ((-1 * odd) / 100);
@@ -87,7 +115,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     requestUserId: loggedInUserId,
     opponentUserId: data.opponentUserId,
     requestUserBetAmount: parseFloat(data.amount.toFixed(2)),
-    requestUserFairOdds: data.requestUserFairOdds,
+    requestUserGoalServeOdd: data.requestUserGoalServeOdd,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
   if (betRequestUserDataFound && isConfirmed === false) {
@@ -101,7 +129,7 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     opponentUserId: loggedInUserId,
     requestUserId: data.opponentUserId,
     opponentUserBetAmount: parseFloat(data.amount.toFixed(2)),
-    opponentUserFairOdds: data.requestUserFairOdds,
+    opponentUserGoalServeOdd: data.opponentUserGoalServeOdd,
     goalServeMatchId: data.goalServeMatchId,
   }).lean();
 
@@ -247,6 +275,7 @@ const responseBet = async (
   let prepareObject = {
     status: isConfirmed ? betStatus.CONFIRMED : betStatus.REJECTED,
     responseAt: new Date(),
+    activeTimestamp: isConfirmed ? new Date() : null,
   };
 
   const updateBet = await Bet.updateOne(
@@ -255,7 +284,13 @@ const responseBet = async (
     },
     prepareObject
   );
-
+  // let updatedStatus = await listBetsDashboard({
+  //   socketType: true,
+  //   betId: id,
+  // });
+  // await socketService.socket("betConfirmed", {
+  //   bet: updatedStatus.list[0],
+  // });
   const responseBet = await Bet.findOne({
     _id: id,
   }).lean();
@@ -660,16 +695,86 @@ const listBetsByType = async (
   let query: any = [];
   if (body.type === "OPEN") {
     condition.status = "PENDING";
-    query.push({
-      $match: condition,
-    });
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
   } else if (body.type === "ACTIVE") {
     condition["$and"].push({
       $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
     });
-    query.push({
-      $match: condition,
-    });
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
   } else if (body.type === "SETTLED") {
     condition.status = "RESULT_DECLARED";
     query.push(
@@ -687,6 +792,39 @@ const listBetsByType = async (
               else: { $eq: ["$opponentUserId", loggedInUserId] },
             },
           },
+        },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
         },
       }
     );
@@ -713,6 +851,39 @@ const listBetsByType = async (
         $match: {
           isWon: true,
         },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
       }
     );
   } else if (body.type === "LOST") {
@@ -738,6 +909,39 @@ const listBetsByType = async (
         $match: {
           isWon: false,
         },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
       }
     );
   } else {
@@ -760,6 +964,39 @@ const listBetsByType = async (
             },
           },
         },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
       }
     );
   }
@@ -781,10 +1018,936 @@ const listBetsByType = async (
   const count = await Bet.aggregate(countQuery);
   query.push(
     {
+      $facet: {
+        mlbData: [
+          {
+            $match: {
+              leagueType: "MLB",
+            },
+          },
+          {
+            $lookup: {
+              from: "matches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      //added standing
+                      {
+                        $lookup: {
+                          from: "standings",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "homeTeamStanding",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: {
+                            $arrayElemAt: ["$homeTeamStanding.won", 0],
+                          },
+                          lost: {
+                            $arrayElemAt: ["$homeTeamStanding.lost", 0],
+                          },
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "teamImages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      //added standing
+                      {
+                        $lookup: {
+                          from: "standings",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "awayTeamStanding",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: {
+                            $arrayElemAt: ["$awayTeamStanding.won", 0],
+                          },
+                          lost: {
+                            $arrayElemAt: ["$awayTeamStanding.lost", 0],
+                          },
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    league: "mlb",
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        nflData: [
+          {
+            $match: {
+              leagueType: "NFL",
+            },
+          },
+          {
+            $lookup: {
+              from: "nflmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nflteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nflteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nflteams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nflteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    league: "nfl",
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        nhlData: [
+          {
+            $match: {
+              leagueType: "NHL",
+            },
+          },
+          {
+            $lookup: {
+              from: "nhlmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nhlteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "teams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    league: "nhl",
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+        ncaafData: [
+          {
+            $match: {
+              leagueType: "NCAAF",
+            },
+          },
+          {
+            $lookup: {
+              from: "ncaafmatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "ncaafteams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "ncaafteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: "$locality",
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "ncaafteams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "ncaafteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: "$locality",
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    league: "ncaaf",
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        root: { $concatArrays: ["$mlbData", "$nflData", "$ncaafData"] },
+      },
+    },
+    { $unwind: "$root" },
+    { $replaceRoot: { newRoot: "$root" } },
+    {
+      $unwind: {
+        path: "$match",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    // {
+    //   $sort: body.sortBy,
+    // },
+    {
+      $addFields: {
+        dateutc: {
+          $toDate: "$createdAt",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateutc: -1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
+        },
+      },
+    },
+    {
       $skip: skip,
     },
     {
       $limit: limit,
+    },
+    {
+      $project: {
+        _id: 1,
+        goalServeMatchId: 1,
+        requestUserId: 1,
+        opponentUserId: 1,
+        isSquared: { $ifNull: ["$isSquared", false] },
+        betTotalAmount: { $round: ["$betTotalAmount", 2] },
+        requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
+        opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
+        oddType: 1,
+        likeCount: 1,
+        loggedInUserLiked: 1,
+        goalServeLeagueId: 1,
+        goalServeRequestUserTeamId: 1,
+        goalServeOpponentUserTeamId: 1,
+        isRequestUserWinAmount: 1,
+        isOpponentUserWinAmount: 1,
+        requestUserFairOdds: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
+                { $toString: "$requestUserFairOdds" },
+              ],
+            },
+            { $toString: "$requestUserFairOdds" },
+          ],
+        },
+        opponentUserFairOdds: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
+                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
+                { $toString: "$opponentUserFairOdds" },
+              ],
+            },
+            { $toString: "$opponentUserFairOdds" },
+          ],
+        },
+        requestUserGoalServeOdd: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
+                { $toString: "$requestUserGoalServeOdd" },
+                { $toString: "$requestUserGoalServeOdd" },
+              ],
+            },
+            { $toString: "$requestUserGoalServeOdd" },
+          ],
+        },
+        opponentUserGoalServeOdd: {
+          $cond: [
+            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+            {
+              $cond: [
+                { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
+                { $toString: "$opponentUserGoalServeOdd" },
+                { $toString: "$opponentUserGoalServeOdd" },
+              ],
+            },
+            { $toString: "$opponentUserGoalServeOdd" },
+          ],
+        },
+        leagueType: 1,
+        status: 1,
+        paymentStatus: 1,
+        isDeleted: 1,
+        createdAt: "$dateInString",
+        updatedAt: 1,
+        __v: 1,
+        responseAt: 1,
+        goalServeWinTeamId: 1,
+        resultAt: 1,
+        isWon: 1,
+        match: 1,
+        requestUser: 1,
+        opponentUser: 1,
+        displayStatus: {
+          $switch: {
+            branches: [
+              {
+                case: { $eq: ["$status", "CONFIRMED"] },
+                then: "ACTIVE",
+              },
+              {
+                case: {
+                  $and: [
+                    { $eq: ["$status", "RESULT_DECLARED"] },
+                    { $eq: ["$isWon", true] },
+                  ],
+                },
+                then: "WON",
+              },
+              {
+                case: {
+                  $and: [
+                    { $eq: ["$status", "RESULT_DECLARED"] },
+                    { $eq: ["$isWon", false] },
+                  ],
+                },
+                then: "LOST",
+              },
+            ],
+            default: "$status",
+          },
+        },
+      },
+    }
+  );
+  let data = await Bet.aggregate(query);
+  if (data && data.length > 0) {
+    const ids = [
+      ...new Set(
+        data.map((item) => [item.requestUserId, item.opponentUserId]).flat()
+      ),
+    ];
+    const resp = await axiosPostMicro(
+      {
+        ids,
+      },
+      `${config.authServerUrl}/users/getBulk`,
+      ""
+    );
+    const bindedObject: any = data.map(
+      (item: { requestUserId: number; opponentUserId: number }) => {
+        const requestUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.requestUserId
+        );
+        const opponentUser = resp.data.data.find(
+          (user: { id: number }) => user.id == item.opponentUserId
+        );
+
+        return {
+          ...item,
+          requestUser,
+          opponentUser,
+        };
+      }
+    );
+    return { list: bindedObject, count: count[0]?.count[0]?.count ?? 0 };
+  }
+  return { list: data, count: count[0]?.count[0]?.count ?? 0 };
+};
+
+const listBetsDashboard = async (body: IlistBetRequestData) => {
+  let page = 1;
+  let limit = body.size ?? 10;
+  if (body.page) {
+    page = body.page;
+  }
+  let skip = limit * (page - 1);
+  let condition: any = {
+    isDeleted: false,
+    $or: [
+      { status: "CONFIRMED" },
+      { status: "ACTIVE" },
+      { status: "RESULT_DECLARED" },
+    ],
+  };
+  if (body.socketType) {
+    condition._id = new ObjectId(body.betId);
+  }
+  let query: any = [];
+  query.push(
+    {
+      $match: condition,
+    },
+    {
+      $lookup: {
+        from: "betlikes",
+        let: {
+          id: "$_id",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ["$betId", "$$id"],
+                  },
+                  {
+                    $eq: ["$isBetLike", true],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        likedUser: "$likes",
+      },
+    }
+  );
+
+  let countQuery: Array<any> = Array.from(query);
+  countQuery.push({
+    $facet: {
+      count: [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ],
+    },
+  });
+  const count = await Bet.aggregate(countQuery);
+  query.push(
+    {
+      $addFields: {
+        isWon: {
+          $cond: {
+            if: {
+              $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+            },
+            then: "$requestUserId",
+            else: "$opponentUserId",
+          },
+        },
+      },
     },
     {
       $facet: {
@@ -976,6 +2139,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league: "mlb",
                     _id: 1,
                   },
                 },
@@ -1126,6 +2290,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league: "nfl",
                     _id: 1,
                   },
                 },
@@ -1276,6 +2441,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league: "nhl",
                     _id: 1,
                   },
                 },
@@ -1426,6 +2592,7 @@ const listBetsByType = async (
                     date: 1,
                     outs: 1,
                     timezone: 1,
+                    league: "ncaaf",
                     _id: 1,
                   },
                 },
@@ -1450,125 +2617,138 @@ const listBetsByType = async (
       },
     },
     {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        createdAt: -1,
+      $addFields: {
+        dateutc: {
+          $toDate: "$activeTimestamp",
+        },
       },
     },
     {
-      $project: {
-        _id: 1,
-        goalServeMatchId: 1,
-        requestUserId: 1,
-        opponentUserId: 1,
-        betTotalAmount: { $round: ["$betTotalAmount", 2] },
-        requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
-        opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
-        oddType: 1,
-        goalServeLeagueId: 1,
-        goalServeRequestUserTeamId: 1,
-        goalServeOpponentUserTeamId: 1,
-        isRequestUserWinAmount: 1,
-        isOpponentUserWinAmount: 1,
-        requestUserFairOdds: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
-                { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
-                { $toString: "$requestUserFairOdds" },
-              ],
-            },
-            { $toString: "$requestUserFairOdds" },
-          ],
-        },
-        opponentUserFairOdds: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
-                { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
-                { $toString: "$opponentUserFairOdds" },
-              ],
-            },
-            { $toString: "$opponentUserFairOdds" },
-          ],
-        },
-        requestUserGoalServeOdd: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
-                { $toString: "$requestUserGoalServeOdd" },
-                { $toString: "$requestUserGoalServeOdd" },
-              ],
-            },
-            { $toString: "$requestUserGoalServeOdd" },
-          ],
-        },
-        opponentUserGoalServeOdd: {
-          $cond: [
-            { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
-            {
-              $cond: [
-                { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
-                { $toString: "$opponentUserGoalServeOdd" },
-                { $toString: "$opponentUserGoalServeOdd" },
-              ],
-            },
-            { $toString: "$opponentUserGoalServeOdd" },
-          ],
-        },
-        leagueType: 1,
-        status: 1,
-        paymentStatus: 1,
-        isDeleted: 1,
-        createdAt: 1,
-        updatedAt: 1,
-        __v: 1,
-        responseAt: 1,
-        goalServeWinTeamId: 1,
-        resultAt: 1,
-        isWon: 1,
-        match: 1,
-        requestUser: 1,
-        opponentUser: 1,
-        displayStatus: {
-          $switch: {
-            branches: [
-              {
-                case: { $eq: ["$status", "CONFIRMED"] },
-                then: "ACTIVE",
-              },
-              {
-                case: {
-                  $and: [
-                    { $eq: ["$status", "RESULT_DECLARED"] },
-                    { $eq: ["$isWon", true] },
-                  ],
-                },
-                then: "WON",
-              },
-              {
-                case: {
-                  $and: [
-                    { $eq: ["$status", "RESULT_DECLARED"] },
-                    { $eq: ["$isWon", false] },
-                  ],
-                },
-                then: "LOST",
-              },
-            ],
-            default: "$status",
-          },
+      $sort: {
+        dateutc: -1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toString: "$dateutc",
         },
       },
-    }
+    },
   );
+  if (!body.socketType) {
+    query.push(
+      {
+        $skip: skip,
+      },
+      {
+        $limit: limit,
+      }
+    );
+  }
+
+  query.push({
+    $project: {
+      _id: 1,
+      goalServeMatchId: 1,
+      requestUserId: 1,
+      opponentUserId: 1,
+      dateutc:1,
+      isSquared: { $ifNull: ["$isSquared", false] },
+      betTotalAmount: { $round: ["$betTotalAmount", 2] },
+      requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
+      opponentUserBetAmount: { $round: ["$opponentUserBetAmount", 2] },
+      oddType: 1,
+      likedUser: 1,
+      goalServeLeagueId: 1,
+      goalServeRequestUserTeamId: 1,
+      goalServeOpponentUserTeamId: 1,
+      isRequestUserWinAmount: 1,
+      isOpponentUserWinAmount: 1,
+      requestUserFairOdds: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$requestUserFairOdds" }, 0] },
+              { $concat: ["+", { $toString: "$requestUserFairOdds" }] },
+              { $toString: "$requestUserFairOdds" },
+            ],
+          },
+          { $toString: "$requestUserFairOdds" },
+        ],
+      },
+      opponentUserFairOdds: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$opponentUserFairOdds" }, 0] },
+              { $concat: ["+", { $toString: "$opponentUserFairOdds" }] },
+              { $toString: "$opponentUserFairOdds" },
+            ],
+          },
+          { $toString: "$opponentUserFairOdds" },
+        ],
+      },
+      requestUserGoalServeOdd: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$requestUserGoalServeOdd" }, 0] },
+              { $toString: "$requestUserGoalServeOdd" },
+              { $toString: "$requestUserGoalServeOdd" },
+            ],
+          },
+          { $toString: "$requestUserGoalServeOdd" },
+        ],
+      },
+      opponentUserGoalServeOdd: {
+        $cond: [
+          { $ne: ["$oddType", "Total"] }, // Check if oddType is not equal to "Total"
+          {
+            $cond: [
+              { $gte: [{ $toDouble: "$opponentUserGoalServeOdd" }, 0] },
+              { $toString: "$opponentUserGoalServeOdd" },
+              { $toString: "$opponentUserGoalServeOdd" },
+            ],
+          },
+          { $toString: "$opponentUserGoalServeOdd" },
+        ],
+      },
+      leagueType: 1,
+      status: 1,
+      paymentStatus: 1,
+      isDeleted: 1,
+      createdAt: 1,
+      updatedAt: 1,
+      __v: 1,
+      responseAt: 1,
+      goalServeWinTeamId: 1,
+      resultAt: 1,
+      isWon: 1,
+      match: 1,
+      requestUser: 1,
+      opponentUser: 1,
+      displayStatus: {
+        $switch: {
+          branches: [
+            {
+              case: { $eq: ["$status", "CONFIRMED"] },
+              then: "ACTIVE",
+            },
+            {
+              case: { $eq: ["$status", "RESULT_DECLARED"] },
+              then: "FINAL",
+            },
+          ],
+          default: "$status",
+        },
+      },
+    },
+  });
+
   let data = await Bet.aggregate(query);
   if (data && data.length > 0) {
     const ids = [
@@ -1584,17 +2764,33 @@ const listBetsByType = async (
       ""
     );
     const bindedObject: any = data.map(
-      (item: { requestUserId: number; opponentUserId: number }) => {
+      (item: {
+        requestUserId: number;
+        opponentUserId: number;
+        status: string;
+        isWon: number;
+      }) => {
+        // Find the corresponding requestUser and opponentUser
         const requestUser = resp.data.data.find(
-          (user: { id: number }) => user.id == item.requestUserId
+          (user: { id: number }) => user.id === item.requestUserId
         );
         const opponentUser = resp.data.data.find(
-          (user: { id: number }) => user.id == item.opponentUserId
+          (user: { id: number }) => user.id === item.opponentUserId
         );
+        const modifiedRequestUser = { ...requestUser };
+        const modifiedOpponentUser = { ...opponentUser };
+        if (modifiedRequestUser && item.status === "RESULT_DECLARED") {
+          modifiedRequestUser.isWon = item.isWon === item.requestUserId;
+        }
+
+        if (modifiedOpponentUser && item.status === "RESULT_DECLARED") {
+          modifiedOpponentUser.isWon = item.isWon === item.opponentUserId;
+        }
+
         return {
           ...item,
-          requestUser,
-          opponentUser,
+          requestUser: modifiedRequestUser,
+          opponentUser: modifiedOpponentUser,
         };
       }
     );
@@ -1673,6 +2869,130 @@ const readNotification = async (userId: number) => {
     });
   }
 };
+
+const likeBet = async (userId: number, betData: IBetData) => {
+  const bet = await Bet.findOne({
+    _id: betData.betId,
+  }).lean();
+  if (!bet) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
+  }
+   await BetLike.updateOne(
+    {
+      goalServeMatchId: bet.goalServeMatchId,
+      betId: betData.betId,
+      betLikedUserId: userId,
+    },
+    {
+      $set: {
+        opponentUserId: bet.opponentUserId,
+        requestUserId: bet.requestUserId,
+        isBetLike: betData.isBetLike,
+      },
+    },
+    { upsert: true }
+  );
+  const betLikedResponse = await Bet.aggregate([
+    {
+      $match: {
+        _id: bet._id,
+      },
+    },
+    {
+      $limit: 1,
+    },
+    {
+      $lookup: {
+        from: "betlikes",
+        let: {
+          id: "$_id",
+        },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: ["$betId", "$$id"],
+                  },
+                  {
+                    $eq: ["$isBetLike", true],
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        as: "likes",
+      },
+    },
+    {
+      $project: {
+        likedUser: "$likes",
+      },
+    },
+  ]);
+  let updatedStatus = await listBetsDashboard({
+    socketType: true,
+    betId: betData.betId,
+  });
+  await socketService.socket("betUpdate", {
+    bet: updatedStatus.list[0],
+  });
+  return betLikedResponse[0];
+};
+
+const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
+  const bet = await Bet.findOne({
+    _id: betData.betId,
+  }).lean();
+  if (!bet) {
+    throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
+  }
+  if (
+    (userId === bet.requestUserId &&
+      bet?.goalServeWinTeamId === bet.goalServeRequestUserTeamId) ||
+    (userId === bet.opponentUserId &&
+      bet?.goalServeWinTeamId === bet.goalServeOpponentUserTeamId)
+  ) {
+    await Bet.updateOne(
+      {
+        goalServeMatchId: bet.goalServeMatchId,
+        _id: betData.betId,
+      },
+      {
+        $set: {
+          squaredUser: userId,
+          isSquared: betData.isSquaredBet,
+        },
+      }
+    );
+    const betSettledResponse = await Bet.aggregate([
+      { $match: { _id: bet._id } },
+      {
+        $project: {
+          _id: 1,
+          isSquared: { $ifNull: ["$isSquared", false] },
+        },
+      },
+    ]);
+    // let updatedStatus = await listBetsDashboard({
+    //   socketType: true,
+    //   betId: bet._id,
+    // });
+
+    // await socketService.socket("betUpdate", {
+    //   bet: updatedStatus.list[0],
+    // });
+    return betSettledResponse[0];
+  } else {
+    throw new AppError(
+      httpStatus.NOT_FOUND,
+      Messages.YOU_CAN_NOT_RESPONSE_TO_THIS_BET
+    );
+  }
+};
+
 export default {
   getBetUser,
   listBetsByStatus,
@@ -1687,4 +3007,7 @@ export default {
   listBetsByType,
   readNotification,
   pushNotification,
+  likeBet,
+  betSettledUpdate,
+  listBetsDashboard,
 };

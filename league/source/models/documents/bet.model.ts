@@ -43,6 +43,14 @@ var betSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    squaredUser: {
+      type: Number,
+    },
+    isSquared: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
     isOpponentUserWinAmount: {
       type: Boolean,
       default: false,
@@ -79,7 +87,7 @@ var betSchema = new Schema(
     },
     leagueType: {
       type: String,
-      enum: ["NHL", "MLB", "NBA", "NFL","NCAAF"],
+      enum: ["NHL", "MLB", "NBA", "NFL", "NCAAF"],
       required: true,
     },
     status: {
@@ -95,6 +103,9 @@ var betSchema = new Schema(
       ],
       default: "PENDING",
     },
+    activeTimestamp: {
+      type: Date,
+    },
     paymentStatus: {
       type: String,
       enum: ["PENDING", "DONE", "REFUNDED"],
@@ -107,5 +118,4 @@ var betSchema = new Schema(
   }
 );
 const Bet = model<IBetModel>("bet", betSchema);
-
 export default Bet;

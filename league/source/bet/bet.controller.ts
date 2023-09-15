@@ -142,6 +142,20 @@ const listBetsByType = async (req: Request, res: Response) => {
   }
 };
 
+const listBetsDashboard = async (req: Request, res: Response) => {
+  try {
+    const betListDataByStatus = await BetService.listBetsDashboard(req.body);
+    createResponse(
+      res,
+      httpStatus.OK,
+      Messages.BET_DATA_FOUND,
+      betListDataByStatus
+    );
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 const getBetUser = async (req: Request, res: Response) => {
   try {
     const getBetUser = await BetService.getBetUser(Number(req.params.userId));
@@ -162,6 +176,25 @@ const deleteBet = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+const likeBet = async (req: Request, res: Response) => {
+  try {
+    const betDataLike = await BetService.likeBet(req.loggedInUser.id, req.body);
+    createResponse(res, httpStatus.OK, "", betDataLike);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+const betSettledUpdate = async (req: Request, res: Response) => {
+  try {
+    const betData = await BetService.betSettledUpdate(
+      req.loggedInUser.id,
+      req.body
+    );
+    createResponse(res, httpStatus.OK, "", betData);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   getBetUser,
   createBet,
@@ -173,4 +206,7 @@ export default {
   responseBet,
   listBetsByType,
   deleteBet,
+  likeBet,
+  betSettledUpdate,
+  listBetsDashboard,
 };

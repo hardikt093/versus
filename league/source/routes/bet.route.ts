@@ -30,7 +30,25 @@ router.post(
   validate(BetValidation.listbyType),
   BetController.listBetsByType
 );
+router.post(
+  "/home-list",
+  auth,
+  validate(BetValidation.listbyType),
+  BetController.listBetsDashboard
+);
 
+router.post(
+  "/squared",
+  auth,
+  validate(BetValidation.betSettled),
+  BetController.betSettledUpdate
+);
+router.post(
+  "/like",
+  auth,
+  validate(BetValidation.betLike),
+  BetController.likeBet
+);
 router.post(
   "/:id/response",
   auth,

@@ -9,5 +9,5 @@ export default {
   nhlCron,
   mlbCron,
   nflCron,
-  ncaafCron
+  ncaafCron,
 };
