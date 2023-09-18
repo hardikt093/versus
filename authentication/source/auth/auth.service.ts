@@ -674,6 +674,7 @@ const getUser = async (user: IUser) => {
       },
     },
   });
+  userDetails.isSkipped = userDetails.venmoStatus === "SKIPPED" ? true : false;
   return userDetails;
 };
 
@@ -707,7 +708,6 @@ const changePassword = async (
     );
   }
 };
-
 
 export default {
   signUp,
