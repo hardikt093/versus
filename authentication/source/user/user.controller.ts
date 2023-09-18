@@ -181,10 +181,12 @@ const userProfileDetails = async (req: Request, res: Response) => {
       `${config.leagueServer}/bet/getUserBetDetails`,
       token
     );
-    console.log(resp.data)
-    const userProfile = await userService.userProfileDetails(resp.data);
+    const userProfile = await userService.userProfileDetails(body);
 
-    createResponse(res, httpStatus.OK, "", userProfile);
+    createResponse(res, httpStatus.OK, "", {
+      ...userProfile,
+      ...resp.data.data,
+    });
   } catch (error: any) {}
 };
 export default {

@@ -417,8 +417,22 @@ const updateVenmoUserName = async (
   });
 };
 
-const userProfileDetails = async (data: any) => {
-  console.log(data);
+const userProfileDetails = async (body:any) => {
+  return await prisma.user.findUnique({
+    where:{
+      id:body.userId
+    },
+    select: {
+      firstName: true,
+      lastName: true,
+      userName: true,
+      phone: true,
+      profileImage: true,
+      id: true,
+      venmoUserName: true,
+    },
+  })
+
 };
 export default {
   profilePictureUpdate,
