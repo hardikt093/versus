@@ -443,7 +443,7 @@ export default class NCAAFDbCronServiceClass {
         );
       });
       const updatePromises = matchArray?.map(async (match: any) => {
-        console.log("LIVE ncaafmatch.id", match?.contestID);
+        // console.log("LIVE ncaafmatch.id", match?.contestID);
         const data: Partial<INcaafMatchModel> = {
           attendance: match?.attendance,
           goalServeHomeTeamId: match?.hometeam.id,
@@ -478,7 +478,7 @@ export default class NCAAFDbCronServiceClass {
           { $set: data },
           { new: true }
         );
-        console.log("LIVE ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
+        // console.log("LIVE ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
 
         const goalServeMatchId = match.contestID;
         // expire not accepted bet requests
@@ -565,16 +565,18 @@ export default class NCAAFDbCronServiceClass {
         return;
       }
 
-      const matchArray = matchArrayAll?.filter(
-        (element: any) =>
+      const matchArray = matchArrayAll?.filter((element: any) => {
+        return (
           element.status === "Final" ||
           element.status === "After Over Time" ||
           element.status === "Final/OT" ||
           element.status === "Final/20T"
-      );
+        );
+      });
+
+      // console.log("matchArray==>", matchArray);
 
       const updatePromises = matchArray?.map(async (match: any) => {
-        // console.log("NCAAF FINAL match.contestID", match.contestID);
         const findMatch = await NcaafMatch.findOne({
           goalServeMatchId: match.contestID,
           $or: [
@@ -584,6 +586,7 @@ export default class NCAAFDbCronServiceClass {
             { status: "Final/20T" },
           ],
         }).lean();
+        console.log("findMatch",findMatch?.goalServeMatchId)
         if (!findMatch) {
           const data: Partial<INcaafMatchModel> = {
             attendance: match?.attendance,
@@ -619,6 +622,9 @@ export default class NCAAFDbCronServiceClass {
             { $set: data },
             { new: true, upsert: true }
           );
+
+        console.log("NCAAF FINAL match updated", dataUpdate.goalServeMatchId);
+
           // if (match.status == "Final") {
           const homeTeamTotalScore = parseFloat(match.hometeam.totalscore);
           const awayTeamTotalScore = parseFloat(match.awayteam.totalscore);
@@ -655,7 +661,7 @@ export default class NCAAFDbCronServiceClass {
         for (let i = 0; i < matchArray?.length; i++) {
           // console.log("statusssssss======>", matchArray[i]?.status);
           const data: Partial<INcaafMatchModel> = {
-            status: matchArray[i]?.status,
+            // status: matchArray[i]?.status,
             awayTeamDefensive: matchArray[i]?.defensive?.awayteam?.player
               ? matchArray[i]?.defensive?.awayteam?.player
               : [],

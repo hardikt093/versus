@@ -756,13 +756,14 @@ export default class NFLDbCronServiceClass {
         console.log("No matches to update.");
         return;
       }
-      const matchArray = matchArrayAll?.filter(
-        (element: any) =>
+      const matchArray = matchArrayAll?.filter((element: any) => {
+        return (
           element.status === "Final" ||
           element.status === "After Over Time" ||
           element.status === "Final/OT" ||
           element.status === "Final/20T"
-      );
+        );
+      });
 
       const updatePromises = matchArray?.map(async (match: any) => {
         const findMatch = await NflMatch.findOne({
