@@ -12,7 +12,8 @@ const s3 = new aws.S3();
 import userService from "../user/user.service";
 import createResponse from "./../utils/response";
 import Messages from "./../utils/messages";
-
+import { axiosPostMicro } from "../services/axios.service";
+import config from "../config/config";
 /**
  *
  * @param req
@@ -170,10 +171,19 @@ const updateVenmoName = async (req: Request, res: Response) => {
 
 const userProfileDetails = async (req: Request, res: Response) => {
   try {
-    const userProfile = await userService.userProfileDetails(
-      req.loggedInUser,
-      req.body
+    let token: any = req.header("Authorization");
+    const body = {
+      userId: req.loggedInUser.id,
+      profileId: req.params.profileId,
+    };
+    const resp = await axiosPostMicro(
+      body,
+      `${config.leagueServer}/bet/getUserBetDetails`,
+      token
     );
+    console.log(resp.data)
+    const userProfile = await userService.userProfileDetails(resp.data);
+
     createResponse(res, httpStatus.OK, "", userProfile);
   } catch (error: any) {}
 };
@@ -188,5 +198,5 @@ export default {
   usersGetBulk,
   getFriendList,
   updateVenmoName,
-  userProfileDetails
+  userProfileDetails,
 };

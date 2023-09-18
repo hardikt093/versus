@@ -2634,7 +2634,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
           $toString: "$dateutc",
         },
       },
-    },
+    }
   );
   if (!body.socketType) {
     query.push(
@@ -2653,7 +2653,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       goalServeMatchId: 1,
       requestUserId: 1,
       opponentUserId: 1,
-      dateutc:1,
+      dateutc: 1,
       isSquared: { $ifNull: ["$isSquared", false] },
       betTotalAmount: { $round: ["$betTotalAmount", 2] },
       requestUserBetAmount: { $round: ["$requestUserBetAmount", 2] },
@@ -2877,7 +2877,7 @@ const likeBet = async (userId: number, betData: IBetData) => {
   if (!bet) {
     throw new AppError(httpStatus.NOT_FOUND, Messages.BET_DATA_NOT_FOUND);
   }
-   await BetLike.updateOne(
+  await BetLike.updateOne(
     {
       goalServeMatchId: bet.goalServeMatchId,
       betId: betData.betId,
@@ -2993,6 +2993,110 @@ const betSettledUpdate = async (userId: number, betData: IBetSquared) => {
   }
 };
 
+const getUserBetDetails = async (userId: number, profileUserId: string) => {
+  const count = await Bet.aggregate([
+    {
+      $match: {
+        $or: [
+          { opponentUserId: Number(profileUserId) },
+          { requestUserId: Number(profileUserId) },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        isWon: {
+          $cond: {
+            if: {
+              $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+            },
+            then: { $eq: ["$requestUserId", Number(profileUserId)] },
+            else: { $eq: ["$opponentUserId", Number(profileUserId)] },
+          },
+        },
+      },
+    },
+    {
+      $group: {
+        _id: 0,
+        betsWon: { $sum: { $cond: { if: "$isWon", then: 1, else: 0 } } },
+        betsLost: {
+          $sum: { $cond: { if: { $not: "$isWon" }, then: 1, else: 0 } },
+        },
+        wonBetsFromUser: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  "$isWon",
+                  {
+                    $or: [
+                      { $eq: ["$requestUserId", userId] },
+                      { $eq: ["$opponentUserId", userId] },
+                    ],
+                  },
+                ],
+              },
+              then: 1,
+              else: 0,
+            },
+          },
+        },
+        lostBetsFromUser: {
+          $sum: {
+            $cond: {
+              if: {
+                $and: [
+                  { $not: "$isWon" },
+                  {
+                    $or: [
+                      { $eq: ["$requestUserId", Number(userId)] },
+                      { $eq: ["$opponentUserId", Number(userId)] },
+                    ],
+                  },
+                ],
+              },
+              then: 1,
+              else: 0,
+            },
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        overallRecord: {
+          win: "$betsWon",
+          loss: "$betsLost",
+          percentage: {
+            $multiply: [
+              {
+                $divide: ["$betsWon", { $add: ["$betsWon", "$betsLost"] }],
+              },
+              100,
+            ],
+          },
+        },
+        headToHead: {
+          win: "$wonBetsFromUser",
+          loss: "$lostBetsFromUser",
+          percentage: {
+            $multiply: [
+              {
+                $divide: [
+                  "$wonBetsFromUser",
+                  { $add: ["$wonBetsFromUser", "$lostBetsFromUser"] },
+                ],
+              },
+              100,
+            ],
+          },
+        },
+      },
+    },
+  ]);
+  return count[0];
+};
 export default {
   getBetUser,
   listBetsByStatus,
@@ -3010,4 +3114,5 @@ export default {
   likeBet,
   betSettledUpdate,
   listBetsDashboard,
+  getUserBetDetails,
 };

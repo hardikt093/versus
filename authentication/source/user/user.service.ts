@@ -417,7 +417,9 @@ const updateVenmoUserName = async (
   });
 };
 
-const userProfileDetails = async (user: any, body: { userId: number }) => {};
+const userProfileDetails = async (data: any) => {
+  console.log(data);
+};
 export default {
   profilePictureUpdate,
   userContacts,

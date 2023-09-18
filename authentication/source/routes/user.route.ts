@@ -126,6 +126,6 @@ router.post("/list", auth, userController.usersList);
 router.post("/getBulk", userController.usersGetBulk);
 router.get("/getFriendList", auth, userController.getFriendList);
 router.put("/updateVenmoUserName", auth, userController.updateVenmoName)
-router.get("/userProfile", auth, userController.userProfileDetails)
+router.get("/userProfile/:profileId", auth, userController.userProfileDetails)
 
 export default router;
