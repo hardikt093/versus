@@ -11,7 +11,8 @@ const signIn = {
     firstName: Joi.string().allow(null, ""),
     lastName: Joi.string().allow(null, ""),
     googleCode: Joi.string().allow(null, ""),
-    profileImage: Joi.string().allow(null, "")
+    profileImage: Joi.string().allow(null, ""),
+
   }),
 };
 
@@ -29,6 +30,9 @@ const signUp = {
     profileImage: Joi.string().allow(null, ""),
     userId: Joi.number().allow(null, ""),
     isSignUp: Joi.string().allow(null, ""),
+    venmoUserName:Joi.string().allow(null, ""),
+
+    
   }),
 };
 

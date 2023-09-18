@@ -80,6 +80,7 @@ const signIn = async (req: Request, res: Response) => {
             )
               ? true
               : false,
+            venmoUserName: "",
           };
           var createContact: any = {};
           const signUp = await authService.signUp(data);
@@ -293,7 +294,17 @@ const changePassword = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-
+const updateVenmoName=async (req:Request, res:Response)=>{
+  try {
+    const updateVenmoName = await authService.updateVenmoUserName(
+      req.loggedInUser,
+      req.body
+    );
+    createResponse(res, httpStatus.OK, "", true);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   signIn,
   signUp,
@@ -306,4 +317,5 @@ export default {
   refreshAuthTokens,
   getUser,
   changePassword,
+  updateVenmoName
 };

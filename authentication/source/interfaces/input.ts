@@ -16,6 +16,7 @@ export interface ICreateUser {
   isSignUp: string;
   userId: number | undefined | string;
   isContactScope: boolean | undefined;
+  venmoUserName: string | undefined;
 }
 
 export interface ISignIn {
@@ -31,7 +32,7 @@ export interface IUpdateUserProfile {
   profileImage: string;
   id: string;
   birthDate?: string;
-  phone?: object
+  phone?: object;
 }
 
 export interface IForgotPassword {
