@@ -204,6 +204,6 @@ router.get("/getContact", auth, authController.getContact);
 router.get("/getUser", auth, authController.getUser);
 router.delete("/userDelete", authController.deleteUser);
 router.post("/changePassword", auth, authController.changePassword);
-router.post("/updateVenmoUserName", auth, authController.updateVenmoName)
+
 
 export = router;

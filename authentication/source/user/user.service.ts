@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs";
 import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
 import { axiosGetMicro } from "../services/axios.service";
 import config from "../config/config";
-import authService from "../auth/auth.service";
 import AppError from "../utils/AppError";
 import httpStatus from "http-status";
 import Messages from "../utils/messages";
@@ -357,21 +356,18 @@ const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
   const userData = await prisma.user.findUnique({
     where: {
       id: loggedInUser,
+    },
+  });
+  const keys = userData.profileImage.split("profile-images/");
+  const param: S3.DeleteObjectRequest = {
+    Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
+    Key: "profile-images/" + keys[1],
+  };
+  s3.deleteObject(param, (err, data) => {
+    if (err) {
+      throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
     }
   });
-  const keys = userData.profileImage.split('profile-images/');
-    const param: S3.DeleteObjectRequest = {
-      Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
-      Key: 'profile-images/'+ keys[1]
-    };
-    s3.deleteObject(param, (err, data) => {
-      if (err) {
-        throw new AppError(
-          httpStatus.UNPROCESSABLE_ENTITY,
-          ""
-        );
-      }
-    });
   return await prisma.user.update({
     where: {
       id: loggedInUser,
@@ -390,6 +386,30 @@ const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
     },
   });
 };
+
+const updateVenmoUserName = async (
+  user: any,
+  body: { venmoUserName: string; skip: boolean }
+) => {
+  return await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      venmoUserName: !body.skip ? body.venmoUserName : null,
+      venmoStatus: body.skip ? "SKIPPED" : "ADDED",
+    },
+    select: {
+      firstName: true,
+      lastName: true,
+      userName: true,
+      phone: true,
+      profileImage: true,
+      id: true,
+      venmoUserName:true
+    },
+  });
+};
 export default {
   profilePictureUpdate,
   userContacts,
@@ -399,5 +419,6 @@ export default {
   userByIdMongoRelation,
   userlist,
   userGetBulk,
-  getFriendList
+  getFriendList,
+  updateVenmoUserName,
 };

@@ -70,7 +70,6 @@ const checkDuplicateUserName = async (userName: string | undefined) => {
  * @param data signup for user
  */
 const signUp = async (data: ICreateUser) => {
-  console.log("data?.venmoUserName", data?.venmoUserName);
   if (data.userId != "" && data.userId) {
     const getUser = await prisma.user.findUnique({
       where: {
@@ -79,7 +78,7 @@ const signUp = async (data: ICreateUser) => {
     });
 
     if (getUser) {
-      let birthday = new Date(data.birthDate);
+      let birthday = new Date(data?.birthDate);
       const ageDifMs = new Date(Date.now() - birthday.getTime());
       const userAge = Math.abs(ageDifMs.getUTCFullYear() - 1970);
       if (userAge >= 21) {
@@ -152,8 +151,8 @@ const signUp = async (data: ICreateUser) => {
       throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "session out");
     }
   } else {
-    if (data.password.length > 0) {
-      data.password = await bcrypt.hash(data.password, 8);
+    if (data?.password.length > 0) {
+      data.password = await bcrypt.hash(data?.password, 8);
     }
     const emailCheck = await checkDuplicateEmail(data.email?.toLowerCase());
 
@@ -181,7 +180,7 @@ const signUp = async (data: ICreateUser) => {
           googleIdToken: data.googleRefreshToken ? data.googleRefreshToken : "",
           isSignUp: data.isSignUp,
           isContactScope: data.isContactScope ?? null,
-          venmoUserName: data?.venmoUserName ? data?.venmoUserName : "",
+          venmoUserName: data?.venmoUserName ? data?.venmoUserName : null,
           venmoStatus: data?.venmoUserName ? "ADDED" : "PENDING",
         },
       });
@@ -709,20 +708,7 @@ const changePassword = async (
   }
 };
 
-const updateVenmoUserName = async (
-  id: any,
-  body: { venmoUserName: string; skip: boolean }
-) => {
-  return await prisma.user.update({
-    where: {
-      id: id.id,
-    },
-    data: {
-      venmoUserName: !body.skip ? body.venmoUserName : "",
-      venmoStatus: body.skip ? "SKIPPED" : "ADDED",
-    },
-  });
-};
+
 export default {
   signUp,
   signIn,
@@ -740,5 +726,4 @@ export default {
   getUser,
   checkDuplicateUserName,
   changePassword,
-  updateVenmoUserName,
 };

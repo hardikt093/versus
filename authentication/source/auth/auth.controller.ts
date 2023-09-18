@@ -14,7 +14,6 @@ import { IUser } from "../interfaces/input";
  * @param res
  */
 const signIn = async (req: Request, res: Response) => {
-  console.log("in signin");
   try {
     if (!req.body.provider) {
       const signIn = await authService.signIn(req.body);
@@ -80,7 +79,7 @@ const signIn = async (req: Request, res: Response) => {
             )
               ? true
               : false,
-            venmoUserName: "",
+            venmoUserName: null,
           };
           var createContact: any = {};
           const signUp = await authService.signUp(data);
@@ -294,17 +293,7 @@ const changePassword = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
-const updateVenmoName=async (req:Request, res:Response)=>{
-  try {
-    const updateVenmoName = await authService.updateVenmoUserName(
-      req.loggedInUser,
-      req.body
-    );
-    createResponse(res, httpStatus.OK, "", true);
-  } catch (error: any) {
-    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
-  }
-}
+
 export default {
   signIn,
   signUp,
@@ -316,6 +305,5 @@ export default {
   checkInviteExpire,
   refreshAuthTokens,
   getUser,
-  changePassword,
-  updateVenmoName
+  changePassword
 };

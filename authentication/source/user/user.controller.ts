@@ -155,6 +155,18 @@ const getImageBasedOnS3Key = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const updateVenmoName=async (req:Request, res:Response)=>{
+  try {
+    const venmoUserName = await userService.updateVenmoUserName(
+      req.loggedInUser,
+      req.body
+    );
+    createResponse(res, httpStatus.OK, "", venmoUserName);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+}
 export default {
   getImageBasedOnS3Key,
   profilePictureUpdate,
@@ -165,4 +177,5 @@ export default {
   usersList,
   usersGetBulk,
   getFriendList,
+  updateVenmoName
 };
