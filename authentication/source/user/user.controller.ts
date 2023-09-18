@@ -131,14 +131,14 @@ const profilePictureUpdate = async (req: Request, res: Response) => {
 
 const getImageBasedOnS3Key = async (req: Request, res: Response) => {
   try {
-    const key = req.params.folder + '/'+req.params.image;
+    const key = req.params.folder + "/" + req.params.image;
     const param: S3.GetObjectRequest = {
       Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
-      Key: key
+      Key: key,
     };
-  
+
     const readStream = s3.getObject(param).createReadStream();
-    readStream.on('error', (error) => {
+    readStream.on("error", (error) => {
       createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
     });
     readStream.pipe(res);
@@ -156,7 +156,7 @@ const getImageBasedOnS3Key = async (req: Request, res: Response) => {
   }
 };
 
-const updateVenmoName=async (req:Request, res:Response)=>{
+const updateVenmoName = async (req: Request, res: Response) => {
   try {
     const venmoUserName = await userService.updateVenmoUserName(
       req.loggedInUser,
@@ -166,7 +166,17 @@ const updateVenmoName=async (req:Request, res:Response)=>{
   } catch (error: any) {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
-}
+};
+
+const userProfileDetails = async (req: Request, res: Response) => {
+  try {
+    const userProfile = await userService.userProfileDetails(
+      req.loggedInUser,
+      req.body
+    );
+    createResponse(res, httpStatus.OK, "", userProfile);
+  } catch (error: any) {}
+};
 export default {
   getImageBasedOnS3Key,
   profilePictureUpdate,
@@ -177,5 +187,6 @@ export default {
   usersList,
   usersGetBulk,
   getFriendList,
-  updateVenmoName
+  updateVenmoName,
+  userProfileDetails
 };

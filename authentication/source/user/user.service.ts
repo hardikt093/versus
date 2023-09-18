@@ -37,6 +37,8 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         lastName: data.lastName,
         userName: data.userName,
         phone: data.phone,
+        venmoUserName: data.venmoUserName,
+        venmoStatus: data.venmoUserName ? "ADDED" : "PENDING",
       },
       select: {
         firstName: true,
@@ -45,6 +47,7 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         phone: true,
         profileImage: true,
         id: true,
+        venmoUserName: true,
       },
     });
   } else if (findUserName) {
@@ -62,6 +65,8 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         lastName: data.lastName,
         userName: data.userName,
         phone: data.phone,
+        venmoUserName: data.venmoUserName,
+        venmoStatus: data.venmoUserName ? "ADDED" : "PENDING",
       },
       select: {
         firstName: true,
@@ -70,6 +75,7 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         phone: true,
         profileImage: true,
         id: true,
+        venmoUserName: true,
       },
     });
   }
@@ -406,10 +412,12 @@ const updateVenmoUserName = async (
       phone: true,
       profileImage: true,
       id: true,
-      venmoUserName:true
+      venmoUserName: true,
     },
   });
 };
+
+const userProfileDetails = async (user: any, body: { userId: number }) => {};
 export default {
   profilePictureUpdate,
   userContacts,
@@ -421,4 +429,5 @@ export default {
   userGetBulk,
   getFriendList,
   updateVenmoUserName,
+  userProfileDetails,
 };

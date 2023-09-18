@@ -33,6 +33,7 @@ export interface IUpdateUserProfile {
   id: string;
   birthDate?: string;
   phone?: object;
+  venmoUserName: string | undefined | null;
 }
 
 export interface IForgotPassword {
