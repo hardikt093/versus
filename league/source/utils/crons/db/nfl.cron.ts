@@ -28,7 +28,7 @@ const updateNflUpcommingMatch = cron.schedule("*/60 * * * * *", async () => {
   } catch (error) {
     console.log(error);
   } finally {
-    isupdateStandingRecordRunning = false;
+    isUpdateNflUpcommingMatch = false;
   }
 });
 
@@ -93,7 +93,7 @@ const updateLiveMatchFinal = cron.schedule("*/10 * * * * *", async () => {
   } catch (error) {
     console.log(error);
   } finally {
-    isUpdateLiveMatch = false;
+    isUpdateLiveMatchFinal = false;
   }
 });
 
