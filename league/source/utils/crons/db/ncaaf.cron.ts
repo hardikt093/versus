@@ -65,7 +65,7 @@ const updateLiveMatchFinal = cron.schedule("*/35 * * * * *", async () => {
     Date;
     console.log(error);
   } finally {
-    isUpdateLiveMatch = false;
+    isUpdateLiveMatchFinal = false;
   }
 });
 

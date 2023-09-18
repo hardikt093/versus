@@ -495,7 +495,7 @@ export default class NCAAFDbCronServiceClass {
             {
               status: "PENDING",
               goalServeMatchId: Number(goalServeMatchId),
-              leagueType: "NFL",
+              leagueType: "NCAAF",
             },
             {
               status: "EXPIRED",
@@ -506,7 +506,7 @@ export default class NCAAFDbCronServiceClass {
             {
               status: "CONFIRMED",
               goalServeMatchId: Number(goalServeMatchId),
-              leagueType: "NFL",
+              leagueType: "NCAAF",
             },
             {
               status: "ACTIVE",
@@ -523,7 +523,7 @@ export default class NCAAFDbCronServiceClass {
             {
               status: "PENDING",
               goalServeMatchId: Number(goalServeMatchId),
-              leagueType: "NFL",
+              leagueType: "NCAAF",
             },
             {
               status: "EXPIRED",
@@ -533,7 +533,7 @@ export default class NCAAFDbCronServiceClass {
             {
               status: { $in: ["CONFIRMED", "ACTIVE"] },
               goalServeMatchId: Number(goalServeMatchId),
-              leagueType: "NFL",
+              leagueType: "NCAAF",
             },
             {
               status: "CANCELED",
@@ -560,6 +560,8 @@ export default class NCAAFDbCronServiceClass {
         ? getMatch?.data?.scores?.category?.match
         : [getMatch?.data?.scores?.category?.match];
 
+      // console.log("matchArrayAll===>", matchArrayAll.length);
+
       if (!matchArrayAll || matchArrayAll?.length === 0) {
         console.log("No matches to update.");
         return;
@@ -577,6 +579,7 @@ export default class NCAAFDbCronServiceClass {
       // console.log("matchArray==>", matchArray);
 
       const updatePromises = matchArray?.map(async (match: any) => {
+        // console.log("findMatch", match?.contestID);
         const findMatch = await NcaafMatch.findOne({
           goalServeMatchId: match.contestID,
           $or: [
@@ -586,7 +589,7 @@ export default class NCAAFDbCronServiceClass {
             { status: "Final/20T" },
           ],
         }).lean();
-        console.log("findMatch",findMatch?.goalServeMatchId)
+        // console.log("findMatch", findMatch?.goalServeMatchId);
         if (!findMatch) {
           const data: Partial<INcaafMatchModel> = {
             attendance: match?.attendance,
@@ -623,7 +626,7 @@ export default class NCAAFDbCronServiceClass {
             { new: true, upsert: true }
           );
 
-        console.log("NCAAF FINAL match updated", dataUpdate.goalServeMatchId);
+          // console.log("NCAAF FINAL match updated", dataUpdate.goalServeMatchId);
 
           // if (match.status == "Final") {
           const homeTeamTotalScore = parseFloat(match.hometeam.totalscore);
