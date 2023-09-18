@@ -125,5 +125,5 @@ router.post("/friends", auth, userController.userContacts);
 router.post("/list", auth, userController.usersList);
 router.post("/getBulk", userController.usersGetBulk);
 router.get("/getFriendList", auth, userController.getFriendList);
-router.post("/updateVenmoUserName", auth, userController.updateVenmoName)
+router.put("/updateVenmoUserName", auth, userController.updateVenmoName)
 export default router;
