@@ -420,7 +420,7 @@ const updateVenmoUserName = async (
 const userProfileDetails = async (body:any) => {
   return await prisma.user.findUnique({
     where:{
-      id:body.userId
+      id: Number(body.profileId)
     },
     select: {
       firstName: true,

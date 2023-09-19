@@ -183,9 +183,9 @@ const userProfileDetails = async (req: Request, res: Response) => {
     );
     const userProfile = await userService.userProfileDetails(body);
 
-    createResponse(res, httpStatus.OK, "", {
-      ...userProfile,
-      ...resp.data.data,
+    return createResponse(res, httpStatus.OK, "", {
+      user : userProfile ?? {},
+      betsDetails : resp.data?.data ?? {},
     });
   } catch (error: any) {}
 };
