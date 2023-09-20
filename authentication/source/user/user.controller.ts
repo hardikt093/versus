@@ -186,7 +186,9 @@ const userProfileDetails = async (req: Request, res: Response) => {
       user: userProfile ?? {},
       betsDetails: resp.data?.data ?? {},
     });
-  } catch (error: any) {}
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
 };
 
 const contactsBetDetails = async (req: Request, res: Response) => {
@@ -201,7 +203,9 @@ const contactsBetDetails = async (req: Request, res: Response) => {
     return createResponse(res, httpStatus.OK, "", {
       users
     });
-  } catch (error: any) {}
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
 };
 
 export default {

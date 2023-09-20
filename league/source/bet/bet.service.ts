@@ -3141,7 +3141,6 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
   return count[0];
 };
 const getWonBets = async (profileUserIds: number[]) => {
-  // Create an initial array with all profileUserId
   const counts = await Bet.aggregate([
     {
       $match: {
@@ -3186,17 +3185,17 @@ const getWonBets = async (profileUserIds: number[]) => {
         profileUserId: "$_id.profileUserId",
         overallRecord: {
           win: {
-            $ifNull: ["$betsWon", 0] // Return 0 if there is no data for betsWon
+            $ifNull: ["$betsWon", 0]
           },
           loss: {
-            $ifNull: ["$betsLost", 0] // Return 0 if there is no data for betsLost
+            $ifNull: ["$betsLost", 0] 
           },
           percentage: {
             $multiply: [
               {
                 $cond: [
-                  { $eq: [0, { $add: ["$betsWon", "$betsLost"] }] }, // Check if the denominator is 0
-                  0, // Return 0 if the denominator is 0 to avoid division by zero error
+                  { $eq: [0, { $add: ["$betsWon", "$betsLost"] }] },
+                  0,
                   {
                     $divide: ["$betsWon", { $add: ["$betsWon", "$betsLost"] }],
                   },
@@ -3209,28 +3208,22 @@ const getWonBets = async (profileUserIds: number[]) => {
       },
     },
   ]);
-  
-  // Create a map to store the results by profileUserId
+
   const resultMap = new Map();
   for (const count of counts) {
     resultMap.set(count.profileUserId, count);
   }
+
+  const finalResult = profileUserIds.map(profileUserId => {
+    const existingCount = resultMap.get(profileUserId);
+    return {
+      profileUserId,
+      overallRecord: existingCount ? existingCount.overallRecord : { win: 0, loss: 0, percentage: 0 },
+    };
+  });
   
-  // Initialize the final result array with default values
-  const finalResult = profileUserIds.map(profileUserId => ({
-    profileUserId,
-    overallRecord: { win: 0, loss: 0, percentage: 0 },
-  }));
+  return finalResult;
   
-  // Populate the final result array with actual data
-  for (const count of finalResult) {
-    const existingCount = resultMap.get(count.profileUserId);
-    if (existingCount) {
-      count.overallRecord = existingCount.overallRecord;
-    }
-  }
-  
- return finalResult
 };
 export default {
   getBetUser,
