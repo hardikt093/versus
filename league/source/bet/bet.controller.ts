@@ -207,6 +207,17 @@ const getUserBetDetails = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const getBetsFromContacts= async (req:Request,res:Response)=>{
+  try {
+    const betData = await BetService.getWonBets(
+     req.body.ids
+    );
+    createResponse(res, httpStatus.OK, "", betData);
+  } catch (error) {
+    
+  }
+}
 export default {
   getBetUser,
   createBet,
@@ -222,4 +233,5 @@ export default {
   betSettledUpdate,
   listBetsDashboard,
   getUserBetDetails,
+  getBetsFromContacts
 };

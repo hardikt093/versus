@@ -79,6 +79,7 @@ router.post(
 
 router.get("/:id/result", auth, BetController.getResultBet);
 router.post("/getUserBetDetails", auth, BetController.getUserBetDetails);
+router.post("/getWonBets", auth, BetController.getBetsFromContacts);
 
 router.post(
   "/:id/result-satisfied",

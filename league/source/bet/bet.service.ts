@@ -3140,6 +3140,98 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
   ]);
   return count[0];
 };
+const getWonBets = async (profileUserIds: number[]) => {
+  // Create an initial array with all profileUserId
+  const counts = await Bet.aggregate([
+    {
+      $match: {
+        $or: [
+          { opponentUserId: { $in: profileUserIds } },
+          { requestUserId: { $in: profileUserIds } },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        isWon: {
+          $cond: {
+            if: {
+              $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
+            },
+            then: { $in: ["$requestUserId", profileUserIds] },
+            else: { $in: ["$opponentUserId", profileUserIds] },
+          },
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          profileUserId: {
+            $cond: {
+              if: { $in: ["$requestUserId", profileUserIds] },
+              then: "$requestUserId",
+              else: "$opponentUserId",
+            },
+          },
+        },
+        betsWon: { $sum: { $cond: { if: "$isWon", then: 1, else: 0 } } },
+        betsLost: {
+          $sum: { $cond: { if: { $not: "$isWon" }, then: 1, else: 0 } },
+        },
+      },
+    },
+    {
+      $project: {
+        profileUserId: "$_id.profileUserId",
+        overallRecord: {
+          win: {
+            $ifNull: ["$betsWon", 0] // Return 0 if there is no data for betsWon
+          },
+          loss: {
+            $ifNull: ["$betsLost", 0] // Return 0 if there is no data for betsLost
+          },
+          percentage: {
+            $multiply: [
+              {
+                $cond: [
+                  { $eq: [0, { $add: ["$betsWon", "$betsLost"] }] }, // Check if the denominator is 0
+                  0, // Return 0 if the denominator is 0 to avoid division by zero error
+                  {
+                    $divide: ["$betsWon", { $add: ["$betsWon", "$betsLost"] }],
+                  },
+                ],
+              },
+              100,
+            ],
+          },
+        },
+      },
+    },
+  ]);
+  
+  // Create a map to store the results by profileUserId
+  const resultMap = new Map();
+  for (const count of counts) {
+    resultMap.set(count.profileUserId, count);
+  }
+  
+  // Initialize the final result array with default values
+  const finalResult = profileUserIds.map(profileUserId => ({
+    profileUserId,
+    overallRecord: { win: 0, loss: 0, percentage: 0 },
+  }));
+  
+  // Populate the final result array with actual data
+  for (const count of finalResult) {
+    const existingCount = resultMap.get(count.profileUserId);
+    if (existingCount) {
+      count.overallRecord = existingCount.overallRecord;
+    }
+  }
+  
+ return finalResult
+};
 export default {
   getBetUser,
   listBetsByStatus,
@@ -3158,4 +3250,5 @@ export default {
   betSettledUpdate,
   listBetsDashboard,
   getUserBetDetails,
+  getWonBets
 };

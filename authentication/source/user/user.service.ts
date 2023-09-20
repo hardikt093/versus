@@ -2,8 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 import bcrypt from "bcryptjs";
 
-import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
-import { axiosGetMicro } from "../services/axios.service";
+import { IUpdateUserProfile, IUser, IUserLogin } from "../interfaces/input";
+import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
 import AppError from "../utils/AppError";
 import httpStatus from "http-status";
@@ -417,10 +417,10 @@ const updateVenmoUserName = async (
   });
 };
 
-const userProfileDetails = async (body:any) => {
+const userProfileDetails = async (body: any) => {
   return await prisma.user.findUnique({
-    where:{
-      id: Number(body.profileId)
+    where: {
+      id: Number(body.profileId),
     },
     select: {
       firstName: true,
@@ -431,8 +431,111 @@ const userProfileDetails = async (body:any) => {
       id: true,
       venmoUserName: true,
     },
-  })
+  });
+};
 
+const getContactsBetDetails = async (
+  userId: number | string,
+  search: string,
+  page: string,
+  token: any
+) => {
+  // const contacts = await prisma.contact.findMany({
+  //   where: {
+  //     userId: user.id,
+  //     OR: [
+  //       {
+  //         email: {
+  //           contains: query,
+  //           mode: "insensitive",
+  //         },
+  //       },
+  //       {
+  //         name: {
+  //           contains: query,
+  //           mode: "insensitive",
+  //         },
+  //       },
+  //     ],
+  //   },
+  //   include: {
+  //     sendInvite: {
+  //       where: {
+  //         sendInviteBy: user.id,
+  //       },
+  //       select: {
+  //         createdAt: true,
+  //       },
+  //       orderBy: {
+  //         createdAt: "desc",
+  //       },
+  //       take: 1,
+  //     },
+  //   },
+  //   orderBy: { createdAt: "asc" },
+  // });
+  // return contacts;
+  const pages = parseInt(page) || 1;
+  const limit = 10;
+  const startIndex = (pages - 1) * limit;
+
+  const contacts = await prisma.user.findMany({
+    take: limit,
+    skip: startIndex,
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
+      email: true,
+    },
+    where: {
+      id: {
+        not: userId,
+      },
+      OR: [
+        {
+          userName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          firstName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          lastName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+  });
+  const ids = contacts.map((item: any) => {
+    return item.id;
+  });
+
+  const resp = await axiosPostMicro(
+    { ids },
+    `${config.leagueServer}/bet/getWonBets`,
+    token
+  );
+  const mergedData = resp.data.data.map((count: any) => {
+    const userDetail = contacts.find(
+      (user: any) => user.id === count.profileUserId
+    );
+
+    return {
+      overallRecord: count.overallRecord,
+      ...userDetail,
+    };
+  });
+  return mergedData;
 };
 export default {
   profilePictureUpdate,
@@ -446,4 +549,5 @@ export default {
   getFriendList,
   updateVenmoUserName,
   userProfileDetails,
+  getContactsBetDetails,
 };

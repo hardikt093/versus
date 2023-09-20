@@ -174,25 +174,36 @@ const userProfileDetails = async (req: Request, res: Response) => {
     let token: any = req.header("Authorization");
     const body = {
       userId: req.loggedInUser.id,
-      profileId: req.params.profileId,
+      profileId: req.params.profileId
     };
-    console.log("body", body)
     const resp = await axiosPostMicro(
       body,
       `${config.leagueServer}/bet/getUserBetDetails`,
       token
     );
-    console.log("before userProfile resp ", resp.data.data)
-
     const userProfile = await userService.userProfileDetails(body);
-
-    console.log("userProfile", userProfile)
     return createResponse(res, httpStatus.OK, "", {
-      user : userProfile ?? {},
-      betsDetails : resp.data?.data ?? {},
+      user: userProfile ?? {},
+      betsDetails: resp.data?.data ?? {},
     });
   } catch (error: any) {}
 };
+
+const contactsBetDetails = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const users = await userService.getContactsBetDetails(
+      req.loggedInUser.id,
+      req.query.search as string,
+      req.query.page as string,
+      token
+    );
+    return createResponse(res, httpStatus.OK, "", {
+      users
+    });
+  } catch (error: any) {}
+};
+
 export default {
   getImageBasedOnS3Key,
   profilePictureUpdate,
@@ -205,4 +216,5 @@ export default {
   getFriendList,
   updateVenmoName,
   userProfileDetails,
+  contactsBetDetails,
 };
