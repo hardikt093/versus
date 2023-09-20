@@ -515,6 +515,9 @@ const getContactsBetDetails = async (
         },
       ],
     },
+    orderBy: {
+      userName: "asc",
+    },
   });
   const ids = contacts.map((item: any) => {
     return item.id;
