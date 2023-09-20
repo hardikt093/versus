@@ -176,13 +176,17 @@ const userProfileDetails = async (req: Request, res: Response) => {
       userId: req.loggedInUser.id,
       profileId: req.params.profileId,
     };
+    console.log("body", body)
     const resp = await axiosPostMicro(
       body,
       `${config.leagueServer}/bet/getUserBetDetails`,
       token
     );
+    console.log("before userProfile resp ", resp.data.data)
+
     const userProfile = await userService.userProfileDetails(body);
 
+    console.log("userProfile", userProfile)
     return createResponse(res, httpStatus.OK, "", {
       user : userProfile ?? {},
       betsDetails : resp.data?.data ?? {},

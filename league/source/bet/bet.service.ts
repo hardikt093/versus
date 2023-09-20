@@ -3010,8 +3010,24 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
             if: {
               $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
             },
-            then: { $eq: ["$requestUserId", Number(profileUserId)] },
-            else: { $eq: ["$opponentUserId", Number(profileUserId)] },
+            then: {
+              $cond: {
+                if: {
+                  $eq: ["$requestUserId", Number(profileUserId)],
+                },
+                then: 1,
+                else: 0,
+              },
+            },
+            else: {
+              $cond: {
+                if: {
+                  $eq: ["$opponentUserId", Number(profileUserId)],
+                },
+                then: 1,
+                else: 0,
+              },
+            },
           },
         },
       },
@@ -3069,27 +3085,54 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
           win: "$betsWon",
           loss: "$betsLost",
           percentage: {
-            $multiply: [
-              {
-                $divide: ["$betsWon", { $add: ["$betsWon", "$betsLost"] }],
+            $cond: {
+              if: { $and: [{ $eq: ["$betsWon", 0] }, { $eq: ["$betsLost", 0] }] }, // Check if both values are 0
+              then: 0, // Set percentage to 0 if both values are 0
+              else: {
+                $cond: {
+                  if: { $eq: ["$betsLost", 0] }, // Check for division by zero
+                  then: 100, // Set a default value when the denominator is zero
+                  else: {
+                    $multiply: [
+                      {
+                        $divide: [
+                          "$betsWon",
+                          { $add: ["$betsWon", "$betsLost"] },
+                        ],
+                      },
+                      100,
+                    ],
+                  },
+                },
               },
-              100,
-            ],
+            },
           },
         },
         headToHead: {
           win: "$wonBetsFromUser",
           loss: "$lostBetsFromUser",
           percentage: {
-            $multiply: [
-              {
-                $divide: [
-                  "$wonBetsFromUser",
-                  { $add: ["$wonBetsFromUser", "$lostBetsFromUser"] },
-                ],
+            $cond: {
+              if: { $and: [{ $eq: ["$wonBetsFromUser", 0] }, { $eq: ["$lostBetsFromUser", 0] }] }, // Check if both values are 0
+              then: 0, // Set percentage to 0 if both values are 0
+              else: {
+                $cond: {
+                  if: { $eq: ["$lostBetsFromUser", 0] }, // Check for division by zero
+                  then: 100, // Set a default value when the denominator is zero
+                  else: {
+                    $multiply: [
+                      {
+                        $divide: [
+                          "$wonBetsFromUser",
+                          { $add: ["$wonBetsFromUser", "$lostBetsFromUser"] },
+                        ],
+                      },
+                      100,
+                    ],
+                  },
+                },
               },
-              100,
-            ],
+            },
           },
         },
       },
