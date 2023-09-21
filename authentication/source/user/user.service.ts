@@ -534,7 +534,7 @@ const getContactsBetDetails = async (
     );
 
     return {
-      overallRecord: count.overallRecord,
+      overallRecord: count,
       ...userDetail,
     };
   });
