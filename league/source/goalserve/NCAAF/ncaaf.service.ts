@@ -3002,7 +3002,11 @@ const ncaafFinal = async (goalServeMatchId: string) => {
       {
         $addFields: {
           outcome: {
-            $arrayElemAt: ["$outcome", 0],
+            $cond: {
+              if: { $arrayElemAt: ["$outcome.awayTeamMoneyLine", 0] }, 
+              then: { $arrayElemAt: ["$outcome", 0] }, 
+              else: { $arrayElemAt: ["$odds", 0] }, 
+            },
           },
           odds: {
             $arrayElemAt: ["$odds", 0],
