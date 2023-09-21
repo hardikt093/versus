@@ -2997,9 +2997,14 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
   const count = await Bet.aggregate([
     {
       $match: {
-        $or: [
-          { opponentUserId: Number(profileUserId) },
-          { requestUserId: Number(profileUserId) },
+        $and: [
+          {
+            $or: [
+              { opponentUserId: Number(profileUserId) },
+              { requestUserId: Number(profileUserId) },
+            ],
+          },
+          { status: "RESULT_DECLARED" },
         ],
       },
     },
@@ -3086,7 +3091,9 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
           loss: "$betsLost",
           percentage: {
             $cond: {
-              if: { $and: [{ $eq: ["$betsWon", 0] }, { $eq: ["$betsLost", 0] }] }, // Check if both values are 0
+              if: {
+                $and: [{ $eq: ["$betsWon", 0] }, { $eq: ["$betsLost", 0] }],
+              }, // Check if both values are 0
               then: 0, // Set percentage to 0 if both values are 0
               else: {
                 $cond: {
@@ -3113,7 +3120,12 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
           loss: "$lostBetsFromUser",
           percentage: {
             $cond: {
-              if: { $and: [{ $eq: ["$wonBetsFromUser", 0] }, { $eq: ["$lostBetsFromUser", 0] }] }, // Check if both values are 0
+              if: {
+                $and: [
+                  { $eq: ["$wonBetsFromUser", 0] },
+                  { $eq: ["$lostBetsFromUser", 0] },
+                ],
+              }, // Check if both values are 0
               then: 0, // Set percentage to 0 if both values are 0
               else: {
                 $cond: {
@@ -3138,15 +3150,21 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
       },
     },
   ]);
+  console.log("counts", count);
   return count[0];
 };
 const getWonBets = async (profileUserIds: number[]) => {
   const counts = await Bet.aggregate([
     {
       $match: {
-        $or: [
-          { opponentUserId: { $in: profileUserIds } },
-          { requestUserId: { $in: profileUserIds } },
+        $and: [
+          {
+            $or: [
+              { opponentUserId: { $in: profileUserIds } },
+              { requestUserId: { $in: profileUserIds } },
+            ],
+          },
+          { status: "RESULT_DECLARED" },
         ],
       },
     },
@@ -3185,10 +3203,10 @@ const getWonBets = async (profileUserIds: number[]) => {
         profileUserId: "$_id.profileUserId",
         overallRecord: {
           win: {
-            $ifNull: ["$betsWon", 0]
+            $ifNull: ["$betsWon", 0],
           },
           loss: {
-            $ifNull: ["$betsLost", 0] 
+            $ifNull: ["$betsLost", 0],
           },
           percentage: {
             $multiply: [
@@ -3208,22 +3226,23 @@ const getWonBets = async (profileUserIds: number[]) => {
       },
     },
   ]);
-
+  console.log("counts", counts);
   const resultMap = new Map();
   for (const count of counts) {
     resultMap.set(count.profileUserId, count);
   }
 
-  const finalResult = profileUserIds.map(profileUserId => {
+  const finalResult = profileUserIds.map((profileUserId) => {
     const existingCount = resultMap.get(profileUserId);
     return {
       profileUserId,
-      overallRecord: existingCount ? existingCount.overallRecord : { win: 0, loss: 0, percentage: 0 },
+      overallRecord: existingCount
+        ? existingCount.overallRecord
+        : { win: 0, loss: 0, percentage: 0 },
     };
   });
-  
+
   return finalResult;
-  
 };
 export default {
   getBetUser,
@@ -3243,5 +3262,5 @@ export default {
   betSettledUpdate,
   listBetsDashboard,
   getUserBetDetails,
-  getWonBets
+  getWonBets,
 };
