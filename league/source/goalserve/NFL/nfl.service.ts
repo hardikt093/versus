@@ -3286,7 +3286,11 @@ const nflFinal = async (goalServeMatchId: string) => {
       {
         $addFields: {
           outcome: {
-            $arrayElemAt: ["$outcome", 0],
+            $cond: {
+              if: { $arrayElemAt: ["$outcome", 0] }, // Check if "outcome" is an array
+              then: { $arrayElemAt: ["$outcome", 0] }, // Set "outcome" to its first element
+              else: { $arrayElemAt: ["$odds", 0] } // Set "outcome" to the first element of "odds"
+            }
           },
           odds: {
             $arrayElemAt: ["$odds", 0],
@@ -3935,6 +3939,7 @@ const nflFinal = async (goalServeMatchId: string) => {
           weekName: "$weekName",
           seasonName: "$seasonName",
           statsTeams: true,
+          outcomes:"$outcome",
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
