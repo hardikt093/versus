@@ -3287,10 +3287,10 @@ const nflFinal = async (goalServeMatchId: string) => {
         $addFields: {
           outcome: {
             $cond: {
-              if: { $arrayElemAt: ["$outcome", 0] }, // Check if "outcome" is an array
-              then: { $arrayElemAt: ["$outcome", 0] }, // Set "outcome" to its first element
-              else: { $arrayElemAt: ["$odds", 0] } // Set "outcome" to the first element of "odds"
-            }
+              if: { $arrayElemAt: ["$outcome.awayTeamMoneyLine", 0] }, 
+              then: { $arrayElemAt: ["$outcome", 0] }, 
+              else: { $arrayElemAt: ["$odds", 0] }, 
+            },
           },
           odds: {
             $arrayElemAt: ["$odds", 0],
