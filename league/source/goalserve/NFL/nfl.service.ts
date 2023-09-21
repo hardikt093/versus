@@ -4430,22 +4430,22 @@ const nflFinal = async (goalServeMatchId: string) => {
               ],
             },
             homeTeamSpreadObj: {
-              homeTeamSpread: "$outcome.homeTeamSpread",
+              homeTeamSpread: "$outcome.homeTeamSpread.handicap",
               homeTeamSpreadUs: {
                 $cond: [
-                  { $gte: [{ $toDouble: "$outcome.homeTeamSpreadUs" }, 0] },
-                  { $concat: ["+", "$outcome.homeTeamSpreadUs"] },
-                  "$outcome.homeTeamSpreadUs",
+                  { $gte: [{ $toDouble: "$outcome.homeTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$outcome.homeTeamSpread.us"] },
+                  "$outcome.homeTeamSpread.us",
                 ],
               },
             },
             awayTeamSpreadObj: {
-              awayTeamSpread: "$outcome.awayTeamSpread",
+              awayTeamSpread: "$outcome.awayTeamSpread.handicap",
               awayTeamSpreadUs: {
                 $cond: [
-                  { $gte: [{ $toDouble: "$outcome.awayTeamSpreadUs" }, 0] },
-                  { $concat: ["+", "$outcome.awayTeamSpreadUs"] },
-                  "$outcome.awayTeamSpreadUs",
+                  { $gte: [{ $toDouble: "$outcome.awayTeamSpread.us" }, 0] },
+                  { $concat: ["+", "$outcome.awayTeamSpread.us"] },
+                  "$outcome.awayTeamSpread.us",
                 ],
               },
             },
