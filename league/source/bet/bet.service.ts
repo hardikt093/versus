@@ -3150,18 +3150,19 @@ const getUserBetDetails = async (userId: number, profileUserId: string) => {
       },
     },
   ]);
-  console.log("counts", count);
+
   return count[0];
 };
-const getWonBets = async (profileUserIds: number[]) => {
-  const counts = await Bet.aggregate([
+
+const findOverAllRecord = async (profileUserId: number) => {
+  const count = await Bet.aggregate([
     {
       $match: {
         $and: [
           {
             $or: [
-              { opponentUserId: { $in: profileUserIds } },
-              { requestUserId: { $in: profileUserIds } },
+              { opponentUserId: Number(profileUserId) },
+              { requestUserId: Number(profileUserId) },
             ],
           },
           { status: "RESULT_DECLARED" },
@@ -3175,23 +3176,31 @@ const getWonBets = async (profileUserIds: number[]) => {
             if: {
               $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
             },
-            then: { $in: ["$requestUserId", profileUserIds] },
-            else: { $in: ["$opponentUserId", profileUserIds] },
+            then: {
+              $cond: {
+                if: {
+                  $eq: ["$requestUserId", Number(profileUserId)],
+                },
+                then: 1,
+                else: 0,
+              },
+            },
+            else: {
+              $cond: {
+                if: {
+                  $eq: ["$opponentUserId", Number(profileUserId)],
+                },
+                then: 1,
+                else: 0,
+              },
+            },
           },
         },
       },
     },
     {
       $group: {
-        _id: {
-          profileUserId: {
-            $cond: {
-              if: { $in: ["$requestUserId", profileUserIds] },
-              then: "$requestUserId",
-              else: "$opponentUserId",
-            },
-          },
-        },
+        _id: 0,
         betsWon: { $sum: { $cond: { if: "$isWon", then: 1, else: 0 } } },
         betsLost: {
           $sum: { $cond: { if: { $not: "$isWon" }, then: 1, else: 0 } },
@@ -3200,49 +3209,64 @@ const getWonBets = async (profileUserIds: number[]) => {
     },
     {
       $project: {
-        profileUserId: "$_id.profileUserId",
-        overallRecord: {
-          win: {
-            $ifNull: ["$betsWon", 0],
-          },
-          loss: {
-            $ifNull: ["$betsLost", 0],
-          },
-          percentage: {
-            $multiply: [
-              {
-                $cond: [
-                  { $eq: [0, { $add: ["$betsWon", "$betsLost"] }] },
-                  0,
-                  {
-                    $divide: ["$betsWon", { $add: ["$betsWon", "$betsLost"] }],
-                  },
-                ],
+        win: "$betsWon",
+        loss: "$betsLost",
+        percentage: {
+          $cond: {
+            if: {
+              $and: [{ $eq: ["$betsWon", 0] }, { $eq: ["$betsLost", 0] }],
+            }, // Check if both values are 0
+            then: 0, // Set percentage to 0 if both values are 0
+            else: {
+              $cond: {
+                if: { $eq: ["$betsLost", 0] }, // Check for division by zero
+                then: 100, // Set a default value when the denominator is zero
+                else: {
+                  $multiply: [
+                    {
+                      $divide: [
+                        "$betsWon",
+                        { $add: ["$betsWon", "$betsLost"] },
+                      ],
+                    },
+                    100,
+                  ],
+                },
               },
-              100,
-            ],
+            },
           },
         },
       },
     },
   ]);
-  console.log("counts", counts);
-  const resultMap = new Map();
-  for (const count of counts) {
-    resultMap.set(count.profileUserId, count);
+
+  return {
+    profileUserId: Number(profileUserId),
+    win: count[0]?.win ?? 0,
+    loss: count[0]?.loss ?? 0,
+    percentage: count[0]?.percentage ?? 0,
+  };
+};
+const getWonBets = async (profileUserIds: number[]) => {
+  const fetchOverallRecord = async (userId: any) => {
+    try {
+      const output = await findOverAllRecord(userId);
+      return (
+        output ?? { profileUserId: userId, win: 0, loss: 0, percentage: 0 }
+      );
+    } catch (error) {
+      console.error(`Error fetching record for user ${userId}:`, error);
+      throw error;
+    }
+  };
+
+  try {
+    const result = await Promise.all(profileUserIds.map(fetchOverallRecord));
+    return result;
+  } catch (error) {
+    console.error("Error fetching overall records:", error);
+    // Handle or log any errors that occur during the process
   }
-
-  const finalResult = profileUserIds.map((profileUserId) => {
-    const existingCount = resultMap.get(profileUserId);
-    return {
-      profileUserId,
-      overallRecord: existingCount
-        ? existingCount.overallRecord
-        : { win: 0, loss: 0, percentage: 0 },
-    };
-  });
-
-  return finalResult;
 };
 export default {
   getBetUser,
