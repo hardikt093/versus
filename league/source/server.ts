@@ -3,7 +3,9 @@ import express, { Express } from "express";
 import morgan from "morgan";
 import cors from "cors";
 import mongoose from "mongoose";
-
+import dotenv from "dotenv";
+import path from "path";
+dotenv.config({ path: path.join(__dirname, "./../.env") });
 import routes from "./routes/";
 import logger from "./config/logger";
 import { Server } from "socket.io";

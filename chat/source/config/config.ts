@@ -2,12 +2,12 @@ import dotenv from "dotenv";
 import path from "path";
 import Joi from "@hapi/joi";
 
-dotenv.config({ path: path.join(__dirname, "./../../.env") });
-
+console.log(`./../../${process.env.NODE_ENV}.env`)
+dotenv.config({ path: path.join(__dirname, `./../../${process.env.NODE_ENV}.env`) });
 const envVarsSchema = Joi.object()
   .keys({
     NODE_ENV: Joi.string()
-      .valid("production", "development", "test")
+      .valid("versus_production", "development", "versus_test")
       .required(),
     PORT: Joi.number().default(3000),
     JWT_SECRET: Joi.string().required().description("JWT secret key"),
