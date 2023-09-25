@@ -3286,11 +3286,7 @@ const nflFinal = async (goalServeMatchId: string) => {
       {
         $addFields: {
           outcome: {
-            $cond: {
-              if: { $arrayElemAt: ["$outcome.awayTeamMoneyLine", 0] }, 
-              then: { $arrayElemAt: ["$outcome", 0] }, 
-              else: { $arrayElemAt: ["$odds", 0] }, 
-            },
+            $arrayElemAt: ["$outcome", 0],
           },
           odds: {
             $arrayElemAt: ["$odds", 0],
@@ -3939,7 +3935,6 @@ const nflFinal = async (goalServeMatchId: string) => {
           weekName: "$weekName",
           seasonName: "$seasonName",
           statsTeams: true,
-          outcomes:"$outcome",
           awayTeamFullName: { $arrayElemAt: ["$teams.awayTeam.name", 0] },
           homeTeamFullName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
           awayTeamAbbreviation: {
@@ -4476,6 +4471,9 @@ const nflFinal = async (goalServeMatchId: string) => {
         },
       },
     ]);
+    getMatch[0].outcome = getMatch[0].outcome.awayTeamMoneyLine
+      ? getMatch[0].outcome
+      : getMatch[0].closingOddsAndOutcome;
     return getMatch[0];
   } catch (error) {}
 };

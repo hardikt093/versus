@@ -2524,18 +2524,28 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
           teamStatistics: [
             {
               title: "Points Scored",
-              homeTeam: { $arrayElemAt: ["$standings.homeTeam.overall_points_for", 0] },
-              awayTeam: { $arrayElemAt: ["$standings.awayTeam.overall_points_for", 0] },
+              homeTeam: {
+                $arrayElemAt: ["$standings.homeTeam.overall_points_for", 0],
+              },
+              awayTeam: {
+                $arrayElemAt: ["$standings.awayTeam.overall_points_for", 0],
+              },
               total: {
                 $add: [
                   {
                     $toInt: {
-                      $arrayElemAt: ["$standings.homeTeam.overall_points_for", 0],
+                      $arrayElemAt: [
+                        "$standings.homeTeam.overall_points_for",
+                        0,
+                      ],
                     },
                   },
                   {
                     $toInt: {
-                      $arrayElemAt: ["$standings.awayTeam.overall_points_for", 0],
+                      $arrayElemAt: [
+                        "$standings.awayTeam.overall_points_for",
+                        0,
+                      ],
                     },
                   },
                 ],
@@ -2554,12 +2564,18 @@ const ncaafUpcomming = async (goalServeMatchId: string) => {
                 $add: [
                   {
                     $toDouble: {
-                      $arrayElemAt: ["$standings.homeTeam.overall_points_against", 0],
+                      $arrayElemAt: [
+                        "$standings.homeTeam.overall_points_against",
+                        0,
+                      ],
                     },
                   },
                   {
                     $toDouble: {
-                      $arrayElemAt: ["$standings.awayTeam.overall_points_against", 0],
+                      $arrayElemAt: [
+                        "$standings.awayTeam.overall_points_against",
+                        0,
+                      ],
                     },
                   },
                 ],
@@ -3002,11 +3018,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
       {
         $addFields: {
           outcome: {
-            $cond: {
-              if: { $arrayElemAt: ["$outcome.awayTeamMoneyLine", 0] }, 
-              then: { $arrayElemAt: ["$outcome", 0] }, 
-              else: { $arrayElemAt: ["$odds", 0] }, 
-            },
+            $arrayElemAt: ["$outcome", 0],
           },
           odds: {
             $arrayElemAt: ["$odds", 0],
@@ -3614,6 +3626,7 @@ const ncaafFinal = async (goalServeMatchId: string) => {
       {
         $project: {
           id: true,
+
           attendance: true,
           status: true,
           venueName: true,
@@ -4197,6 +4210,9 @@ const ncaafFinal = async (goalServeMatchId: string) => {
         },
       },
     ]);
+    getMatch[0].outcome = getMatch[0].outcome.awayTeamMoneyLine
+      ? getMatch[0].outcome
+      : getMatch[0].closingOddsAndOutcome;
     return getMatch[0];
   } catch (error) {}
 };

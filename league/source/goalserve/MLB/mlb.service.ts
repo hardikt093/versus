@@ -1257,7 +1257,7 @@ const getFinalMatch = async () => {
           status: true,
           datetime_utc: "$dateTimeUtc",
           time: true,
-          channelExpireTime:true,
+          channelExpireTime: true,
           goalServeMatchId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
@@ -2764,7 +2764,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
           time: true,
           goalServeMatchId: true,
           goalServeLeagueId: true,
-          channelExpireTime:true,
+          channelExpireTime: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
@@ -4666,11 +4666,7 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
       {
         $addFields: {
           outcome: {
-            $cond: {
-              if: { $arrayElemAt: ["$outcome.awayTeamMoneyLine", 0] }, 
-              then: { $arrayElemAt: ["$outcome", 0] }, 
-              else: { $arrayElemAt: ["$odds", 0] }, 
-            },
+            $arrayElemAt: ["$outcome", 0],
           },
           odds: {
             $arrayElemAt: ["$odds", 0],
@@ -5687,6 +5683,10 @@ const singleGameBoxScore = async (goalServeMatchId: string) => {
         },
       },
     ]);
+    getMatch[0].outcome = getMatch[0].outcome.awayTeamMoneyLine
+      ? getMatch[0].outcome
+      : getMatch[0].closingOddsAndOutcome;
+
     return { getMatch: getMatch[0] };
   } catch (error: any) {
     console.log("error", error);
@@ -14013,7 +14013,7 @@ const getAllFinalGameData = async () => {
     const data = await Match.aggregate([
       {
         $match: {
-          status: {$ne : "Not Started"},
+          status: { $ne: "Not Started" },
         },
       },
       {
@@ -14125,12 +14125,14 @@ const getAllFinalGameData = async () => {
   }
 };
 
-const getSingleMlbGame = async(data:{goalServeMatchId:string | number})=>{
+const getSingleMlbGame = async (data: {
+  goalServeMatchId: string | number;
+}) => {
   return await Match.aggregate([
     {
-      $match:{
-        goalServeMatchId:Number(data.goalServeMatchId)
-      }
+      $match: {
+        goalServeMatchId: Number(data.goalServeMatchId),
+      },
     },
     {
       $lookup: {
@@ -14242,7 +14244,6 @@ const getSingleMlbGame = async(data:{goalServeMatchId:string | number})=>{
           won: "$awayTeamStandings.won",
           lose: "$awayTeamStandings.lost",
           teamImage: "$awayTeamImage.image",
-        
         },
         homeTeam: {
           homeTeamName: "$homeTeam.name",
@@ -14258,8 +14259,8 @@ const getSingleMlbGame = async(data:{goalServeMatchId:string | number})=>{
         },
       },
     },
-  ])
-}
+  ]);
+};
 export default {
   mlbGetTeam,
   getMLBStandings,
@@ -14295,5 +14296,5 @@ export default {
   get24HoursFinalGameData,
   addChatDetailInMatch,
   getAllFinalGameData,
-  getSingleMlbGame
+  getSingleMlbGame,
 };
