@@ -586,7 +586,7 @@ const scoreWithDate = async (data: any) => {
     {
       $addFields: {
         dateInString: {
-          $toString: "$dateTimeUtc",
+          $toDate: "$dateTimeUtc",
         },
       },
     },
@@ -602,7 +602,7 @@ const scoreWithDate = async (data: any) => {
       $sort: {
         // formattedDate: 1,
         // time: 1,
-        dateInString: -1,
+        dateInString: 1,
       },
     },
     {
