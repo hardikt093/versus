@@ -80,7 +80,7 @@ const getCalendar = async () => {
           $push: "$dateInString",
         },
       },
-    },
+    },   
     {
       $group: {
         _id: null,
@@ -583,19 +583,26 @@ const scoreWithDate = async (data: any) => {
         },
       },
     },
-
     {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
+      $addFields: {
+        dateInString: {
+          $toString: "$dateTimeUtc",
+        },
       },
     },
+    
     {
       $unwind: {
         path: "$odds",
         includeArrayIndex: "string",
         preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $sort: {
+        // formattedDate: 1,
+        // time: 1,
+        dateInString: -1,
       },
     },
     {
