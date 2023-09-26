@@ -37,6 +37,23 @@ const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
   }
 });
 
+let isupdateCurruntDateRecordRunningFinal: boolean = false;
+const updateCurruntDateRecordFinal = cron.schedule("*/10 * * * * *", async () => {
+  if (isupdateCurruntDateRecordRunningFinal) {
+    console.log("MLB updateCurruntDateRecordFinal Skip");
+    return;
+  }
+  isupdateCurruntDateRecordRunningFinal = true;
+  try {
+    console.info("inside MLB score cron updateCurruntDateRecordFinal");
+    await mlbService.updateCurruntDateRecordFinal();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateCurruntDateRecordRunningFinal = false;
+  }
+});
+
 let isUpdateRemainingCurruntDateRecord: boolean = false;
 const updateRemainingCurruntDateRecord = cron.schedule("*/60 * * * * *", async () => {
   if (isUpdateRemainingCurruntDateRecord) {
@@ -167,4 +184,5 @@ export default {
   updateInjuryRecored,
   updateMlbMatch,
   updateTeamStats,
+  updateCurruntDateRecordFinal
 };

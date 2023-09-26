@@ -159,13 +159,182 @@ export default class MlbDbCronServiceClass {
         data,
         "baseball/usa"
       );
-      const matchArrayAll = await getMatch?.data?.scores?.category?.match;
-      const matchArray = matchArrayAll?.filter((element: any) => {
-        return element.status !== "Not Started";
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
+
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
+      }
+      const matchArray = matchArrayAll.filter((element: any) => {
+        return (
+          element.status !== "Not Started" &&
+          element.status !== "Final" &&
+          // element.status !== "After Over Time" &&
+          element.status !== "Final/OT" &&
+          element.status !== "Final/20T"
+        );
       });
-      if (matchArray?.length > 0) {
-        for (const match of matchArray) {
-          // console.log("MLB match.id==>", match.id);
+
+      const updatePromises = matchArray?.map(async (match: any) => {
+        console.log("MLB  LIVE MATCHID", match?.id);
+        const data: Partial<IMatchModel> = {
+          outs: match.outs,
+          date: match.date,
+          formattedDate: match.formatted_date,
+          timezone: match.timezone,
+          oddsid: match.seasonType,
+          attendance: match.attendance,
+          goalServeMatchId: match.id,
+          dateTimeUtc: match.datetime_utc,
+          status: match.status,
+          time: match.time,
+          homeTeamHit: match.hometeam.hits,
+          homeTeamTotalScore: match.hometeam.totalscore,
+          homeTeamError: match.hometeam.errors,
+          awayTeamHit: match.awayteam.hits,
+          awayTeamTotalScore: match.awayteam.totalscore,
+          awayTeamError: match.awayteam.errors,
+          awayTeamInnings: match.awayteam?.innings?.inning || [],
+          homeTeamInnings: match.hometeam?.innings?.inning || [],
+        };
+
+        const matchUpdate = await Match.findOneAndUpdate(
+          { goalServeMatchId: data.goalServeMatchId },
+          data,
+          { new: true }
+        );
+        console.log("MLB matchUpdate==>", matchUpdate?.goalServeMatchId);
+
+        // const goalServeMatchId = match.id;
+
+        if (
+          match.status != "Not Started" &&
+          match.status != "Final" &&
+          match.status != "Postponed" &&
+          match.status != "Canceled" &&
+          match.status != "Suspended"
+        ) {
+          const goalServeMatchId = match.id;
+          // expire not accepted bet requests
+          await Bet.updateMany(
+            {
+              status: "PENDING",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "EXPIRED",
+            }
+          );
+          // active  CONFIRMED bet when match start
+          await Bet.updateMany(
+            {
+              status: "CONFIRMED",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "ACTIVE",
+            }
+          );
+        }
+        // else if (match.status == "Final") {
+        //   const homeTeamTotalScore = parseFloat(
+        //     match.hometeam.totalscore
+        //   );
+        //   const awayTeamTotalScore = parseFloat(
+        //     match.awayteam.totalscore
+        //   );
+        //   const goalServeMatchId = match.id;
+        //   const goalServeWinTeamId =
+        //     homeTeamTotalScore > awayTeamTotalScore
+        //       ? match.hometeam.id
+        //       : match.awayteam.id;
+        //   await declareResultMatch(
+        //     parseInt(goalServeMatchId),
+        //     parseInt(goalServeWinTeamId),
+        //     "MLB"
+        //   );
+        // }
+        else if (
+          match.status == "Canceled" ||
+          match.status == "Postponed" ||
+          match.status == "Suspended"
+        ) {
+          const goalServeMatchId = match.id;
+          await Bet.updateMany(
+            {
+              status: "PENDING",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "EXPIRED",
+            }
+          );
+          await Bet.updateMany(
+            {
+              status: { $in: ["CONFIRMED", "ACTIVE"] },
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "CANCELED",
+            }
+          );
+        }
+        await Promise.all(updatePromises);
+      });
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+
+  public updateCurruntDateRecordFinal = async () => {
+    try {
+      let data = {
+        json: true,
+      };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "baseball/usa"
+      );
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
+
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
+      }
+      const matchArray = matchArrayAll.filter((element: any) => {
+        return (
+          element.status === "Final" ||
+          element.status === "After Over Time" ||
+          element.status === "Final/OT" ||
+          element.status === "Final/20T"
+        );
+      });
+
+      const updatePromises = matchArray?.map(async (match: any) => {
+        const findMatch = await Match.findOne({
+          goalServeMatchId: match.id,
+          $or: [
+            { status: "After Over Time" },
+            { status: "Final" },
+            { status: "Final/OT" },
+            { status: "Final/20T" },
+          ],
+        }).lean();
+        console.log("findMatch", findMatch);
+        if (!findMatch) {
           const data: Partial<IMatchModel> = {
             outs: match.outs,
             date: match.date,
@@ -185,96 +354,33 @@ export default class MlbDbCronServiceClass {
             awayTeamError: match.awayteam.errors,
             awayTeamInnings: match.awayteam?.innings?.inning || [],
             homeTeamInnings: match.hometeam?.innings?.inning || [],
-            // event: match.events?.event || [],
-            // startingPitchers: match.starting_pitchers,
-            // awayTeamHitters: match.stats?.hitters?.awayteam?.player || [],
-            // homeTeamHitters: match.stats?.hitters?.hometeam?.player || [],
-            // awayTeamPitchers: match.stats?.pitchers?.awayteam?.player || [],
-            // homeTeamPitchers: match.stats?.pitchers?.hometeam?.player || [],
           };
+          console.log("data===>", data.goalServeMatchId);
           const matchUpdate = await Match.findOneAndUpdate(
-            { goalServeMatchId: data.goalServeMatchId },
+            { goalServeMatchId: match.id },
             data,
             { new: true }
           );
-          // console.log("MLB matchUpdate==>", matchUpdate?.goalServeMatchId);
+          // const goalServeMatchId = match.id;
+          console.log("matchUpdate MLB", matchUpdate?.goalServeMatchId);
+          // else if (match.status == "Final") {
+          const homeTeamTotalScore = parseFloat(match.hometeam.totalscore);
+          const awayTeamTotalScore = parseFloat(match.awayteam.totalscore);
+          const goalServeMatchId = match.id;
+          const goalServeWinTeamId =
+            homeTeamTotalScore > awayTeamTotalScore
+              ? match.hometeam.id
+              : match.awayteam.id;
+          await declareResultMatch(
+            parseInt(goalServeMatchId),
+            parseInt(goalServeWinTeamId),
+            "MLB"
+          );
           // }
-          if (
-            match.status != "Not Started" &&
-            match.status != "Final" &&
-            match.status != "Postponed" &&
-            match.status != "Canceled" &&
-            match.status != "Suspended"
-          ) {
-            const goalServeMatchId = match.id;
-            // expire not accepted bet requests
-            await Bet.updateMany(
-              {
-                status: "PENDING",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "EXPIRED",
-              }
-            );
-            // active  CONFIRMED bet when match start
-            await Bet.updateMany(
-              {
-                status: "CONFIRMED",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "ACTIVE",
-              }
-            );
-          } else if (match.status == "Final") {
-            const homeTeamTotalScore = parseFloat(
-              match.hometeam.totalscore
-            );
-            const awayTeamTotalScore = parseFloat(
-              match.awayteam.totalscore
-            );
-            const goalServeMatchId = match.id;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? match.hometeam.id
-                : match.awayteam.id;
-            await declareResultMatch(
-              parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId),
-              "MLB"
-            );
-          } else if (
-            match.status == "Canceled" ||
-            match.status == "Postponed" ||
-            match.status == "Suspended"
-          ) {
-            const goalServeMatchId = match.id;
-            await Bet.updateMany(
-              {
-                status: "PENDING",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "EXPIRED",
-              }
-            );
-            await Bet.updateMany(
-              {
-                status: { $in: ["CONFIRMED", "ACTIVE"] },
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "CANCELED",
-              }
-            );
-          }
+
+          await Promise.all(updatePromises);
         }
-      }
+      });
     } catch (error: any) {
       console.log("error", error);
     }
@@ -292,8 +398,7 @@ export default class MlbDbCronServiceClass {
       );
       const matchArray = await getMatch?.data?.scores?.category?.match;
       const index = matchArray.findIndex(
-        (element: any) =>
-           element.status === "Not Started"
+        (element: any) => element.status === "Not Started"
       );
       if (index !== -1) {
         // Element found, remove it from the array
