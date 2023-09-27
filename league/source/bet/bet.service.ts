@@ -1869,8 +1869,11 @@ const listBetsByType = async (
               : item?.opponentUserId;
           item.isWon = oddWin === loggedInUserId ? true : false;
           item.displayStatus =
-            item?.displayStatus !== "ACTIVE" &&
-            (oddWin === loggedInUserId ? "WON" : "LOST");
+            item?.displayStatus !== "ACTIVE" && item?.displayStatus !== "PENDING"
+              ? oddWin === loggedInUserId
+                ? "WON"
+                : "LOST"
+              : item.displayStatus;
         }
         return {
           ...item,
