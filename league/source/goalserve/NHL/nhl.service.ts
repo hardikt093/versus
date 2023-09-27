@@ -1325,6 +1325,18 @@ const nhlScoreWithDate = async (date1: string, type: string) => {
       },
     },
     {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateInString: 1,
+      },
+    },
+    {
       $project: {
         id: true,
         date: true,
@@ -1542,6 +1554,18 @@ const nhlScoreWithDate = async (date1: string, type: string) => {
       $sort: {
         formattedDate: 1,
         time: 1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateInString: 1,
       },
     },
     {
@@ -1808,6 +1832,18 @@ const getLiveDataOfNhl = async (date1: string) => {
     {
       $sort: {
         datetime_utc: 1,
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateInString: 1,
       },
     },
     {
