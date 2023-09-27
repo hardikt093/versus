@@ -60,11 +60,9 @@ export default class BetDbCronServiceClass {
               );
             }
           } else if (bet?.leagueType === "NFL") {
-            console.log("inside nfl")
             const getMatch = await NflMatch.findOne({
               goalServeMatchId: bet.goalServeMatchId,
             });
-            console.log("getMatch nfl", getMatch?.goalServeMatchId)
             const totalRunOfMAtch =
               Number(getMatch?.awayTeamTotalScore) +
               Number(getMatch?.homeTeamTotalScore);
@@ -82,8 +80,6 @@ export default class BetDbCronServiceClass {
                 : bet?.opponentUserId;
               
             if (oddWin === bet?.requestUserId) {
-              console.log("inside request user payment");
-              
               // payout to req user
               const resp = await axiosPostMicro(
                 {
@@ -95,7 +91,6 @@ export default class BetDbCronServiceClass {
                 ""
               );
             } else {
-              console.log("inside opponent user payment");
               // payout to opponent user
               const resp = await axiosPostMicro(
                 {

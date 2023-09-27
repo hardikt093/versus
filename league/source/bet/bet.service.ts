@@ -1844,14 +1844,34 @@ const listBetsByType = async (
       ""
     );
     const bindedObject: any = data.map(
-      (item: { requestUserId: number; opponentUserId: number }) => {
+      (
+        item: any
+        //  { requestUserId: number; opponentUserId: number,oddType:string,match:any ,requestUserGoalServeOdd:string}
+      ) => {
         const requestUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.requestUserId
         );
         const opponentUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.opponentUserId
         );
-
+        if (item?.oddType === "Total") {
+          const totalRunOfMAtch =
+            Number(item.match?.awayTeamTotalScore) +
+            Number(item.match?.homeTeamTotalScore);
+          const requestUserOddSplit = item.requestUserGoalServeOdd?.split(" ");
+          const oddWin =
+            totalRunOfMAtch > Number(requestUserOddSplit[1])
+              ? item?.requestUserGoalServeOdd.includes("O")
+                ? item?.requestUserId
+                : item?.opponentUserId
+              : item?.requestUserGoalServeOdd.includes("U")
+              ? item?.requestUserId
+              : item?.opponentUserId;
+          item.isWon = oddWin === loggedInUserId ? true : false;
+          item.displayStatus =
+            item?.displayStatus !== "ACTIVE" &&
+            (oddWin === loggedInUserId ? "WON" : "LOST");
+        }
         return {
           ...item,
           requestUser,
