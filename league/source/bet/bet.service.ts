@@ -1451,14 +1451,14 @@ const listBetsByType = async (
       {
         $match: condition,
       },
-      
-      
+
       {
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$toDouble:"$match.awayTeamTotalScore"},
-              {$toDouble:"$match.homeTeamTotalScore"}
+              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+           
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1471,8 +1471,9 @@ const listBetsByType = async (
             $cond: {
               if: {
                 $gt: [
-                  "$totalRunOfMAtch",
-                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                  "$totalRunOfMatch",
+                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
+               
                 ],
               },
               then: {
@@ -1577,8 +1578,9 @@ const listBetsByType = async (
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$toDouble:"$match.awayTeamTotalScore"},
-              {$toDouble:"$match.homeTeamTotalScore"}
+              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+           
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1591,8 +1593,9 @@ const listBetsByType = async (
             $cond: {
               if: {
                 $gt: [
-                  "$totalRunOfMAtch",
-                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                  "$totalRunOfMatch",
+                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
+               
                 ],
               },
               then: {
@@ -1702,8 +1705,9 @@ const listBetsByType = async (
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$toDouble:"$match.awayTeamTotalScore"},
-              {$toDouble:"$match.homeTeamTotalScore"}
+              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+           
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1716,8 +1720,9 @@ const listBetsByType = async (
             $cond: {
               if: {
                 $gt: [
-                  "$totalRunOfMAtch",
-                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                  "$totalRunOfMatch",
+                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
+               
                 ],
               },
               then: {
@@ -1829,8 +1834,9 @@ const listBetsByType = async (
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$toDouble:"$match.awayTeamTotalScore"},
-              {$toDouble:"$match.homeTeamTotalScore"}
+              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+           
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1843,8 +1849,9 @@ const listBetsByType = async (
             $cond: {
               if: {
                 $gt: [
-                  "$totalRunOfMAtch",
-                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                  "$totalRunOfMatch",
+                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
+               
                 ],
               },
               then: {
@@ -2118,16 +2125,14 @@ const listBetsByType = async (
       ""
     );
     const bindedObject: any = data.map(
-      (
-        item: { requestUserId: number; opponentUserId: number}
-      ) => {
+      (item: { requestUserId: number; opponentUserId: number }) => {
         const requestUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.requestUserId
         );
         const opponentUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.opponentUserId
         );
-    
+
         return {
           ...item,
           requestUser,
