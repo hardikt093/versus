@@ -584,14 +584,6 @@ const scoreWithDate = async (data: any) => {
       },
     },
     {
-      $addFields: {
-        dateInString: {
-          $toDate: "$dateTimeUtc",
-        },
-      },
-    },
-    
-    {
       $unwind: {
         path: "$odds",
         includeArrayIndex: "string",
@@ -599,9 +591,14 @@ const scoreWithDate = async (data: any) => {
       },
     },
     {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
       $sort: {
-        // formattedDate: 1,
-        // time: 1,
         dateInString: 1,
       },
     },
@@ -890,10 +887,15 @@ const scoreWithDate = async (data: any) => {
       },
     },
     {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
       $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
+        dateInString: 1,
       },
     },
     {
@@ -1186,13 +1188,6 @@ const getLiveDataOfNcaaf = async (data: any) => {
       },
     },
     {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
-      },
-    },
-    {
       $addFields: {
         status: {
           $switch: {
@@ -1221,6 +1216,18 @@ const getLiveDataOfNcaaf = async (data: any) => {
             default: "$status",
           },
         },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateInString: 1,
       },
     },
     {
