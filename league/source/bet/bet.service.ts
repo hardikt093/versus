@@ -2218,19 +2218,6 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
   const count = await Bet.aggregate(countQuery);
   query.push(
     {
-      $addFields: {
-        isWon: {
-          $cond: {
-            if: {
-              $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
-            },
-            then: "$requestUserId",
-            else: "$opponentUserId",
-          },
-        },
-      },
-    },
-    {
       $facet: {
         mlbData: [
           {
@@ -2899,6 +2886,88 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
     },
     {
       $addFields: {
+        totalRunOfMatch: {
+          $add: [
+            {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+            {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
+         
+          ],
+        },
+        requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
+        opponentUserOddSplit: { $split: ["$opponentUserGoalServeOdd", " "] },
+      },
+    },
+    {
+      $addFields: {
+        oddWin: {
+          $cond: {
+            if: {
+              $gt: [
+                "$totalRunOfMatch",
+                {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
+             
+              ],
+            },
+            then: {
+              $cond: {
+                if: {
+                  $regexMatch: {
+                    input: "$requestUserGoalServeOdd",
+                    regex: /O/,
+                  },
+                },
+                then: "$requestUserId",
+                else: "$opponentUserId",
+              },
+            },
+            else: {
+              $cond: {
+                if: {
+                  $regexMatch: {
+                    input: "$requestUserGoalServeOdd",
+                    regex: /U/,
+                  },
+                },
+                then: "$requestUserId",
+                else: "$opponentUserId",
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        isWon: {
+          $switch: {
+            branches: [
+              {
+                case: { $eq: ["$oddType", "Total"] },
+                then: "$oddWin",
+              },
+              {
+                case: { $in: ["$oddType", ["Moneyline", "Spread"]] },
+                then: {
+                  $cond: {
+                    if: {
+                      $eq: [
+                        "$goalServeWinTeamId",
+                        "$goalServeRequestUserTeamId",
+                      ],
+                    },
+                    then: "$requestUserId",
+                    else: "$opponentUserId",
+                  },
+                },
+              },
+            ],
+            default: null,
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
         dateutc: {
           $toDate: "$activeTimestamp",
         },
@@ -2915,7 +2984,8 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
           $toString: "$dateutc",
         },
       },
-    }
+    },
+
   );
   if (!body.socketType) {
     query.push(
