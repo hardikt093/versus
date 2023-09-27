@@ -1006,47 +1006,64 @@ export default class NFLDbCronServiceClass {
         `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-playbyplay-scores`,
         { json: true }
       );
-      const matchArray = await getMatch?.data?.scores?.category?.match;
-      const league: ILeagueModel | undefined | null = await League.findOne({
-        goalServeLeagueId: getMatch?.data?.scores?.category?.id,
-      });
-      if (matchArray?.length > 0 && matchArray) {
-        for (let i = 0; i < matchArray?.length; i++) {
-          const match: INflMatchModel | null = await NflMatch.findOne({
-            goalServeMatchId: matchArray[i]?.contestID,
-          });
-          if (match) {
-            const data: any = {
-              drive: matchArray[i].playbyplay.drive[0].play[0].down
-                ? matchArray[i].playbyplay.drive[0].play[0].down
-                : "",
-            };
-            const dataUpdate = await NflMatch.findOneAndUpdate(
-              { goalServeMatchId: matchArray[i]?.contestID },
-              { $set: data },
-              { new: true }
-            );
-          }
-        }
-      } else {
-        if (matchArray) {
-          const match: INflMatchModel | null = await NflMatch.findOne({
-            goalServeMatchId: matchArray?.contestID,
-          });
-          if (match) {
-            const data: any = {
-              drive: matchArray.playbyplay.drive[0].play[0].down
-                ? matchArray.playbyplay.drive[0].play[0].down
-                : "",
-            };
-            const dataUpdate = await NflMatch.findOneAndUpdate(
-              { goalServeMatchId: matchArray?.contestID },
-              { $set: data },
-              { new: true }
-            );
-          }
-        }
+      // const matchArray = await getMatch?.data?.scores?.category?.match;
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
       }
+
+      const matchArray = matchArrayAll.filter((element: any) => {
+        return (
+          element.status !== "Not Started" &&
+          element.status !== "Final" &&
+          // element.status !== "Delayed" &&
+          // element.status !== "Suspended" &&
+          // element.status !== "Canceled" &&
+          // element.status !== "Postponed" &&
+          element.status !== "After Over Time" &&
+          element.status !== "Final/OT" &&
+          element.status !== "Final/20T"
+        );
+      });
+      // if (matchArray?.length > 0 && matchArray) {
+        const updatePromises = matchArray?.map(async (match: any) => {
+          const data: any = {
+            drive: match.playbyplay.drive[0].play[0].down
+              ? match.playbyplay.drive[0].play[0].down
+              : "",
+          };
+
+          const dataUpdate = await NflMatch.findOneAndUpdate(
+                  { goalServeMatchId: match?.contestID },
+                  { $set: data },
+                  { new: true }
+                );
+        })
+      await Promise.all(updatePromises);
+
+        // for (let i = 0; i < matchArray?.length; i++) {
+        //   const match: INflMatchModel | null = await NflMatch.findOne({
+        //     goalServeMatchId: matchArray[i]?.contestID,
+        //   });
+        //   if (match) {
+        //     const data: any = {
+        //       drive: matchArray[i].playbyplay.drive[0].play[0].down
+        //         ? matchArray[i].playbyplay.drive[0].play[0].down
+        //         : "",
+        //     };
+        //     const dataUpdate = await NflMatch.findOneAndUpdate(
+        //       { goalServeMatchId: matchArray[i]?.contestID },
+        //       { $set: data },
+        //       { new: true }
+        //     );
+        //   }
+        // }
+      
     } catch (error: any) {}
   };
 
