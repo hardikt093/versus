@@ -1247,7 +1247,7 @@ const getFinalMatch = async () => {
       },
       {
         $sort: {
-          dateTimeUtc: 1,
+          dateutc: 1,
         },
       },
       {
@@ -1543,6 +1543,18 @@ const getLiveMatch = async () => {
         },
       },
       {
+        $addFields: {
+          dateInString: {
+            $toDate: "$dateTimeUtc",
+          },
+        },
+      },
+      {
+        $sort: {
+          dateInString: 1,
+        },
+      },
+      {
         $project: {
           id: true,
           date: true,
@@ -1743,9 +1755,7 @@ const mlbScoreWithDate = async (date1: string) => {
       },
       {
         $sort: {
-          // formattedDate: 1,
-          // time: 1,
-          dateTimeUtc: 1,
+          dateutc: 1,
         },
       },
       {
@@ -1928,13 +1938,6 @@ const mlbScoreWithDate = async (date1: string) => {
           path: "$homeTeamImage",
           includeArrayIndex: "string",
           preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $sort: {
-          // formattedDate: 1,
-          // time: 1,
-          dateTimeUtc: 1,
         },
       },
       {
@@ -2301,7 +2304,11 @@ const mlbScoreWithDate = async (date1: string) => {
           },
         },
       },
-
+      {
+        $sort: {
+          dateutc: 1,
+        },
+      },
       {
         $project: {
           id: true,
@@ -2752,7 +2759,7 @@ const getFinalMatchDataFromDB = async (date1: string) => {
         $sort: {
           // formattedDate: 1,
           // time: 1,
-          dateTimeUtc: 1,
+          dateutc: 1,
         },
       },
       {
@@ -3312,6 +3319,11 @@ const getUpcomingDataFromMongodb = async (date1: string) => {
         },
       },
       {
+        $sort: {
+          dateutc: 1,
+        },
+      },
+      {
         $project: {
           id: true,
           date: true,
@@ -3578,12 +3590,7 @@ const getLiveDataFromMongodb = async () => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      {
-        $sort: {
-          datetime_utc: 1,
-          // time: 1,
-        },
-      },
+      
       {
         $addFields: {
           inningNo: {
@@ -3939,6 +3946,11 @@ const getLiveDataFromMongodb = async () => {
               ],
             },
           },
+        },
+      },
+      {
+        $sort: {
+          dateutc: 1,
         },
       },
       {
