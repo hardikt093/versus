@@ -333,7 +333,7 @@ export default class MlbDbCronServiceClass {
             { status: "Final/20T" },
           ],
         }).lean();
-        console.log("findMatch", findMatch);
+        // console.log("findMatch", findMatch);
         if (!findMatch) {
           const data: Partial<IMatchModel> = {
             outs: match.outs,
