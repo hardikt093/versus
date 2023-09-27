@@ -1259,7 +1259,7 @@ export default class NCAAFDbCronServiceClass {
       .subtract(24, "hours")
       .utc()
       .toISOString();
-    let addDate = moment().add(3, "days").utc().toISOString();
+    let addDate = moment().add(1, "weeks").utc().toISOString();
     let day1 = moment(subDate).format("D");
     let month1 = moment(subDate).format("MM");
     let year1 = moment(subDate).format("YYYY");
