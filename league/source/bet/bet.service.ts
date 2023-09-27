@@ -693,329 +693,6 @@ const listBetsByType = async (
   };
 
   let query: any = [];
-  if (body.type === "OPEN") {
-    condition.status = "PENDING";
-    query.push(
-      {
-        $match: condition,
-      },
-      {
-        $lookup: {
-          from: "betlikes",
-          let: {
-            id: "$_id",
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$betId", "$$id"],
-                    },
-                    {
-                      $eq: ["$isBetLike", true],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "likes",
-        },
-      },
-      {
-        $addFields: {
-          loggedInUserLiked: {
-            $in: [loggedInUserId, "$likes.betLikedUserId"],
-          },
-          likeCount: { $size: "$likes" },
-        },
-      }
-    );
-  } else if (body.type === "ACTIVE") {
-    condition["$and"].push({
-      $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
-    });
-    query.push(
-      {
-        $match: condition,
-      },
-      {
-        $lookup: {
-          from: "betlikes",
-          let: {
-            id: "$_id",
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$betId", "$$id"],
-                    },
-                    {
-                      $eq: ["$isBetLike", true],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "likes",
-        },
-      },
-      {
-        $addFields: {
-          loggedInUserLiked: {
-            $in: [loggedInUserId, "$likes.betLikedUserId"],
-          },
-          likeCount: { $size: "$likes" },
-        },
-      }
-    );
-  } else if (body.type === "SETTLED") {
-    condition.status = "RESULT_DECLARED";
-    query.push(
-      {
-        $match: condition,
-      },
-      {
-        $addFields: {
-          isWon: {
-            $cond: {
-              if: {
-                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
-              },
-              then: { $eq: ["$requestUserId", loggedInUserId] },
-              else: { $eq: ["$opponentUserId", loggedInUserId] },
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "betlikes",
-          let: {
-            id: "$_id",
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$betId", "$$id"],
-                    },
-                    {
-                      $eq: ["$isBetLike", true],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "likes",
-        },
-      },
-      {
-        $addFields: {
-          loggedInUserLiked: {
-            $in: [loggedInUserId, "$likes.betLikedUserId"],
-          },
-          likeCount: { $size: "$likes" },
-        },
-      }
-    );
-  } else if (body.type === "WON") {
-    condition.status = "RESULT_DECLARED";
-    query.push(
-      {
-        $match: condition,
-      },
-      {
-        $addFields: {
-          isWon: {
-            $cond: {
-              if: {
-                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
-              },
-              then: { $eq: ["$requestUserId", loggedInUserId] },
-              else: { $eq: ["$opponentUserId", loggedInUserId] },
-            },
-          },
-        },
-      },
-      {
-        $match: {
-          isWon: true,
-        },
-      },
-      {
-        $lookup: {
-          from: "betlikes",
-          let: {
-            id: "$_id",
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$betId", "$$id"],
-                    },
-                    {
-                      $eq: ["$isBetLike", true],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "likes",
-        },
-      },
-      {
-        $addFields: {
-          loggedInUserLiked: {
-            $in: [loggedInUserId, "$likes.betLikedUserId"],
-          },
-          likeCount: { $size: "$likes" },
-        },
-      }
-    );
-  } else if (body.type === "LOST") {
-    condition.status = "RESULT_DECLARED";
-    query.push(
-      {
-        $match: condition,
-      },
-      {
-        $addFields: {
-          isWon: {
-            $cond: {
-              if: {
-                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
-              },
-              then: { $eq: ["$requestUserId", loggedInUserId] },
-              else: { $eq: ["$opponentUserId", loggedInUserId] },
-            },
-          },
-        },
-      },
-      {
-        $match: {
-          isWon: false,
-        },
-      },
-      {
-        $lookup: {
-          from: "betlikes",
-          let: {
-            id: "$_id",
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$betId", "$$id"],
-                    },
-                    {
-                      $eq: ["$isBetLike", true],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "likes",
-        },
-      },
-      {
-        $addFields: {
-          loggedInUserLiked: {
-            $in: [loggedInUserId, "$likes.betLikedUserId"],
-          },
-          likeCount: { $size: "$likes" },
-        },
-      }
-    );
-  } else {
-    condition.status = {
-      $nin: ["REJECTED", "EXPIRED", "CANCELED"],
-    };
-    query.push(
-      {
-        $match: condition,
-      },
-      {
-        $addFields: {
-          isWon: {
-            $cond: {
-              if: {
-                $eq: ["$goalServeWinTeamId", "$goalServeRequestUserTeamId"],
-              },
-              then: { $eq: ["$requestUserId", loggedInUserId] },
-              else: { $eq: ["$opponentUserId", loggedInUserId] },
-            },
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: "betlikes",
-          let: {
-            id: "$_id",
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ["$betId", "$$id"],
-                    },
-                    {
-                      $eq: ["$isBetLike", true],
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          as: "likes",
-        },
-      },
-      {
-        $addFields: {
-          loggedInUserLiked: {
-            $in: [loggedInUserId, "$likes.betLikedUserId"],
-          },
-          likeCount: { $size: "$likes" },
-        },
-      }
-    );
-  }
-  let countQuery: Array<any> = Array.from(query);
-  countQuery.push({
-    $facet: {
-      count: [
-        {
-          $group: {
-            _id: null,
-            count: {
-              $sum: 1,
-            },
-          },
-        },
-      ],
-    },
-  });
-  const count = await Bet.aggregate(countQuery);
   query.push(
     {
       $facet: {
@@ -1684,7 +1361,602 @@ const listBetsByType = async (
         path: "$match",
         preserveNullAndEmptyArrays: true,
       },
+    }
+  );
+  if (body.type === "OPEN") {
+    condition.status = "PENDING";
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
+  } else if (body.type === "ACTIVE") {
+    condition["$and"].push({
+      $or: [{ status: "CONFIRMED" }, { status: "ACTIVE" }],
+    });
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
+  } else if (body.type === "SETTLED") {
+    condition.status = "RESULT_DECLARED";
+    query.push(
+      {
+        $match: condition,
+      },
+      
+      
+      {
+        $addFields: {
+          totalRunOfMatch: {
+            $add: [
+              {$toDouble:"$match.awayTeamTotalScore"},
+              {$toDouble:"$match.homeTeamTotalScore"}
+            ],
+          },
+          requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
+          opponentUserOddSplit: { $split: ["$opponentUserGoalServeOdd", " "] },
+        },
+      },
+      {
+        $addFields: {
+          oddWin: {
+            $cond: {
+              if: {
+                $gt: [
+                  "$totalRunOfMAtch",
+                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                ],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /O/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /U/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          isWon: {
+            $switch: {
+              branches: [
+                {
+                  case: { $eq: ["$oddType", "Total"] },
+                  then: { $eq: ["$oddWin", loggedInUserId] },
+                },
+                {
+                  case: { $in: ["$oddType", ["Moneyline", "Spread"]] },
+                  then: {
+                    $cond: {
+                      if: {
+                        $eq: [
+                          "$goalServeWinTeamId",
+                          "$goalServeRequestUserTeamId",
+                        ],
+                      },
+                      then: { $eq: ["$requestUserId", loggedInUserId] },
+                      else: { $eq: ["$opponentUserId", loggedInUserId] },
+                    },
+                  },
+                },
+              ],
+              default: null,
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
+  } else if (body.type === "WON") {
+    condition.status = "RESULT_DECLARED";
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $addFields: {
+          totalRunOfMatch: {
+            $add: [
+              {$toDouble:"$match.awayTeamTotalScore"},
+              {$toDouble:"$match.homeTeamTotalScore"}
+            ],
+          },
+          requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
+          opponentUserOddSplit: { $split: ["$opponentUserGoalServeOdd", " "] },
+        },
+      },
+      {
+        $addFields: {
+          oddWin: {
+            $cond: {
+              if: {
+                $gt: [
+                  "$totalRunOfMAtch",
+                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                ],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /O/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /U/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          isWon: {
+            $switch: {
+              branches: [
+                {
+                  case: { $eq: ["$oddType", "Total"] },
+                  then: { $eq: ["$oddWin", loggedInUserId] },
+                },
+                {
+                  case: { $in: ["$oddType", ["Moneyline", "Spread"]] },
+                  then: {
+                    $cond: {
+                      if: {
+                        $eq: [
+                          "$goalServeWinTeamId",
+                          "$goalServeRequestUserTeamId",
+                        ],
+                      },
+                      then: { $eq: ["$requestUserId", loggedInUserId] },
+                      else: { $eq: ["$opponentUserId", loggedInUserId] },
+                    },
+                  },
+                },
+              ],
+              default: null,
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          isWon: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
+  } else if (body.type === "LOST") {
+    condition.status = "RESULT_DECLARED";
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $addFields: {
+          totalRunOfMatch: {
+            $add: [
+              {$toDouble:"$match.awayTeamTotalScore"},
+              {$toDouble:"$match.homeTeamTotalScore"}
+            ],
+          },
+          requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
+          opponentUserOddSplit: { $split: ["$opponentUserGoalServeOdd", " "] },
+        },
+      },
+      {
+        $addFields: {
+          oddWin: {
+            $cond: {
+              if: {
+                $gt: [
+                  "$totalRunOfMAtch",
+                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                ],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /O/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /U/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          isWon: {
+            $switch: {
+              branches: [
+                {
+                  case: { $eq: ["$oddType", "Total"] },
+                  then: { $eq: ["$oddWin", loggedInUserId] },
+                },
+                {
+                  case: { $in: ["$oddType", ["Moneyline", "Spread"]] },
+                  then: {
+                    $cond: {
+                      if: {
+                        $eq: [
+                          "$goalServeWinTeamId",
+                          "$goalServeRequestUserTeamId",
+                        ],
+                      },
+                      then: { $eq: ["$requestUserId", loggedInUserId] },
+                      else: { $eq: ["$opponentUserId", loggedInUserId] },
+                    },
+                  },
+                },
+              ],
+              default: null,
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          isWon: false,
+        },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
+  } else {
+    condition.status = {
+      $nin: ["REJECTED", "EXPIRED", "CANCELED"],
+    };
+    query.push(
+      {
+        $match: condition,
+      },
+      {
+        $addFields: {
+          totalRunOfMatch: {
+            $add: [
+              {$toDouble:"$match.awayTeamTotalScore"},
+              {$toDouble:"$match.homeTeamTotalScore"}
+            ],
+          },
+          requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
+          opponentUserOddSplit: { $split: ["$opponentUserGoalServeOdd", " "] },
+        },
+      },
+      {
+        $addFields: {
+          oddWin: {
+            $cond: {
+              if: {
+                $gt: [
+                  "$totalRunOfMAtch",
+                  { $toDouble: { $arrayElemAt: ["$requestUserOddSplit", 1] } },
+                ],
+              },
+              then: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /O/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+              else: {
+                $cond: {
+                  if: {
+                    $regexMatch: {
+                      input: "$requestUserGoalServeOdd",
+                      regex: /U/,
+                    },
+                  },
+                  then: "$requestUserId",
+                  else: "$opponentUserId",
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          isWon: {
+            $switch: {
+              branches: [
+                {
+                  case: { $eq: ["$oddType", "Total"] },
+                  then: { $eq: ["$oddWin", loggedInUserId] },
+                },
+                {
+                  case: { $in: ["$oddType", ["Moneyline", "Spread"]] },
+                  then: {
+                    $cond: {
+                      if: {
+                        $eq: [
+                          "$goalServeWinTeamId",
+                          "$goalServeRequestUserTeamId",
+                        ],
+                      },
+                      then: { $eq: ["$requestUserId", loggedInUserId] },
+                      else: { $eq: ["$opponentUserId", loggedInUserId] },
+                    },
+                  },
+                },
+              ],
+              default: null,
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "betlikes",
+          let: {
+            id: "$_id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$betId", "$$id"],
+                    },
+                    {
+                      $eq: ["$isBetLike", true],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "likes",
+        },
+      },
+      {
+        $addFields: {
+          loggedInUserLiked: {
+            $in: [loggedInUserId, "$likes.betLikedUserId"],
+          },
+          likeCount: { $size: "$likes" },
+        },
+      }
+    );
+  }
+  let countQuery: Array<any> = Array.from(query);
+  countQuery.push({
+    $facet: {
+      count: [
+        {
+          $group: {
+            _id: null,
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ],
     },
+  });
+  const count = await Bet.aggregate(countQuery);
+  query.push(
     // {
     //   $sort: body.sortBy,
     // },
@@ -1716,6 +1988,8 @@ const listBetsByType = async (
     {
       $project: {
         _id: 1,
+        totalRunOfMAtch: 1,
+        oddWin: 1,
         goalServeMatchId: 1,
         requestUserId: 1,
         opponentUserId: 1,
@@ -1845,8 +2119,7 @@ const listBetsByType = async (
     );
     const bindedObject: any = data.map(
       (
-        item: any
-        //  { requestUserId: number; opponentUserId: number,oddType:string,match:any ,requestUserGoalServeOdd:string}
+        item: { requestUserId: number; opponentUserId: number}
       ) => {
         const requestUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.requestUserId
@@ -1854,27 +2127,7 @@ const listBetsByType = async (
         const opponentUser = resp.data.data.find(
           (user: { id: number }) => user.id == item.opponentUserId
         );
-        if (item?.oddType === "Total") {
-          const totalRunOfMAtch =
-            Number(item.match?.awayTeamTotalScore) +
-            Number(item.match?.homeTeamTotalScore);
-          const requestUserOddSplit = item.requestUserGoalServeOdd?.split(" ");
-          const oddWin =
-            totalRunOfMAtch > Number(requestUserOddSplit[1])
-              ? item?.requestUserGoalServeOdd.includes("O")
-                ? item?.requestUserId
-                : item?.opponentUserId
-              : item?.requestUserGoalServeOdd.includes("U")
-              ? item?.requestUserId
-              : item?.opponentUserId;
-          item.isWon = oddWin === loggedInUserId ? true : false;
-          item.displayStatus =
-            item?.displayStatus !== "ACTIVE" && item?.displayStatus !== "PENDING"
-              ? oddWin === loggedInUserId
-                ? "WON"
-                : "LOST"
-              : item.displayStatus;
-        }
+    
         return {
           ...item,
           requestUser,
