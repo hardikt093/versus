@@ -775,21 +775,18 @@ const scoreWithDate = async (data: any) => {
         },
       },
     },
-
     {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
       },
     },
-    // {
-    //   $unwind: {
-    //     path: "$odds",
-    //     includeArrayIndex: "string",
-    //     preserveNullAndEmptyArrays: true,
-    //   },
-    // },
+    {
+      $sort: {
+        dateInString: 1,
+      },
+    },
     {
       $project: {
         id: true,
@@ -1078,10 +1075,15 @@ const scoreWithDate = async (data: any) => {
       },
     },
     {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
       $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
+        dateInString: 1,
       },
     },
     {
@@ -2943,14 +2945,7 @@ const getLiveDataOfNfl = async (data: any) => {
           },
         },
       },
-    },
-    {
-      $sort: {
-        // formattedDate: 1,
-        // time: 1,
-        dateTimeUtc: 1,
-      },
-    },
+    }, 
     {
       $addFields: {
         status: {
@@ -2980,6 +2975,18 @@ const getLiveDataOfNfl = async (data: any) => {
             default: "$status",
           },
         },
+      },
+    },
+    {
+      $addFields: {
+        dateInString: {
+          $toDate: "$dateTimeUtc",
+        },
+      },
+    },
+    {
+      $sort: {
+        dateInString: 1,
       },
     },
     {
