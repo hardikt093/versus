@@ -168,6 +168,23 @@ const oddAdded = cron.schedule("*/1 * * * *", async () => {
     isOddAdded = false;
   }
 });
+
+let isUpdateUpcomingNcaafMatch: boolean = false;
+const updateUpcomingNcaafMatch = cron.schedule("*/30 * * * * *", async () => {
+  if (isUpdateUpcomingNcaafMatch) {
+    console.log("isUpdateUpcomingNcaafMatch Skip", new Date());
+    return;
+  }
+  isUpdateUpcomingNcaafMatch = true;
+  try {
+    console.info("inside isUpdateUpcomingNcaafMatch", new Date());
+    await ncaafService.updateUpcomingNcaafMatch();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isUpdateUpcomingNcaafMatch = false;
+  }
+});
 export default {
   updateTeamStatsNcaaf,
   updatePlayerRecord,
@@ -178,5 +195,6 @@ export default {
   updateStandingRecord,
   updateLiveMatchRemainingData,
   addOrUpdateDriveInLive,
-  updateLiveMatchFinal
+  updateLiveMatchFinal,
+  updateUpcomingNcaafMatch
 };

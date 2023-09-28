@@ -1236,19 +1236,19 @@ export default class NCAAFDbCronServiceClass {
         );
       });
       // if (matchArray?.length > 0 && matchArray) {
-        const updatePromises = matchArray?.map(async (match: any) => {
-          const data: any = {
-            drive: match.playbyplay.drive[0].play[0].down
-              ? match.playbyplay.drive[0].play[0].down
-              : "",
-          };
+      const updatePromises = matchArray?.map(async (match: any) => {
+        const data: any = {
+          drive: match.playbyplay.drive[0].play[0].down
+            ? match.playbyplay.drive[0].play[0].down
+            : "",
+        };
 
-          const dataUpdate = await NcaafMatch.findOneAndUpdate(
-                  { goalServeMatchId: match?.contestID },
-                  { $set: data },
-                  { new: true }
-                );
-        })
+        const dataUpdate = await NcaafMatch.findOneAndUpdate(
+          { goalServeMatchId: match?.contestID },
+          { $set: data },
+          { new: true }
+        );
+      });
       await Promise.all(updatePromises);
     } catch (error: any) {}
   };
@@ -1556,6 +1556,143 @@ export default class NCAAFDbCronServiceClass {
         continue;
 
         return true;
+      }
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+
+  public updateUpcomingNcaafMatch = async () => {
+    try {
+      let subDate = moment()
+      .startOf("day")
+      .subtract(24, "hours")
+      .utc()
+      .toISOString();
+    let addDate = moment().add(1, "weeks").utc().toISOString();
+    let day1 = moment(subDate).format("D");
+    let month1 = moment(subDate).format("MM");
+    let year1 = moment(subDate).format("YYYY");
+    let date1 = `${day1}.${month1}.${year1}`;
+
+    let day2 = moment(addDate).format("D");
+    let month2 = moment(addDate).format("MM");
+    let year2 = moment(addDate).format("YYYY");
+    let date2 = `${day2}.${month2}.${year2}`;
+    
+      let data = {
+        json: true,
+        date1: date1,
+        date2: date2,
+      };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "football/fbs-shedule"
+      );
+      const matchArray = [];
+      await matchArray.push(getMatch?.data?.shedules?.tournament);
+      const league: ILeagueModel | null = await League.findOne({
+        goalServeLeagueId: getMatch?.data?.shedules?.id,
+      });
+      for (let i = 0; i < matchArray?.length; i++) {
+        for (let j = 0; j < matchArray[i]?.week?.length; j++) {
+          if (matchArray[i]?.week[j]?.matches?.length > 0) {
+            for (let k = 0; k < matchArray[i]?.week[j].matches.length; k++) {
+              for (
+                let l = 0;
+                l < matchArray[i]?.week[j].matches[k].match.length;
+                l++
+              ) {
+                const match: INcaafMatchModel | null = await NcaafMatch.findOne(
+                  {
+                    goalServeMatchId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                    status: "Not Started",
+                  }
+                );
+                if (match) {
+                  const data: Partial<INcaafMatchModel> = {
+                    goalServeHomeTeamId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.hometeam.id,
+                    goalServeAwayTeamId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.awayteam.id,
+                    date: matchArray[i]?.week[j]?.matches[k]?.date,
+                    dateTimeUtc:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]
+                        ?.datetime_utc,
+                    formattedDate:
+                      matchArray[i]?.week[j]?.matches[k]?.formatted_date,
+                    time: matchArray[i]?.week[j]?.matches[k]?.match[l]?.time,
+                    timezone: matchArray[i]?.week[j]?.matches[k]?.timezone,
+                    goalServeVenueId:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue_id,
+                    venueName:
+                      matchArray[i]?.week[j]?.matches[k]?.match[l]?.venue,
+                  };
+
+                  const dataUpdate = await NcaafMatch.findOneAndUpdate(
+                    {
+                      goalServeMatchId:
+                        matchArray[i]?.week[j]?.matches[k]?.match[l]?.contestID,
+                    },
+                    { $set: data },
+                    { new: true }
+                  );
+
+                  console.log("dataUpdate", dataUpdate?.goalServeMatchId);
+
+                  // const matchData = new NcaafMatch(data);
+                  // await matchData.save();
+                }
+              }
+              continue;
+            }
+            continue;
+          } else {
+            for (
+              let m = 0;
+              m < matchArray[i]?.week[j].matches?.match.length;
+              m++
+            ) {
+              const match: INcaafMatchModel | null = await NcaafMatch.findOne({
+                goalServeMatchId:
+                  matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+              });
+              if (match) {
+                const data: Partial<INcaafMatchModel> = {
+                  goalServeHomeTeamId:
+                    matchArray[i]?.week[j]?.matches?.match[m]?.hometeam.id,
+                  goalServeAwayTeamId:
+                    matchArray[i]?.week[j]?.matches?.match[m]?.awayteam.id,
+
+                  date: matchArray[i]?.week[j]?.matches?.date,
+                  dateTimeUtc:
+                    matchArray[i]?.week[j]?.matches?.match[m]?.datetime_utc,
+                  formattedDate:
+                    matchArray[i]?.week[j]?.matches?.formatted_date,
+                  time: matchArray[i]?.week[j]?.matches?.match[m]?.time,
+                  timezone: matchArray[i]?.week[j]?.matches?.timezone,
+                  goalServeVenueId:
+                    matchArray[i]?.week[j]?.matches?.match[m]?.venue_id,
+                  venueName: matchArray[i]?.week[j]?.matches?.match[m]?.venue,
+                };
+                const dataUpdate = await NcaafMatch.findOneAndUpdate(
+                  {
+                    goalServeMatchId:
+                      matchArray[i]?.week[j]?.matches?.match[m]?.contestID,
+                  },
+                  { $set: data },
+                  { new: true }
+                );
+                // const matchData = new NcaafMatch(data);
+                // await matchData.save();
+              }
+            }
+            continue;
+          }
+        }
+        continue;
       }
     } catch (error: any) {
       console.log("error", error);
