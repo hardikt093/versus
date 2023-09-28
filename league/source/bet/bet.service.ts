@@ -2195,7 +2195,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
     },
     {
       $addFields: {
-        likedUser: "$likes",
+        likedUser: "$likes.betLikedUserId",
       },
     }
   );
@@ -3279,7 +3279,7 @@ const likeBet = async (userId: number, betData: IBetData) => {
     },
     {
       $project: {
-        likedUser: "$likes",
+        likedUser: "$likes.betLikedUserId",
       },
     },
   ]);
