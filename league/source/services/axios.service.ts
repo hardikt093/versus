@@ -28,7 +28,7 @@ const axiosGet = async (url: string, payload = {}) => {
   try {
     return await axios.get(`${url}?${params}`);
   } catch (error: any) {
-    console.log("error.message", error)
+    console.log("error.message", error?.message)
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
   }
 };

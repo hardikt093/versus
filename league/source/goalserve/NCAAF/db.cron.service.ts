@@ -1235,6 +1235,7 @@ export default class NCAAFDbCronServiceClass {
           element.status !== "Final/20T"
         );
       });
+      // console.log("matchArray IN ncaaf drive",matchArray)
       // if (matchArray?.length > 0 && matchArray) {
       const updatePromises = matchArray?.map(async (match: any) => {
         const data: any = {
@@ -1242,7 +1243,6 @@ export default class NCAAFDbCronServiceClass {
             ? match.playbyplay.drive[0].play[0].down
             : "",
         };
-
         const dataUpdate = await NcaafMatch.findOneAndUpdate(
           { goalServeMatchId: match?.contestID },
           { $set: data },

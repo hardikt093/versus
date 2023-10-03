@@ -350,5 +350,6 @@ export interface INcaafMatchModel extends Document {
       yards: String;
     }
   ];
+  drive:String | undefined
 }
 export default INcaafMatchModel;

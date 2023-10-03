@@ -170,7 +170,7 @@ const oddAdded = cron.schedule("*/1 * * * *", async () => {
 });
 
 let isUpdateUpcomingNcaafMatch: boolean = false;
-const updateUpcomingNcaafMatch = cron.schedule("*/30 * * * * *", async () => {
+const updateUpcomingNcaafMatch = cron.schedule("0 0 0 * * *", async () => {
   if (isUpdateUpcomingNcaafMatch) {
     console.log("isUpdateUpcomingNcaafMatch Skip", new Date());
     return;

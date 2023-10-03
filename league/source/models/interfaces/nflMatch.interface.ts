@@ -15,6 +15,8 @@ export interface INflMatchModel extends Document {
   venueName: String;
   awayTeamTotalScore: String;
   homeTeamTotalScore: String;
+  drive:String | undefined
+
 
   // new
   timer: String;
