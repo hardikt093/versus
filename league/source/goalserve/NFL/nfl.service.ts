@@ -2947,7 +2947,7 @@ const nflUpcomming = async (goalServeMatchId: string) => {
 //           },
 //         },
 //       },
-//     }, 
+//     },
 //     {
 //       $addFields: {
 //         status: {
@@ -3058,9 +3058,7 @@ const getLiveDataOfNfl = async (data: any) => {
       `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/nfl-scores`,
       { json: true }
     );
-    const matchArrayAll = Array.isArray(
-      getMatch?.data?.scores?.category?.match
-    )
+    const matchArrayAll = Array.isArray(getMatch?.data?.scores?.category?.match)
       ? getMatch?.data?.scores?.category?.match
       : [getMatch?.data?.scores?.category?.match];
 
@@ -3077,7 +3075,16 @@ const getLiveDataOfNfl = async (data: any) => {
         element.status !== "Final/20T"
       );
     });
-
+    function transformStatus(status: string) {
+      const words = status.split(" ");
+      if (words.includes("Quarter")) {
+        return words[0] + " Qtr";
+      } else if (status === "End of Period") {
+        return "End of Quarter";
+      } else {
+        return status;
+      }
+    }
     const updatePromises = matchArray?.map(async (match: any) => {
       const findMatch = await NflMatch.findOne({
         goalServeMatchId: match.contestID,
@@ -3102,11 +3109,13 @@ const getLiveDataOfNfl = async (data: any) => {
       });
       return {
         awayTeam: {
-          abbreviation: findAwayTeam?.locality,
+          abbreviation: findAwayTeam?.abbreviation,
           awayTeamName: findAwayTeam?.teamName,
           awayTeamRun: match?.awayteam?.totalscore,
           goalServeAwayTeamId: findAwayTeam?.goalServeTeamId,
-          // isWinner:
+          isWinner: findAwayTeam?.abbreviation
+            .split(" ")
+            ?.includes(findMatch?.drive as string),
           lose: findAwayTeamStandings?.lost,
           teamImage: findAwayTeamImg?.image,
           won: findAwayTeamStandings?.won,
@@ -3119,33 +3128,35 @@ const getLiveDataOfNfl = async (data: any) => {
         formattedDate: match?.formatted_date,
 
         homeTeam: {
-          abbreviation: findHomeTeam?.locality,
+          abbreviation: findHomeTeam?.abbreviation,
           homeTeamName: findHomeTeam?.teamName,
           homeTeamRun: match?.hometeam?.totalscore,
           goalServeAwayTeamId: findHomeTeam?.goalServeTeamId,
-          // isWinner:
+          isWinner: findHomeTeam?.abbreviation
+            .split(" ")
+            ?.includes(findMatch?.drive as string),
           lose: findHomeTeamStandings?.lost,
           teamImage: findHomeTeamImg?.image,
           won: findHomeTeamStandings?.won,
         },
         seasonName: findMatch?.seasonName,
-        status: match?.status,
+        status: transformStatus(match?.status as string),
         time: match?.time,
 
         timer: match?.timer ? match?.timer : "",
         weekName: findMatch?.weekName,
       };
       // console.log("data", data.goalServeMatchId);
-    //  return returnObj.push(data);
+      //  return returnObj.push(data);
     });
     return Promise.all(updatePromises).then(async (response) => {
-      // console.log("response",response)
+      response.sort((a, b) => a.datetime_utc.localeCompare(b.datetime_utc));
       return response;
-    });
+    })
   } catch (error) {
     console.log("error", error);
   }
-}
+};
 const nflFinal = async (goalServeMatchId: string) => {
   try {
     const getMatch = await NflMatch.aggregate([

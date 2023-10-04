@@ -1395,7 +1395,7 @@ const getLiveDataOfNcaaf = async (data: any) => {
       //  return returnObj.push(data);
     });
     return Promise.all(updatePromises).then(async (response) => {
-      response.sort((a, b) => b.datetime_utc.localeCompare(a.datetime_utc));
+      response.sort((a, b) => a.datetime_utc.localeCompare(b.datetime_utc));
       return response;
     });
     // console.log("updatePromises====>", updatePromises);
