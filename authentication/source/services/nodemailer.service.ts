@@ -14,13 +14,12 @@ export const sendMail = async (mail: any) => {
     const oauth2Client = new OAuth2(
       process.env.CLEINT_ID, // ClientID
       process.env.CLIENT_SECRET, // Client Secret
-      process.env.REDIRECT_URI // Redirect URL
+      process.env.GOOGLE_REDIRECT_URI,// Redirect URL
     );
     oauth2Client.setCredentials({
       refresh_token: process.env.REFRESHTOKEN,
     });
     const accessToken = await oauth2Client.getAccessToken();
-    console.log("Access Token : ",accessToken);
     const smtpTransport = nodemailer.createTransport({
       service: "gmail",
       auth: {
