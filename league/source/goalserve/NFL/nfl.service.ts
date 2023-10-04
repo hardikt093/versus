@@ -3387,6 +3387,20 @@ const nflFinal = async (goalServeMatchId: string) => {
       },
       {
         $addFields: {
+          awayTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$awayTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
+          },
+          homeTeamTotalScoreInNumber: {
+            $convert: {
+              input: "$homeTeamTotalScore",
+              to: "int",
+              onError: 0, // Default value when conversion fails
+            },
+          },
           outcome: {
             $arrayElemAt: ["$outcome", 0],
           },
@@ -4056,6 +4070,18 @@ const nflFinal = async (goalServeMatchId: string) => {
             teamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
             awayTeamTotalScore: "$awayTeamTotalScore",
             // awayTeamHit: "$awayTeamHit",
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$awayTeamTotalScoreInNumber",
+                    "$homeTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
+              },
+            },
           },
           homeTeam: {
             homeTeamName: { $arrayElemAt: ["$teams.homeTeam.name", 0] },
@@ -4067,6 +4093,18 @@ const nflFinal = async (goalServeMatchId: string) => {
             lose: { $arrayElemAt: ["$standings.homeTeam.lost", 0] },
             teamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
             homeTeamTotalScore: "$homeTeamTotalScore",
+            isWinner: {
+              $cond: {
+                if: {
+                  $gte: [
+                    "$homeTeamTotalScoreInNumber",
+                    "$awayTeamTotalScoreInNumber",
+                  ],
+                },
+                then: true,
+                else: false,
+              },
+            },
           },
           homeTeamImage: { $arrayElemAt: ["$teamImages.homeTeam.image", 0] },
           awayTeamImage: { $arrayElemAt: ["$teamImages.awayTeam.image", 0] },
