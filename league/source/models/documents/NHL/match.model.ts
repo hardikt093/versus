@@ -3,7 +3,7 @@ import IMatchModel from "../../interfaces/nhlMatch.interface";
 var matchSchema = new Schema(
     {
         goalServeLeagueId: { type: Number, required: true },
-        goalServeMatchId: { type: Number, required: true },
+        goalServeMatchId: { type: Number, required: true, index:true },
         attendance: Number,
         goalServeAwayTeamId: { type: Number, required: true },
         goalServeHomeTeamId: { type: Number, required: true },
