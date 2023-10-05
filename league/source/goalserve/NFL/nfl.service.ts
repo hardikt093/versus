@@ -1478,16 +1478,471 @@ const nflUpcomming = async (goalServeMatchId: string) => {
       {
         $lookup: {
           from: "nflinjuries",
-          localField: "goalServeHomeTeamId",
-          foreignField: "goalServeTeamId",
+          let: {
+            homeTeamId: "$goalServeHomeTeamId",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                },
+              },
+            },
+
+            {
+              $addFields: {
+                newDateFormat: {
+                  $dateToString: {
+                    format: "%Y-%m-%d", // Specify the desired format here
+                    date: {
+                      $dateFromParts: {
+                        year: {
+                          $toInt: {
+                            $arrayElemAt: [{ $split: ["$date", ", "] }, 1],
+                          },
+                        },
+                        month: {
+                          $switch: {
+                            branches: [
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Jan",
+                                  ],
+                                },
+                                then: 1,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Feb",
+                                  ],
+                                },
+                                then: 2,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Mar",
+                                  ],
+                                },
+                                then: 3,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Apr",
+                                  ],
+                                },
+                                then: 4,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "May",
+                                  ],
+                                },
+                                then: 5,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Jun",
+                                  ],
+                                },
+                                then: 6,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Jul",
+                                  ],
+                                },
+                                then: 7,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Aug",
+                                  ],
+                                },
+                                then: 8,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Sep",
+                                  ],
+                                },
+                                then: 9,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Oct",
+                                  ],
+                                },
+                                then: 10,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Nov",
+                                  ],
+                                },
+                                then: 11,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Dec",
+                                  ],
+                                },
+                                then: 12,
+                              },
+                            ],
+                            default: 0, // Default value if none of the cases match
+                          },
+                        },
+                        day: {
+                          $toInt: {
+                            $arrayElemAt: [
+                              {
+                                $split: [
+                                  {
+                                    $arrayElemAt: [
+                                      { $split: ["$date", " "] },
+                                      1,
+                                    ],
+                                  },
+                                  ",",
+                                ],
+                              },
+                              0,
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $sort: {
+                newDateFormat: -1,
+              },
+            },
+          ],
           as: "homeTeamInjuredPlayers",
         },
       },
       {
         $lookup: {
           from: "nflinjuries",
-          localField: "goalServeAwayTeamId",
-          foreignField: "goalServeTeamId",
+          let: {
+            awayTeamId: "$goalServeAwayTeamId",
+
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                },
+              },
+            },
+
+            {
+              $addFields: {
+                newDateFormat: {
+                  $dateToString: {
+                    format: "%Y-%m-%d", // Specify the desired format here
+                    date: {
+                      $dateFromParts: {
+                        year: {
+                          $toInt: {
+                            $arrayElemAt: [{ $split: ["$date", ", "] }, 1],
+                          },
+                        },
+                        month: {
+                          $switch: {
+                            branches: [
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Jan",
+                                  ],
+                                },
+                                then: 1,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Feb",
+                                  ],
+                                },
+                                then: 2,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Mar",
+                                  ],
+                                },
+                                then: 3,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Apr",
+                                  ],
+                                },
+                                then: 4,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "May",
+                                  ],
+                                },
+                                then: 5,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Jun",
+                                  ],
+                                },
+                                then: 6,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Jul",
+                                  ],
+                                },
+                                then: 7,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Aug",
+                                  ],
+                                },
+                                then: 8,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Sep",
+                                  ],
+                                },
+                                then: 9,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Oct",
+                                  ],
+                                },
+                                then: 10,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Nov",
+                                  ],
+                                },
+                                then: 11,
+                              },
+                              {
+                                case: {
+                                  $eq: [
+                                    {
+                                      $arrayElemAt: [
+                                        { $split: ["$date", " "] },
+                                        0,
+                                      ],
+                                    },
+                                    "Dec",
+                                  ],
+                                },
+                                then: 12,
+                              },
+                            ],
+                            default: 0, // Default value if none of the cases match
+                          },
+                        },
+                        day: {
+                          $toInt: {
+                            $arrayElemAt: [
+                              {
+                                $split: [
+                                  {
+                                    $arrayElemAt: [
+                                      { $split: ["$date", " "] },
+                                      1,
+                                    ],
+                                  },
+                                  ",",
+                                ],
+                              },
+                              0,
+                            ],
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $sort: {
+                newDateFormat: -1,
+              },
+            },
+          ],
           as: "awayTeamInjuredPlayers",
         },
       },
@@ -2945,7 +3400,7 @@ const getLiveDataOfNfl = async (data: any) => {
           },
         },
       },
-    }, 
+    },
     {
       $addFields: {
         status: {
