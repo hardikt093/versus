@@ -89,14 +89,12 @@ const createAndUpdateOddsNhl = cron.schedule("*/5 * * * *", async () => {
 });
 
 let isupdateNhlMatchRunning: boolean = false;
-const updateNhlMatch = cron.schedule("0 */12 * * *", async () => {
+const updateNhlMatch = cron.schedule("*/30 * * * * *", async () => {
   if (isupdateNhlMatchRunning) {
-    // console.log("updateNhlMatch Skip");
     return;
   }
   isupdateNhlMatchRunning = true;
   try {
-    // console.info("inside score cron updateNhlMatch");
     await goalserveService.updateNhlMatch();
   } catch (error) {
     console.log(error);

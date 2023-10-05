@@ -36,12 +36,10 @@ const updateNflUpcommingMatch = cron.schedule("0 0 */1 * * *", async () => {
 let isUpdateLiveMatch: boolean = false;
 const updateLiveMatch = cron.schedule("*/35 * * * * *", async () => {
   if (isUpdateLiveMatch) {
-    console.log("updateLiveMatch NCAAF Skip", new Date());
     return;
   }
   isUpdateLiveMatch = true;
   try {
-    console.info("inside NCAAF updateLiveMatch", new Date());
     await ncaafService.updateLiveMatch();
   } catch (error) {
     Date;
@@ -54,12 +52,10 @@ const updateLiveMatch = cron.schedule("*/35 * * * * *", async () => {
 let isUpdateLiveMatchFinal: boolean = false;
 const updateLiveMatchFinal = cron.schedule("*/35 * * * * *", async () => {
   if (isUpdateLiveMatchFinal) {
-    console.log("updateLiveMatchFinal NCAAF Skip", new Date());
     return;
   }
   isUpdateLiveMatchFinal = true;
   try {
-    console.info("inside NCAAF updateLiveMatchFinal", new Date());
     await ncaafService.updateLiveMatchFinal();
   } catch (error) {
     Date;
@@ -155,7 +151,6 @@ const updateMatchStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
 let isOddAdded: boolean = false;
 const oddAdded = cron.schedule("*/1 * * * *", async () => {
   if (isOddAdded) {
-    console.log("oddAdded Skip", new Date());
     return;
   }
   isOddAdded = true;
@@ -172,12 +167,10 @@ const oddAdded = cron.schedule("*/1 * * * *", async () => {
 let isUpdateUpcomingNcaafMatch: boolean = false;
 const updateUpcomingNcaafMatch = cron.schedule("*/30 * * * * *", async () => {
   if (isUpdateUpcomingNcaafMatch) {
-    console.log("isUpdateUpcomingNcaafMatch Skip", new Date());
     return;
   }
   isUpdateUpcomingNcaafMatch = true;
   try {
-    console.info("inside isUpdateUpcomingNcaafMatch", new Date());
     await ncaafService.updateUpcomingNcaafMatch();
   } catch (error) {
     console.log(error);

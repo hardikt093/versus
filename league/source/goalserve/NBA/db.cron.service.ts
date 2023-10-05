@@ -870,28 +870,29 @@ export default class NbaDbCronServiceClass {
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/bsktbl/nba-shedule`,
         { json: true }
       );
-      let matchesNeedToRemove = await NbaMatch.find({
-        goalServeLeagueId: getMatch?.data?.shedules?.id,
-        status: "Not Started",
-      }).lean();
+      // let matchesNeedToRemove = await NbaMatch.find({
+      //   goalServeLeagueId: getMatch?.data?.shedules?.id,
+      //   status: "Not Started",
+      // }).lean();
       const matchArray = await getMatch?.data?.shedules?.matches;
-      const league: ILeagueModel | null = await League.findOne({
-        goalServeLeagueId: getMatch?.data?.shedules?.id,
-      });
+      // const league: ILeagueModel | null = await League.findOne({
+      //   goalServeLeagueId: getMatch?.data?.shedules?.id,
+      // });
       for (let i = 0; i < matchArray?.length; i++) {
         for (let j = 0; j < matchArray[i]?.match?.length; j++) {
-          matchesNeedToRemove = await removeByAttr(
-            matchesNeedToRemove,
-            "goalServerMatchId",
-            Number(matchArray[i]?.match[j]?.id)
-          );
+          // matchesNeedToRemove = await removeByAttr(
+          //   matchesNeedToRemove,
+          //   "goalServerMatchId",
+          //   Number(matchArray[i]?.match[j]?.id)
+          // );
           const match: INbaMatchModel | null = await NbaMatch.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
+          // console.log("matchArray[i]?.match[j].formatted_date",matchArray[i]?.match[j].formatted_date)
           if (!match) {
             const data: Partial<INbaMatchModel> = {
-              leagueId: league?._id,
-              goalServeLeagueId: league?.goalServeLeagueId,
+              // leagueId: league?._id,
+              goalServeLeagueId: getMatch?.data?.shedules?.id,
               date: matchArray[i]?.match[j].date,
               formattedDate: matchArray[i]?.match[j].formatted_date,
               timezone: matchArray[i]?.match[j].timezone,
@@ -950,34 +951,34 @@ export default class NbaDbCronServiceClass {
                     ?.player
                 : [],
             };
-            const teamIdAway: ITeamNBAModel | null | undefined =
-              await TeamNBA.findOne({
-                goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
-              });
+            // const teamIdAway: ITeamNBAModel | null | undefined =
+            //   await TeamNBA.findOne({
+            //     goalServeTeamId: matchArray[i]?.match[j]?.awayteam.id,
+            //   });
 
-            data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
-              ? teamIdAway.goalServeTeamId
+            data.goalServeAwayTeamId = matchArray[i]?.match[j]?.awayteam?.id
+              ? matchArray[i]?.match[j]?.awayteam?.id
               : 1;
 
-            const teamIdHome: ITeamNBAModel | null | undefined =
-              await TeamNBA.findOne({
-                goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
-              });
+            // const teamIdHome: ITeamNBAModel | null | undefined =
+            //   await TeamNBA.findOne({
+            //     goalServeTeamId: matchArray[i]?.match[j]?.hometeam.id,
+            //   });
 
-            data.goalServeHomeTeamId = teamIdHome?.goalServeTeamId
-              ? teamIdHome.goalServeTeamId
+            data.goalServeHomeTeamId = matchArray[i]?.match[j]?.hometeam?.id
+              ? matchArray[i]?.match[j]?.hometeam?.id
               : 1;
             const matchData = new NbaMatch(data);
             await matchData.save();
           }
         }
       }
-      for (let k = 0; k < matchesNeedToRemove.length; k++) {
-        const match = matchesNeedToRemove[k];
-        await NbaMatch.deleteOne({
-          goalServeMatchId: match.goalServeMatchId,
-        });
-      }
+      // for (let k = 0; k < matchesNeedToRemove.length; k++) {
+      //   const match = matchesNeedToRemove[k];
+      //   await NbaMatch.deleteOne({
+      //     goalServeMatchId: match.goalServeMatchId,
+      //   });
+      // }
       return true;
     } catch (error: any) {
       console.log("error", error);
