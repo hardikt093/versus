@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int           @id @default(autoincrement())
+  email              String        @unique
+  password           String
+  firstName          String?
+  lastName           String?
+  userName           String        @unique
+  profileImage       String?
+  socialLogin        Boolean
+  birthDate          String?
+  phone              Json?
+  createdAt          DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime      @updatedAt @db.Timestamptz(3)
+  isDeleted          Boolean       @default(false)
+  googleAccessToken  String?
+  googleRefreshToken String?
+  googleIdToken      String?
+  isContactScope     Boolean?
+  isSignUp           isSignUp      @default(PENDING)
+  venmoStatus        VenmoStatus   @default(PENDING)
+  venmoUserName      String?
+  contactUser        Contact[]     @relation("contactUserId")
+  contact            Contact[]     @relation("userId")
+  holdAmount         HoldAmount[]
+  invite             Invite[]
+  messagesReceived   Message[]     @relation("fromUserId")
+  wallet             Wallet?
+  adminAccess        channelUser[] @relation("adminAccess")
+  channelUser        channelUser[] @relation("channelUser")
+  reportedBy         reportUser[]  @relation("reportedBy")
+  reportedTo         reportUser[]  @relation("reportedTo")
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  token     String
+  user      Int
+  type      Int
+  expiresAt String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  isDeleted Boolean  @default(false)
+}
+
+model Channel {
+  id                Int           @id @default(autoincrement())
+  channelType       ChannelType
+  description       String?
+  channelExpiredAt  DateTime?
+  channelName       String?       @unique
+  channelStartAt    DateTime?
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  goalServeLeagueId Int?
+  goalServeMatchId  Int?
+  isDeleted         Boolean       @default(false)
+  matchChannelName  String?
+  matchStartAt      DateTime?
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+  channelHeader     Json?
+  message           Message[]
+  channelUser       channelUser[]
+  reportUser        reportUser[]
+}
+
+model Message {
+  id              Int          @id @default(autoincrement())
+  text            String
+  updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
+  mediaUrl        String[]
+  parentMessageId Int?
+  userId          Int?
+  channelId       Int?
+  messageType     MessageType  @default(TEXT)
+  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
+  channel         Channel?     @relation(fields: [channelId], references: [id])
+  parentMessage   Message?     @relation("childMessages", fields: [parentMessageId], references: [id])
+  childMessages   Message[]    @relation("childMessages")
+  user            User?        @relation("fromUserId", fields: [userId], references: [id])
+  reportUser      reportUser[]
+}
+
+model channelUser {
+  id               Int         @id @default(autoincrement())
+  userId           Int?
+  adminAccessId    Int?
+  channelType      ChannelType
+  permisionGranted String?
+  channelId        Int?
+  isAdmin          Boolean     @default(false)
+  isCreatedChannel Boolean     @default(false)
+  userExist        Boolean     @default(true)
+  adminAccess      User?       @relation("adminAccess", fields: [adminAccessId], references: [id])
+  channel          Channel?    @relation(fields: [channelId], references: [id])
+  channelUser      User?       @relation("channelUser", fields: [userId], references: [id])
+}
+
+model reportUser {
+  id               Int      @id @default(autoincrement())
+  reportedByUserId Int?
+  reportedToUserId Int?
+  description      String
+  channelId        Int?
+  messageId        Int?
+  channel          Channel? @relation(fields: [channelId], references: [id])
+  message          Message? @relation(fields: [messageId], references: [id])
+  reportedBy       User?    @relation("reportedBy", fields: [reportedByUserId], references: [id])
+  reportedTo       User?    @relation("reportedTo", fields: [reportedToUserId], references: [id])
+}
+
+model Contact {
+  id            Int        @id @default(autoincrement())
+  name          String?
+  email         String?
+  phoneNumber   String?
+  userId        Int?
+  invite        inviteSend @default(PENDING)
+  updatedAt     DateTime   @updatedAt @db.Timestamptz(3)
+  isDeleted     Boolean    @default(false)
+  contactUserId Int?
+  createdAt     DateTime   @default(now()) @db.Timestamptz(3)
+  contactUser   User?      @relation("contactUserId", fields: [contactUserId], references: [id])
+  user          User?      @relation("userId", fields: [userId], references: [id])
+  sendInvite    Invite[]
+}
+
+model Invite {
+  id                Int      @id @default(autoincrement())
+  token             String   @unique @db.Uuid
+  expire            DateTime
+  sendInviteBy      Int
+  sendInviteContact Int
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
+  user              User     @relation(fields: [sendInviteBy], references: [id])
+  contact           Contact  @relation(fields: [sendInviteContact], references: [id])
+}
+
+model Wallet {
+  id         Int          @id @default(autoincrement())
+  userId     Int          @unique
+  amount     Float?
+  holdAmount HoldAmount[]
+  user       User         @relation(fields: [userId], references: [id])
+}
+
+model HoldAmount {
+  id                    Int     @id @default(autoincrement())
+  userId                Int?
+  amount                Float?
+  walletId              Int
+  goalServeMatchId      Int?
+  requestUserId         Int?
+  opponentUserId        Int?
+  requestUserBetAmount  Float?
+  opponentUserBetAmount Float?
+  goalServeLeagueId     Int?
+  betId                 String?
+  revertAmount          Float?
+  user                  User?   @relation(fields: [userId], references: [id])
+  wallet                Wallet  @relation(fields: [walletId], references: [id])
+}
+
+enum Status {
+  online
+  offline
+}
+
+enum ChannelType {
+  oneToOne
+  matchChannel
+  privateChannel
+}
+
+enum inviteSend {
+  SENT
+  ACCEPTED
+  PENDING
+}
+
+enum isSignUp {
+  SUCCESS
+  PENDING
+}
+
+enum MessageType {
+  TEXT
+  FILE
+  USERADDED
+}
+
+enum VenmoStatus {
+  PENDING
+  SKIPPED
+  ADDED
+}
