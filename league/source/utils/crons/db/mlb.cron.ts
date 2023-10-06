@@ -23,12 +23,10 @@ const createOdds = cron.schedule("*/5 * * * *", async () => {
 let isupdateCurruntDateRecordRunning: boolean = false;
 const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateCurruntDateRecordRunning) {
-    console.log("MLB updateCurruntDateRecord Skip");
     return;
   }
   isupdateCurruntDateRecordRunning = true;
   try {
-    console.info("inside MLB score cron updateCurruntDateRecord");
     await mlbService.updateCurruntDateRecord();
   } catch (error) {
     console.log(error);
@@ -40,12 +38,10 @@ const updateCurruntDateRecord = cron.schedule("*/10 * * * * *", async () => {
 let isupdateCurruntDateRecordRunningFinal: boolean = false;
 const updateCurruntDateRecordFinal = cron.schedule("*/10 * * * * *", async () => {
   if (isupdateCurruntDateRecordRunningFinal) {
-    console.log("MLB updateCurruntDateRecordFinal Skip");
     return;
   }
   isupdateCurruntDateRecordRunningFinal = true;
   try {
-    console.info("inside MLB score cron updateCurruntDateRecordFinal");
     await mlbService.updateCurruntDateRecordFinal();
   } catch (error) {
     console.log(error);
@@ -165,13 +161,29 @@ const updateMlbMatch = cron.schedule("*/5 * * * *", async () => {
   }
   isupdateMlbMatchRunning = true;
   try {
-    // console.log("start updateMlbMatch");
     await mlbService.updateMlbMatch();
     // console.log("end updateMlbMatch");
   } catch (error) {
     console.log(error);
   } finally {
     isupdateMlbMatchRunning = false;
+  }
+});
+
+let isupdateMlbMatchAfterAddRunning: boolean = false;
+const updateMlbMatchAfterAdd = cron.schedule("*/5 * * * *", async () => {
+  if (isupdateMlbMatchAfterAddRunning) {
+    // console.log("skip updateMlbMatch");
+    return;
+  }
+  isupdateMlbMatchAfterAddRunning = true;
+  try {
+    await mlbService.updateMlbMatchAfterAdd();
+    // console.log("end updateMlbMatch");
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isupdateMlbMatchAfterAddRunning = false;
   }
 });
 export default {
@@ -184,5 +196,6 @@ export default {
   updateInjuryRecored,
   updateMlbMatch,
   updateTeamStats,
-  updateCurruntDateRecordFinal
+  updateCurruntDateRecordFinal,
+  updateMlbMatchAfterAdd
 };

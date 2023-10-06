@@ -37,7 +37,7 @@ const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateNbaMatchRunning: boolean = false;
-const updateNbaMatch = cron.schedule("0 */12 * * *", async () => {
+const updateNbaMatch = cron.schedule("* */1 * * *", async () => {
   if (isupdateNbaMatchRunning) {
     // console.log("updateNbaMatch Skip");
     return;
@@ -59,7 +59,7 @@ const updateStandingNba = cron.schedule("*/10 * * * * *", async () => {
     // console.log("updateStandingNba Skip");
     return;
   }
-  isupdateNbaMatchRunning = true;
+  isupdateStandingNbaRunning = true;
   try {
     // console.info("inside score cron updateStandingNba");
     await goalserveNbaService.addNbaStandings();

@@ -1640,7 +1640,6 @@ export default class NCAAFDbCronServiceClass {
                     { new: true }
                   );
 
-                  console.log("dataUpdate", dataUpdate?.goalServeMatchId);
 
                   // const matchData = new NcaafMatch(data);
                   // await matchData.save();
