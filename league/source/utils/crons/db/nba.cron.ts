@@ -37,7 +37,7 @@ const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateNbaMatchRunning: boolean = false;
-const updateNbaMatch = cron.schedule("*/30 * * * * *", async () => {
+const updateNbaMatch = cron.schedule("* */1 * * *", async () => {
   if (isupdateNbaMatchRunning) {
     // console.log("updateNbaMatch Skip");
     return;

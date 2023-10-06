@@ -55,7 +55,7 @@ const updatePlayersNhl = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateInjuredPlayerNHLRunning: boolean = false;
-const updateInjuredPlayerNHL = cron.schedule("*/10 * * * *", async () => {
+const updateInjuredPlayerNHL = cron.schedule("*/1 * * * *", async () => {
   if (isupdateInjuredPlayerNHLRunning) {
     // console.log("updateInjuredPlayerNHL Skip");
     return;
@@ -89,7 +89,7 @@ const createAndUpdateOddsNhl = cron.schedule("*/5 * * * *", async () => {
 });
 
 let isupdateNhlMatchRunning: boolean = false;
-const updateNhlMatch = cron.schedule("*/30 * * * * *", async () => {
+const updateNhlMatch = cron.schedule("*/1 * * *", async () => {
   if (isupdateNhlMatchRunning) {
     return;
   }

@@ -16,7 +16,7 @@ import { INbaPlayerhModel } from "../../models/interfaces/nbaPlayer.interface";
 import ITeamNBAModel from "../../models/interfaces/teamNBA.interface";
 import Bet from "../../models/documents/bet.model";
 import { betStatus } from "../../models/interfaces/bet.interface";
-async function declareResultMatch (
+async function declareResultMatch(
   matchId: number,
   winTeamId: number,
   leagueType: string
@@ -33,7 +33,7 @@ async function declareResultMatch (
       resultAt: new Date(),
     }
   );
-};
+}
 function removeByAttr(arr: any, attr: string, value: number) {
   let i = arr.length;
   while (i--) {
@@ -795,70 +795,66 @@ export default class NbaDbCronServiceClass {
           );
         }
         const regex = /^Final(.*)$/;
-          if (
-            matchArray.status != "Not Started" &&
-            !regex.test(matchArray.status) &&
-            matchArray.status != "Postponed" &&
-            matchArray.status != "Canceled" &&
-            matchArray.status != "Suspended"
-          ) {
-            const goalServeMatchId = matchArray.id;
-            // expire not accepted bet requests
-            await Bet.updateMany(
-              {
-                status: "PENDING",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "NBA",
-              },
-              {
-                status: "EXPIRED",
-              }
-            );
-            // active  CONFIRMED bet when match start
-            await Bet.updateMany(
-              {
-                status: "CONFIRMED",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "NBA",
-              },
-              {
-                status: "ACTIVE",
-              }
-            );
-          } else if (regex.test(matchArray.status)) {
-            const homeTeamTotalScore = parseFloat(
-              matchArray.hometeam.totalscore
-            );
-            const awayTeamTotalScore = parseFloat(
-              matchArray.awayteam.totalscore
-            );
-            const goalServeMatchId = matchArray.id;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? matchArray.hometeam.id
-                : matchArray.awayteam.id;
-            await declareResultMatch(
-              parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId),
-              "NBA"
-            );
-          } else if (
-            matchArray.status == "Canceled" ||
-            matchArray.status == "Postponed" ||
-            matchArray.status == "Suspended"
-          ) {
-            const goalServeMatchId = matchArray.id;
-            await Bet.updateMany(
-              {
-                status: "PENDING",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "NBA",
-              },
-              {
-                status: "CANCELED",
-              }
-            );
-          }
+        if (
+          matchArray.status != "Not Started" &&
+          !regex.test(matchArray.status) &&
+          matchArray.status != "Postponed" &&
+          matchArray.status != "Canceled" &&
+          matchArray.status != "Suspended"
+        ) {
+          const goalServeMatchId = matchArray.id;
+          // expire not accepted bet requests
+          await Bet.updateMany(
+            {
+              status: "PENDING",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "NBA",
+            },
+            {
+              status: "EXPIRED",
+            }
+          );
+          // active  CONFIRMED bet when match start
+          await Bet.updateMany(
+            {
+              status: "CONFIRMED",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "NBA",
+            },
+            {
+              status: "ACTIVE",
+            }
+          );
+        } else if (regex.test(matchArray.status)) {
+          const homeTeamTotalScore = parseFloat(matchArray.hometeam.totalscore);
+          const awayTeamTotalScore = parseFloat(matchArray.awayteam.totalscore);
+          const goalServeMatchId = matchArray.id;
+          const goalServeWinTeamId =
+            homeTeamTotalScore > awayTeamTotalScore
+              ? matchArray.hometeam.id
+              : matchArray.awayteam.id;
+          await declareResultMatch(
+            parseInt(goalServeMatchId),
+            parseInt(goalServeWinTeamId),
+            "NBA"
+          );
+        } else if (
+          matchArray.status == "Canceled" ||
+          matchArray.status == "Postponed" ||
+          matchArray.status == "Suspended"
+        ) {
+          const goalServeMatchId = matchArray.id;
+          await Bet.updateMany(
+            {
+              status: "PENDING",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "NBA",
+            },
+            {
+              status: "CANCELED",
+            }
+          );
+        }
       }
     } catch (error: any) {
       console.log("error", error);
@@ -888,6 +884,14 @@ export default class NbaDbCronServiceClass {
           const match: INbaMatchModel | null = await NbaMatch.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
+          console.log(
+            "matchArray[i]?.match[j]?.id",
+            matchArray[i]?.match[j]?.id
+          );
+          console.log(
+            "matchArray[i]?.match[j]?.format",
+            matchArray[i]?.match[j]?.formatted_date
+          );
           // console.log("matchArray[i]?.match[j].formatted_date",matchArray[i]?.match[j].formatted_date)
           if (!match) {
             const data: Partial<INbaMatchModel> = {

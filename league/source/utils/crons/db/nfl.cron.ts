@@ -96,7 +96,7 @@ const updateLiveMatchFinal = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateInjuredPlayernflRunning: boolean = false;
-const updateInjuredPlayerNFL = cron.schedule("0 0 */1 * * *", async () => {
+const updateInjuredPlayerNFL = cron.schedule("*/5 * * * *", async () => {
   if (isupdateInjuredPlayernflRunning) {
     return;
   }
