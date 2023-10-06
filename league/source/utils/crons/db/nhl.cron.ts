@@ -89,7 +89,7 @@ const createAndUpdateOddsNhl = cron.schedule("*/5 * * * *", async () => {
 });
 
 let isupdateNhlMatchRunning: boolean = false;
-const updateNhlMatch = cron.schedule("*/1 * * *", async () => {
+const updateNhlMatch = cron.schedule("* */1 * * *", async () => {
   if (isupdateNhlMatchRunning) {
     return;
   }

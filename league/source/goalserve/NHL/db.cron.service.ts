@@ -984,7 +984,6 @@ export default class NhlDbCronServiceClass {
           const match: any = await NhlMatch.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
-          
           if (!match) {
             const data: Partial<INhlMatchModel> = {
               goalServeLeagueId: league.goalServeLeagueId,

@@ -884,14 +884,6 @@ export default class NbaDbCronServiceClass {
           const match: INbaMatchModel | null = await NbaMatch.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
-          console.log(
-            "matchArray[i]?.match[j]?.id",
-            matchArray[i]?.match[j]?.id
-          );
-          console.log(
-            "matchArray[i]?.match[j]?.format",
-            matchArray[i]?.match[j]?.formatted_date
-          );
           // console.log("matchArray[i]?.match[j].formatted_date",matchArray[i]?.match[j].formatted_date)
           if (!match) {
             const data: Partial<INbaMatchModel> = {
