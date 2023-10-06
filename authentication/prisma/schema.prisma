@@ -26,6 +26,8 @@ model User {
   googleIdToken      String?
   isContactScope     Boolean?
   isSignUp           isSignUp      @default(PENDING)
+  venmoStatus        VenmoStatus   @default(PENDING)
+  venmoUserName      String?
   contactUser        Contact[]     @relation("contactUserId")
   contact            Contact[]     @relation("userId")
   holdAmount         HoldAmount[]
@@ -52,17 +54,17 @@ model Token {
 model Channel {
   id                Int           @id @default(autoincrement())
   channelType       ChannelType
-  channelName       String?       @unique
-  matchChannelName  String?
   description       String?
-  goalServeMatchId  Int?
-  goalServeLeagueId Int?
-  matchStartAt      DateTime?
-  channelStartAt    DateTime?
   channelExpiredAt  DateTime?
+  channelName       String?       @unique
+  channelStartAt    DateTime?
   createdAt         DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+  goalServeLeagueId Int?
+  goalServeMatchId  Int?
   isDeleted         Boolean       @default(false)
+  matchChannelName  String?
+  matchStartAt      DateTime?
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
   channelHeader     Json?
   message           Message[]
   channelUser       channelUser[]
@@ -72,13 +74,13 @@ model Channel {
 model Message {
   id              Int          @id @default(autoincrement())
   text            String
-  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime     @updatedAt @db.Timestamptz(3)
   mediaUrl        String[]
   parentMessageId Int?
   userId          Int?
   channelId       Int?
   messageType     MessageType  @default(TEXT)
+  createdAt       DateTime     @default(now()) @db.Timestamptz(3)
   channel         Channel?     @relation(fields: [channelId], references: [id])
   parentMessage   Message?     @relation("childMessages", fields: [parentMessageId], references: [id])
   childMessages   Message[]    @relation("childMessages")
@@ -88,17 +90,17 @@ model Message {
 
 model channelUser {
   id               Int         @id @default(autoincrement())
-  channelType      ChannelType
-  channelUser      User?       @relation(name: "channelUser", fields: [userId], references: [id])
-  userExist        Boolean     @default(true)
   userId           Int?
+  adminAccessId    Int?
+  channelType      ChannelType
+  permisionGranted String?
+  channelId        Int?
   isAdmin          Boolean     @default(false)
   isCreatedChannel Boolean     @default(false)
-  adminAccess      User?       @relation(name: "adminAccess", fields: [adminAccessId], references: [id])
-  adminAccessId    Int?
+  userExist        Boolean     @default(true)
+  adminAccess      User?       @relation("adminAccess", fields: [adminAccessId], references: [id])
   channel          Channel?    @relation(fields: [channelId], references: [id])
-  channelId        Int?
-  permisionGranted String?
+  channelUser      User?       @relation("channelUser", fields: [userId], references: [id])
 }
 
 model reportUser {
@@ -121,10 +123,10 @@ model Contact {
   phoneNumber   String?
   userId        Int?
   invite        inviteSend @default(PENDING)
-  createdAt     DateTime   @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime   @updatedAt @db.Timestamptz(3)
   isDeleted     Boolean    @default(false)
   contactUserId Int?
+  createdAt     DateTime   @default(now()) @db.Timestamptz(3)
   contactUser   User?      @relation("contactUserId", fields: [contactUserId], references: [id])
   user          User?      @relation("userId", fields: [userId], references: [id])
   sendInvite    Invite[]
@@ -193,4 +195,10 @@ enum MessageType {
   TEXT
   FILE
   USERADDED
+}
+
+enum VenmoStatus {
+  PENDING
+  SKIPPED
+  ADDED
 }

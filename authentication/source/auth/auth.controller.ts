@@ -14,7 +14,6 @@ import { IUser } from "../interfaces/input";
  * @param res
  */
 const signIn = async (req: Request, res: Response) => {
-  console.log("in signin");
   try {
     if (!req.body.provider) {
       const signIn = await authService.signIn(req.body);
@@ -80,6 +79,7 @@ const signIn = async (req: Request, res: Response) => {
             )
               ? true
               : false,
+            venmoUserName: null,
           };
           var createContact: any = {};
           const signUp = await authService.signUp(data);
@@ -305,5 +305,5 @@ export default {
   checkInviteExpire,
   refreshAuthTokens,
   getUser,
-  changePassword,
+  changePassword
 };

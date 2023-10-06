@@ -30,7 +30,25 @@ router.post(
   validate(BetValidation.listbyType),
   BetController.listBetsByType
 );
+router.post(
+  "/home-list",
+  auth,
+  validate(BetValidation.listbyType),
+  BetController.listBetsDashboard
+);
 
+router.post(
+  "/squared",
+  auth,
+  validate(BetValidation.betSettled),
+  BetController.betSettledUpdate
+);
+router.post(
+  "/like",
+  auth,
+  validate(BetValidation.betLike),
+  BetController.likeBet
+);
 router.post(
   "/:id/response",
   auth,
@@ -60,6 +78,8 @@ router.post(
 );
 
 router.get("/:id/result", auth, BetController.getResultBet);
+router.post("/getUserBetDetails", auth, BetController.getUserBetDetails);
+router.post("/getWonBets", auth, BetController.getBetsFromContacts);
 
 router.post(
   "/:id/result-satisfied",

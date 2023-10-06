@@ -78,6 +78,7 @@ export default class BetDbCronServiceClass {
                 : bet?.requestUserGoalServeOdd.includes("U")
                 ? bet?.requestUserId
                 : bet?.opponentUserId;
+              
             if (oddWin === bet?.requestUserId) {
               // payout to req user
               const resp = await axiosPostMicro(

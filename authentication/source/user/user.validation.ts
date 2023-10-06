@@ -7,6 +7,7 @@ const profileUpdate = {
     userName: Joi.string().allow(null, ""),
     profileImage: Joi.string().allow(null, ""),
     phone: Joi.object().allow(null, ""),
+    venmoUserName: Joi.string().allow(null, ""),
   }),
 };
 

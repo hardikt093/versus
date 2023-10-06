@@ -2,10 +2,9 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 import bcrypt from "bcryptjs";
 
-import { IUpdateUserProfile, IUserLogin } from "../interfaces/input";
-import { axiosGetMicro } from "../services/axios.service";
+import { IUpdateUserProfile, IUser, IUserLogin } from "../interfaces/input";
+import { axiosGetMicro, axiosPostMicro } from "../services/axios.service";
 import config from "../config/config";
-import authService from "../auth/auth.service";
 import AppError from "../utils/AppError";
 import httpStatus from "http-status";
 import Messages from "../utils/messages";
@@ -38,6 +37,8 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         lastName: data.lastName,
         userName: data.userName,
         phone: data.phone,
+        venmoUserName: data.venmoUserName,
+        venmoStatus: data.venmoUserName ? "ADDED" : "PENDING",
       },
       select: {
         firstName: true,
@@ -46,6 +47,7 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         phone: true,
         profileImage: true,
         id: true,
+        venmoUserName: true,
       },
     });
   } else if (findUserName) {
@@ -63,6 +65,8 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         lastName: data.lastName,
         userName: data.userName,
         phone: data.phone,
+        venmoUserName: data.venmoUserName,
+        venmoStatus: data.venmoUserName ? "ADDED" : "PENDING",
       },
       select: {
         firstName: true,
@@ -71,6 +75,7 @@ const userProfileUpdate = async (data: IUpdateUserProfile, id: any) => {
         phone: true,
         profileImage: true,
         id: true,
+        venmoUserName: true,
       },
     });
   }
@@ -357,21 +362,18 @@ const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
   const userData = await prisma.user.findUnique({
     where: {
       id: loggedInUser,
+    },
+  });
+  const keys = userData.profileImage.split("profile-images/");
+  const param: S3.DeleteObjectRequest = {
+    Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
+    Key: "profile-images/" + keys[1],
+  };
+  s3.deleteObject(param, (err, data) => {
+    if (err) {
+      throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "");
     }
   });
-  const keys = userData.profileImage.split('profile-images/');
-    const param: S3.DeleteObjectRequest = {
-      Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
-      Key: 'profile-images/'+ keys[1]
-    };
-    s3.deleteObject(param, (err, data) => {
-      if (err) {
-        throw new AppError(
-          httpStatus.UNPROCESSABLE_ENTITY,
-          ""
-        );
-      }
-    });
   return await prisma.user.update({
     where: {
       id: loggedInUser,
@@ -390,6 +392,154 @@ const profilePictureUpdate = async (loggedInUser: number, imageUrl: string) => {
     },
   });
 };
+
+const updateVenmoUserName = async (
+  user: any,
+  body: { venmoUserName: string; skip: boolean }
+) => {
+  return await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      venmoUserName: !body.skip ? body.venmoUserName : null,
+      venmoStatus: body.skip ? "SKIPPED" : "ADDED",
+    },
+    select: {
+      firstName: true,
+      lastName: true,
+      userName: true,
+      phone: true,
+      profileImage: true,
+      id: true,
+      venmoUserName: true,
+    },
+  });
+};
+
+const userProfileDetails = async (body: any) => {
+  return await prisma.user.findUnique({
+    where: {
+      id: Number(body.profileId),
+    },
+    select: {
+      firstName: true,
+      lastName: true,
+      userName: true,
+      phone: true,
+      profileImage: true,
+      id: true,
+      venmoUserName: true,
+    },
+  });
+};
+
+const getContactsBetDetails = async (
+  userId: number | string,
+  search: string,
+  page: string,
+  token: any
+) => {
+  // const contacts = await prisma.contact.findMany({
+  //   where: {
+  //     userId: user.id,
+  //     OR: [
+  //       {
+  //         email: {
+  //           contains: query,
+  //           mode: "insensitive",
+  //         },
+  //       },
+  //       {
+  //         name: {
+  //           contains: query,
+  //           mode: "insensitive",
+  //         },
+  //       },
+  //     ],
+  //   },
+  //   include: {
+  //     sendInvite: {
+  //       where: {
+  //         sendInviteBy: user.id,
+  //       },
+  //       select: {
+  //         createdAt: true,
+  //       },
+  //       orderBy: {
+  //         createdAt: "desc",
+  //       },
+  //       take: 1,
+  //     },
+  //   },
+  //   orderBy: { createdAt: "asc" },
+  // });
+  // return contacts;
+  const pages = parseInt(page) || 1;
+  const limit = 10;
+  const startIndex = (pages - 1) * limit;
+
+  const contacts = await prisma.user.findMany({
+    take: limit,
+    skip: startIndex,
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      userName: true,
+      profileImage: true,
+      email: true,
+    },
+    where: {
+      id: {
+        not: userId,
+      },
+      OR: [
+        {
+          userName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          firstName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          lastName: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+    orderBy: {
+      userName: "asc",
+    },
+  });
+  const ids = contacts.map((item: any) => {
+    return item.id;
+  });
+
+  const resp = await axiosPostMicro(
+    { ids },
+    `${config.leagueServer}/bet/getWonBets`,
+    token
+  );
+  const mergedData = resp.data.data.map((count: any) => {
+    const userDetail = contacts.find(
+      (user: any) => user.id === count.profileUserId
+    );
+
+    return {
+      overallRecord: count,
+      ...userDetail,
+    };
+  });
+  return mergedData;
+};
 export default {
   profilePictureUpdate,
   userContacts,
@@ -399,5 +549,8 @@ export default {
   userByIdMongoRelation,
   userlist,
   userGetBulk,
-  getFriendList
+  getFriendList,
+  updateVenmoUserName,
+  userProfileDetails,
+  getContactsBetDetails,
 };

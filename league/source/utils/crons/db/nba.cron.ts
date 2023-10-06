@@ -3,7 +3,7 @@ import GoalserveNbaService from "../../../goalserve/NBA/db.cron.service";
 const goalserveNbaService = new GoalserveNbaService();
 
 let createAndUpdateMatchOddsRunning: boolean = false;
-const createAndUpdateOddsNba = cron.schedule("*/10 * * * * *", async () => {
+const createAndUpdateOddsNba = cron.schedule("*/5 * * * *", async () => {
   if (createAndUpdateMatchOddsRunning) {
     // console.log("createAndUpdateMatchOdds Skip");
     return;
@@ -37,7 +37,7 @@ const updateCurruntDateRecordNba = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateNbaMatchRunning: boolean = false;
-const updateNbaMatch = cron.schedule("0 */12 * * *", async () => {
+const updateNbaMatch = cron.schedule("* */1 * * *", async () => {
   if (isupdateNbaMatchRunning) {
     // console.log("updateNbaMatch Skip");
     return;
@@ -59,7 +59,7 @@ const updateStandingNba = cron.schedule("*/10 * * * * *", async () => {
     // console.log("updateStandingNba Skip");
     return;
   }
-  isupdateNbaMatchRunning = true;
+  isupdateStandingNbaRunning = true;
   try {
     // console.info("inside score cron updateStandingNba");
     await goalserveNbaService.addNbaStandings();

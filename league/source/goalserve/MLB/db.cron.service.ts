@@ -110,44 +110,44 @@ const search = async (nameKey: any, myArray: any) => {
   }
   return;
 };
-const transformLeague = async (getResponse: any, data: any) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const leagues = getResponse?.data?.standings?.category?.league;
-      const transformedLeagues = [];
-      for (let i = 0; i < leagues.length; i++) {
-        const league = leagues[i];
-        const leagueTransform: any = [];
-        const divisions = league.division;
-        await Promise.all(
-          divisions.map(async (division: IDivision) => {
-            const teams = division.team;
-            await Promise.all(
-              teams.map(async (team: ITeam) => {
-                const getAwayTeamImage = await goalserveApi(
-                  "https://www.goalserve.com/getfeed",
-                  data,
-                  `baseball/${team.id}_rosters`
-                );
-                team.teamImage = getAwayTeamImage.data.team.image;
+// const transformLeague = async (getResponse: any, data: any) => {
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const leagues = getResponse?.data?.standings?.category?.league;
+//       const transformedLeagues = [];
+//       for (let i = 0; i < leagues.length; i++) {
+//         const league = leagues[i];
+//         const leagueTransform: any = [];
+//         const divisions = league.division;
+//         await Promise.all(
+//           divisions.map(async (division: IDivision) => {
+//             const teams = division.team;
+//             await Promise.all(
+//               teams.map(async (team: ITeam) => {
+//                 const getAwayTeamImage = await goalserveApi(
+//                   "https://www.goalserve.com/getfeed",
+//                   data,
+//                   `baseball/${team.id}_rosters`
+//                 );
+//                 team.teamImage = getAwayTeamImage.data.team.image;
 
-                team.pct = +(
-                  (Number(team.won) * 100) /
-                  (Number(team.won) + Number(team.lost))
-                ).toFixed(3);
-              })
-            );
-            leagueTransform.push({ teams: teams, name: division.name });
-          })
-        );
-        transformedLeagues.push({ [league.name]: leagueTransform });
-      }
-      resolve(transformedLeagues);
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
+//                 team.pct = +(
+//                   (Number(team.won) * 100) /
+//                   (Number(team.won) + Number(team.lost))
+//                 ).toFixed(3);
+//               })
+//             );
+//             leagueTransform.push({ teams: teams, name: division.name });
+//           })
+//         );
+//         transformedLeagues.push({ [league.name]: leagueTransform });
+//       }
+//       resolve(transformedLeagues);
+//     } catch (error) {
+//       reject(error);
+//     }
+//   });
+// };
 export default class MlbDbCronServiceClass {
   public updateCurruntDateRecord = async () => {
     try {
@@ -159,236 +159,290 @@ export default class MlbDbCronServiceClass {
         data,
         "baseball/usa"
       );
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
 
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
+      }
+      const matchArray = matchArrayAll?.filter((element: any) => {
+        return (
+          element?.status !== "Not Started" &&
+          element?.status !== "Final" &&
+          // element.status !== "After Over Time" &&
+          element?.status !== "Final/OT" &&
+          element?.status !== "Final/20T"
+        );
+      });
+
+      const updatePromises = matchArray?.map(async (match: any) => {
+        const data: Partial<IMatchModel> = {
+          outs: match?.outs,
+          date: match?.date,
+          formattedDate: match?.formatted_date,
+          timezone: match?.timezone,
+          oddsid: match?.seasonType,
+          attendance: match?.attendance,
+          goalServeMatchId: match?.id,
+          dateTimeUtc: match?.datetime_utc,
+          status: match?.status,
+          time: match?.time,
+          homeTeamHit: match?.hometeam.hits,
+          homeTeamTotalScore: match?.hometeam.totalscore,
+          homeTeamError: match?.hometeam?.errors,
+          awayTeamHit: match?.awayteam?.hits,
+          awayTeamTotalScore: match?.awayteam?.totalscore,
+          awayTeamError: match?.awayteam?.errors,
+          awayTeamInnings: match?.awayteam?.innings?.inning || [],
+          homeTeamInnings: match?.hometeam?.innings?.inning || [],
+        };
+
+        const matchUpdate = await Match.findOneAndUpdate(
+          { goalServeMatchId: data?.goalServeMatchId },
+          data,
+          { new: true }
+        );
+
+        // const goalServeMatchId = match.id;
+
+        if (
+          match?.status != "Not Started" &&
+          match?.status != "Final" &&
+          match?.status != "Postponed" &&
+          match?.status != "Canceled" &&
+          match?.status != "Suspended"
+        ) {
+          const goalServeMatchId = match?.id;
+          // expire not accepted bet requests
+          await Bet.updateMany(
+            {
+              status: "PENDING",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "EXPIRED",
+            }
+          );
+          // active  CONFIRMED bet when match start
+          await Bet.updateMany(
+            {
+              status: "CONFIRMED",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "ACTIVE",
+            }
+          );
+        }
+        // else if (match.status == "Final") {
+        //   const homeTeamTotalScore = parseFloat(
+        //     match.hometeam.totalscore
+        //   );
+        //   const awayTeamTotalScore = parseFloat(
+        //     match.awayteam.totalscore
+        //   );
+        //   const goalServeMatchId = match.id;
+        //   const goalServeWinTeamId =
+        //     homeTeamTotalScore > awayTeamTotalScore
+        //       ? match.hometeam.id
+        //       : match.awayteam.id;
+        //   await declareResultMatch(
+        //     parseInt(goalServeMatchId),
+        //     parseInt(goalServeWinTeamId),
+        //     "MLB"
+        //   );
+        // }
+        else if (
+          match.status == "Canceled" ||
+          match.status == "Postponed" ||
+          match.status == "Suspended"
+        ) {
+          const goalServeMatchId = match.id;
+          await Bet.updateMany(
+            {
+              status: "PENDING",
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "EXPIRED",
+            }
+          );
+          await Bet.updateMany(
+            {
+              status: { $in: ["CONFIRMED", "ACTIVE"] },
+              goalServeMatchId: goalServeMatchId,
+              leagueType: "MLB",
+            },
+            {
+              status: "CANCELED",
+            }
+          );
+        }
+        await Promise.all(updatePromises);
+      });
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+
+  public updateCurruntDateRecordFinal = async () => {
+    try {
+      let data = {
+        json: true,
+      };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "baseball/usa"
+      );
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
+
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
+      }
+      const matchArray = matchArrayAll?.filter((element: any) => {
+        return (
+          element?.status === "Final" ||
+          element?.status === "After Over Time" ||
+          element?.status === "Final/OT" ||
+          element?.status === "Final/20T"
+        );
+      });
+
+      const updatePromises = matchArray?.map(async (match: any) => {
+        const findMatch = await Match.findOne({
+          goalServeMatchId: match.id,
+          $or: [
+            { status: "After Over Time" },
+            { status: "Final" },
+            { status: "Final/OT" },
+            { status: "Final/20T" },
+          ],
+        }).lean();
+        // console.log("findMatch", findMatch);
+        if (!findMatch) {
+          const data: Partial<IMatchModel> = {
+            outs: match.outs,
+            date: match.date,
+            formattedDate: match.formatted_date,
+            timezone: match.timezone,
+            oddsid: match.seasonType,
+            attendance: match.attendance,
+            goalServeMatchId: match.id,
+            dateTimeUtc: match.datetime_utc,
+            status: match.status,
+            time: match.time,
+            homeTeamHit: match.hometeam.hits,
+            homeTeamTotalScore: match.hometeam.totalscore,
+            homeTeamError: match.hometeam.errors,
+            awayTeamHit: match.awayteam.hits,
+            awayTeamTotalScore: match.awayteam.totalscore,
+            awayTeamError: match.awayteam.errors,
+            awayTeamInnings: match.awayteam?.innings?.inning || [],
+            homeTeamInnings: match.hometeam?.innings?.inning || [],
+          };
+          const matchUpdate = await Match.findOneAndUpdate(
+            { goalServeMatchId: match.id },
+            data,
+            { new: true }
+          );
+          // const goalServeMatchId = match.id;
+          // else if (match.status == "Final") {
+          const homeTeamTotalScore = parseFloat(match.hometeam.totalscore);
+          const awayTeamTotalScore = parseFloat(match.awayteam.totalscore);
+          const goalServeMatchId = match.id;
+          const goalServeWinTeamId =
+            homeTeamTotalScore > awayTeamTotalScore
+              ? match.hometeam.id
+              : match.awayteam.id;
+          await declareResultMatch(
+            parseInt(goalServeMatchId),
+            parseInt(goalServeWinTeamId),
+            "MLB"
+          );
+          // }
+
+          await Promise.all(updatePromises);
+        }
+      });
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+
+  public updateRmainingCurruntDateRecord = async () => {
+    try {
+      let data = {
+        json: true,
+      };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "baseball/usa"
+      );
       const matchArray = await getMatch?.data?.scores?.category?.match;
+      const index = matchArray?.findIndex(
+        (element: any) => element?.status === "Not Started"
+      );
+      if (index !== -1) {
+        // Element found, remove it from the array
+        matchArray?.splice(index, 1);
+      } else {
+        // Element not found
+        console.log("Element not found in the array.");
+      }
+
+      // console.log("remaning matchArray.length====>", matchArray?.length);
       if (matchArray?.length > 0) {
-        for (let j = 0; j < matchArray?.length; j++) {
-          const league: ILeagueModel | undefined | null = await League.findOne({
-            goalServeLeagueId: getMatch?.data.scores.category.id,
-          });
-          if (
-            matchArray[j].status != "Not Started" &&
-            matchArray[j].status != "Final"
-          ) {
-            const data: Partial<IMatchModel> = {
-              leagueId: league?._id,
-              goalServeLeagueId: league?.goalServeLeagueId,
-              outs: matchArray[j].outs,
-              date: matchArray[j].date,
-              formattedDate: matchArray[j].formatted_date,
-              timezone: matchArray[j].timezone,
-              oddsid: matchArray[j].seasonType,
-              attendance: matchArray[j].attendance,
-              goalServeMatchId: matchArray[j].id,
-              dateTimeUtc: matchArray[j].datetime_utc,
-              status: matchArray[j].status,
-              time: matchArray[j].time,
-              goalServeVenueId: matchArray[j].venue_id,
-              venueName: matchArray[j].venue_name,
-              homeTeamHit: matchArray[j].hometeam.hits,
-              homeTeamTotalScore: matchArray[j].hometeam.totalscore,
-              homeTeamError: matchArray[j].hometeam.errors,
-              awayTeamHit: matchArray[j].awayteam.hits,
-              awayTeamTotalScore: matchArray[j].awayteam.totalscore,
-              awayTeamError: matchArray[j].awayteam.errors,
-              // new entries
-              awayTeamInnings: matchArray[j].awayteam?.innings?.inning
-                ? matchArray[j].awayteam?.innings?.inning
-                : [],
-              homeTeamInnings: matchArray[j].hometeam?.innings?.inning
-                ? matchArray[j].hometeam?.innings?.inning
-                : [],
-              event: matchArray[j].events?.event
-                ? matchArray[j].events?.event
-                : [],
-              startingPitchers: matchArray[j].starting_pitchers,
-              awayTeamHitters: matchArray[j].stats?.hitters?.awayteam?.player
-                ? matchArray[j].stats?.hitters?.awayteam?.player
-                : [],
-              homeTeamHitters: matchArray[j].stats?.hitters?.hometeam?.player
-                ? matchArray[j].stats?.hitters?.hometeam?.player
-                : [],
-              awayTeamPitchers: matchArray[j].stats?.pitchers?.awayteam?.player
-                ? matchArray[j].stats?.pitchers?.awayteam?.player
-                : [],
-              homeTeamPitchers: matchArray[j].stats?.pitchers?.hometeam?.player
-                ? matchArray[j].stats?.pitchers?.hometeam?.player
-                : [],
-            };
-            const teamIdAway: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: matchArray[j].awayteam.id,
-              });
-            if (teamIdAway) {
-              data.awayTeamId = teamIdAway.id;
-              data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
-            }
-            const teamIdHome: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: matchArray[j].hometeam.id,
-              });
-            if (teamIdHome) {
-              data.homeTeamId = teamIdHome.id;
-              data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-            }
-            await Match.findOneAndUpdate(
-              { goalServeMatchId: data.goalServeMatchId },
-              { $set: data },
-              { new: true, upsert: true }
-            );
-          } else {
-            const data: Partial<IMatchModel> = {
-              leagueId: league?._id,
-              goalServeLeagueId: league?.goalServeLeagueId,
-              outs: matchArray[j].outs,
-              date: matchArray[j].date,
-              formattedDate: matchArray[j].formatted_date,
-              timezone: matchArray[j].timezone,
-              oddsid: matchArray[j].seasonType,
-              attendance: matchArray[j].attendance,
-              goalServeMatchId: matchArray[j].id,
-              dateTimeUtc: matchArray[j].datetime_utc,
-              status: matchArray[j].status,
-              time: matchArray[j].time,
-              goalServeVenueId: matchArray[j].venue_id,
-              venueName: matchArray[j].venue_name,
-              homeTeamHit: matchArray[j].hometeam.hits,
-              homeTeamTotalScore: matchArray[j].hometeam.totalscore,
-              homeTeamError: matchArray[j].hometeam.errors,
-              awayTeamHit: matchArray[j].awayteam.hits,
-              awayTeamTotalScore: matchArray[j].awayteam.totalscore,
-              awayTeamError: matchArray[j].awayteam.errors,
-              // new entries
-              awayTeamInnings: matchArray[j].awayteam?.innings?.inning
-                ? matchArray[j].awayteam?.innings?.inning
-                : [],
-              homeTeamInnings: matchArray[j].hometeam?.innings?.inning
-                ? matchArray[j].hometeam?.innings?.inning
-                : [],
-              event: matchArray[j].events?.event
-                ? matchArray[j].events?.event
-                : [],
-              startingPitchers: matchArray[j].starting_pitchers,
-              awayTeamHitters: matchArray[j].stats?.hitters?.awayteam?.player
-                ? matchArray[j].stats?.hitters?.awayteam?.player
-                : [],
-              homeTeamHitters: matchArray[j].stats?.hitters?.hometeam?.player
-                ? matchArray[j].stats?.hitters?.hometeam?.player
-                : [],
-              awayTeamPitchers: matchArray[j].stats?.pitchers?.awayteam?.player
-                ? matchArray[j].stats?.pitchers?.awayteam?.player
-                : [],
-              homeTeamPitchers: matchArray[j].stats?.pitchers?.hometeam?.player
-                ? matchArray[j].stats?.pitchers?.hometeam?.player
-                : [],
-            };
-            if (matchArray[j].status == "Final") {
-              const findMatch = await Match.findOne({
-                channelExpireTime: {
-                  $eq: null,
-                },
-              });
-              if(findMatch){
-                const endDate = moment().add(2, "hours");
-                data.channelExpireTime = endDate.format("YYYY-MM-DDTHH:mm:ss.SSSZ");
-              }
-            }
-            const teamIdAway: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: matchArray[j].awayteam.id,
-              });
-            if (teamIdAway) {
-              data.awayTeamId = teamIdAway.id;
-              data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
-            }
-            const teamIdHome: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: matchArray[j].hometeam.id,
-              });
-            if (teamIdHome) {
-              data.homeTeamId = teamIdHome.id;
-              data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-            }
-            await Match.findOneAndUpdate(
-              { goalServeMatchId: data.goalServeMatchId },
-              { $set: data },
-              { new: true }
-            );
-          }
-          if (
-            matchArray[j].status != "Not Started" &&
-            matchArray[j].status != "Final" &&
-            matchArray[j].status != "Postponed" &&
-            matchArray[j].status != "Canceled" &&
-            matchArray[j].status != "Suspended"
-          ) {
-            const goalServeMatchId = matchArray[j].id;
-            // expire not accepted bet requests
-            await Bet.updateMany(
-              {
-                status: "PENDING",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "EXPIRED",
-              }
-            );
-            // active  CONFIRMED bet when match start
-            await Bet.updateMany(
-              {
-                status: "CONFIRMED",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "ACTIVE",
-              }
-            );
-          } else if (matchArray[j].status == "Final") {
-            const homeTeamTotalScore = parseFloat(
-              matchArray[j].hometeam.totalscore
-            );
-            const awayTeamTotalScore = parseFloat(
-              matchArray[j].awayteam.totalscore
-            );
-            const goalServeMatchId = matchArray[j].id;
-            const goalServeWinTeamId =
-              homeTeamTotalScore > awayTeamTotalScore
-                ? matchArray[j].hometeam.id
-                : matchArray[j].awayteam.id;
-            await declareResultMatch(
-              parseInt(goalServeMatchId),
-              parseInt(goalServeWinTeamId),
-              "MLB"
-            );
-          } else if (
-            matchArray[j].status == "Canceled" ||
-            matchArray[j].status == "Postponed" ||
-            matchArray[j].status == "Suspended"
-          ) {
-            const goalServeMatchId = matchArray[j].id;
-            await Bet.updateMany(
-              {
-                status: "PENDING",
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "EXPIRED",
-              }
-            );
-            await Bet.updateMany(
-              {
-                status: { $in: ["CONFIRMED", "ACTIVE"] },
-                goalServeMatchId: goalServeMatchId,
-                leagueType: "MLB",
-              },
-              {
-                status: "CANCELED",
-              }
-            );
-          }
+        for (const match of matchArray) {
+          // console.log("remaningmatchArray[j]==>", match.id);
+
+          const data: Partial<IMatchModel> = {
+            // outs: match.outs,
+            // date: match.date,
+            // formattedDate: match.formatted_date,
+            // timezone: match.timezone,
+            // oddsid: match.seasonType,
+            // attendance: match.attendance,
+            goalServeMatchId: match.id,
+            // dateTimeUtc: match.datetime_utc,
+            // status: match.status,
+            // time: match.time,
+            // homeTeamHit: match.hometeam.hits,
+            // homeTeamTotalScore: match.hometeam.totalscore,
+            // homeTeamError: match.hometeam.errors,
+            // awayTeamHit: match.awayteam.hits,
+            // awayTeamTotalScore: match.awayteam.totalscore,
+            // awayTeamError: match.awayteam.errors,
+            // awayTeamInnings: match.awayteam?.innings?.inning || [],
+            // homeTeamInnings: match.hometeam?.innings?.inning || [],
+            event: match.events?.event || [],
+            startingPitchers: match.starting_pitchers,
+            awayTeamHitters: match.stats?.hitters?.awayteam?.player || [],
+            homeTeamHitters: match.stats?.hitters?.hometeam?.player || [],
+            awayTeamPitchers: match.stats?.pitchers?.awayteam?.player || [],
+            homeTeamPitchers: match.stats?.pitchers?.hometeam?.player || [],
+          };
+          // console.log("remaing data=======>",data)
+          const matchUpdate = await Match.findOneAndUpdate(
+            { goalServeMatchId: data.goalServeMatchId },
+            data,
+            { new: true }
+          );
+          // console.log("remaingmatchUpdate==>", matchUpdate?.goalServeMatchId);
+          // }
         }
       }
     } catch (error: any) {
@@ -556,10 +610,10 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsNl.data.statistic.category.team.map(async (item: any) => {
+      teamStatsNl?.data.statistic.category.team.map(async (item: any) => {
         const team = await Team.findOne({ name: item.name });
         let data = item;
-        data.category = teamStatsNl.data.statistic.category.name;
+        data.category = teamStatsNl?.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
         data.battingRank = teamStatsNl?.data.statistic.category.rank;
@@ -578,10 +632,10 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsAL.data.statistic.category.team.map(async (item: any) => {
+      teamStatsAL?.data.statistic.category.team.map(async (item: any) => {
         const team = await Team.findOne({ name: item.name });
         let data = item;
-        data.category = teamStatsAL.data.statistic.category.name;
+        data.category = teamStatsAL?.data.statistic.category.name;
         data.teamId = team?.id;
         data.goalServeTeamId = team?.goalServeTeamId;
         data.battingRank = teamStatsAL?.data.statistic.category.rank;
@@ -599,11 +653,11 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsNlPitching.data.statistic.category.team.map(
+      teamStatsNlPitching?.data.statistic.category.team.map(
         async (item: any) => {
           const team = await Team.findOne({ name: item.name });
           let data = item;
-          data.category = teamStatsNlPitching.data.statistic.category.name;
+          data.category = teamStatsNlPitching?.data.statistic.category.name;
           data.teamId = team?.id;
           data.goalServeTeamId = team?.goalServeTeamId;
           data.pitchingRank = teamStatsNlPitching?.data.statistic.category.rank;
@@ -623,11 +677,11 @@ export default class MlbDbCronServiceClass {
     );
 
     await Promise.all(
-      teamStatsALPitching.data.statistic.category.team.map(
+      teamStatsALPitching?.data.statistic.category.team.map(
         async (item: any) => {
           const team = await Team.findOne({ name: item.name });
           let data = item;
-          data.category = teamStatsALPitching.data.statistic.category.name;
+          data.category = teamStatsALPitching?.data.statistic.category.name;
           data.teamId = team?.id;
           data.goalServeTeamId = team?.goalServeTeamId;
           data.pitchingRank = teamStatsALPitching?.data.statistic.category.rank;
@@ -901,7 +955,7 @@ export default class MlbDbCronServiceClass {
       .subtract(24, "hours")
       .utc()
       .toISOString();
-    let addDate = moment().add(30, "days").utc().toISOString();
+    let addDate = moment().add(1, "weeks").utc().toISOString();
     let day1 = moment(subDate).format("D");
     let month1 = moment(subDate).format("MM");
     let year1 = moment(subDate).format("YYYY");
@@ -1048,10 +1102,30 @@ export default class MlbDbCronServiceClass {
   };
   public updateMlbMatch = async () => {
     try {
-      console.log("INSIDE  updateMlbMatch function");
+      let subDate = moment()
+        .startOf("day")
+        .subtract(24, "hours")
+        .utc()
+        .toISOString();
+      let addDate = moment().add(1, "month").utc().toISOString();
+      let day1 = moment(subDate).format("D");
+      let month1 = moment(subDate).format("MM");
+      let year1 = moment(subDate).format("YYYY");
+      let date1 = `${day1}.${month1}.${year1}`;
+
+      let day2 = moment(addDate).format("D");
+      let month2 = moment(addDate).format("MM");
+      let year2 = moment(addDate).format("YYYY");
+      let date2 = `${day2}.${month2}.${year2}`;
+
+      let data = {
+        json: true,
+        date1: date1,
+        date2: date2,
+      };
       const mlb_shedule = await axiosGet(
         `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
-        { json: true }
+        data
       );
       // let matchesNeedToRemove = await Match.find({
       //   goalServeLeagueId: mlb_shedule?.data?.shedules?.id,
@@ -1059,7 +1133,7 @@ export default class MlbDbCronServiceClass {
       // }).lean();
 
       const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches;
-
+      // console.log(matchArray.length);
       const league: ILeagueModel | undefined | null = await League.findOne({
         goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
       });
@@ -1074,6 +1148,7 @@ export default class MlbDbCronServiceClass {
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
           if (!match) {
+            // console.log("matchArray[i].match[j].id", matchArray[i].match[j].id);
             const data: Partial<IMatchModel> = {
               leagueId: league?._id,
               goalServeLeagueId: league?.goalServeLeagueId,
@@ -1123,26 +1198,173 @@ export default class MlbDbCronServiceClass {
                 : [],
             };
 
-            const teamIdAway: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: matchArray[i].match[j].awayteam.id,
-              });
-            if (teamIdAway) {
-              data.awayTeamId = teamIdAway.id;
-              data.goalServeAwayTeamId = teamIdAway?.goalServeTeamId
-                ? teamIdAway?.goalServeTeamId
-                : undefined;
-            }
-            const teamIdHome: ITeamModel | null | undefined =
-              await Team.findOne({
-                goalServeTeamId: matchArray[i].match[j].hometeam.id,
-              });
-            if (teamIdHome) {
-              data.homeTeamId = teamIdHome.id;
-              data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-            }
+            // const teamIdAway: ITeamModel | null | undefined =
+            //   await Team.findOne({
+            //     goalServeTeamId: matchArray[i].match[j].awayteam.id,
+            //   });
+            // if (teamIdAway) {
+            //   data.awayTeamId = teamIdAway.id? teamIdAway.id : undefined;
+            data.goalServeAwayTeamId = matchArray[i].match[j].awayteam.id
+              ? matchArray[i].match[j].awayteam.id
+              : undefined;
+            // }
+            // const teamIdHome: ITeamModel | null | undefined =
+            //   await Team.findOne({
+            //     goalServeTeamId: matchArray[i].match[j].hometeam.id,
+            //   });
+            // if (teamIdHome) {
+            // data.homeTeamId = teamIdHome.id? teamIdHome.id : undefined;
+            data.goalServeHomeTeamId = matchArray[i].match[j].hometeam.id
+              ? matchArray[i].match[j].hometeam.id
+              : undefined;
+            // }
             const matchData = new Match(data);
-            await matchData.save();
+            const datares = await matchData.save();
+          }
+        }
+      }
+      // for (let k = 0; k < matchesNeedToRemove.length; k++) {
+      //   const match = matchesNeedToRemove[k];
+      //   await Match.deleteOne({
+      //     goalServeMatchId: match.goalServeMatchId,
+      //   });
+      // }
+      return true;
+    } catch (error: any) {
+      console.log("error", error);
+    }
+  };
+
+  public updateMlbMatchAfterAdd = async () => {
+    try {
+      let subDate = moment()
+        .startOf("day")
+        .subtract(24, "hours")
+        .utc()
+        .toISOString();
+      let addDate = moment().add(1, "month").utc().toISOString();
+      let day1 = moment(subDate).format("D");
+      let month1 = moment(subDate).format("MM");
+      let year1 = moment(subDate).format("YYYY");
+      let date1 = `${day1}.${month1}.${year1}`;
+
+      let day2 = moment(addDate).format("D");
+      let month2 = moment(addDate).format("MM");
+      let year2 = moment(addDate).format("YYYY");
+      let date2 = `${day2}.${month2}.${year2}`;
+
+      let data = {
+        json: true,
+        date1: date1,
+        date2: date2,
+      };
+      const mlb_shedule = await axiosGet(
+        `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/baseball/mlb_shedule`,
+        data
+      );
+      // let matchesNeedToRemove = await Match.find({
+      //   goalServeLeagueId: mlb_shedule?.data?.shedules?.id,
+      //   status: "Not Started",
+      // }).lean();
+
+      const matchArray = await mlb_shedule?.data?.fixtures?.category?.matches;
+      // console.log(matchArray.length);
+      const league: ILeagueModel | undefined | null = await League.findOne({
+        goalServeLeagueId: mlb_shedule?.data.fixtures?.category?.id,
+      });
+      for (let i = 0; i < matchArray?.length; i++) {
+        for (let j = 0; j < matchArray[i].match?.length; j++) {
+          // matchesNeedToRemove = await removeByAttr(
+          //   matchesNeedToRemove,
+          //   "goalServerMatchId",
+          //   Number(matchArray[i]?.match[j]?.id)
+          // );
+          const match: IMatchModel | null = await Match.findOne({
+            goalServeMatchId: matchArray[i]?.match[j]?.id,
+          });
+          if (match) {
+            const data: Partial<IMatchModel> = {
+              leagueId: league?._id,
+              goalServeLeagueId: league?.goalServeLeagueId,
+              // outs: matchArray[i].match[j].outs,
+              date: matchArray[i].match[j].date,
+              formattedDate: matchArray[i].match[j].formatted_date,
+              timezone: matchArray[i].match[j].timezone,
+              oddsid: matchArray[i].match[j].seasonType,
+              attendance: matchArray[i].match[j].attendance,
+              goalServeMatchId: matchArray[i].match[j].id,
+              dateTimeUtc: matchArray[i].match[j].datetime_utc,
+              // status: matchArray[i].match[j].status,
+              time: matchArray[i].match[j].time,
+              goalServeVenueId: matchArray[i].match[j].venue_id,
+              venueName: matchArray[i].match[j].venue_name,
+              // homeTeamHit: matchArray[i].match[j].hometeam.hits,
+              // homeTeamTotalScore: matchArray[i].match[j].hometeam.totalscore,
+              // homeTeamError: matchArray[i].match[j].hometeam.errors,
+              // awayTeamHit: matchArray[i].match[j].awayteam.hits,
+              // awayTeamTotalScore: matchArray[i].match[j].awayteam.totalscore,
+              // awayTeamError: matchArray[i].match[j].awayteam.errors,
+              // awayTeamInnings: matchArray[i].match[j].awayteam?.innings?.inning
+              //   ? matchArray[i].match[j].awayteam?.innings?.inning
+              //   : [],
+              // homeTeamInnings: matchArray[i].match[j].hometeam?.innings?.inning
+              //   ? matchArray[i].match[j].hometeam?.innings?.inning
+              //   : [],
+              // event: matchArray[i].match[j].events?.event
+              //   ? matchArray[i].match[j].events?.event
+              //   : [],
+              startingPitchers: matchArray[i].match[j].starting_pitchers,
+              // awayTeamHitters: matchArray[i].match[j].stats?.hitters?.awayteam
+              //   ?.player
+              //   ? matchArray[i].match[j].stats?.hitters?.awayteam?.player
+              //   : [],
+              // homeTeamHitters: matchArray[i].match[j].stats?.hitters?.hometeam
+              //   ?.player
+              //   ? matchArray[i].match[j].stats?.hitters?.hometeam?.player
+              //   : [],
+              // awayTeamPitchers: matchArray[i].match[j].stats?.pitchers?.awayteam
+              //   ?.player
+              //   ? matchArray[i].match[j].stats?.pitchers?.awayteam?.player
+              //   : [],
+              // homeTeamPitchers: matchArray[i].match[j].stats?.pitchers?.hometeam
+              //   ?.player
+              //   ? matchArray[i].match[j].stats?.pitchers?.hometeam?.player
+              //   : [],
+            };
+
+            // const teamIdAway: ITeamModel | null | undefined =
+            //   await Team.findOne({
+            //     goalServeTeamId: matchArray[i].match[j].awayteam.id,
+            //   });
+            // if (teamIdAway) {
+            //   data.awayTeamId = teamIdAway.id? teamIdAway.id : undefined;
+            data.goalServeAwayTeamId = matchArray[i].match[j].awayteam.id
+              ? matchArray[i].match[j].awayteam.id
+              : undefined;
+            // }
+            // const teamIdHome: ITeamModel | null | undefined =
+            //   await Team.findOne({
+            //     goalServeTeamId: matchArray[i].match[j].hometeam.id,
+            //   });
+            // if (teamIdHome) {
+            // data.homeTeamId = teamIdHome.id? teamIdHome.id : undefined;
+            data.goalServeHomeTeamId = matchArray[i].match[j].hometeam.id
+              ? matchArray[i].match[j].hometeam.id
+              : undefined;
+            // }
+
+            const dataUpdate = await Match.findOneAndUpdate(
+              {
+                goalServeMatchId: matchArray[i].match[j].id,
+              },
+              { $set: data },
+              { new: true }
+            );
+
+            // console.log("dataUpdatedataUpdatedataUpdate",dataUpdate)
+
+            // const matchData = new Match(data);
+            // const datares = await matchData.save();
           }
         }
       }

@@ -1283,17 +1283,17 @@ const nbaScoreWithDate = async (date1: string, type: string) => {
         as: "odds",
       },
     },
-    {
-      $sort: {
-        formattedDate: 1,
-        time: 1,
-      },
-    },
+   
     {
       $addFields: {
         odds: {
           $arrayElemAt: ["$odds", 0],
         },
+      },
+    },
+    {
+      $sort: {
+        dateutc: 1,
       },
     },
     {
@@ -1506,8 +1506,7 @@ const nbaScoreWithDate = async (date1: string, type: string) => {
     },
     {
       $sort: {
-        formattedDate: 1,
-        time: 1,
+        dateutc: 1,
       },
     },
     {
@@ -1765,7 +1764,7 @@ const getLiveDataOfNba = async (date1: string) => {
     },
     {
       $sort: {
-        datetime_utc: 1,
+        dateutc: 1,
       },
     },
     {

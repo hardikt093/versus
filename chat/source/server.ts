@@ -57,7 +57,8 @@ export const io = new Server(httpServer, {
       "https://localhost:3000",
       "https://localhost:3001",
       "http://127.0.0.1:3000",
-      "https://app.versus-social.com"
+      "https://app.versus-social.com",
+      "https://dev.app.versus-social.com"
     ],
     credentials: true,
   },

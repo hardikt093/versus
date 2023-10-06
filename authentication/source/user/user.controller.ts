@@ -12,7 +12,8 @@ const s3 = new aws.S3();
 import userService from "../user/user.service";
 import createResponse from "./../utils/response";
 import Messages from "./../utils/messages";
-
+import { axiosPostMicro } from "../services/axios.service";
+import config from "../config/config";
 /**
  *
  * @param req
@@ -131,14 +132,14 @@ const profilePictureUpdate = async (req: Request, res: Response) => {
 
 const getImageBasedOnS3Key = async (req: Request, res: Response) => {
   try {
-    const key = req.params.folder + '/'+req.params.image;
+    const key = req.params.folder + "/" + req.params.image;
     const param: S3.GetObjectRequest = {
       Bucket: process.env.AWS_S3_PROFILE_PICTURE_BUCKET ?? "",
-      Key: key
+      Key: key,
     };
-  
+
     const readStream = s3.getObject(param).createReadStream();
-    readStream.on('error', (error) => {
+    readStream.on("error", (error) => {
       createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
     });
     readStream.pipe(res);
@@ -155,6 +156,58 @@ const getImageBasedOnS3Key = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const updateVenmoName = async (req: Request, res: Response) => {
+  try {
+    const venmoUserName = await userService.updateVenmoUserName(
+      req.loggedInUser,
+      req.body
+    );
+    createResponse(res, httpStatus.OK, "", venmoUserName);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const userProfileDetails = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const body = {
+      userId: req.loggedInUser.id,
+      profileId: req.params.profileId
+    };
+    const resp = await axiosPostMicro(
+      body,
+      `${config.leagueServer}/bet/getUserBetDetails`,
+      token
+    );
+    const userProfile = await userService.userProfileDetails(body);
+    return createResponse(res, httpStatus.OK, "", {
+      user: userProfile ?? {},
+      betsDetails: resp.data?.data ?? {},
+    });
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
+const contactsBetDetails = async (req: Request, res: Response) => {
+  try {
+    let token: any = req.header("Authorization");
+    const users = await userService.getContactsBetDetails(
+      req.loggedInUser.id,
+      req.query.search as string,
+      req.query.page as string,
+      token
+    );
+    return createResponse(res, httpStatus.OK, "", {
+      users
+    });
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
+
 export default {
   getImageBasedOnS3Key,
   profilePictureUpdate,
@@ -165,4 +218,7 @@ export default {
   usersList,
   usersGetBulk,
   getFriendList,
+  updateVenmoName,
+  userProfileDetails,
+  contactsBetDetails,
 };

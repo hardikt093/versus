@@ -78,7 +78,7 @@ const signUp = async (data: ICreateUser) => {
     });
 
     if (getUser) {
-      let birthday = new Date(data.birthDate);
+      let birthday = new Date(data?.birthDate);
       const ageDifMs = new Date(Date.now() - birthday.getTime());
       const userAge = Math.abs(ageDifMs.getUTCFullYear() - 1970);
       if (userAge >= 21) {
@@ -151,8 +151,8 @@ const signUp = async (data: ICreateUser) => {
       throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, "session out");
     }
   } else {
-    if (data.password.length > 0) {
-      data.password = await bcrypt.hash(data.password, 8);
+    if (data?.password.length > 0) {
+      data.password = await bcrypt.hash(data?.password, 8);
     }
     const emailCheck = await checkDuplicateEmail(data.email?.toLowerCase());
 
@@ -180,6 +180,8 @@ const signUp = async (data: ICreateUser) => {
           googleIdToken: data.googleRefreshToken ? data.googleRefreshToken : "",
           isSignUp: data.isSignUp,
           isContactScope: data.isContactScope ?? null,
+          venmoUserName: data?.venmoUserName ? data?.venmoUserName : null,
+          venmoStatus: data?.venmoUserName ? "ADDED" : "PENDING",
         },
       });
 
@@ -331,7 +333,6 @@ const resetPassword = async (data: IResetPassword) => {
  */
 
 const socialLogin = async (data: any) => {
-  
   const checkEmail = await prisma.user.findUnique({
     where: {
       email: data.toLowerCase(),
@@ -354,8 +355,8 @@ const socialLogin = async (data: any) => {
         accessToken: tokens.access.token,
         refreshToken: tokens.refresh.token,
         userName: checkEmail.userName,
-        phone:checkEmail.phone,
-        email:checkEmail.email
+        phone: checkEmail.phone,
+        email: checkEmail.email,
       };
       return user;
     }
@@ -397,7 +398,8 @@ const createContact = async (data: any) => {
   const result = await data.reduce((acc: any, address: any) => {
     const dup = acc.find(
       (addr: any) =>
-        addr.email === address.email.toLowerCase() && addr.phoneNumber === address.phoneNumber
+        addr.email === address.email.toLowerCase() &&
+        addr.phoneNumber === address.phoneNumber
     );
     if (dup) {
       return acc;
@@ -416,7 +418,7 @@ const createContact = async (data: any) => {
           phoneNumber: item.phoneNumber,
           userId: item.userId,
           invite: "ACCEPTED",
-          contactUserId: getUser.id
+          contactUserId: getUser.id,
         };
         await prisma.contact.create({
           data: contact,
@@ -655,9 +657,9 @@ const updateContact = async (email: string) => {
       },
       data: {
         invite: "ACCEPTED",
-        contactUserId: findUser.id
-      }
-    })
+        contactUserId: findUser.id,
+      },
+    });
   }
   return true;
 };
@@ -672,34 +674,41 @@ const getUser = async (user: IUser) => {
       },
     },
   });
+  userDetails.isSkipped = userDetails.venmoStatus === "SKIPPED" ? true : false;
   return userDetails;
 };
 
-const changePassword = async (id: any, body: { oldPassword: string, newPassword: string }) => {
+const changePassword = async (
+  id: any,
+  body: { oldPassword: string; newPassword: string }
+) => {
   const findUser = await prisma.user.findUnique({
     where: {
-      id: id.id
-    }
-  })
-  const checkPassword = await bcrypt.compare(body.oldPassword, findUser.password);
+      id: id.id,
+    },
+  });
+  const checkPassword = await bcrypt.compare(
+    body.oldPassword,
+    findUser.password
+  );
   if (checkPassword) {
     const hashPassword = await bcrypt.hash(body.newPassword, 8);
     return await prisma.user.update({
       where: {
-        id: id.id
+        id: id.id,
       },
       data: {
-        password: hashPassword
-      }
-    })
+        password: hashPassword,
+      },
+    });
   } else {
     throw new AppError(
       httpStatus.UNPROCESSABLE_ENTITY,
       Messages.PASSWORD_INCORRECT
     );
   }
+};
 
-}
 export default {
   signUp,
   signIn,
@@ -716,5 +725,5 @@ export default {
   getContact,
   getUser,
   checkDuplicateUserName,
-  changePassword
+  changePassword,
 };

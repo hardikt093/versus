@@ -40,6 +40,8 @@ model User {
   reportedTo         reportUser[]  @relation("reportedTo")
   channelUser        channelUser[] @relation("channelUser")
   adminAccess        channelUser[] @relation("adminAccess")
+  venmoUserName      String?
+  venmoStatus        VenmoStatus  @default(PENDING)
 }
 
 model Token {
@@ -146,6 +148,12 @@ enum ChannelType {
   oneToOne
   matchChannel
   privateChannel
+}
+
+enum VenmoStatus {
+  PENDING
+  SKIPPED
+  ADDED
 }
 
 enum MessageType {
