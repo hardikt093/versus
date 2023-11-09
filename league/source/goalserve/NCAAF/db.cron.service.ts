@@ -1089,62 +1089,196 @@ export default class NCAAFDbCronServiceClass {
       );
     }
   };
+  // public addTeamStats = async () => {
+  //   const teams = await TeamNCAAF.find();
+  //   let data = {
+  //     json: true,
+  //   };
+  //   if (teams.length > 0) {
+  //     await Promise.all(
+  //       teams.map(async (item) => {
+  //         const team = item;
+  //         const teamstats = await goalserveApi(
+  //           "https://www.goalserve.com/getfeed",
+  //           data,
+  //           `football/${team.goalServeTeamId}_stats`
+  //         );
+  //         let stats: Partial<INFLStatsTeamModel> = {};
+  //         let category = teamstats?.data?.statistic?.category;
+  //         for (let j = 0; j < category?.length; j++) {
+  //           let categoryName = category[j].name;
+  //           switch (categoryName) {
+  //             case "Passing":
+  //               stats.passingOpponent = category[j].opponents;
+  //               stats.passingTeam = category[j].team;
+  //               break;
+  //             case "Rushing":
+  //               stats.rushingOpponent = category[j].opponents;
+  //               stats.rushingTeam = category[j].team;
+  //               break;
+  //             case "Downs":
+  //               stats.downsOpponent = category[j].opponents;
+  //               stats.downsTeam = category[j].team;
+  //               break;
+  //             case "Returning":
+  //               stats.returningOpponent = category[j].opponents;
+  //               stats.returningTeam = category[j].team;
+  //               break;
+  //             case "Kicking":
+  //               stats.kickingOpponent = category[j].opponents;
+  //               stats.kickingTeam = category[j].team;
+
+  //               break;
+
+  //             default:
+  //               break;
+  //           }
+  //         }
+  //         await StatsTeamNCAAF.updateOne(
+  //           {
+  //             teamId: team.id,
+  //             goalServeTeamId: teamstats?.data?.statistic.id,
+  //           },
+  //           { $set: stats },
+  //           { upsert: true }
+  //         );
+  //       })
+  //     );
+  //   }
+  // };
+
   public addTeamStats = async () => {
-    const teams = await TeamNCAAF.find();
-    let data = {
-      json: true,
-    };
-    if (teams.length > 0) {
-      await Promise.all(
-        teams.map(async (item) => {
-          const team = item;
-          const teamstats = await goalserveApi(
-            "https://www.goalserve.com/getfeed",
-            data,
-            `football/${team.goalServeTeamId}_stats`
-          );
-          let stats: Partial<INFLStatsTeamModel> = {};
-          let category = teamstats?.data?.statistic?.category;
-          for (let j = 0; j < category?.length; j++) {
-            let categoryName = category[j].name;
-            switch (categoryName) {
-              case "Passing":
-                stats.passingOpponent = category[j].opponents;
-                stats.passingTeam = category[j].team;
-                break;
-              case "Rushing":
-                stats.rushingOpponent = category[j].opponents;
-                stats.rushingTeam = category[j].team;
-                break;
-              case "Downs":
-                stats.downsOpponent = category[j].opponents;
-                stats.downsTeam = category[j].team;
-                break;
-              case "Returning":
-                stats.returningOpponent = category[j].opponents;
-                stats.returningTeam = category[j].team;
-                break;
-              case "Kicking":
-                stats.kickingOpponent = category[j].opponents;
-                stats.kickingTeam = category[j].team;
-
-                break;
-
-              default:
-                break;
-            }
-          }
-          await StatsTeamNCAAF.updateOne(
-            {
-              teamId: team.id,
-              goalServeTeamId: teamstats?.data?.statistic.id,
-            },
-            { $set: stats },
-            { upsert: true }
-          );
-        })
+    try {
+      const getMatch: any = await axiosGet(
+        `https://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/football/fbs-scores`,
+        { json: true }
       );
-    }
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
+
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
+      }
+      const matchArray = matchArrayAll.filter((element: any) => {
+        return (
+          // element.status !== "Not Started" &&
+          element.status !== "Final" &&
+          element.status !== "After Over Time" &&
+          element.status !== "Final/OT" &&
+          element.status !== "Final/20T"
+        );
+      });
+      console.log("matchArray",matchArray?.length)
+      const updatePromises = matchArray?.map(async (match: any) => {
+        let data = {
+          json: true,
+        };
+        // let hometeamstats : any;
+        // setTimeout(async () => {
+        //   hometeamstats = await goalserveApi(
+        //     "https://www.goalserve.com/getfeed",
+        //     data,
+        //     `football/${Number(match?.hometeam.id)}_stats`
+        //   );
+        // },1000)
+        const hometeamstats = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          data,
+          `football/${Number(match?.hometeam.id)}_stats`
+        );
+        let stats: Partial<INFLStatsTeamModel> = {};
+        let homeCategory = hometeamstats?.data?.statistic?.category;
+        console.log("homeCategory",homeCategory)
+        for (let j = 0; j < homeCategory?.length; j++) {
+          let categoryName = homeCategory[j].name;
+          switch (categoryName) {
+            case "Passing":
+              stats.passingOpponent = homeCategory[j].opponents;
+              stats.passingTeam = homeCategory[j].team;
+              break;
+            case "Rushing":
+              stats.rushingOpponent = homeCategory[j].opponents;
+              stats.rushingTeam = homeCategory[j].team;
+              break;
+            case "Downs":
+              stats.downsOpponent = homeCategory[j].opponents;
+              stats.downsTeam = homeCategory[j].team;
+              break;
+            case "Returning":
+              stats.returningOpponent = homeCategory[j].opponents;
+              stats.returningTeam = homeCategory[j].team;
+              break;
+            case "Kicking":
+              stats.kickingOpponent = homeCategory[j].opponents;
+              stats.kickingTeam = homeCategory[j].team;
+
+              break;
+
+            default:
+              break;
+          }
+        }
+        const dataUpdate = await StatsTeamNCAAF.updateOne(
+          {
+            teamId: parseInt(match?.hometeam.id),
+            goalServeTeamId: hometeamstats?.data?.statistic.id,
+          },
+          { $set: stats },
+          { upsert: true }
+        );
+        console.log("dataUpdate",dataUpdate)
+        //awayteam stats
+        const awayteamstats = await goalserveApi(
+          "https://www.goalserve.com/getfeed",
+          data,
+          `football/${match?.hometeam.id}_stats`
+        );
+        let awaystats: Partial<INFLStatsTeamModel> = {};
+        let awayCategory = awayteamstats?.data?.statistic?.category;
+        for (let j = 0; j < awayCategory?.length; j++) {
+          let categoryName = awayCategory[j].name;
+          switch (categoryName) {
+            case "Passing":
+              awaystats.passingOpponent = awayCategory[j].opponents;
+              awaystats.passingTeam = awayCategory[j].team;
+              break;
+            case "Rushing":
+              awaystats.rushingOpponent = awayCategory[j].opponents;
+              awaystats.rushingTeam = awayCategory[j].team;
+              break;
+            case "Downs":
+              awaystats.downsOpponent = awayCategory[j].opponents;
+              awaystats.downsTeam = awayCategory[j].team;
+              break;
+            case "Returning":
+              awaystats.returningOpponent = awayCategory[j].opponents;
+              awaystats.returningTeam = awayCategory[j].team;
+              break;
+            case "Kicking":
+              awaystats.kickingOpponent = awayCategory[j].opponents;
+              awaystats.kickingTeam = awayCategory[j].team;
+
+              break;
+
+            default:
+              break;
+          }
+        }
+        await StatsTeamNCAAF.updateOne(
+          {
+            teamId: match?.awayteam.id,
+            goalServeTeamId: awayteamstats?.data?.statistic.id,
+          },
+          { $set: awaystats },
+          { upsert: true }
+        );
+      });
+      await Promise.all(updatePromises);
+    } catch (error: any) {}
   };
 
   public addMatchTeamStats = async () => {
@@ -1565,21 +1699,21 @@ export default class NCAAFDbCronServiceClass {
   public updateUpcomingNcaafMatch = async () => {
     try {
       let subDate = moment()
-      .startOf("day")
-      .subtract(24, "hours")
-      .utc()
-      .toISOString();
-    let addDate = moment().add(1, "weeks").utc().toISOString();
-    let day1 = moment(subDate).format("D");
-    let month1 = moment(subDate).format("MM");
-    let year1 = moment(subDate).format("YYYY");
-    let date1 = `${day1}.${month1}.${year1}`;
+        .startOf("day")
+        .subtract(24, "hours")
+        .utc()
+        .toISOString();
+      let addDate = moment().add(1, "weeks").utc().toISOString();
+      let day1 = moment(subDate).format("D");
+      let month1 = moment(subDate).format("MM");
+      let year1 = moment(subDate).format("YYYY");
+      let date1 = `${day1}.${month1}.${year1}`;
 
-    let day2 = moment(addDate).format("D");
-    let month2 = moment(addDate).format("MM");
-    let year2 = moment(addDate).format("YYYY");
-    let date2 = `${day2}.${month2}.${year2}`;
-    
+      let day2 = moment(addDate).format("D");
+      let month2 = moment(addDate).format("MM");
+      let year2 = moment(addDate).format("YYYY");
+      let date2 = `${day2}.${month2}.${year2}`;
+
       let data = {
         json: true,
         date1: date1,
@@ -1639,7 +1773,6 @@ export default class NCAAFDbCronServiceClass {
                     { $set: data },
                     { new: true }
                   );
-
 
                   // const matchData = new NcaafMatch(data);
                   // await matchData.save();

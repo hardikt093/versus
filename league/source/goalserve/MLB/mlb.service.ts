@@ -5892,99 +5892,109 @@ const getStandingData = async () => {
   }
 };
 const addMatchWithNewModel = async () => {
-  var getDaysArray = function (start: any, end: any) {
-    for (
-      var arr = [], dt = new Date(start);
-      dt <= new Date(end);
-      dt.setDate(dt.getDate() + 1)
-    ) {
-      let day = moment(dt).format("DD");
-      let month = moment(dt).format("MM");
-      let year = moment(dt).format("YYYY");
-      let date = `${day}.${month}.${year}`;
-      arr.push(date);
-    }
-    return arr;
-  };
-
-  var daylist = getDaysArray(new Date("2023-02-28"), new Date("2023-06-08"));
-  for (let i = 0; i < daylist?.length; i++) {
-    let data = { json: true, date: daylist[i] };
-    const getMatch = await goalserveApi(
-      "https://www.goalserve.com/getfeed",
-      data,
-      "baseball/usa"
-    );
-
-    const matchArray = await getMatch?.data?.scores?.category?.match;
-    if (matchArray?.length > 0) {
-      const league: ILeagueModel | undefined | null = await League.findOne({
-        goalServeLeagueId: getMatch?.data.scores.category.id,
-      });
-
-      for (let j = 0; j < matchArray?.length; j++) {
-        const data: Partial<IMatchModel> = {
-          leagueId: league?._id,
-          goalServeLeagueId: league?.goalServeLeagueId,
-          outs: matchArray[j].outs,
-          date: matchArray[j].date,
-          formattedDate: matchArray[j].formatted_date,
-          timezone: matchArray[j].timezone,
-          oddsid: matchArray[j].seasonType,
-          attendance: matchArray[j].attendance,
-          goalServeMatchId: matchArray[j].id,
-          dateTimeUtc: matchArray[j].datetime_utc,
-          status: matchArray[j].status,
-          time: matchArray[j].time,
-          goalServeVenueId: matchArray[j].venue_id,
-          venueName: matchArray[j].venue_name,
-          homeTeamHit: matchArray[j].hometeam.hits,
-          homeTeamTotalScore: matchArray[j].hometeam.totalscore,
-          homeTeamError: matchArray[j].hometeam.errors,
-          awayTeamHit: matchArray[j].awayteam.hits,
-          awayTeamTotalScore: matchArray[j].awayteam.totalscore,
-          awayTeamError: matchArray[j].awayteam.errors,
-          awayTeamInnings: matchArray[j].awayteam?.innings?.inning
-            ? matchArray[j].awayteam?.innings?.inning
-            : [],
-          homeTeamInnings: matchArray[j].hometeam?.innings?.inning
-            ? matchArray[j].hometeam?.innings?.inning
-            : [],
-          event: matchArray[j].events?.event ? matchArray[j].events?.event : [],
-          startingPitchers: matchArray[j].starting_pitchers,
-          awayTeamHitters: matchArray[j].stats?.hitters?.awayteam?.player
-            ? matchArray[j].stats?.hitters?.awayteam?.player
-            : [],
-          homeTeamHitters: matchArray[j].stats?.hitters?.hometeam?.player
-            ? matchArray[j].stats?.hitters?.hometeam?.player
-            : [],
-          awayTeamPitchers: matchArray[j].stats?.pitchers?.awayteam?.player
-            ? matchArray[j].stats?.pitchers?.awayteam?.player
-            : [],
-          homeTeamPitchers: matchArray[j].stats?.pitchers?.hometeam?.player
-            ? matchArray[j].stats?.pitchers?.hometeam?.player
-            : [],
-        };
-
-        const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
-          goalServeTeamId: matchArray[j].awayteam.id,
+  try {
+    var getDaysArray = function (start: any, end: any) {
+      for (
+        var arr = [], dt = new Date(start);
+        dt <= new Date(end);
+        dt.setDate(dt.getDate() + 1)
+      ) {
+        let day = moment(dt).format("DD");
+        let month = moment(dt).format("MM");
+        let year = moment(dt).format("YYYY");
+        let date = `${day}.${month}.${year}`;
+        arr.push(date);
+      }
+      return arr;
+    };
+  
+    var daylist = getDaysArray(new Date("2023-10-29"), new Date("2023-10-31"));
+    for (let i = 0; i < daylist?.length; i++) {
+      let data = { json: true, date: daylist[i] };
+      const getMatch = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        "baseball/usa"
+      );
+  console.log("getMatch",getMatch)
+      const matchArray = await getMatch?.data?.scores?.category?.match;
+      if (matchArray?.length > 0) {
+        const league: ILeagueModel | undefined | null = await League.findOne({
+          goalServeLeagueId: getMatch?.data.scores.category.id,
         });
-        if (teamIdAway) {
-          data.awayTeamId = teamIdAway.id;
-          data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+  
+        for (let j = 0; j < matchArray?.length; j++) {
+          const data: Partial<IMatchModel> = {
+            leagueId: league?._id,
+            goalServeLeagueId: league?.goalServeLeagueId,
+            outs: matchArray[j].outs,
+            date: matchArray[j].date,
+            formattedDate: matchArray[j].formatted_date,
+            timezone: matchArray[j].timezone,
+            oddsid: matchArray[j].seasonType,
+            attendance: matchArray[j].attendance,
+            goalServeMatchId: matchArray[j].id,
+            dateTimeUtc: matchArray[j].datetime_utc,
+            status: matchArray[j].status,
+            time: matchArray[j].time,
+            goalServeVenueId: matchArray[j].venue_id,
+            venueName: matchArray[j].venue_name,
+            homeTeamHit: matchArray[j].hometeam.hits,
+            homeTeamTotalScore: matchArray[j].hometeam.totalscore,
+            homeTeamError: matchArray[j].hometeam.errors,
+            awayTeamHit: matchArray[j].awayteam.hits,
+            awayTeamTotalScore: matchArray[j].awayteam.totalscore,
+            awayTeamError: matchArray[j].awayteam.errors,
+            awayTeamInnings: matchArray[j].awayteam?.innings?.inning
+              ? matchArray[j].awayteam?.innings?.inning
+              : [],
+            homeTeamInnings: matchArray[j].hometeam?.innings?.inning
+              ? matchArray[j].hometeam?.innings?.inning
+              : [],
+            event: matchArray[j].events?.event ? matchArray[j].events?.event : [],
+            startingPitchers: matchArray[j].starting_pitchers,
+            awayTeamHitters: matchArray[j].stats?.hitters?.awayteam?.player
+              ? matchArray[j].stats?.hitters?.awayteam?.player
+              : [],
+            homeTeamHitters: matchArray[j].stats?.hitters?.hometeam?.player
+              ? matchArray[j].stats?.hitters?.hometeam?.player
+              : [],
+            awayTeamPitchers: matchArray[j].stats?.pitchers?.awayteam?.player
+              ? matchArray[j].stats?.pitchers?.awayteam?.player
+              : [],
+            homeTeamPitchers: matchArray[j].stats?.pitchers?.hometeam?.player
+              ? matchArray[j].stats?.pitchers?.hometeam?.player
+              : [],
+          };
+  
+          const teamIdAway: ITeamModel | null | undefined = await Team.findOne({
+            goalServeTeamId: matchArray[j].awayteam.id,
+          });
+          if (teamIdAway) {
+            data.awayTeamId = teamIdAway.id;
+            data.goalServeAwayTeamId = teamIdAway.goalServeTeamId;
+          }
+          const teamIdHome: ITeamModel | null | undefined = await Team.findOne({
+            goalServeTeamId: matchArray[j].hometeam.id,
+          });
+          if (teamIdHome) {
+            data.homeTeamId = teamIdHome.id;
+            data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
+          }
+          const matchUpdate = await Match.findOneAndUpdate(
+            { goalServeMatchId: data?.goalServeMatchId },
+            data,
+            { new: true }
+          );
+  
+          console.log("matchUpdate",matchUpdate)
         }
-        const teamIdHome: ITeamModel | null | undefined = await Team.findOne({
-          goalServeTeamId: matchArray[j].hometeam.id,
-        });
-        if (teamIdHome) {
-          data.homeTeamId = teamIdHome.id;
-          data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
-        }
-        const matchData = new Match(data);
-        await matchData.save();
       }
     }
+  } catch (error) {
+    console.log("error",error)
   }
+ 
 };
 const singleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
   try {

@@ -48,7 +48,7 @@ const updatePlayersNfl = cron.schedule("*/60 * * * * *", async () => {
   }
 });
 let isupdateTeamStatsNflRunning: boolean = false;
-const updateTeamStatsNfl = cron.schedule("0 0 */1 * * *", async () => {
+const updateTeamStatsNfl = cron.schedule("*/1 * * * *", async () => {
   // console.log("isupdateTeamStatsNflRunning Skip");
   if (isupdateTeamStatsNflRunning) {
     return;

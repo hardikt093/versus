@@ -116,14 +116,14 @@ const updatePlayerRecord = cron.schedule("*/10 * * * * *", async () => {
 });
 
 let isupdateTeamStatsNCAAfRunning: boolean = false;
-const updateTeamStatsNcaaf = cron.schedule("*/10 * * * * *", async () => {
+const updateTeamStatsNcaaf = cron.schedule("*/1 * * * *", async () => {
   if (isupdateTeamStatsNCAAfRunning) {
-    // console.log("updateTeamStatsNcaaf Skip", new Date());
+    console.log("updateTeamStatsNcaaf Skip", new Date());
     return;
   }
   isupdateTeamStatsNCAAfRunning = true;
   try {
-    // console.info("inside updateTeamStatsNcaaf", new Date());
+    console.info("inside updateTeamStatsNcaaf", new Date());
     await ncaafService.addTeamStats();
   } catch (error) {
     console.log(error);

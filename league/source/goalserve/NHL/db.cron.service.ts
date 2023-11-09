@@ -531,93 +531,224 @@ export default class NhlDbCronServiceClass {
       })
     );
   };
-  public updatePlayersNhl = async () => {
-    const team = await TeamNHL.find();
-    let data = {
-      json: true,
-    };
-    await Promise.all(
-      team.map(async (item) => {
-        const roasterApi = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `hockey/${item.goalServeTeamId}_rosters`
-        );
-        let allRosterPlayers: any = [];
-        roasterApi?.data?.team?.position?.map((roasterApiItem: any) => {
-          if (roasterApiItem?.player?.length) {
-            roasterApiItem.player.map((player: any) => {
-              player.position = roasterApiItem?.name;
-              player.teamId = item.id;
-              player.goalServeTeamId = item.goalServeTeamId;
-              player.goalServePlayerId = player.id;
-              allRosterPlayers.push(player);
-            });
-          } else {
-            let player = roasterApiItem.player;
-            player.position = item?.name;
-            player.teamId = item.id;
-            player.goalServeTeamId = item.goalServeTeamId;
-            player.goalServePlayerId = roasterApiItem.player.id;
+  // public updatePlayersNhl = async () => {
+  //   const team = await TeamNHL.find();
+  //   let data = {
+  //     json: true,
+  //   };
+  //   await Promise.all(
+  //     team.map(async (item) => {
+  //       const roasterApi = await goalserveApi(
+  //         "https://www.goalserve.com/getfeed",
+  //         data,
+  //         `hockey/${item.goalServeTeamId}_rosters`
+  //       );
+  //       let allRosterPlayers: any = [];
+  //       roasterApi?.data?.team?.position?.map((roasterApiItem: any) => {
+  //         if (roasterApiItem?.player?.length) {
+  //           roasterApiItem.player.map((player: any) => {
+  //             player.position = roasterApiItem?.name;
+  //             player.teamId = item.id;
+  //             player.goalServeTeamId = item.goalServeTeamId;
+  //             player.goalServePlayerId = player.id;
+  //             allRosterPlayers.push(player);
+  //           });
+  //         } else {
+  //           let player = roasterApiItem.player;
+  //           player.position = item?.name;
+  //           player.teamId = item.id;
+  //           player.goalServeTeamId = item.goalServeTeamId;
+  //           player.goalServePlayerId = roasterApiItem.player.id;
 
+  //           allRosterPlayers.push(player);
+  //         }
+  //       });
+  //       const statsApi = await goalserveApi(
+  //         "https://www.goalserve.com/getfeed",
+  //         data,
+  //         `hockey/${item.goalServeTeamId}_stats`
+  //       );
+  //       let allStatePlayer: any = [];
+  //       if (statsApi?.data?.statistic?.goalkeepers?.player?.length) {
+  //         statsApi?.data?.statistic?.goalkeepers?.player?.map(
+  //           (statsPlayer: any) => {
+  //             statsPlayer.teamId = item.id;
+  //             statsPlayer.isGoalKeeper = true;
+  //             statsPlayer.goalServePlayerId = statsPlayer.id;
+  //             allStatePlayer.push(statsPlayer);
+  //           }
+  //         );
+  //       } else {
+  //         let player: any = statsApi?.data?.statistic?.goalkeepers?.player;
+  //         player.isGoalKeeper = true;
+  //         player.goalServePlayerId =
+  //           statsApi?.data?.statistic?.goalkeepers?.player?.id;
+  //         player.teamId = item.id;
+  //         allStatePlayer.push(player);
+  //       }
+  //       if (statsApi?.data?.statistic?.team?.length > 0) {
+  //         if (statsApi?.data?.statistic?.team[1]?.player?.length) {
+  //           statsApi?.data?.statistic?.team[1]?.player?.map(
+  //             (statsPlayer: any) => {
+  //               statsPlayer.teamId = item.id;
+  //               statsPlayer.goalServePlayerId = statsPlayer.id;
+  //               allStatePlayer.push(statsPlayer);
+  //             }
+  //           );
+  //         } else {
+  //           let player: any = statsApi?.data?.statistic?.team[1]?.player;
+  //           player.goalServePlayerId =
+  //             statsApi?.data?.statistic?.team[1]?.player?.id;
+  //           player.teamId = item.id;
+  //           allStatePlayer.push(player);
+  //         }
+  //       }
+  //       const mergedArr = allStatePlayer.map((obj1: any) => {
+  //         const obj2 = allRosterPlayers.find(
+  //           (obj2: any) => obj1?.goalServePlayerId === obj2?.goalServePlayerId
+  //         );
+  //         return { ...obj1, ...obj2 };
+  //       });
+  //       mergedArr.map(async (item: any) => {
+  //         await PlayersNHL.findOneAndUpdate(
+  //           { goalServePlayerId: item.goalServePlayerId },
+  //           { $set: item },
+  //           { upsert: true, new: true }
+  //         );
+  //       });
+  //     })
+  //   );
+  // };
+
+  handleRoasterTeamStatsData = async (id : string) => {
+    try {
+      let data = {
+        json: true,
+      };
+      const roasterApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `hockey/${id}_rosters`
+      );
+
+      const selectedTeam: any = await TeamNHL.find({
+        goalServeTeamId: id,
+      });
+
+      let allRosterPlayers: any = [];
+      roasterApi?.data?.team?.position?.map((roasterApiItem: any) => {
+        if (roasterApiItem?.player?.length) {
+          roasterApiItem.player.map((player: any) => {
+            player.position = roasterApiItem?.name;
+            player.teamId = selectedTeam.id;
+            player.goalServeTeamId = selectedTeam.goalServeTeamId;
+            player.goalServePlayerId = player.id;
             allRosterPlayers.push(player);
+          });
+        } else {
+          let player = roasterApiItem.player;
+          player.position = selectedTeam?.name;
+          player.teamId = selectedTeam.id;
+          player.goalServeTeamId = selectedTeam?.goalServeTeamId;
+          player.goalServePlayerId = roasterApiItem.player.id;
+
+          allRosterPlayers.push(player);
+        }
+      });
+      const statsApi = await goalserveApi(
+        "https://www.goalserve.com/getfeed",
+        data,
+        `hockey/${id}_stats`
+      );
+      let allStatePlayer: any = [];
+      if (statsApi?.data?.statistic?.goalkeepers?.player?.length) {
+        statsApi?.data?.statistic?.goalkeepers?.player?.map(
+          (statsPlayer: any) => {
+            statsPlayer.teamId = selectedTeam.id;
+            statsPlayer.isGoalKeeper = true;
+            statsPlayer.goalServePlayerId = statsPlayer.id;
+            allStatePlayer.push(statsPlayer);
           }
-        });
-        const statsApi = await goalserveApi(
-          "https://www.goalserve.com/getfeed",
-          data,
-          `hockey/${item.goalServeTeamId}_stats`
         );
-        let allStatePlayer: any = [];
-        if (statsApi?.data?.statistic?.goalkeepers?.player?.length) {
-          statsApi?.data?.statistic?.goalkeepers?.player?.map(
+      } else {
+        let player: any = statsApi?.data?.statistic?.goalkeepers?.player;
+        player.isGoalKeeper = true;
+        player.goalServePlayerId =
+          statsApi?.data?.statistic?.goalkeepers?.player?.id;
+        player.teamId = selectedTeam.id;
+        allStatePlayer.push(player);
+      }
+      if (statsApi?.data?.statistic?.team?.length > 0) {
+        if (statsApi?.data?.statistic?.team[1]?.player?.length) {
+          statsApi?.data?.statistic?.team[1]?.player?.map(
             (statsPlayer: any) => {
-              statsPlayer.teamId = item.id;
-              statsPlayer.isGoalKeeper = true;
+              statsPlayer.teamId = selectedTeam.id;
               statsPlayer.goalServePlayerId = statsPlayer.id;
               allStatePlayer.push(statsPlayer);
             }
           );
         } else {
-          let player: any = statsApi?.data?.statistic?.goalkeepers?.player;
-          player.isGoalKeeper = true;
+          let player: any = statsApi?.data?.statistic?.team[1]?.player;
           player.goalServePlayerId =
-            statsApi?.data?.statistic?.goalkeepers?.player?.id;
-          player.teamId = item.id;
+            statsApi?.data?.statistic?.team[1]?.player?.id;
+          player.teamId = selectedTeam.id;
           allStatePlayer.push(player);
         }
-        if (statsApi?.data?.statistic?.team?.length > 0) {
-          if (statsApi?.data?.statistic?.team[1]?.player?.length) {
-            statsApi?.data?.statistic?.team[1]?.player?.map(
-              (statsPlayer: any) => {
-                statsPlayer.teamId = item.id;
-                statsPlayer.goalServePlayerId = statsPlayer.id;
-                allStatePlayer.push(statsPlayer);
-              }
-            );
-          } else {
-            let player: any = statsApi?.data?.statistic?.team[1]?.player;
-            player.goalServePlayerId =
-              statsApi?.data?.statistic?.team[1]?.player?.id;
-            player.teamId = item.id;
-            allStatePlayer.push(player);
-          }
-        }
-        const mergedArr = allStatePlayer.map((obj1: any) => {
-          const obj2 = allRosterPlayers.find(
-            (obj2: any) => obj1?.goalServePlayerId === obj2?.goalServePlayerId
-          );
-          return { ...obj1, ...obj2 };
-        });
-        mergedArr.map(async (item: any) => {
-          await PlayersNHL.findOneAndUpdate(
-            { goalServePlayerId: item.goalServePlayerId },
-            { $set: item },
-            { upsert: true, new: true }
-          );
-        });
-      })
-    );
+      }
+      const mergedArr = allStatePlayer.map((obj1: any) => {
+        const obj2 = allRosterPlayers.find(
+          (obj2: any) => obj1?.goalServePlayerId === obj2?.goalServePlayerId
+        );
+        return { ...obj1, ...obj2 };
+      });
+      const updatePromises = mergedArr.map(async (item: any) => {
+        await PlayersNHL.findOneAndUpdate(
+          { goalServePlayerId: item.goalServePlayerId },
+          { $set: item },
+          { upsert: true, new: true }
+        );
+      });
+
+      await Promise.all(updatePromises);
+    } catch (error) {
+      console.error("NHL Stats Error : ",error);
+    }
+  }
+
+  public updatePlayersNhl = async () => {
+    try {
+      const getMatch = await axiosGet(
+        `http://www.goalserve.com/getfeed/1db8075f29f8459c7b8408db308b1225/hockey/nhl-scores`,
+        { json: true }
+      );
+      const matchArrayAll = Array.isArray(
+        getMatch?.data?.scores?.category?.match
+      )
+        ? getMatch?.data?.scores?.category?.match
+        : [getMatch?.data?.scores?.category?.match];
+
+      if (!matchArrayAll || matchArrayAll?.length === 0) {
+        console.log("No matches to update.");
+        return;
+      }
+      const regex = /^Final(.*)$/;
+      const matchArray = matchArrayAll.filter(
+        (element: any) =>
+          element.status !== "Not Started" &&
+          !regex.test(element.status) &&
+          element.status !== "Postponed" &&
+          element.status !== "Canceled" &&
+          element.status !== "Suspended"
+      );
+
+      const updatePromises = matchArray?.map(async (match: any) => {
+          await this.handleRoasterTeamStatsData(match.hometeam.id);
+          await this.handleRoasterTeamStatsData(match.awayteam.id);
+      });
+      await Promise.all(updatePromises);
+    } catch (error) {
+      console.error("NHL Stats Error : ",error);
+    }
   };
   public updateInjuredPlayerNHL = async () => {
     const team = await TeamNHL.find();
