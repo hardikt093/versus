@@ -11,11 +11,11 @@ async function main() {
     await mongoose.connect(config.mongoose.url).then((result: any) => {
         console.info(`Connected to MongoDB -${config.mongoose.url}`);
     });
-    // nbaCron;
-    // nhlCron;
+    nbaCron;
+    nhlCron;
     mlbCron;
-    // betCron;
-    // nflCron;
-    // ncaafCron
+    betCron;
+    nflCron;
+    ncaafCron
 }
 main();

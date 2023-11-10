@@ -123,7 +123,7 @@ const updateTeamStatsNcaaf = cron.schedule("*/1 * * * *", async () => {
   }
   isupdateTeamStatsNCAAfRunning = true;
   try {
-    console.info("inside updateTeamStatsNcaaf", new Date());
+    // console.info("inside updateTeamStatsNcaaf", new Date());
     await ncaafService.addTeamStats();
   } catch (error) {
     console.log(error);

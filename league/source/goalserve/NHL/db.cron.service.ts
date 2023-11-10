@@ -620,7 +620,7 @@ export default class NhlDbCronServiceClass {
   //   );
   // };
 
-  handleRoasterTeamStatsData = async (id : string) => {
+  handleRoasterTeamStatsData = async (id: string) => {
     try {
       let data = {
         json: true,
@@ -711,9 +711,9 @@ export default class NhlDbCronServiceClass {
 
       await Promise.all(updatePromises);
     } catch (error) {
-      console.error("NHL Stats Error : ",error);
+      console.error("NHL Stats Error : ", error);
     }
-  }
+  };
 
   public updatePlayersNhl = async () => {
     try {
@@ -742,12 +742,12 @@ export default class NhlDbCronServiceClass {
       );
 
       const updatePromises = matchArray?.map(async (match: any) => {
-          await this.handleRoasterTeamStatsData(match.hometeam.id);
-          await this.handleRoasterTeamStatsData(match.awayteam.id);
+        await this.handleRoasterTeamStatsData(match.hometeam.id);
+        await this.handleRoasterTeamStatsData(match.awayteam.id);
       });
       await Promise.all(updatePromises);
     } catch (error) {
-      console.error("NHL Stats Error : ",error);
+      console.error("NHL Stats Error : ", error);
     }
   };
   public updateInjuredPlayerNHL = async () => {

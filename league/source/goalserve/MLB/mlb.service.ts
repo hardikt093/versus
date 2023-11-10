@@ -5908,7 +5908,7 @@ const addMatchWithNewModel = async () => {
       return arr;
     };
   
-    var daylist = getDaysArray(new Date("2023-10-29"), new Date("2023-10-31"));
+    var daylist = getDaysArray(new Date("2023-10-28"), new Date("2023-10-28"));
     for (let i = 0; i < daylist?.length; i++) {
       let data = { json: true, date: daylist[i] };
       const getMatch = await goalserveApi(
@@ -5916,7 +5916,7 @@ const addMatchWithNewModel = async () => {
         data,
         "baseball/usa"
       );
-  console.log("getMatch",getMatch)
+  console.log("getMatch",getMatch?.data?.scores?.category?.match)
       const matchArray = await getMatch?.data?.scores?.category?.match;
       if (matchArray?.length > 0) {
         const league: ILeagueModel | undefined | null = await League.findOne({
@@ -5981,6 +5981,7 @@ const addMatchWithNewModel = async () => {
             data.homeTeamId = teamIdHome.id;
             data.goalServeHomeTeamId = teamIdHome.goalServeTeamId;
           }
+          console.log("data",data)
           const matchUpdate = await Match.findOneAndUpdate(
             { goalServeMatchId: data?.goalServeMatchId },
             data,

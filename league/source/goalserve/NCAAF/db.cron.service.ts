@@ -439,7 +439,7 @@ export default class NCAAFDbCronServiceClass {
         );
       });
       const updatePromises = matchArray?.map(async (match: any) => {
-        // console.log("LIVE ncaafmatch.id", match?.contestID);
+        // console.log("LIVE ncaafmatch.id", match?.contestID, match?.status);
         const data: Partial<INcaafMatchModel> = {
           attendance: match?.attendance,
           goalServeHomeTeamId: match?.hometeam.id,
@@ -474,7 +474,7 @@ export default class NCAAFDbCronServiceClass {
           { $set: data },
           { new: true }
         );
-        // console.log("LIVE ncaafdataUpdate==>", dataUpdate?.goalServeMatchId);
+        // console.log("LIVE ncaafdataUpdate==>", dataUpdate?.goalServeMatchId,dataUpdate?.status);
 
         const goalServeMatchId = match.contestID;
         // expire not accepted bet requests
@@ -1172,7 +1172,6 @@ export default class NCAAFDbCronServiceClass {
           element.status !== "Final/20T"
         );
       });
-      console.log("matchArray",matchArray?.length)
       const updatePromises = matchArray?.map(async (match: any) => {
         let data = {
           json: true,
@@ -1192,7 +1191,6 @@ export default class NCAAFDbCronServiceClass {
         );
         let stats: Partial<INFLStatsTeamModel> = {};
         let homeCategory = hometeamstats?.data?.statistic?.category;
-        console.log("homeCategory",homeCategory)
         for (let j = 0; j < homeCategory?.length; j++) {
           let categoryName = homeCategory[j].name;
           switch (categoryName) {
@@ -1230,7 +1228,6 @@ export default class NCAAFDbCronServiceClass {
           { $set: stats },
           { upsert: true }
         );
-        console.log("dataUpdate",dataUpdate)
         //awayteam stats
         const awayteamstats = await goalserveApi(
           "https://www.goalserve.com/getfeed",

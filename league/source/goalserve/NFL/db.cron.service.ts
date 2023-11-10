@@ -620,7 +620,7 @@ export default class NFLDbCronServiceClass {
           element.status !== "Final/20T"
         );
       });
-      console.log("matchArray",matchArray?.length)
+      // console.log("matchArray", matchArray?.length);
       const updatePromises = matchArray?.map(async (match: any) => {
         let data = {
           json: true,
@@ -632,7 +632,7 @@ export default class NFLDbCronServiceClass {
         );
         let stats: Partial<INFLStatsTeamModel> = {};
         let homeCategory = hometeamstats?.data?.statistic?.category;
-        console.log("homeCategory",homeCategory)
+        // console.log("homeCategory", homeCategory);
         for (let j = 0; j < homeCategory?.length; j++) {
           let categoryName = homeCategory[j].name;
           switch (categoryName) {
@@ -670,7 +670,7 @@ export default class NFLDbCronServiceClass {
           { $set: stats },
           { upsert: true }
         );
-        console.log("dataUpdate",dataUpdate)
+        // console.log("dataUpdate", dataUpdate);
         //awayteam stats
         const awayteamstats = await goalserveApi(
           "https://www.goalserve.com/getfeed",
@@ -718,9 +718,7 @@ export default class NFLDbCronServiceClass {
         );
       });
       await Promise.all(updatePromises);
-    } catch (error) {
-      
-    }
+    } catch (error) {}
   };
 
   public updateLiveMatch = async () => {
@@ -743,10 +741,10 @@ export default class NFLDbCronServiceClass {
         return (
           element.status !== "Not Started" &&
           element.status !== "Final" &&
-          // element.status !== "Delayed" &&
-          // element.status !== "Suspended" &&
-          // element.status !== "Canceled" &&
-          // element.status !== "Postponed" &&
+          element.status !== "Delayed" &&
+          element.status !== "Suspended" &&
+          element.status !== "Canceled" &&
+          element.status !== "Postponed" &&
           element.status !== "After Over Time" &&
           element.status !== "Final/OT" &&
           element.status !== "Final/20T"
@@ -755,7 +753,7 @@ export default class NFLDbCronServiceClass {
       // console.log("matchArray", matchArray);
 
       const updatePromises = matchArray?.map(async (match: any) => {
-        console.log("LIVE NFLmatch.id", match?.contestID);
+        // console.log("LIVE NFLmatch.id", match?.contestID);
 
         const data: Partial<INflMatchModel> = {
           attendance: match?.attendance,
@@ -801,7 +799,7 @@ export default class NFLDbCronServiceClass {
           { $set: data },
           { new: true }
         );
-        console.log("LIVE NFLdataUpdate==>", dataUpdate?.goalServeMatchId);
+        // console.log("LIVE NFLdataUpdate==>", dataUpdate?.goalServeMatchId);
 
         if (
           match?.status != "Not Started" &&
@@ -1159,39 +1157,38 @@ export default class NFLDbCronServiceClass {
         );
       });
       // if (matchArray?.length > 0 && matchArray) {
-        const updatePromises = matchArray?.map(async (match: any) => {
-          const data: any = {
-            drive: match.playbyplay.drive[0].play[0].down
-              ? match.playbyplay.drive[0].play[0].down
-              : "",
-          };
+      const updatePromises = matchArray?.map(async (match: any) => {
+        const data: any = {
+          drive: match.playbyplay.drive[0].play[0].down
+            ? match.playbyplay.drive[0].play[0].down
+            : "",
+        };
 
-          const dataUpdate = await NflMatch.findOneAndUpdate(
-                  { goalServeMatchId: match?.contestID },
-                  { $set: data },
-                  { new: true }
-                );
-        })
+        const dataUpdate = await NflMatch.findOneAndUpdate(
+          { goalServeMatchId: match?.contestID },
+          { $set: data },
+          { new: true }
+        );
+      });
       await Promise.all(updatePromises);
 
-        // for (let i = 0; i < matchArray?.length; i++) {
-        //   const match: INflMatchModel | null = await NflMatch.findOne({
-        //     goalServeMatchId: matchArray[i]?.contestID,
-        //   });
-        //   if (match) {
-        //     const data: any = {
-        //       drive: matchArray[i].playbyplay.drive[0].play[0].down
-        //         ? matchArray[i].playbyplay.drive[0].play[0].down
-        //         : "",
-        //     };
-        //     const dataUpdate = await NflMatch.findOneAndUpdate(
-        //       { goalServeMatchId: matchArray[i]?.contestID },
-        //       { $set: data },
-        //       { new: true }
-        //     );
-        //   }
-        // }
-      
+      // for (let i = 0; i < matchArray?.length; i++) {
+      //   const match: INflMatchModel | null = await NflMatch.findOne({
+      //     goalServeMatchId: matchArray[i]?.contestID,
+      //   });
+      //   if (match) {
+      //     const data: any = {
+      //       drive: matchArray[i].playbyplay.drive[0].play[0].down
+      //         ? matchArray[i].playbyplay.drive[0].play[0].down
+      //         : "",
+      //     };
+      //     const dataUpdate = await NflMatch.findOneAndUpdate(
+      //       { goalServeMatchId: matchArray[i]?.contestID },
+      //       { $set: data },
+      //       { new: true }
+      //     );
+      //   }
+      // }
     } catch (error: any) {}
   };
 
@@ -1603,13 +1600,15 @@ export default class NFLDbCronServiceClass {
               ? matchArray[i]?.rushing?.hometeam?.player
               : [],
           };
+          // console.log("data",data)
           const dataUpdate = await NflMatch.findOneAndUpdate(
             { goalServeMatchId: matchArray[i]?.contestID },
             { $set: data },
             { new: true }
           );
         }
-      } else {
+      }
+      else {
         if (matchArray) {
           const data: Partial<INflMatchModel> = {
             awayTeamDefensive: matchArray?.defensive?.awayteam?.player
