@@ -77,7 +77,6 @@ const fairOddCalculation = function (favourite: number, underdog: number) {
 };
 
 const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
-  console.log('data: ', data);
   let isConfirmed: boolean = false;
   isConfirmed = data.isConfirmed;
   if (data.opponentUserId === loggedInUserId) {
@@ -165,7 +164,6 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
-    console.log('matchData: ', matchData);
   } else if (data.leagueType === "NBA") {
     matchData = await NbaMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
@@ -1209,6 +1207,157 @@ const listBetsByType = async (
             },
           },
         ],
+        nbaData: [
+          {
+            $match: {
+              leagueType: "NBA",
+            },
+          },
+          {
+            $lookup: {
+              from: "nbamatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nbateams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nbateamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nbateams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    league: "nhl",
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
         ncaafData: [
           {
             $match: {
@@ -1364,7 +1513,15 @@ const listBetsByType = async (
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nflData", "$ncaafData","$nhlData"] },
+        root: {
+          $concatArrays: [
+            "$mlbData",
+            "$nflData",
+            "$ncaafData",
+            "$nhlData",
+            "$nbaData",
+          ],
+        },
       },
     },
     { $unwind: "$root" },
@@ -1469,9 +1626,22 @@ const listBetsByType = async (
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-           
+              {
+                $convert: {
+                  input: "$match.awayTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
+              {
+                $convert: {
+                  input: "$match.homeTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1485,8 +1655,14 @@ const listBetsByType = async (
               if: {
                 $gt: [
                   "$totalRunOfMatch",
-                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
-               
+                  {
+                    $convert: {
+                      input: { $arrayElemAt: ["$requestUserOddSplit", 1] },
+                      to: "double",
+                      onError: 0,
+                      onNull: 0,
+                    },
+                  },
                 ],
               },
               then: {
@@ -1591,9 +1767,22 @@ const listBetsByType = async (
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-           
+              {
+                $convert: {
+                  input: "$match.awayTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
+              {
+                $convert: {
+                  input: "$match.homeTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1607,8 +1796,14 @@ const listBetsByType = async (
               if: {
                 $gt: [
                   "$totalRunOfMatch",
-                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
-               
+                  {
+                    $convert: {
+                      input: { $arrayElemAt: ["$requestUserOddSplit", 1] },
+                      to: "double",
+                      onError: 0,
+                      onNull: 0,
+                    },
+                  },
                 ],
               },
               then: {
@@ -1718,9 +1913,22 @@ const listBetsByType = async (
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-           
+              {
+                $convert: {
+                  input: "$match.awayTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
+              {
+                $convert: {
+                  input: "$match.homeTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1734,8 +1942,14 @@ const listBetsByType = async (
               if: {
                 $gt: [
                   "$totalRunOfMatch",
-                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
-               
+                  {
+                    $convert: {
+                      input: { $arrayElemAt: ["$requestUserOddSplit", 1] },
+                      to: "double",
+                      onError: 0,
+                      onNull: 0,
+                    },
+                  },
                 ],
               },
               then: {
@@ -1847,9 +2061,22 @@ const listBetsByType = async (
         $addFields: {
           totalRunOfMatch: {
             $add: [
-              {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-              {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-           
+              {
+                $convert: {
+                  input: "$match.awayTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
+              {
+                $convert: {
+                  input: "$match.homeTeamTotalScore",
+                  to: "double",
+                  onError: 0,
+                  onNull: 0,
+                },
+              },
             ],
           },
           requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -1863,8 +2090,14 @@ const listBetsByType = async (
               if: {
                 $gt: [
                   "$totalRunOfMatch",
-                  {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
-               
+                  {
+                    $convert: {
+                      input: { $arrayElemAt: ["$requestUserOddSplit", 1] },
+                      to: "double",
+                      onError: 0,
+                      onNull: 0,
+                    },
+                  },
                 ],
               },
               then: {
@@ -2731,6 +2964,157 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
             },
           },
         ],
+        nbaData: [
+          {
+            $match: {
+              leagueType: "NBA",
+            },
+          },
+          {
+            $lookup: {
+              from: "nbamatches",
+              let: {
+                matchId: "$goalServeMatchId",
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $eq: ["$goalServeMatchId", "$$matchId"],
+                    },
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nbateams",
+                    let: {
+                      homeTeamId: "$goalServeHomeTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$homeTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nbateamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "homeTeam",
+                  },
+                },
+                {
+                  $lookup: {
+                    from: "nbateams",
+                    let: {
+                      awayTeamId: "$goalServeAwayTeamId",
+                    },
+                    pipeline: [
+                      {
+                        $match: {
+                          $expr: {
+                            $eq: ["$goalServeTeamId", "$$awayTeamId"],
+                          },
+                        },
+                      },
+                      {
+                        $lookup: {
+                          from: "nhlteamimages",
+                          let: {
+                            teamId: "$goalServeTeamId",
+                          },
+                          pipeline: [
+                            {
+                              $match: {
+                                $expr: {
+                                  $eq: ["$goalServeTeamId", "$$teamId"],
+                                },
+                              },
+                            },
+                          ],
+                          as: "teamImages",
+                        },
+                      },
+                      {
+                        $project: {
+                          name: 1,
+                          teamImages: {
+                            $arrayElemAt: ["$teamImages.image", 0],
+                          },
+                          abbreviation: 1,
+                          won: 1,
+                          lost: 1,
+                          _id: 1,
+                        },
+                      },
+                    ],
+                    as: "awayTeam",
+                  },
+                },
+                {
+                  $project: {
+                    goalServeLeagueId: 1,
+                    goalServeMatchId: 1,
+                    awayTeamId: 1,
+                    awayTeam: { $arrayElemAt: ["$awayTeam", 0] },
+                    homeTeam: { $arrayElemAt: ["$homeTeam", 0] },
+                    goalServeAwayTeamId: 1,
+                    homeTeamId: 1,
+                    goalServeHomeTeamId: 1,
+                    dateTimeUtc: 1,
+                    formattedDate: 1,
+                    status: 1,
+                    awayTeamTotalScore: 1,
+                    homeTeamTotalScore: 1,
+                    time: 1,
+                    homeTeamHit: 1,
+                    homeTeamError: 1,
+                    awayTeamHit: 1,
+                    awayTeamError: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    attendance: 1,
+                    date: 1,
+                    outs: 1,
+                    timezone: 1,
+                    league: "nhl",
+                    _id: 1,
+                  },
+                },
+              ],
+              as: "match",
+            },
+          },
+        ],
         ncaafData: [
           {
             $match: {
@@ -2886,7 +3270,9 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nflData", "$ncaafData"] },
+        root: {
+          $concatArrays: ["$mlbData", "$nflData", "$ncaafData", "$nbaData","$nhlData"],
+        },
       },
     },
     { $unwind: "$root" },
@@ -2901,9 +3287,22 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
       $addFields: {
         totalRunOfMatch: {
           $add: [
-            {$convert: {input: "$match.awayTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-            {$convert: {input: "$match.homeTeamTotalScore", to : 'double', onError: 0,onNull: 0}},
-         
+            {
+              $convert: {
+                input: "$match.awayTeamTotalScore",
+                to: "double",
+                onError: 0,
+                onNull: 0,
+              },
+            },
+            {
+              $convert: {
+                input: "$match.homeTeamTotalScore",
+                to: "double",
+                onError: 0,
+                onNull: 0,
+              },
+            },
           ],
         },
         requestUserOddSplit: { $split: ["$requestUserGoalServeOdd", " "] },
@@ -2917,8 +3316,14 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
             if: {
               $gt: [
                 "$totalRunOfMatch",
-                {$convert: {input:{ $arrayElemAt: ["$requestUserOddSplit", 1] }, to : 'double', onError: 0,onNull: 0}},
-             
+                {
+                  $convert: {
+                    input: { $arrayElemAt: ["$requestUserOddSplit", 1] },
+                    to: "double",
+                    onError: 0,
+                    onNull: 0,
+                  },
+                },
               ],
             },
             then: {
@@ -2997,8 +3402,7 @@ const listBetsDashboard = async (body: IlistBetRequestData) => {
           $toString: "$dateutc",
         },
       },
-    },
-
+    }
   );
   if (!body.socketType) {
     query.push(
