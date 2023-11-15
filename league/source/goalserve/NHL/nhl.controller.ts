@@ -94,6 +94,18 @@ const nhlSingleGameBoxScoreLive = async (req: Request, res: Response) => {
     createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
   }
 };
+
+const get2DaysUpcomingDataFromMongodb = async (req: Request, res: Response) => {
+  try {
+    const scoreWithCurrentDate =
+      await nhlService.get2DaysUpcomingDataFromMongodb(
+        req.query.date1 as string
+      );
+    createResponse(res, httpStatus.OK, "", scoreWithCurrentDate);
+  } catch (error: any) {
+    createResponse(res, httpStatus.BAD_REQUEST, error.message, {});
+  }
+};
 export default {
   addNhlMatch,
   getNhlStandings,
@@ -104,4 +116,5 @@ export default {
   nhlGetTeam,
   nhlSingleGameBoxScoreUpcomming,
   nhlSingleGameBoxScoreLive,
+  get2DaysUpcomingDataFromMongodb
 };

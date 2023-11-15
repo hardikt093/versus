@@ -20,6 +20,7 @@ import Notification from "../models/documents/notification.model";
 import NflMatch from "../models/documents/NFL/match.model";
 import NcaafMatch from "../models/documents/NCAAF/match.model";
 import BetLike from "../models/documents/betLike.model";
+import NhlMatch from "../models/documents/NHL/match.model";
 Bet.watch().on("change", async (data: any) => {
   if (data?.operationType === "update") {
     if (
@@ -76,6 +77,7 @@ const fairOddCalculation = function (favourite: number, underdog: number) {
 };
 
 const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
+  console.log('data: ', data);
   let isConfirmed: boolean = false;
   isConfirmed = data.isConfirmed;
   if (data.opponentUserId === loggedInUserId) {
@@ -155,6 +157,17 @@ const createBet = async (loggedInUserId: number, data: ICreateBetRequest) => {
     }).lean();
   } else if (data.leagueType === "NCAAF") {
     matchData = await NcaafMatch.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+      status: "Not Started",
+    }).lean();
+  } else if (data.leagueType === "NHL") {
+    matchData = await NhlMatch.findOne({
+      goalServeMatchId: data.goalServeMatchId,
+      status: "Not Started",
+    }).lean();
+    console.log('matchData: ', matchData);
+  } else if (data.leagueType === "NBA") {
+    matchData = await NbaMatch.findOne({
       goalServeMatchId: data.goalServeMatchId,
       status: "Not Started",
     }).lean();
@@ -1115,7 +1128,7 @@ const listBetsByType = async (
                 },
                 {
                   $lookup: {
-                    from: "teams",
+                    from: "nhlteams",
                     let: {
                       awayTeamId: "$goalServeAwayTeamId",
                     },
@@ -1351,7 +1364,7 @@ const listBetsByType = async (
     },
     {
       $project: {
-        root: { $concatArrays: ["$mlbData", "$nflData", "$ncaafData"] },
+        root: { $concatArrays: ["$mlbData", "$nflData", "$ncaafData","$nhlData"] },
       },
     },
     { $unwind: "$root" },
