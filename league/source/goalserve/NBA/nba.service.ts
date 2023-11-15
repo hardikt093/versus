@@ -6743,26 +6743,26 @@ const nbaSingleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
               "$odds.homeTeamMoneyline.us",
             ],
           },
-          homeTeamSpreadObj: {
+          // homeTeamSpreadObj: {
             homeTeamSpread: "$odds.homeTeamSpread.handicap",
-            homeTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.homeTeamSpreadUs"] },
-                "$odds.homeTeamSpreadUs",
-              ],
-            },
-          },
-          awayTeamSpreadObj: {
+          //   homeTeamSpreadUs: {
+          //     $cond: [
+          //       { $gte: [{ $toDouble: "$odds.homeTeamSpreadUs" }, 0] },
+          //       { $concat: ["+", "$odds.homeTeamSpreadUs"] },
+          //       "$odds.homeTeamSpreadUs",
+          //     ],
+          //   },
+          // },
+          // awayTeamSpreadObj: {
             awayTeamSpread: "$odds.awayTeamSpread.handicap",
-            awayTeamSpreadUs: {
-              $cond: [
-                { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
-                { $concat: ["+", "$odds.awayTeamSpreadUs"] },
-                "$odds.awayTeamSpreadUs",
-              ],
-            },
-          },
+          //   awayTeamSpreadUs: {
+          //     $cond: [
+          //       { $gte: [{ $toDouble: "$odds.awayTeamSpreadUs" }, 0] },
+          //       { $concat: ["+", "$odds.awayTeamSpreadUs"] },
+          //       "$odds.awayTeamSpreadUs",
+          //     ],
+          //   },
+          // },
           homeTeamTotal: "$odds.homeTeamTotal",
           awayTeamTotal: "$odds.awayTeamTotal",
         },

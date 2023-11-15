@@ -147,18 +147,18 @@ export default class NbaDbCronServiceClass {
           );
           const awayTeamMoneyline = getMoneyLine
             ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
-            : {};
+            : undefined;
           const homeTeamMoneyline = getMoneyLine
             ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
-            : {};
+            : undefined;
           // getSpread
           const getSpread = await getOdds("Handicap", item?.odds?.type);
           const getAwayTeamRunLine = (await getSpread)
             ? getSpread?.handicap?.odd?.find((item: any) => item?.name === "2")
-            : {};
+            : undefined;
           const getHomeTeamRunLine = (await getSpread)
             ? getSpread?.handicap?.odd?.find((item: any) => item?.name === "1")
-            : {};
+            : undefined;
           const total = await getTotal("Over/Under", item?.odds?.type);
           const totalValues = await getTotalValues(total);
           let data = {

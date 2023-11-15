@@ -1456,12 +1456,12 @@ export default class NCAAFDbCronServiceClass {
                   ? getSpread?.handicap?.odd?.find(
                       (item: any) => item?.name === "2"
                     )
-                  : {};
+                  : undefined;
                 const getHomeTeamRunLine = (await getSpread)
                   ? getSpread?.handicap?.odd?.find(
                       (item: any) => item?.name === "1"
                     )
-                  : {};
+                  : undefined;
                 const total = await getTotal(
                   "Over/Under",
                   matchArray[i]?.week[j]?.matches[k]?.match[l]?.odds?.type
