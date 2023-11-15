@@ -30,8 +30,8 @@ export default class ConversationDbCronServiceClass {
             const date = matchDate.split(".");
             let day = date[0] ?? moment(utcDate).format("D");
             let month = date[1] ?? moment(utcDate).format("M");
-            let awayTeamNameSplit = match.awayTeam.awayTeamName.split(" ").pop();
-            let homeTeamNameSplit = match.homeTeam.homeTeamName.split(" ").pop();
+            let awayTeamNameSplit = match?.awayTeam?.awayTeamName?.split(" ").pop();
+            let homeTeamNameSplit = match?.homeTeam?.homeTeamName?.split(" ").pop();
             const chatName = `#${
               awayTeamNameSplit
             }@${
@@ -67,8 +67,8 @@ export default class ConversationDbCronServiceClass {
             const date = matchDate.split(".");
             let day = date[0] ?? moment(utcDate).format("D");
             let month = date[1] ?? moment(utcDate).format("M");
-            let awayTeamNameSplit = match.awayTeam.awayTeamName.split(" ").pop();
-            let homeTeamNameSplit = match.homeTeam.homeTeamName.split(" ").pop();
+            let awayTeamNameSplit = match?.awayTeam?.awayTeamName?.split(" ").pop();
+            let homeTeamNameSplit = match?.homeTeam?.homeTeamName?.split(" ").pop();
             const chatName = `#${
               awayTeamNameSplit
             }@${

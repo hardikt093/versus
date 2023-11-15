@@ -51,28 +51,34 @@ function removeByAttr(arr: any, attr: string, value: number) {
 const getOdds = (nameKey: string, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
-      return myArray[i];
+      if (isArray(myArray[i]?.bookmaker) == true) {
+        return myArray[i].bookmaker[0];
+      } else {
+        return myArray[i].bookmaker;
+      }
     }
   }
 };
 const getTotal = (nameKey: string, myArray: any) => {
   if (myArray?.length > 0) {
     for (let i = 0; i < myArray?.length; i++) {
-      if (myArray[i].value == nameKey) {
-        return myArray[i];
+      if (myArray[i]?.value == nameKey) {
+        if (isArray(myArray[i]?.bookmaker) == true) {
+          return myArray[i]?.bookmaker[0];
+        } else {
+          return myArray[i]?.bookmaker;
+        }
       }
     }
   }
 };
 
 const getTotalValues = async (total: any) => {
-  if (total?.bookmaker) {
-    if (isArray(total?.bookmaker?.total)) {
-      return total?.bookmaker?.total[0]?.name
-        ? total?.bookmaker?.total[0]?.name
-        : "";
+  if (total) {
+    if (isArray(total?.total)) {
+      return total?.total[0]?.name ? total?.total[0]?.name : "";
     } else {
-      return total?.bookmaker?.total?.name ? total?.bookmaker?.total?.name : "";
+      return total?.total?.name ? total?.total?.name : "";
     }
   } else {
     return "";
@@ -120,44 +126,38 @@ export default class NbaDbCronServiceClass {
         date1: date1,
         date2: date2,
         showodds: "1",
-        bm: "451,",
+        bm: "451,455,",
       };
       const getScore = await goalserveApi(
         "http://www.goalserve.com/getfeed",
         data,
         "bsktbl/nba-shedule"
       );
-      var matchData = getScore?.data?.shedules?.matches?.match;
+
+      var matchData = getScore?.data?.shedules?.matches;
       const league: ILeagueModel | null = await League.findOne({
         goalServeLeagueId: getScore?.data?.shedules?.id,
       });
-      if (matchData?.length > 0) {
-        const takeData = await matchData?.map(async (item: any) => {
+      // if (matchData?.length > 0) {
+      const takeData = await matchData?.map(async (item: any) => {
+        const matchDataItem = await item.match.map(async (item: any) => {
           const getMoneyLine: any = await getOdds(
             "Home/Away",
             item?.odds?.type
           );
           const awayTeamMoneyline = getMoneyLine
-            ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+            ? getMoneyLine?.odd?.find((item: any) => item?.name === "2")
             : {};
           const homeTeamMoneyline = getMoneyLine
-            ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+            ? getMoneyLine?.odd?.find((item: any) => item?.name === "1")
             : {};
           // getSpread
           const getSpread = await getOdds("Handicap", item?.odds?.type);
           const getAwayTeamRunLine = (await getSpread)
-            ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
+            ? getSpread?.handicap?.odd?.find((item: any) => item?.name === "2")
             : {};
           const getHomeTeamRunLine = (await getSpread)
-            ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
+            ? getSpread?.handicap?.odd?.find((item: any) => item?.name === "1")
             : {};
           const total = await getTotal("Over/Under", item?.odds?.type);
           const totalValues = await getTotalValues(total);
@@ -166,12 +166,22 @@ export default class NbaDbCronServiceClass {
             goalServeMatchId: item?.id,
             goalServeHomeTeamId: item?.hometeam?.id,
             goalServeAwayTeamId: item?.awayteam?.id,
-            homeTeamSpread: getHomeTeamRunLine,
-            homeTeamTotal: totalValues,
-            awayTeamSpread: getAwayTeamRunLine,
-            awayTeamTotal: totalValues,
-            awayTeamMoneyline: awayTeamMoneyline,
-            homeTeamMoneyline: homeTeamMoneyline,
+            // homeTeamSpread: getHomeTeamRunLine,
+            ...(getHomeTeamRunLine && { homeTeamSpread: getHomeTeamRunLine }),
+            // homeTeamTotal: totalValues,
+            ...(totalValues && { homeTeamTotal: totalValues }),
+            // awayTeamSpread: getAwayTeamRunLine,
+            ...(getAwayTeamRunLine && { awayTeamSpread: getAwayTeamRunLine }),
+            // awayTeamTotal: totalValues,
+            ...(totalValues && { awayTeamTotal: totalValues }),
+            // awayTeamMoneyline: awayTeamMoneyline,
+            ...(awayTeamMoneyline && {
+              awayTeamMoneyline: awayTeamMoneyline,
+            }),
+            // homeTeamMoneyline: homeTeamMoneyline,
+            ...(homeTeamMoneyline && {
+              homeTeamMoneyline: homeTeamMoneyline,
+            }),
             status: item.status,
           };
           if (item.status == "Not Started") {
@@ -229,111 +239,137 @@ export default class NbaDbCronServiceClass {
             }
           }
         });
-      } else {
-        if (matchData) {
-          const league: ILeagueModel | null = await League.findOne({
-            goalServeLeagueId: getScore?.data?.shedules?.id,
-          });
+      });
+      // }
+      // else {
+      //   if (matchData) {
+      //     const league: ILeagueModel | null = await League.findOne({
+      //       goalServeLeagueId: getScore?.data?.shedules?.id,
+      //     });
 
-          const getMoneyLine: any = await getOdds(
-            "Home/Away",
-            matchData?.odds?.type
-          );
-          const awayTeamMoneyline = getMoneyLine
-            ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
-            : {};
-          const homeTeamMoneyline = getMoneyLine
-            ? getMoneyLine?.bookmaker?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
-            : {};
-          // getSpread
-          const getSpread = await getOdds("Handicap", matchData?.odds?.type);
-          const getAwayTeamRunLine = getSpread
-            ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "2"
-              )
-            : {};
+      //     const getMoneyLine: any = await getOdds(
+      //       "Home/Away",
+      //       matchData?.odds?.type
+      //     );
+      //     const awayTeamMoneyline = getMoneyLine
+      //       ? getMoneyLine?.bookmaker?.odd?.find(
+      //           (item: any) => item?.name === "2"
+      //         )
+      //       : {};
+      //     const homeTeamMoneyline = getMoneyLine
+      //       ? getMoneyLine?.bookmaker?.odd?.find(
+      //           (item: any) => item?.name === "1"
+      //         )
+      //       : {};
+      //     // getSpread
+      //     const getSpread = await getOdds("Handicap", matchData?.odds?.type);
+      //     const getAwayTeamRunLine = getSpread
+      //       ? getSpread?.bookmaker?.handicap?.odd?.find(
+      //           (item: any) => item?.name === "2"
+      //         )
+      //       : {};
 
-          const getHomeTeamRunLine = getSpread
-            ? getSpread?.bookmaker?.handicap?.odd?.find(
-                (item: any) => item?.name === "1"
-              )
-            : {};
-          const total = await getTotal("Over/Under", matchData?.odds?.type);
-          const totalValues = await getTotalValues(total);
-          let data = {
-            goalServerLeagueId: league?.goalServeLeagueId,
-            goalServeMatchId: matchData?.id,
-            goalServeHomeTeamId: matchData?.hometeam?.id,
-            goalServeAwayTeamId: matchData?.awayteam?.id,
-            homeTeamSpread: getHomeTeamRunLine,
-            homeTeamTotal: totalValues,
-            awayTeamSpread: getAwayTeamRunLine,
-            awayTeamTotal: totalValues,
-            awayTeamMoneyline: awayTeamMoneyline,
-            homeTeamMoneyline: homeTeamMoneyline,
-            status: matchData.status,
-          };
+      //     const getHomeTeamRunLine = getSpread
+      //       ? getSpread?.bookmaker?.handicap?.odd?.find(
+      //           (item: any) => item?.name === "1"
+      //         )
+      //       : {};
+      //     const total = await getTotal("Over/Under", matchData?.odds?.type);
+      //     const totalValues = await getTotalValues(total);
+      //     // let data = {
+      //     //   goalServerLeagueId: league?.goalServeLeagueId,
+      //     //   goalServeMatchId: matchData?.id,
+      //     //   goalServeHomeTeamId: matchData?.hometeam?.id,
+      //     //   goalServeAwayTeamId: matchData?.awayteam?.id,
+      //     //   homeTeamSpread: getHomeTeamRunLine,
+      //     //   homeTeamTotal: totalValues,
+      //     //   awayTeamSpread: getAwayTeamRunLine,
+      //     //   awayTeamTotal: totalValues,
+      //     //   awayTeamMoneyline: awayTeamMoneyline,
+      //     //   homeTeamMoneyline: homeTeamMoneyline,
+      //     //   status: matchData.status,
+      //     // };
 
-          if (matchData.status == "Not Started") {
-            const findMatchOdds = await NbaOdds.find({
-              goalServeMatchId: matchData?.id,
-              status: matchData?.status,
-            });
-            if (findMatchOdds?.length == 0) {
-              const oddsData = new NbaOdds(data);
-              const savedOddsData = await oddsData.save();
-            } else {
-              await NbaOdds.findOneAndUpdate(
-                { goalServeMatchId: matchData?.id },
-                { $set: data },
-                { new: true }
-              );
-            }
-          } else if (
-            (matchData.status != "Not Started" &&
-              matchData.status != "Final" &&
-              matchData.status != "Final/OT" &&
-              matchData.status != "Final/2OT" &&
-              matchData.status != "Postponed" &&
-              matchData.status != "Canceled",
-            matchData.status != "Suspended")
-          ) {
-            const findMatchOdds = await NbaOdds.find({
-              goalServeMatchId: matchData?.id,
-              status: matchData?.status,
-            });
-            if (findMatchOdds?.length == 0) {
-              const oddsData = new NbaOdds(data);
-              await oddsData.save();
-            } else {
-              await NbaOdds.findOneAndUpdate(
-                { goalServeMatchId: matchData?.id },
-                { $set: data },
-                { new: true }
-              );
-            }
-          } else {
-            const findMatchOdds = await NbaOdds.find({
-              goalServeMatchId: matchData?.id,
-              status: matchData?.status,
-            });
-            if (findMatchOdds?.length == 0) {
-              const oddsData = new NbaOdds(data);
-              await oddsData.save();
-            } else {
-              await NbaOdds.findOneAndUpdate(
-                { goalServeMatchId: matchData?.id },
-                { $set: data },
-                { new: true }
-              );
-            }
-          }
-        }
-      }
+      //     let data = {
+      //       goalServerLeagueId: league?.goalServeLeagueId,
+      //       goalServeMatchId: matchData?.id,
+      //       goalServeHomeTeamId: matchData?.hometeam?.id,
+      //       goalServeAwayTeamId: matchData?.awayteam?.id,
+      //       // homeTeamSpread: getHomeTeamRunLine,
+      //       ...(getHomeTeamRunLine && { homeTeamSpread: getHomeTeamRunLine }),
+      //       // homeTeamTotal: totalValues,
+      //       ...(totalValues && { homeTeamTotal: totalValues }),
+      //       // awayTeamSpread: getAwayTeamRunLine,
+      //       ...(getAwayTeamRunLine && { awayTeamSpread: getAwayTeamRunLine }),
+      //       // awayTeamTotal: totalValues,
+      //       ...(totalValues && { awayTeamTotal: totalValues }),
+      //       // awayTeamMoneyline: awayTeamMoneyline,
+      //       ...(awayTeamMoneyline && {
+      //         awayTeamMoneyline: awayTeamMoneyline,
+      //       }),
+      //       // homeTeamMoneyline: homeTeamMoneyline,
+      //       ...(homeTeamMoneyline && {
+      //         homeTeamMoneyline: homeTeamMoneyline,
+      //       }),
+      //       status: matchData.status,
+      //     };
+
+      //     if (matchData.status == "Not Started") {
+      //       const findMatchOdds = await NbaOdds.find({
+      //         goalServeMatchId: matchData?.id,
+      //         status: matchData?.status,
+      //       });
+      //       if (findMatchOdds?.length == 0) {
+      //         const oddsData = new NbaOdds(data);
+      //         const savedOddsData = await oddsData.save();
+      //       } else {
+      //         await NbaOdds.findOneAndUpdate(
+      //           { goalServeMatchId: matchData?.id },
+      //           { $set: data },
+      //           { new: true }
+      //         );
+      //       }
+      //     } else if (
+      //       (matchData.status != "Not Started" &&
+      //         matchData.status != "Final" &&
+      //         matchData.status != "Final/OT" &&
+      //         matchData.status != "Final/2OT" &&
+      //         matchData.status != "Postponed" &&
+      //         matchData.status != "Canceled",
+      //       matchData.status != "Suspended")
+      //     ) {
+      //       const findMatchOdds = await NbaOdds.find({
+      //         goalServeMatchId: matchData?.id,
+      //         status: matchData?.status,
+      //       });
+      //       if (findMatchOdds?.length == 0) {
+      //         const oddsData = new NbaOdds(data);
+      //         await oddsData.save();
+      //       } else {
+      //         await NbaOdds.findOneAndUpdate(
+      //           { goalServeMatchId: matchData?.id },
+      //           { $set: data },
+      //           { new: true }
+      //         );
+      //       }
+      //     } else {
+      //       const findMatchOdds = await NbaOdds.find({
+      //         goalServeMatchId: matchData?.id,
+      //         status: matchData?.status,
+      //       });
+      //       if (findMatchOdds?.length == 0) {
+      //         const oddsData = new NbaOdds(data);
+      //         await oddsData.save();
+      //       } else {
+      //         await NbaOdds.findOneAndUpdate(
+      //           { goalServeMatchId: matchData?.id },
+      //           { $set: data },
+      //           { new: true }
+      //         );
+      //       }
+      //     }
+      //   }
+      // }
     } catch (error: any) {
       console.log("error", error);
     }
@@ -884,7 +920,6 @@ export default class NbaDbCronServiceClass {
           const match: INbaMatchModel | null = await NbaMatch.findOne({
             goalServeMatchId: matchArray[i]?.match[j]?.id,
           });
-          // console.log("matchArray[i]?.match[j].formatted_date",matchArray[i]?.match[j].formatted_date)
           if (!match) {
             const data: Partial<INbaMatchModel> = {
               // leagueId: league?._id,

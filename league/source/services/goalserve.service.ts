@@ -14,6 +14,7 @@ const apiKey = config.goalServeApiKey;
 const goalserveApi = async (url: string, payload = {}, endpoint: string) => {
   const params = new URLSearchParams(payload).toString();
   try {
+    // console.log(`${url}/${apiKey}/${endpoint}?${params}`)
     return await axios.get(`${url}/${apiKey}/${endpoint}?${params}`);
   } catch (error: any) {
     throw new AppError(httpStatus.UNPROCESSABLE_ENTITY, error.message);
