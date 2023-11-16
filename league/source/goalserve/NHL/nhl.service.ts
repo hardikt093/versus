@@ -5737,6 +5737,7 @@ const getUpcommingMatchNhl = async () => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
+          goalServeLeagueId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
