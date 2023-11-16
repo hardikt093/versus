@@ -50,15 +50,23 @@ function removeByAttr(arr: any, attr: string, value: number) {
 const getOdds = (nameKey: string, myArray: any) => {
   for (let i = 0; i < myArray?.length; i++) {
     if (myArray[i].value == nameKey) {
-      return myArray[i];
+      if (isArray(myArray[i]?.bookmaker) == true) {
+        return myArray[i].bookmaker[0];
+      } else {
+        return myArray[i].bookmaker;
+      }
     }
   }
 };
 const getTotal = (nameKey: string, myArray: any) => {
   if (myArray?.length > 0) {
     for (let i = 0; i < myArray?.length; i++) {
-      if (myArray[i].value == nameKey) {
-        return myArray[i];
+      if (myArray[i]?.value == nameKey) {
+        if (isArray(myArray[i]?.bookmaker) == true) {
+          return myArray[i]?.bookmaker[0];
+        } else {
+          return myArray[i]?.bookmaker;
+        }
       }
     }
   }
@@ -71,13 +79,13 @@ const getRunLine = async (nameKey: string, myArray: any) => {
   }
 };
 const getTotalValues = async (total: any) => {
-  if (total?.bookmaker) {
-    if (isArray(total?.bookmaker?.total)) {
-      return total?.bookmaker?.total[0]?.name
-        ? total?.bookmaker?.total[0]?.name
+  if (total) {
+    if (isArray(total?.total)) {
+      return total?.total[0]?.name
+        ? total?.total[0]?.name
         : "";
     } else {
-      return total?.bookmaker?.total?.name ? total?.bookmaker?.total?.name : "";
+      return total?.total?.name ? total?.total?.name : "";
     }
   } else {
     return "";
@@ -850,7 +858,7 @@ export default class NhlDbCronServiceClass {
     let date = `${day}.${month}.${year}`;
 
     try {
-      let data = { json: true, date1: date, showodds: "1", bm: "451," };
+      let data = { json: true, date1: date, showodds: "1", bm: "451,455," };
       const getScore = await goalserveApi(
         "http://www.goalserve.com/getfeed",
         data,
@@ -872,16 +880,17 @@ export default class NhlDbCronServiceClass {
                 "Home/Away",
                 item?.odds?.type
               );
+              console.log("getMoneyLine", getMoneyLine);
               const awayTeamMoneyline = getMoneyLine
                 ? getMoneyLine?.bookmaker?.odd?.find(
                     (item: any) => item?.name === "2"
                   )
-                : {};
+                : undefined;
               const homeTeamMoneyline = getMoneyLine
                 ? getMoneyLine?.bookmaker?.odd?.find(
                     (item: any) => item?.name === "1"
                   )
-                : {};
+                : undefined;
               // getSpread
               const getSpread = await getOdds("Puck Line", item?.odds?.type);
               const getAwayTeamRunLine = await getRunLine(
@@ -894,11 +903,11 @@ export default class NhlDbCronServiceClass {
               );
               const awayTeamSpread = getAwayTeamRunLine
                 ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-                : "";
+                : undefined;
 
               const homeTeamSpread = getHomeTeamRunLine
                 ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-                : "";
+                : undefined;
               const total = await getTotal("Over/Under", item?.odds?.type);
               const totalValues = await getTotalValues(total);
               let data = {
@@ -906,14 +915,21 @@ export default class NhlDbCronServiceClass {
                 goalServeMatchId: item?.id,
                 goalServeHomeTeamId: item?.hometeam?.id,
                 goalServeAwayTeamId: item?.awayteam?.id,
-                homeTeamSpread: homeTeamSpread,
-                homeTeamTotal: totalValues,
-                awayTeamSpread: awayTeamSpread,
-                awayTeamTotal: totalValues,
-                awayTeamMoneyline: awayTeamMoneyline,
+                // homeTeamSpread: homeTeamSpread,
+                ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
+                // homeTeamTotal: totalValues,
+                ...(totalValues && { homeTeamTotal: totalValues }),
+                // awayTeamSpread: awayTeamSpread,
+                ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
+                // awayTeamTotal: totalValues,
+                ...(totalValues && { awayTeamTotal: totalValues }),
+                // awayTeamMoneyline: awayTeamMoneyline,
+                ...(awayTeamMoneyline && { awayTeamMoneyline: awayTeamMoneyline }),
                 homeTeamMoneyline: homeTeamMoneyline,
+                ...(homeTeamMoneyline && { homeTeamMoneyline: homeTeamMoneyline }),
                 status: item?.status,
               };
+              // console.log("data",data)
               const oddsData = new NhlOdds(data);
               const savedOddsData = await oddsData.save();
             } else {
@@ -922,33 +938,37 @@ export default class NhlDbCronServiceClass {
                 "Home/Away",
                 item?.odds?.type
               );
-              const awayTeamMoneyline = getMoneyLine?.bookmaker?.odd
-                ? getMoneyLine?.bookmaker?.odd?.find(
+              // console.log("getMoneyLine", getMoneyLine);
+              console.log("item?.id", item?.id);
+              const awayTeamMoneyline = getMoneyLine?.odd
+                ? getMoneyLine?.odd?.find(
                     (item: any) => item?.name === "2"
                   )
-                : {};
-              const homeTeamMoneyline = getMoneyLine?.bookmaker?.odd
-                ? getMoneyLine?.bookmaker?.odd?.find(
+                : undefined;
+                // console.log("awayTeamMoneyline",awayTeamMoneyline)
+              const homeTeamMoneyline = getMoneyLine?.odd
+                ? getMoneyLine?.odd?.find(
                     (item: any) => item?.name === "1"
                   )
-                : {};
+                : undefined;
               // getSpread
               const getSpread = await getOdds("Puck Line", item?.odds?.type);
+              // console.log("getSpread",getSpread)
               const getAwayTeamRunLine = await getRunLine(
                 item?.awayteam?.name,
-                getSpread?.bookmaker?.odd
+                getSpread?.odd
               );
               const getHomeTeamRunLine = await getRunLine(
                 item?.hometeam?.name,
-                getSpread?.bookmaker?.odd
+                getSpread?.odd
               );
               const awayTeamSpread = getAwayTeamRunLine
                 ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-                : "null";
+                : undefined;
 
               const homeTeamSpread = getHomeTeamRunLine
                 ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-                : "null";
+                : undefined;
               const total = await getTotal("Over/Under", item?.odds?.type);
               const totalValues = await getTotalValues(total);
               let data = {
@@ -956,12 +976,18 @@ export default class NhlDbCronServiceClass {
                 goalServeMatchId: item?.id,
                 goalServeHomeTeamId: item?.hometeam?.id,
                 goalServeAwayTeamId: item?.awayteam?.id,
-                homeTeamSpread: homeTeamSpread,
-                homeTeamTotal: totalValues,
-                awayTeamSpread: awayTeamSpread,
-                awayTeamTotal: totalValues,
-                awayTeamMoneyline: awayTeamMoneyline,
+                // homeTeamSpread: homeTeamSpread,
+                ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
+                // homeTeamTotal: totalValues,
+                ...(totalValues && { homeTeamTotal: totalValues }),
+                // awayTeamSpread: awayTeamSpread,
+                ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
+                // awayTeamTotal: totalValues,
+                ...(totalValues && { awayTeamTotal: totalValues }),
+                // awayTeamMoneyline: awayTeamMoneyline,
+                ...(awayTeamMoneyline && { awayTeamMoneyline: awayTeamMoneyline }),
                 homeTeamMoneyline: homeTeamMoneyline,
+                ...(homeTeamMoneyline && { homeTeamMoneyline: homeTeamMoneyline }),
                 status: item?.status,
               };
               const updateOdds = await NhlOdds.findOneAndUpdate(
@@ -990,12 +1016,12 @@ export default class NhlDbCronServiceClass {
               ? getMoneyLine?.bookmaker?.odd?.find(
                   (item: any) => item?.name === "2"
                 )
-              : {};
+              : undefined;
             const homeTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
                   (item: any) => item?.name === "1"
                 )
-              : {};
+              : undefined;
             // getSpread
             const getSpread = await getOdds("Puck Line", matchData?.odds?.type);
             const getAwayTeamRunLine = await getRunLine(
@@ -1008,11 +1034,11 @@ export default class NhlDbCronServiceClass {
             );
             const awayTeamSpread = getAwayTeamRunLine
               ? getAwayTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
+              : undefined;
 
             const homeTeamSpread = getHomeTeamRunLine
               ? getHomeTeamRunLine?.name?.split(" ").slice(-1)[0]
-              : "";
+              : undefined;
             const total = await getTotal("Over/Under", matchData?.odds?.type);
             const totalValues = await getTotalValues(total);
             let data = {
@@ -1020,12 +1046,18 @@ export default class NhlDbCronServiceClass {
               goalServeMatchId: matchData?.id,
               goalServeHomeTeamId: matchData?.hometeam?.id,
               goalServeAwayTeamId: matchData?.awayteam?.id,
-              homeTeamSpread: homeTeamSpread,
-              homeTeamTotal: totalValues,
-              awayTeamSpread: awayTeamSpread,
-              awayTeamTotal: totalValues,
-              awayTeamMoneyline: awayTeamMoneyline,
+              // homeTeamSpread: homeTeamSpread,
+              ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
+              // homeTeamTotal: totalValues,
+              ...(totalValues && { homeTeamTotal: totalValues }),
+              // awayTeamSpread: awayTeamSpread,
+              ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
+              // awayTeamTotal: totalValues,
+              ...(totalValues && { awayTeamTotal: totalValues }),
+              // awayTeamMoneyline: awayTeamMoneyline,
+              ...(awayTeamMoneyline && { awayTeamMoneyline: awayTeamMoneyline }),
               homeTeamMoneyline: homeTeamMoneyline,
+              ...(homeTeamMoneyline && { homeTeamMoneyline: homeTeamMoneyline }),
               status: matchData?.status,
             };
             const oddsData = new NhlOdds(data);
@@ -1040,12 +1072,12 @@ export default class NhlDbCronServiceClass {
               ? getMoneyLine?.bookmaker?.odd?.find(
                   (item: any) => item?.name === "2"
                 )
-              : {};
+              : undefined;
             const homeTeamMoneyline = getMoneyLine
               ? getMoneyLine?.bookmaker?.odd?.find(
                   (item: any) => item?.name === "1"
                 )
-              : {};
+              : undefined;
             // getSpread
             const getSpread = await getOdds("Puck Line", matchData?.odds?.type);
             const getAwayTeamRunLine = await getRunLine(
@@ -1070,12 +1102,18 @@ export default class NhlDbCronServiceClass {
               goalServeMatchId: matchData?.id,
               goalServeHomeTeamId: matchData?.hometeam?.id,
               goalServeAwayTeamId: matchData?.awayteam?.id,
-              homeTeamSpread: homeTeamSpread,
-              homeTeamTotal: totalValues,
-              awayTeamSpread: awayTeamSpread,
-              awayTeamTotal: totalValues,
-              awayTeamMoneyline: awayTeamMoneyline,
+              // homeTeamSpread: homeTeamSpread,
+              ...(homeTeamSpread && { homeTeamSpread: homeTeamSpread }),
+              // homeTeamTotal: totalValues,
+              ...(totalValues && { homeTeamTotal: totalValues }),
+              // awayTeamSpread: awayTeamSpread,
+              ...(awayTeamSpread && { awayTeamSpread: awayTeamSpread }),
+              // awayTeamTotal: totalValues,
+              ...(totalValues && { awayTeamTotal: totalValues }),
+              // awayTeamMoneyline: awayTeamMoneyline,
+              ...(awayTeamMoneyline && { awayTeamMoneyline: awayTeamMoneyline }),
               homeTeamMoneyline: homeTeamMoneyline,
+              ...(homeTeamMoneyline && { homeTeamMoneyline: homeTeamMoneyline }),
               status: matchData?.status,
             };
             const updateOdds = await NhlOdds.findOneAndUpdate(
