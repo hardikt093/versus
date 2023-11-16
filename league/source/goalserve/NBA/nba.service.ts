@@ -1656,6 +1656,7 @@ const nbaScoreWithDate = async (date1: string, type: string) => {
         datetime_utc: "$dateTimeUtc",
         time: true,
         goalServeMatchId: true,
+        goalServeLeagueId: true,
         awayTeam: {
           awayTeamName: "$awayTeam.name",
           awayTeamId: "$awayTeam._id",
@@ -5409,6 +5410,7 @@ const getUpcommingMatchNba = async () => {
           datetime_utc: "$dateTimeUtc",
           time: true,
           goalServeMatchId: true,
+        goalServeLeagueId: true,
           awayTeam: {
             awayTeamName: "$awayTeam.name",
             awayTeamId: "$awayTeam._id",
@@ -6373,6 +6375,8 @@ const nbaSingleGameBoxScoreUpcomming = async (goalServeMatchId: string) => {
         attendance: 1,
         status: 1,
         venueName: 1,
+        goalServeMatchId: true,
+        goalServeLeagueId: true,
         datetime_utc: "$dateTimeUtc",
         awayTeamFullName: "$awayTeam.name",
         homeTeamFullName: "$homeTeam.name",
