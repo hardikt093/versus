@@ -880,7 +880,7 @@ export default class NhlDbCronServiceClass {
                 "Home/Away",
                 item?.odds?.type
               );
-              console.log("getMoneyLine", getMoneyLine);
+              // console.log("getMoneyLine", getMoneyLine);
               const awayTeamMoneyline = getMoneyLine
                 ? getMoneyLine?.bookmaker?.odd?.find(
                     (item: any) => item?.name === "2"
@@ -939,7 +939,7 @@ export default class NhlDbCronServiceClass {
                 item?.odds?.type
               );
               // console.log("getMoneyLine", getMoneyLine);
-              console.log("item?.id", item?.id);
+              // console.log("item?.id", item?.id);
               const awayTeamMoneyline = getMoneyLine?.odd
                 ? getMoneyLine?.odd?.find(
                     (item: any) => item?.name === "2"
