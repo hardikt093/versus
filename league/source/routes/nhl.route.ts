@@ -11,5 +11,6 @@ router.get("/scoreWithDate", nhlController.nhlScoreWithDate)
 router.get("/scoreWithCurrentDate", nhlController.nhlScoreWithCurrentDate)
 router.get("/single-game-boxscore-upcomming", nhlController.nhlSingleGameBoxScoreUpcomming)
 router.get("/single-game-boxscore-live", nhlController.nhlSingleGameBoxScoreLive)
+router.get("/upcoming2DaysMatch", nhlController.get2DaysUpcomingDataFromMongodb);
 
 export = router;
